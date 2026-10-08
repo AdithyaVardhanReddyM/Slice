@@ -1,0 +1,20 @@
+{
+  "name": "slice",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "pnpm@10.19.0",
+  "devDependencies": {
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.7"
+  }
+}

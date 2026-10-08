@@ -1,0 +1,17 @@
+{
+  "name": "@slice/widget",
+  "version": "0.0.0",
+  "private": true,
+  "description": "slice.js — the script tag merchants embed on their site",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^8.3.3"
+  }
+}

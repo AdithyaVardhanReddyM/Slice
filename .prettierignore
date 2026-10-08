@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+**/convex/_generated/
+**/.next/
+**/dist/
+**/AGENTS.md
+*.svg

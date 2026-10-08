@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Widget playground — demo storefront</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 720px;
+        margin: 48px auto;
+        padding: 0 16px;
+        color: #222;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Demo storefront</h1>
+    <p>
+      A stand-in merchant page for developing slice.js. The launcher sits
+      bottom-right.
+    </p>
+
+    <!-- What a merchant pastes. In production `src` points at the built dist/slice.js. -->
+    <script type="module" src="/src/index.ts" data-slice-key="demo"></script>
+  </body>
+</html>
