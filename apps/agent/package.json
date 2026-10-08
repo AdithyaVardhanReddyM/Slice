@@ -1,0 +1,9 @@
+{
+  "name": "@slice/agent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Python ADK agent; these scripts let turbo run it alongside the JS apps",
+  "scripts": {
+    "dev": "uv run adk web --port 8000"
+  }
+}

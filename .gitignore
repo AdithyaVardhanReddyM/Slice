@@ -26,3 +26,9 @@ coverage/
 
 # local editor/agent tooling
 .claude/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.adk/

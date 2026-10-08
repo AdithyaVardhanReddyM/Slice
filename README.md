@@ -8,8 +8,9 @@ A concierge with taste for every storefront. Slice gives businesses an embeddabl
 apps/
   web/        Next.js 16 — marketing site, merchant dashboard (Clerk), and /embed/* (the concierge UI the widget iframes)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
+  agent/      Python ADK concierge agent (Gemini 3.8 Flash on Vertex AI); deployed to Agent Runtime
 packages/
-  backend/    Convex — schema, queries/mutations/actions, auth config; the agent runs here
+  backend/    Convex — schema, queries/mutations/actions, auth config
   qloo/       Typed client for the Qloo API
 ```
 
@@ -18,14 +19,15 @@ How the pieces talk:
 ```
 merchant site ── slice.js ──iframe──▶ web /embed/concierge ──▶ Convex (anonymous)
 merchant      ──────────────────────▶ web /dashboard      ──▶ Convex (Clerk JWT)
-Convex actions ──▶ Qloo API, LLM
+backend ──▶ agent (ADK on Agent Runtime) ──▶ Gemini (Vertex AI), Qloo API
 ```
 
 ## Prerequisites
 
 - Node ≥ 20.9
 - pnpm 10 (`corepack enable` or `npm i -g pnpm`)
-- A Convex project and a Clerk application
+- [uv](https://docs.astral.sh/uv/) and Python ≥ 3.11 (for `apps/agent`)
+- A Convex project, a Clerk application, and a Google Cloud project with Vertex AI enabled
 
 ## Setup
 
@@ -59,9 +61,17 @@ cp apps/web/.env.example apps/web/.env.local
 cp apps/widget/.env.example apps/widget/.env.local
 ```
 
-Fill `apps/web/.env.local` with `NEXT_PUBLIC_CONVEX_URL` (the `CONVEX_URL` from step 2) and the two Clerk keys.
+Fill `apps/web/.env.local` with `NEXT_PUBLIC_CONVEX_URL` (the `CONVEX_URL` from step 2) and the two Clerk keys. (`.env` works too; both are git-ignored.)
 
-### 4. Run
+### 4. Agent
+
+```bash
+cp apps/agent/.env.example apps/agent/.env
+```
+
+Set your Google Cloud project and the absolute path to a service account key with the **Vertex AI User** role. `pnpm dev` runs `uv run adk web`, which installs the Python dependencies on first run.
+
+### 5. Run
 
 ```bash
 pnpm dev
@@ -71,6 +81,7 @@ pnpm dev
 | ----------------------------------- | --------------------------------------------- |
 | Web (site + dashboard)              | http://localhost:3000                         |
 | Widget playground (demo storefront) | http://localhost:5173                         |
+| Agent (ADK dev UI + API)            | http://localhost:8000                         |
 | Convex dashboard                    | `cd packages/backend && npx convex dashboard` |
 
 ## Environment variables
@@ -82,19 +93,21 @@ pnpm dev
 |                               | `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-in`, `/sign-up`                                             |
 | `apps/widget/.env.local`      | `VITE_SLICE_APP_URL`                                             | Where the web app runs; the widget iframes `{url}/embed/concierge` |
 | Convex (`npx convex env set`) | `CLERK_JWT_ISSUER_DOMAIN`                                        | Clerk Frontend API URL                                             |
+| `apps/agent/.env`             | `GOOGLE_GENAI_USE_ENTERPRISE`                                    | `true`: Gemini through Vertex AI, not AI Studio                    |
+|                               | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`                  | Location must be `global` for `gemini-3.8-flash`                   |
+|                               | `GOOGLE_APPLICATION_CREDENTIALS`                                 | Local dev only; Agent Runtime uses its own service identity        |
 |                               | `QLOO_API_KEY`                                                   | Hackathon key; only works against `https://hackathon.api.qloo.com` |
-|                               | `ANTHROPIC_API_KEY`                                              | When the agent lands                                               |
 
-Server-side secrets (Qloo, LLM) live only in Convex, never in the Next.js or widget env. Don't commit Qloo responses to this repo: caching them privately on the server is allowed, publishing them is not.
+Server-side secrets (Google credentials, Qloo) live only in the agent and Convex, never in the Next.js or widget env. Don't commit Qloo responses to this repo: caching them privately on the server is allowed, publishing them is not.
 
 ## Scripts
 
-| Command                        | Does                                     |
-| ------------------------------ | ---------------------------------------- |
-| `pnpm dev`                     | Convex dev + Next.js + widget playground |
-| `pnpm build`                   | Production builds (web, widget)          |
-| `pnpm typecheck` / `pnpm lint` | Across all packages                      |
-| `pnpm format`                  | Prettier                                 |
+| Command                        | Does                                             |
+| ------------------------------ | ------------------------------------------------ |
+| `pnpm dev`                     | Convex dev + Next.js + widget playground + agent |
+| `pnpm build`                   | Production builds (web, widget)                  |
+| `pnpm typecheck` / `pnpm lint` | Across all packages                              |
+| `pnpm format`                  | Prettier                                         |
 
 ## Embedding the widget
 
