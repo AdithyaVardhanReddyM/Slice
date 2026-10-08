@@ -4,8 +4,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Slice brand, from the logo mark */
+/* Slice brand palette ("Freshly squeezed"). Yellow = primary, orange = secondary (tentative) */
 @theme {
+  --color-brand-amber: #ffbf00;
+  --color-brand-sand: #f2cf7e;
   --color-brand-yellow: #ffe642;
   --color-brand-orange: #ff7900;
 }
