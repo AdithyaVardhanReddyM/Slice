@@ -9,7 +9,15 @@ import { ProductImage } from "@/components/fold/product-image";
 
 // Categories whose photos crop well into tall hero strips, best first.
 const heroCategories = ["Outerwear", "Dresses & one-pieces", "Tops", "Bottoms", "Footwear"];
-const heroStyles = ["streetwear", "romantic-boho", "gorpcore-outdoor", "quiet-minimal", "dark-gothic"];
+// Hand-picked: these photos hold up as tall hero strips. Three of the five
+// are labels that don't exist outside this demo.
+const heroPanels = [
+  { slug: "seom-halo-cropped-puffer", style: "streetwear" },
+  { slug: "hedda-vang-froya-quilted-floral-jacket", style: "romantic-boho" },
+  { slug: "snow-peak-light-mountain-cloth-parka", style: "gorpcore-outdoor" },
+  { slug: "studio-nicholson-hayle-oversized-wool-coat", style: "quiet-minimal" },
+  { slug: "asche-kohle-long-leather-coat", style: "dark-gothic" },
+];
 
 // One product per style, no repeats, preferring photographed apparel.
 function pickFor(styles: string[], used = new Set<string>()): { product: Product; style: string }[] {
@@ -37,8 +45,11 @@ const spanClass: Record<number, string> = { 2: "lg:col-span-2", 4: "lg:col-span-
 
 export default function FoldHome() {
   const { store } = fold;
-  const used = new Set<string>();
-  const hero = pickFor(heroStyles, used);
+  const hero = heroPanels.flatMap(({ slug, style }) => {
+    const product = fold.get(slug);
+    return product ? [{ product, style }] : [];
+  });
+  const used = new Set(hero.map((h) => h.product.id));
   const editCovers = new Map(pickFor(store.styles.map((s) => s.id), used).map((x) => [x.style, x.product]));
   const justIn = fold.newArrivals().slice(0, 10);
   const loved = fold.bestsellers().slice(0, 8);

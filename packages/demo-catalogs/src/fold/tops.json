@@ -82,7 +82,9 @@
       }
     ],
     "imageQuery": "oversized black graphic tee streetwear",
-    "images": [],
+    "images": [
+      "/fold/fd-top-01.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 386,
     "bestseller": true
@@ -170,7 +172,9 @@
       }
     ],
     "imageQuery": "nike red oversized tee man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-02.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 1104
   },
@@ -256,7 +260,9 @@
       }
     ],
     "imageQuery": "lilac cropped baby tee woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-03.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 52,
     "new": true
@@ -340,7 +346,9 @@
       }
     ],
     "imageQuery": "black long drape t-shirt",
-    "images": [],
+    "images": [
+      "/fold/fd-top-04.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 74
   },
@@ -423,7 +431,9 @@
       }
     ],
     "imageQuery": "ecru boxy t-shirt man minimal",
-    "images": [],
+    "images": [
+      "/fold/fd-top-05.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 168
   },
@@ -511,7 +521,9 @@
       }
     ],
     "imageQuery": "sand linen t-shirt woman beach",
-    "images": [],
+    "images": [
+      "/fold/fd-top-06.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 96
   },
@@ -600,7 +612,9 @@
       }
     ],
     "imageQuery": "patagonia p-6 logo tee green",
-    "images": [],
+    "images": [
+      "/fold/fd-top-07.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 912
   },
@@ -685,7 +699,9 @@
       }
     ],
     "imageQuery": "nike white running shirt man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-08.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 641
   },
@@ -770,7 +786,9 @@
       }
     ],
     "imageQuery": "pangaia blue organic cotton tee",
-    "images": [],
+    "images": [
+      "/fold/fd-top-09.jpg"
+    ],
     "rating": 4.3,
     "reviewCount": 238
   },
@@ -856,7 +874,9 @@
       }
     ],
     "imageQuery": "brown pocket t-shirt workwear man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-10.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 147
   },
@@ -942,7 +962,9 @@
       }
     ],
     "imageQuery": "blue oxford button down shirt man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-11.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 534,
     "bestseller": true
@@ -1031,7 +1053,9 @@
       }
     ],
     "imageQuery": "pink striped oxford shirt woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-12.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 211
   },
@@ -1119,7 +1143,9 @@
       }
     ],
     "imageQuery": "light blue linen shirt man beach",
-    "images": [],
+    "images": [
+      "/fold/fd-top-13.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 288
   },
@@ -1205,7 +1231,9 @@
       }
     ],
     "imageQuery": "white broderie puff sleeve blouse",
-    "images": [],
+    "images": [
+      "/fold/fd-top-14.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 172
   },
@@ -1293,7 +1321,9 @@
       }
     ],
     "imageQuery": "pink gingham smocked top woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-15.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 118
   },
@@ -1379,7 +1409,9 @@
       }
     ],
     "imageQuery": "white oversized poplin shirt woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-16.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 94
   },
@@ -1466,7 +1498,9 @@
       }
     ],
     "imageQuery": "oatmeal linen shirt woman relaxed",
-    "images": [],
+    "images": [
+      "/fold/fd-top-17.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 431
   },
@@ -1554,7 +1588,9 @@
       }
     ],
     "imageQuery": "rust plaid flannel shirt man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-18.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 265
   },
@@ -1644,7 +1680,9 @@
       }
     ],
     "imageQuery": "snow peak olive ripstop shirt",
-    "images": [],
+    "images": [
+      "/fold/fd-top-19.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 63,
     "new": true
@@ -1732,7 +1770,9 @@
       }
     ],
     "imageQuery": "cream cable knit sweater woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-20.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 207
   },
@@ -1819,7 +1859,9 @@
       }
     ],
     "imageQuery": "cream crochet cardigan woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-21.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 86
   },
@@ -1906,7 +1948,9 @@
       }
     ],
     "imageQuery": "green cable knit crewneck man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-22.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 188
   },
@@ -1991,8 +2035,10 @@
         "inStock": true
       }
     ],
-    "imageQuery": "norse projects grey wool sweater",
-    "images": [],
+    "imageQuery": "grey wool sweater man portrait",
+    "images": [
+      "/fold/fd-top-23.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 476,
     "bestseller": true
@@ -2081,7 +2127,9 @@
       }
     ],
     "imageQuery": "camel cashmere sweater woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-24.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 352
   },
@@ -2165,7 +2213,9 @@
       }
     ],
     "imageQuery": "black distressed mohair sweater woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-25.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 39,
     "new": true
@@ -2254,7 +2304,9 @@
       }
     ],
     "imageQuery": "cream knitted polo shirt man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-26.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 104
   },
@@ -2342,7 +2394,9 @@
       }
     ],
     "imageQuery": "patagonia brown wool sweater",
-    "images": [],
+    "images": [
+      "/fold/fd-top-27.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 197
   },
@@ -2426,8 +2480,10 @@
         "inStock": true
       }
     ],
-    "imageQuery": "baby blue cropped fuzzy cardigan",
-    "images": [],
+    "imageQuery": "light blue fluffy cardigan woman",
+    "images": [
+      "/fold/fd-top-28.jpg"
+    ],
     "rating": 4.3,
     "reviewCount": 61
   },
@@ -2514,7 +2570,9 @@
       }
     ],
     "imageQuery": "nike black oversized hoodie woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-29.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 1086,
     "bestseller": true
@@ -2601,7 +2659,9 @@
       }
     ],
     "imageQuery": "adidas firebird track jacket blue woman",
-    "images": [],
+    "images": [
+      "/fold/fd-top-30.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 488
   },
@@ -2687,7 +2747,9 @@
       }
     ],
     "imageQuery": "new balance grey crewneck sweatshirt",
-    "images": [],
+    "images": [
+      "/fold/fd-top-31.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 74,
     "new": true
@@ -2775,7 +2837,9 @@
       }
     ],
     "imageQuery": "pangaia green hoodie organic cotton",
-    "images": [],
+    "images": [
+      "/fold/fd-top-32.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 362
   },
@@ -2862,7 +2926,9 @@
       }
     ],
     "imageQuery": "washed black oversized hoodie streetwear",
-    "images": [],
+    "images": [
+      "/fold/fd-top-33.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 219
   },
@@ -2950,7 +3016,9 @@
       }
     ],
     "imageQuery": "carhartt wip brown hoodie man",
-    "images": [],
+    "images": [
+      "/fold/fd-top-34.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 703
   },
@@ -3040,7 +3108,9 @@
       }
     ],
     "imageQuery": "navy gold striped rugby shirt",
-    "images": [],
+    "images": [
+      "/fold/fd-top-35.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 156
   }

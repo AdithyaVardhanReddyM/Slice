@@ -83,8 +83,10 @@
         "inStock": true
       }
     ],
-    "imageQuery": "carhartt detroit jacket brown canvas",
-    "images": [],
+    "imageQuery": "brown canvas work jacket man",
+    "images": [
+      "/fold/fd-out-01.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 864,
     "bestseller": true
@@ -175,7 +177,9 @@
       }
     ],
     "imageQuery": "silver cropped puffer jacket woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-02.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 64,
     "new": true
@@ -263,7 +267,9 @@
       }
     ],
     "imageQuery": "adidas firebird track jacket woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-03.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 942,
     "bestseller": true
@@ -356,7 +362,9 @@
       }
     ],
     "imageQuery": "waxed canvas chore coat brown man",
-    "images": [],
+    "images": [
+      "/fold/fd-out-04.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 212
   },
@@ -449,7 +457,9 @@
       }
     ],
     "imageQuery": "khaki barn jacket corduroy collar",
-    "images": [],
+    "images": [
+      "/fold/fd-out-05.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 156
   },
@@ -540,7 +550,9 @@
       }
     ],
     "imageQuery": "navy wool leather varsity jacket",
-    "images": [],
+    "images": [
+      "/fold/fd-out-06.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 88
   },
@@ -630,7 +642,9 @@
       }
     ],
     "imageQuery": "linen chore jacket man summer",
-    "images": [],
+    "images": [
+      "/fold/fd-out-07.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 47
   },
@@ -720,7 +734,9 @@
       }
     ],
     "imageQuery": "quilted floral cotton jacket woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-08.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 73
   },
@@ -809,7 +825,9 @@
       }
     ],
     "imageQuery": "black washed leather biker jacket woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-09.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 29,
     "new": true
@@ -894,8 +912,10 @@
         "inStock": true
       }
     ],
-    "imageQuery": "levis oversized denim trucker jacket woman",
-    "images": [],
+    "imageQuery": "denim jacket woman street",
+    "images": [
+      "/fold/fd-out-10.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 681
   },
@@ -984,7 +1004,9 @@
       }
     ],
     "imageQuery": "indigo boro patchwork jacket sashiko",
-    "images": [],
+    "images": [
+      "/fold/fd-out-11.jpg"
+    ],
     "rating": 4.9,
     "reviewCount": 22
   },
@@ -1073,7 +1095,9 @@
       }
     ],
     "imageQuery": "long black wool coat minimal",
-    "images": [],
+    "images": [
+      "/fold/fd-out-12.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 58
   },
@@ -1159,7 +1183,9 @@
       }
     ],
     "imageQuery": "long black leather coat man",
-    "images": [],
+    "images": [
+      "/fold/fd-out-13.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 17
   },
@@ -1248,7 +1274,9 @@
       }
     ],
     "imageQuery": "oversized ecru wool coat woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-14.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 41
   },
@@ -1337,7 +1365,9 @@
       }
     ],
     "imageQuery": "charcoal wool overcoat man",
-    "images": [],
+    "images": [
+      "/fold/fd-out-15.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 233
   },
@@ -1423,7 +1453,9 @@
       }
     ],
     "imageQuery": "brown wool car coat man",
-    "images": [],
+    "images": [
+      "/fold/fd-out-16.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 64
   },
@@ -1515,7 +1547,9 @@
       }
     ],
     "imageQuery": "long crochet cardigan coat cream",
-    "images": [],
+    "images": [
+      "/fold/fd-out-17.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 18,
     "new": true
@@ -1605,7 +1639,9 @@
       }
     ],
     "imageQuery": "ruffle collar beige trench coat woman",
-    "images": [],
+    "images": [
+      "/fold/fd-out-18.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 52
   },
@@ -1694,7 +1730,9 @@
       }
     ],
     "imageQuery": "patagonia retro x fleece jacket",
-    "images": [],
+    "images": [
+      "/fold/fd-out-19.jpg"
+    ],
     "rating": 4.8,
     "reviewCount": 1146,
     "bestseller": true
@@ -1782,7 +1820,9 @@
       }
     ],
     "imageQuery": "orange rain jacket woman hiking",
-    "images": [],
+    "images": [
+      "/fold/fd-out-20.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 724
   },
@@ -1870,8 +1910,10 @@
         "inStock": true
       }
     ],
-    "imageQuery": "salomon black waterproof running jacket",
-    "images": [],
+    "imageQuery": "black rain jacket trail runner",
+    "images": [
+      "/fold/fd-out-21.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 312
   },
@@ -1961,7 +2003,9 @@
       }
     ],
     "imageQuery": "olive longline parka shell",
-    "images": [],
+    "images": [
+      "/fold/fd-out-22.jpg"
+    ],
     "rating": 4.7,
     "reviewCount": 46
   },
@@ -2053,7 +2097,9 @@
       }
     ],
     "imageQuery": "oversized nylon anorak black orange",
-    "images": [],
+    "images": [
+      "/fold/fd-out-23.jpg"
+    ],
     "rating": 4.4,
     "reviewCount": 39
   },
@@ -2143,7 +2189,9 @@
       }
     ],
     "imageQuery": "nike windrunner jacket man",
-    "images": [],
+    "images": [
+      "/fold/fd-out-24.jpg"
+    ],
     "rating": 4.6,
     "reviewCount": 893
   },
@@ -2231,7 +2279,9 @@
       }
     ],
     "imageQuery": "woman grey running jacket",
-    "images": [],
+    "images": [
+      "/fold/fd-out-25.jpg"
+    ],
     "rating": 4.5,
     "reviewCount": 141
   }
