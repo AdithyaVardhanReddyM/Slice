@@ -3,36 +3,31 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
 import type { Product, StoreNavGroup } from "@slice/demo-catalogs";
 import { cn } from "cn";
 import { useCart } from "@/lib/cart";
 import { href } from "@/lib/fold";
+import { useWishlist } from "@/lib/wishlist";
 import { FoldWordmark } from "./wordmark";
 import { ProductImage } from "./product-image";
 
 export interface MenuGroup extends StoreNavGroup {
   brands: { name: string; slug: string }[];
-  feature?: Product;
+  features: Product[];
 }
 
-const ticker = [
-  "24 labels on one rail",
-  "8 new to Fold this season",
-  "Free shipping over $150",
-  "Free returns within 30 days",
-  "Lisbon · Seoul · Portland · Oslo · Berlin · Kojima",
-];
-
-const suggestions = ["linen", "loafers", "fleece", "black boots", "cable knit", "trail", "raffia", "selvedge"];
+const popular = ["Linen shirt", "Loafers", "Fleece", "Black boots", "Cable knit", "Trail runners", "Raffia bag", "Selvedge denim"];
 
 export function Header({ groups }: { groups: MenuGroup[] }) {
   const { count, setOpen } = useCart();
+  const { ids: saved } = useWishlist("fold:wishlist");
   const pathname = usePathname();
   const [mega, setMega] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
   const [searching, setSearching] = useState(false);
 
-  // Close the overlays on navigation.
+  // Close overlays when the route changes.
   const [lastPath, setLastPath] = useState(pathname);
   if (lastPath !== pathname) {
     setLastPath(pathname);
@@ -44,150 +39,113 @@ export function Header({ groups }: { groups: MenuGroup[] }) {
   const active = groups.find((g) => g.category === mega);
 
   return (
-    <header className="sticky top-0 z-40" onMouseLeave={() => setMega(null)}>
-      <div className="overflow-hidden border-b border-seam bg-night-2 py-2 text-fog">
-        <div className="ticker flex w-max whitespace-nowrap">
-          {[0, 1].map((n) => (
-            <span key={n} className="flex" aria-hidden={n === 1}>
-              {ticker.map((t) => (
-                <span key={t} className="tag px-8">
-                  {t}
-                  <span className="ml-8 text-signal">✦</span>
-                </span>
-              ))}
-            </span>
+    <header className="sticky top-0 z-40 bg-white" onMouseLeave={() => setMega(null)}>
+      <div className="flex h-9 items-center justify-center bg-fd-forest px-4 text-[13px] text-white">
+        <p className="truncate">
+          Free shipping on orders over $150
+          <span className="hidden sm:inline">
+            <span className="mx-2 opacity-50">·</span> Free returns within 30 days
+          </span>
+        </p>
+      </div>
+
+      <div className="fd-container grid h-[72px] grid-cols-[1fr_auto_1fr] items-center border-b border-fd-line lg:border-b-0">
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setMenu(true)} className="-ml-2 p-2 lg:hidden" aria-label="Open menu">
+            <Menu className="size-6" strokeWidth={1.6} />
+          </button>
+          <button type="button" onClick={() => setSearching(true)} className="p-2 lg:hidden" aria-label="Search">
+            <Search className="size-[22px]" strokeWidth={1.6} />
+          </button>
+          <Suspense fallback={<DeptTabs pathname={pathname} dept={null} />}>
+            <DeptTabsFromUrl pathname={pathname} />
+          </Suspense>
+        </div>
+
+        <Link href={href.home} aria-label="Fold home">
+          <FoldWordmark className="text-[28px]" />
+        </Link>
+
+        <div className="flex items-center justify-end gap-1 sm:gap-2">
+          <SearchBox className="mr-2 hidden w-64 lg:block xl:w-80" />
+          <Link href={href.saved} className="relative p-2" aria-label={`Wishlist, ${saved.length} saved`}>
+            <Heart className="size-[22px]" strokeWidth={1.6} />
+            {saved.length > 0 && <Badge>{saved.length}</Badge>}
+          </Link>
+          <button type="button" onClick={() => setOpen(true)} className="relative -mr-2 p-2" aria-label={`Bag, ${count} items`}>
+            <ShoppingBag className="size-[22px]" strokeWidth={1.6} />
+            {count > 0 && <Badge>{count}</Badge>}
+          </button>
+        </div>
+      </div>
+
+      <nav className="hidden h-12 border-b border-fd-line lg:block" aria-label="Categories">
+        <ul className="fd-container flex h-full items-stretch justify-center gap-1">
+          <NavLink href={href.newIn} on={pathname === "/fold/new"} onEnter={() => setMega(null)}>
+            New in
+          </NavLink>
+          {groups.map((g) => (
+            <NavLink
+              key={g.category}
+              href={href.category(g.category)}
+              on={pathname.startsWith(href.category(g.category)) || mega === g.category}
+              onEnter={() => setMega(g.category)}
+            >
+              {g.label}
+            </NavLink>
           ))}
-        </div>
-      </div>
+          <NavLink href={href.brands} on={pathname.startsWith("/fold/brand")} onEnter={() => setMega(null)}>
+            Brands
+          </NavLink>
+          <NavLink href={href.sale} on={pathname === "/fold/sale"} onEnter={() => setMega(null)} className="text-fd-sale">
+            Sale
+          </NavLink>
+        </ul>
+      </nav>
 
-      <div className="border-b border-seam bg-night/90 backdrop-blur-md">
-        <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
-          <div className="flex items-center gap-5">
-            <button
-              type="button"
-              onClick={() => setMenu(true)}
-              className="tag lg:hidden"
-              aria-label="Open menu"
-            >
-              Menu
-            </button>
-            {/* Its own boundary: reading search params suspends, and the rest of
-                the header must hydrate together with the cart count. */}
-            <Suspense fallback={<DeptNav dept={null} pathname={pathname} />}>
-              <DeptNavFromUrl pathname={pathname} />
-            </Suspense>
-          </div>
-
-          <Link href={href.home} aria-label="Fold home" className="px-4">
-            <FoldWordmark className="text-[2.6rem]" />
-          </Link>
-
-          <div className="flex items-center justify-end gap-5">
-            <button type="button" onClick={() => setSearching(true)} className="tag underline-grow pb-0.5">
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="tag flex items-center gap-2"
-              aria-label={`Bag, ${count} items`}
-            >
-              <span className="hidden sm:inline">Bag</span>
-              <span
-                className={cn(
-                  "grid size-6 place-items-center rounded-full text-[10px] tracking-normal transition-colors",
-                  count > 0 ? "bg-signal text-night" : "border border-seam text-fog",
-                )}
-              >
-                {count}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <nav className="hidden h-11 items-stretch justify-center gap-1 border-t border-seam lg:flex" aria-label="Categories">
-          {groups.map((g) => {
-            const on = pathname.startsWith(href.category(g.category));
-            return (
-              <Link
-                key={g.category}
-                href={href.category(g.category)}
-                onMouseEnter={() => setMega(g.category)}
-                onFocus={() => setMega(g.category)}
-                className={cn(
-                  "tag flex items-center px-3.5 transition-colors xl:px-5",
-                  on || mega === g.category ? "text-bone" : "text-bone-2/70 hover:text-bone",
-                  on && "text-signal",
-                )}
-              >
-                {g.label}
-              </Link>
-            );
-          })}
-          <span className="mx-2 my-3 w-px bg-seam" />
-          <Link
-            href={href.brands}
-            onMouseEnter={() => setMega(null)}
-            className={cn("tag flex items-center px-3.5 xl:px-5", pathname.startsWith("/fold/brand") ? "text-signal" : "text-bone")}
-          >
-            Labels A–Z
-          </Link>
-          <Link
-            href={href.edits}
-            onMouseEnter={() => setMega(null)}
-            className={cn("tag flex items-center px-3.5 xl:px-5", pathname.startsWith("/fold/edit") ? "text-signal" : "text-bone")}
-          >
-            The edits
-          </Link>
-        </nav>
-      </div>
-
-      {/* Mega menu: subcategories, the labels that make them, one picture. */}
       {active && (
-        <div className="fade-in absolute inset-x-0 top-full hidden border-b border-seam bg-night-2 lg:block">
-          <div className="grid grid-cols-[1.1fr_1.4fr_0.8fr] gap-10 px-8 py-10">
+        <div className="drop-in absolute inset-x-0 top-full hidden border-b border-fd-line bg-white shadow-[0_24px_40px_-24px_rgba(0,0,0,0.25)] lg:block">
+          <div className="fd-container grid grid-cols-[1fr_1fr_2fr] gap-12 py-10">
             <div>
-              <p className="tag text-fog">{active.label}</p>
-              <ul className="mt-5 space-y-1.5">
+              <p className="text-sm font-semibold">Shop {active.label.toLowerCase()}</p>
+              <ul className="mt-4 space-y-2.5 text-[15px] text-fd-ink-2">
                 <li>
-                  <Link href={href.category(active.category)} className="didone text-4xl italic hover:text-signal">
-                    Shop all
+                  <Link href={href.category(active.category)} className="hover:text-fd-ink hover:underline">
+                    View all
                   </Link>
                 </li>
                 {active.subcategories.map((s) => (
                   <li key={s}>
-                    <Link href={href.subcategory(active.category, s)} className="didone text-4xl hover:text-signal">
-                      {s.toLowerCase()}
+                    <Link href={href.subcategory(active.category, s)} className="hover:text-fd-ink hover:underline">
+                      {s}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="tag text-fog">Labels in {active.label.toLowerCase()}</p>
-              <ul className="mt-5 grid grid-cols-2 gap-x-6 gap-y-2.5">
-                {active.brands.map((b) => (
+              <p className="text-sm font-semibold">Brands</p>
+              <ul className="mt-4 space-y-2.5 text-[15px] text-fd-ink-2">
+                {active.brands.slice(0, 9).map((b) => (
                   <li key={b.slug}>
-                    <Link href={href.brand(b.slug)} className="text-sm text-bone-2 underline-grow hover:text-bone">
+                    <Link href={href.brand(b.slug)} className="hover:text-fd-ink hover:underline">
                       {b.name}
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
-            {active.feature && (
-              <Link href={href.product(active.feature.slug)} className="group block">
-                <div className="aspect-[4/5] overflow-hidden bg-night-3">
-                  <ProductImage
-                    product={active.feature}
-                    sizes="20vw"
-                    className="transition-transform duration-700 ease-fold group-hover:scale-105"
-                  />
-                </div>
-                <p className="tag mt-3">{active.feature.brand}</p>
-                <p className="mt-1 text-sm text-bone-2">{active.feature.name}</p>
-              </Link>
-            )}
+            <div className="grid grid-cols-2 gap-5">
+              {active.features.map((p) => (
+                <Link key={p.id} href={href.product(p.slug)} className="group block">
+                  <div className="aspect-[4/5] overflow-hidden bg-fd-mist">
+                    <ProductImage product={p} sizes="20vw" className="transition-transform duration-700 ease-fd group-hover:scale-[1.03]" />
+                  </div>
+                  <p className="mt-2.5 text-sm font-semibold">{p.brand}</p>
+                  <p className="text-sm text-fd-ink-2">{p.name}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -198,133 +156,179 @@ export function Header({ groups }: { groups: MenuGroup[] }) {
   );
 }
 
-function DeptNavFromUrl({ pathname }: { pathname: string }) {
-  const params = useSearchParams();
-  return <DeptNav pathname={pathname} dept={pathname === "/fold/shop" ? params.get("dept") : null} />;
+function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="absolute right-0 top-0.5 grid min-w-[18px] place-items-center rounded-full bg-fd-ink px-1 text-[10px] font-semibold leading-[18px] text-white">
+      {children}
+    </span>
+  );
 }
 
-function DeptNav({ pathname, dept }: { pathname: string; dept: string | null }) {
+function NavLink({
+  href: to,
+  on,
+  onEnter,
+  className,
+  children,
+}: {
+  href: string;
+  on: boolean;
+  onEnter: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <nav className="hidden items-center gap-5 lg:flex" aria-label="Departments">
-      {(["women", "men"] as const).map((d) => (
+    <li className="flex">
+      <Link
+        href={to}
+        onMouseEnter={onEnter}
+        onFocus={onEnter}
+        className={cn(
+          "relative flex items-center px-3 text-[14px] font-medium transition-colors xl:px-4",
+          "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-current after:transition-transform after:duration-300 xl:after:inset-x-4",
+          on ? "after:scale-x-100" : "after:scale-x-0 hover:after:scale-x-100",
+          className,
+        )}
+      >
+        {children}
+      </Link>
+    </li>
+  );
+}
+
+function DeptTabsFromUrl({ pathname }: { pathname: string }) {
+  const params = useSearchParams();
+  return <DeptTabs pathname={pathname} dept={pathname === "/fold/shop" ? params.get("dept") : null} />;
+}
+
+// Own Suspense boundary: reading search params suspends, and the rest of the
+// header must hydrate together with the cart count.
+function DeptTabs({ pathname, dept }: { pathname: string; dept: string | null }) {
+  const tabs = [
+    { label: "Women", to: href.shop("women"), on: dept === "women" },
+    { label: "Men", to: href.shop("men"), on: dept === "men" },
+    { label: "Everything", to: href.shop(), on: pathname === "/fold/shop" && !dept },
+  ];
+  return (
+    <nav className="hidden items-center gap-6 lg:flex" aria-label="Departments">
+      {tabs.map((t) => (
         <Link
-          key={d}
-          href={href.shop(d)}
-          className={cn("tag underline-grow pb-0.5", dept === d ? "text-signal" : "text-bone")}
+          key={t.label}
+          href={t.to}
+          className={cn(
+            "border-b-2 py-1 text-[15px] font-medium transition-colors",
+            t.on ? "border-fd-ink" : "border-transparent text-fd-ink-2 hover:text-fd-ink",
+          )}
         >
-          {d}
+          {t.label}
         </Link>
       ))}
-      <Link
-        href={href.shop()}
-        className={cn("tag underline-grow pb-0.5", pathname === "/fold/shop" && !dept ? "text-signal" : "text-bone")}
-      >
-        Everything
-      </Link>
     </nav>
+  );
+}
+
+function SearchBox({ className, autoFocus, onDone }: { className?: string; autoFocus?: boolean; onDone?: () => void }) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [focused, setFocused] = useState(false);
+  const go = (query: string) => {
+    if (!query.trim()) return;
+    router.push(href.search(query.trim()));
+    setFocused(false);
+    onDone?.();
+  };
+  return (
+    <div className={cn("relative", className)}>
+      <form
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          go(q);
+        }}
+        className="flex h-11 items-center gap-2 rounded-full bg-fd-mist px-4 ring-fd-ink focus-within:bg-white focus-within:ring-1"
+      >
+        <Search className="size-[18px] shrink-0 text-fd-mute" strokeWidth={1.8} />
+        <input
+          autoFocus={autoFocus}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 150)}
+          placeholder="Search products and brands"
+          aria-label="Search"
+          className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-fd-mute"
+        />
+      </form>
+      {(focused || autoFocus) && !q && (
+        <div className="drop-in absolute inset-x-0 top-full z-10 mt-2 rounded-lg bg-white p-4 shadow-xl ring-1 ring-black/5">
+          <p className="text-xs font-medium text-fd-mute">Popular searches</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {popular.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => go(s)}
+                className="rounded-full border border-fd-line px-3 py-1.5 text-sm hover:border-fd-ink"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 function MobileMenu({ groups, onClose }: { groups: MenuGroup[]; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-      <button type="button" className="fade-in absolute inset-0 bg-black/60" onClick={onClose} aria-label="Close menu" />
-      <div className="drawer-left absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col overflow-y-auto bg-night-2 px-6 py-6">
-        <div className="flex items-center justify-between">
-          <FoldWordmark className="text-4xl" />
-          <button type="button" onClick={onClose} className="tag">
-            Close
+      <button type="button" className="fade-in absolute inset-0 bg-black/40" onClick={onClose} aria-label="Close menu" />
+      <div className="drawer-left absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col overflow-y-auto bg-white">
+        <div className="flex h-16 items-center justify-between border-b border-fd-line px-5">
+          <FoldWordmark className="text-2xl" />
+          <button type="button" onClick={onClose} className="-mr-2 p-2" aria-label="Close menu">
+            <X className="size-6" strokeWidth={1.6} />
           </button>
         </div>
-        <div className="mt-8 flex gap-5">
-          {(["women", "men"] as const).map((d) => (
-            <Link key={d} href={href.shop(d)} onClick={onClose} className="tag text-signal">
-              {d}
-            </Link>
-          ))}
-          <Link href={href.shop()} onClick={onClose} className="tag">
-            Everything
-          </Link>
+        <div className="grid grid-cols-3 border-b border-fd-line text-center text-[15px] font-medium">
+          <Link href={href.shop("women")} onClick={onClose} className="py-3.5">Women</Link>
+          <Link href={href.shop("men")} onClick={onClose} className="border-x border-fd-line py-3.5">Men</Link>
+          <Link href={href.shop()} onClick={onClose} className="py-3.5">Everything</Link>
         </div>
-        <ul className="mt-6 space-y-1">
+        <ul className="py-2 text-[17px]">
+          <li><Link href={href.newIn} onClick={onClose} className="block px-5 py-3">New in</Link></li>
           {groups.map((g) => (
             <li key={g.category}>
-              <Link href={href.category(g.category)} onClick={onClose} className="didone block py-1 text-[2.6rem]">
-                {g.label.toLowerCase()}
+              <Link href={href.category(g.category)} onClick={onClose} className="block px-5 py-3">
+                {g.label}
               </Link>
             </li>
           ))}
+          <li><Link href={href.brands} onClick={onClose} className="block px-5 py-3">Brands A–Z</Link></li>
+          <li><Link href={href.edits} onClick={onClose} className="block px-5 py-3">Shop by style</Link></li>
+          <li><Link href={href.sale} onClick={onClose} className="block px-5 py-3 text-fd-sale">Sale</Link></li>
         </ul>
-        <hr className="crease my-6" />
-        <Link href={href.brands} onClick={onClose} className="didone text-3xl italic">
-          labels a–z
-        </Link>
-        <Link href={href.edits} onClick={onClose} className="didone mt-2 text-3xl italic">
-          the edits
-        </Link>
       </div>
     </div>
   );
 }
 
 function SearchSheet({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
-  const [q, setQ] = useState("");
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  const go = (query: string) => {
-    if (!query.trim()) return;
-    router.push(href.search(query.trim()));
-    onClose();
-  };
-
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Search">
-      <button type="button" className="fade-in absolute inset-0 bg-black/70" onClick={onClose} aria-label="Close search" />
-      <div className="fade-in relative border-b border-seam bg-night-2 px-4 pb-10 pt-6 sm:px-8">
-        <div className="flex items-center justify-between">
-          <p className="tag text-fog">Search 24 labels</p>
-          <button type="button" onClick={onClose} className="tag">
-            Close
-          </button>
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            go(q);
-          }}
-          className="mt-6 flex items-end gap-4 border-b border-bone/30 pb-2 focus-within:border-signal"
-        >
-          <input
-            autoFocus
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="a linen shirt, a label, a mood…"
-            aria-label="Search"
-            className="didone min-w-0 flex-1 bg-transparent text-4xl italic outline-none placeholder:text-fog/60 sm:text-6xl"
-          />
-          <button type="submit" className="tag shrink-0 pb-2 text-signal">
-            Search →
-          </button>
-        </form>
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <span className="tag mr-2 text-fog">People search</span>
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => go(s)}
-              className="rounded-full border border-seam px-3.5 py-1.5 text-sm text-bone-2 transition-colors hover:border-bone hover:text-bone"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+    <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Search">
+      <button type="button" className="fade-in absolute inset-0 bg-black/40" onClick={onClose} aria-label="Close search" />
+      <div className="drop-in relative flex items-start gap-2 bg-white p-4">
+        <SearchBox autoFocus className="flex-1" onDone={onClose} />
+        <button type="button" onClick={onClose} className="h-11 px-2 text-[15px]">
+          Cancel
+        </button>
       </div>
     </div>
   );

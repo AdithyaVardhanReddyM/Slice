@@ -2,8 +2,7 @@ import type { Product } from "@slice/demo-catalogs";
 import { cn } from "cn";
 import { swatch } from "@/lib/swatches";
 
-// Product photo, or until photos are fetched, a swing-tag placeholder: the
-// brand in italic didone over a strip of the product's own colors.
+// Product photo, or a neutral placeholder in the product's own colours.
 export function ProductImage({
   product,
   className,
@@ -32,21 +31,15 @@ export function ProductImage({
       />
     );
   }
-
-  const colors = product.attributes.colors.slice(0, 4).map(swatch);
   return (
     <div
       role="img"
       aria-label={product.name}
-      className={cn("relative flex h-full w-full flex-col bg-night-3", className)}
+      className={cn("flex h-full w-full items-center justify-center bg-fd-mist", className)}
     >
-      <span className="tag absolute left-4 top-4 text-fog">{product.subcategory}</span>
-      <span className="didone m-auto px-6 text-center text-3xl italic text-bone/80">
-        {product.brand}
-      </span>
-      <span className="flex h-[22%]">
-        {colors.map((c, i) => (
-          <span key={i} className="flex-1" style={{ background: c }} />
+      <span className="flex gap-1.5">
+        {product.attributes.colors.slice(0, 3).map((c) => (
+          <span key={c} className="size-4 rounded-full ring-1 ring-black/10" style={{ background: swatch(c) }} />
         ))}
       </span>
     </div>

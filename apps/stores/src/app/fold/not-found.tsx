@@ -3,14 +3,18 @@ import { href } from "@/lib/fold";
 
 export default function NotFound() {
   return (
-    <main className="px-4 py-36 text-center sm:px-8">
-      <p className="tag text-fog">404</p>
-      <h1 className="didone mt-6 text-7xl sm:text-9xl">
-        not on <em>this rail.</em>
-      </h1>
-      <Link href={href.shop()} className="tag mt-10 inline-block rounded-full bg-bone px-6 py-3.5 text-night hover:bg-signal">
-        Shop everything
-      </Link>
+    <main className="fd-container py-32 text-center">
+      <p className="text-sm font-semibold text-fd-mute">404</p>
+      <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">We couldn&apos;t find that page</h1>
+      <p className="mt-2 text-[15px] text-fd-mute">It may have sold out or moved.</p>
+      <div className="mt-8 flex justify-center gap-3">
+        <Link href={href.home} className="rounded-full bg-fd-ink px-6 py-3 text-sm font-semibold text-white hover:bg-fd-forest">
+          Go to homepage
+        </Link>
+        <Link href={href.newIn} className="rounded-full border border-fd-ink px-6 py-3 text-sm font-semibold hover:bg-fd-ink hover:text-white">
+          Shop new in
+        </Link>
+      </div>
     </main>
   );
 }

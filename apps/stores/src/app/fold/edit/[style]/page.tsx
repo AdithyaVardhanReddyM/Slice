@@ -12,28 +12,27 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/fold/edit/[style]">) {
   const { style } = await params;
   const s = fold.store.styles.find((x) => x.id === style);
-  return { title: s ? `The ${s.label.toLowerCase()} edit` : "The edits" };
+  return { title: s ? `${s.label} style` : "Shop by style" };
 }
 
-export default async function EditPage({ params }: PageProps<"/fold/edit/[style]">) {
+export default async function StylePage({ params }: PageProps<"/fold/edit/[style]">) {
   const { style } = await params;
-  const index = fold.store.styles.findIndex((x) => x.id === style);
-  if (index < 0) notFound();
-  const s = fold.store.styles[index];
+  const s = fold.store.styles.find((x) => x.id === style);
+  if (!s) notFound();
   const products = fold.withStyle(s.id);
   const categories = fold.store.nav.map((g) => g.category).filter((c) => products.some((p) => p.category === c));
 
   return (
     <>
-      <nav className="overflow-x-auto border-b border-seam" aria-label="Edits">
-        <ol className="flex w-max gap-1 px-4 py-3 sm:px-8">
+      <nav className="border-b border-fd-line" aria-label="Styles">
+        <ol className="fd-container no-scrollbar flex gap-6 overflow-x-auto">
           {fold.store.styles.map((x) => (
-            <li key={x.id}>
+            <li key={x.id} className="shrink-0">
               <Link
                 href={href.edit(x.id)}
                 className={cn(
-                  "block whitespace-nowrap rounded-full px-4 py-1.5 text-sm transition-colors",
-                  x.id === s.id ? "bg-signal text-night" : "text-bone-2 hover:text-bone",
+                  "block border-b-2 py-3.5 text-sm font-medium transition-colors",
+                  x.id === s.id ? "border-fd-ink" : "border-transparent text-fd-mute hover:text-fd-ink",
                 )}
               >
                 {x.label}
@@ -46,11 +45,11 @@ export default async function EditPage({ params }: PageProps<"/fold/edit/[style]
         <ProductGrid
           products={products}
           store={fold.store}
+          crumbs={[{ label: "Home", href: href.home }, { label: "Shop by style", href: href.edits }, { label: s.label }]}
+          title={s.label}
+          description={s.description}
           subcategories={categories}
           pillField="category"
-          kicker={`Edit ${String(index + 1).padStart(2, "0")} of ${fold.store.styles.length}`}
-          title={<em>{s.label.toLowerCase()}</em>}
-          description={s.description}
           facets={["brand", "color", "price"]}
         />
       </Suspense>

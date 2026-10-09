@@ -1,60 +1,51 @@
 import Link from "next/link";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { fold, href } from "@/lib/fold";
 import { ProductImage } from "@/components/fold/product-image";
 
-export const metadata = { title: "The edits" };
+export const metadata = { title: "Shop by style" };
 
-// Index of the ten style edits: each a numbered row with a fan of three pieces.
-export default function EditsPage() {
+export default function StylesPage() {
+  const used = new Set<string>();
   return (
-    <main className="px-4 sm:px-8">
-      <header className="pb-14 pt-14 lg:pt-20">
-        <p className="tag text-fog">Ten ways to dress</p>
-        <h1 className="didone fold-rise mt-4 text-[17vw] leading-[0.86] sm:text-8xl lg:text-[8.5rem]">
-          the <em>edits</em>
-        </h1>
+    <main className="fd-container pt-6">
+      <nav className="flex items-center gap-1 text-sm text-fd-mute" aria-label="Breadcrumb">
+        <Link href={href.home} className="hover:text-fd-ink hover:underline">Home</Link>
+        <ChevronRight className="size-3.5" />
+        <span className="text-fd-ink">Shop by style</span>
+      </nav>
+      <header className="mt-6 max-w-3xl">
+        <h1 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px]">Shop by style</h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-fd-ink-2">
+          Ten ways to dress, each with pieces from across our brands, from tops to shoes to the bag you carry.
+        </p>
       </header>
-      <ol>
-        {fold.store.styles.map((s, i) => {
+      <ul className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+        {fold.store.styles.map((s) => {
           const items = fold.withStyle(s.id);
-          const fan = items.filter((p) => p.images.length).slice(0, 3);
+          const photos = items.filter((p) => p.images.length && !used.has(p.id)).slice(0, 3);
+          photos.forEach((p) => used.add(p.id));
           const brands = new Set(items.map((p) => p.brand)).size;
           return (
-            <li key={s.id} className="border-t border-seam last:border-b">
-              <Link
-                href={href.edit(s.id)}
-                className="group grid items-center gap-6 py-8 md:grid-cols-[4rem_1fr_16rem] lg:grid-cols-[5rem_1fr_22rem]"
-              >
-                <span className="tag text-fog">{String(i + 1).padStart(2, "0")}</span>
-                <div>
-                  <h2 className="didone text-5xl transition-colors group-hover:italic group-hover:text-signal sm:text-7xl">
-                    {s.label.toLowerCase()}
-                  </h2>
-                  <p className="mt-3 max-w-lg text-sm leading-relaxed text-bone-2">{s.description}</p>
-                  <p className="tag mt-4 text-fog">
-                    {items.length} pieces · {brands} labels
-                  </p>
-                </div>
-                <div className="relative hidden h-44 md:block">
-                  {fan.map((p, j) => (
-                    <div
-                      key={p.id}
-                      className="absolute top-0 h-44 w-32 overflow-hidden bg-night-3 shadow-xl shadow-black/50 transition-transform duration-700 ease-fold"
-                      style={{
-                        left: `${j * 28}%`,
-                        transform: `rotate(${(j - 1) * 5}deg)`,
-                        zIndex: 3 - Math.abs(j - 1),
-                      }}
-                    >
-                      <ProductImage product={p} sizes="128px" />
+            <li key={s.id}>
+              <Link href={href.edit(s.id)} className="group block">
+                <div className="grid aspect-[4/3] grid-cols-[2fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-md">
+                  {photos.map((p, i) => (
+                    <div key={p.id} className={i === 0 ? "row-span-2 overflow-hidden bg-fd-mist" : "overflow-hidden bg-fd-mist"}>
+                      <ProductImage product={p} sizes="(min-width: 1024px) 22vw, 50vw" className="transition-transform duration-700 ease-fd group-hover:scale-[1.04]" />
                     </div>
                   ))}
                 </div>
+                <h2 className="mt-4 text-xl font-semibold group-hover:underline">{s.label}</h2>
+                <p className="mt-1 text-[15px] leading-relaxed text-fd-ink-2">{s.description}</p>
+                <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold">
+                  {items.length} pieces from {brands} brands <ArrowRight className="size-4" />
+                </p>
               </Link>
             </li>
           );
         })}
-      </ol>
+      </ul>
     </main>
   );
 }

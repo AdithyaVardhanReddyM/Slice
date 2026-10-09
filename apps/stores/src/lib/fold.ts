@@ -23,6 +23,9 @@ export const href = {
   product: (slug: string) => `/fold/p/${slug}`,
   edit: (style: string) => `/fold/edit/${style}`,
   edits: "/fold/edit",
+  newIn: "/fold/new",
+  sale: "/fold/sale",
+  saved: "/fold/saved",
   brand: (slug: string) => `/fold/brand/${slug}`,
   brandOf: (name: string) =>
     `/fold/brand/${fold.store.brands?.find((b) => b.name === name)?.slug ?? slugify(name)}`,
