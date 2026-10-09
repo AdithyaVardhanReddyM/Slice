@@ -147,6 +147,9 @@ importers:
 
   packages/backend:
     dependencies:
+      '@slice/qloo':
+        specifier: workspace:*
+        version: link:../qloo
       convex:
         specifier: ^1.46.0
         version: 1.46.0(@clerk/react@6.17.7(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)

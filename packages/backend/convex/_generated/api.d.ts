@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as http from "../http.js";
+import type * as qloo from "../qloo.js";
+import type * as qlooWarmList from "../qlooWarmList.js";
 import type * as users from "../users.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  http: typeof http;
+  qloo: typeof qloo;
+  qlooWarmList: typeof qlooWarmList;
   users: typeof users;
 }>;
 

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p convex"
   },
   "dependencies": {
+    "@slice/qloo": "workspace:*",
     "convex": "^1.46.0"
   },
   "devDependencies": {

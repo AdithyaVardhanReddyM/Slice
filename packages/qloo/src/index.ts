@@ -22,6 +22,20 @@ export class QlooError extends Error {
 }
 
 /**
+ * Params as a query string with keys sorted, so the same request always
+ * encodes the same way. The Convex cache uses this as part of its key.
+ */
+export function encodeQlooParams(params: QlooParams = {}): string {
+  const search = new URLSearchParams();
+  for (const key of Object.keys(params).sort()) {
+    const value = params[key];
+    if (value === undefined) continue;
+    search.set(key, Array.isArray(value) ? value.join(",") : String(value));
+  }
+  return search.toString();
+}
+
+/**
  * Minimal transport for the Qloo API. Endpoint helpers (search, insights,
  * tags, compare, trending) get built on top of `get` as features need them.
  *
@@ -38,13 +52,7 @@ export function createQlooClient({
     params: QlooParams = {},
   ): Promise<T> {
     const url = new URL(path, baseUrl);
-    for (const [key, value] of Object.entries(params)) {
-      if (value === undefined) continue;
-      url.searchParams.set(
-        key,
-        Array.isArray(value) ? value.join(",") : String(value),
-      );
-    }
+    url.search = encodeQlooParams(params);
 
     const res = await fetchImpl(url, {
       headers: { "X-Api-Key": apiKey, Accept: "application/json" },
