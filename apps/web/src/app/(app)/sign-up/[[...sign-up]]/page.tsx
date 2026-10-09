@@ -1,13 +1,23 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { SignUp } from "@clerk/nextjs";
+import {
+  AuthShell,
+  clerkAppearance,
+} from "@/components/console/auth/auth-shell";
+
+export const metadata: Metadata = { title: "Create account" };
 
 export default function SignUpPage() {
   return (
-    <main className="flex flex-1 items-center justify-center p-6">
+    <AuthShell>
       {/* SignUp reads the URL at request time, so it streams in after the static shell. */}
       <Suspense>
-        <SignUp />
+        <SignUp
+          appearance={clerkAppearance}
+          fallbackRedirectUrl="/dashboard/new"
+        />
       </Suspense>
-    </main>
+    </AuthShell>
   );
 }

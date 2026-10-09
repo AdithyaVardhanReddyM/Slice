@@ -1,30 +1,40 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
-import { ConvexAuthStatus } from "@/components/convex-auth-status";
+import { Suspense } from "react";
+import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/console/primitives";
+import { StandaloneShell } from "@/components/console/widgets/shell";
+import { WidgetCard } from "@/components/console/widgets/widget-card";
+import { WidgetsView } from "@/components/console/widgets/widgets-view";
+import { buttonVariants } from "@/components/ui/button";
+import { widgets } from "@/lib/mock/widgets";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Widgets" };
 
-// Protected by src/proxy.ts. Concierge setup, catalog and insights land here.
-export default function DashboardPage() {
+export default function WidgetsPage() {
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b px-6 py-3">
-        <Link href="/">
-          <Image
-            src="/brand/slice_logo_blktext.svg"
-            alt="Slice"
-            width={96}
-            height={23}
-          />
-        </Link>
-        <UserButton />
-      </header>
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
-        <p>Dashboard coming soon.</p>
-        <ConvexAuthStatus />
-      </main>
-    </div>
+    <StandaloneShell>
+      <div className="mx-auto w-full max-w-6xl px-6 py-8">
+        <Suspense>
+          <WidgetsView hasWidgets={widgets.length > 0}>
+            <PageHeader
+              title="Widgets"
+              description="Each widget is one storefront, with its own catalog, taste questions and install key."
+              actions={
+                <Link href="/dashboard/new" className={buttonVariants()}>
+                  <Plus />
+                  New widget
+                </Link>
+              }
+            />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {widgets.map((w) => (
+                <WidgetCard key={w.id} widget={w} />
+              ))}
+            </div>
+          </WidgetsView>
+        </Suspense>
+      </div>
+    </StandaloneShell>
   );
 }
