@@ -1,0 +1,1530 @@
+[
+  {
+    "id": "mw-bed-01",
+    "slug": "harbor-linen-duvet-set",
+    "name": "Harbor Linen Duvet Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 198,
+    "description": "A duvet cover and two shams in 100% European flax linen, stonewashed so it arrives soft and gets softer with every wash. The weave is loose enough to breathe through warm nights and the natural slubs catch light the way a breezy, sun-filled room does. It drapes in a relaxed rumple that never needs ironing and suits anyone who wants their bed to look lived-in and calm.",
+    "details": [
+      "100% European flax linen, 165 gsm, OEKO-TEX certified",
+      "Set includes duvet cover and two pillow shams (one for Twin)",
+      "Queen duvet cover: 90\" x 92\"; King: 106\" x 92\"",
+      "Hidden button closure, interior corner ties",
+      "Machine wash cold, tumble dry low; expect light wrinkling",
+      "Woven and sewn in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "white",
+        "cool"
+      ],
+      "colors": [
+        "white",
+        "sea salt",
+        "fog blue"
+      ],
+      "useCase": [
+        "hot sleepers",
+        "low-iron bedding",
+        "summer"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "breathable",
+      "stonewashed",
+      "oeko-tex",
+      "relaxed"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-01-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -40
+      },
+      {
+        "id": "mw-bed-01-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -20
+      },
+      {
+        "id": "mw-bed-01-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-01-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "white linen duvet cover bed",
+    "images": [
+      "/marlow/mw-bed-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 612,
+    "bestseller": true
+  },
+  {
+    "id": "mw-bed-02",
+    "slug": "fjell-percale-sheet-set",
+    "name": "Fjell Percale Sheet Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 129,
+    "description": "A crisp 270-thread-count percale woven from long-staple cotton, finished with a clean 1-inch hem and nothing else. It sleeps cool and matte, with the fresh, hotel-sheet snap you get when you shake it out. In white, pale grey and a quiet mist green, it is the sort of bedding that disappears into a pale, uncluttered room.",
+    "details": [
+      "100% long-staple cotton percale, 270 thread count",
+      "Set includes fitted sheet, flat sheet and two pillowcases (one for Twin)",
+      "Fitted sheet pocket depth 16\" with full elastic",
+      "Queen fitted: 60\" x 80\"; Queen flat: 92\" x 102\"",
+      "Machine wash warm, tumble dry low; softens with washing",
+      "Woven in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "white",
+        "stone grey",
+        "mist"
+      ],
+      "useCase": [
+        "hot sleepers",
+        "everyday",
+        "guest room"
+      ],
+      "room": [
+        "bedroom",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "percale",
+      "crisp",
+      "cooling",
+      "long-staple",
+      "essentials"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-02-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -30
+      },
+      {
+        "id": "mw-bed-02-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -10
+      },
+      {
+        "id": "mw-bed-02-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-02-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "white percale cotton sheets bed",
+    "images": [
+      "/marlow/mw-bed-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 438
+  },
+  {
+    "id": "mw-bed-03",
+    "slug": "sato-washed-cotton-sheet-set",
+    "name": "Sato Washed Cotton Sheet Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 118,
+    "description": "A garment-washed cotton with a soft, slightly crinkled hand and a low, matte finish that reads calm rather than crisp. We dye it in muted stoneware tones, charcoal, clay and an undyed natural, so the bed sits quietly under whatever you layer on top. It feels like a favorite worn-in shirt and suits a spare, low-slung room where texture does the talking.",
+    "details": [
+      "100% cotton, garment washed, 200 thread count",
+      "Set includes fitted sheet, flat sheet and two pillowcases (one for Twin)",
+      "Fitted sheet pocket depth 15\"",
+      "Queen fitted: 60\" x 80\"; Queen flat: 90\" x 100\"",
+      "Machine wash cold, line dry or tumble low; no ironing needed",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "natural",
+        "clay",
+        "charcoal"
+      ],
+      "useCase": [
+        "everyday",
+        "low-iron bedding",
+        "year-round"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "washed cotton",
+      "wabi-sabi",
+      "matte",
+      "soft",
+      "low-maintenance"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-03-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -28
+      },
+      {
+        "id": "mw-bed-03-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -10
+      },
+      {
+        "id": "mw-bed-03-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-03-king",
+        "label": "King",
+        "inStock": false,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "washed cotton sheets neutral bedroom",
+    "images": [
+      "/marlow/mw-bed-03.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 221
+  },
+  {
+    "id": "mw-bed-04",
+    "slug": "oriel-velvet-quilt",
+    "name": "Oriel Velvet Quilt",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 238,
+    "description": "A cotton velvet quilt stitched in a fluted channel pattern that catches lamplight in long, polished lines. The face is a dense, short-pile velvet in emerald, sapphire and a deep gold, backed with cotton sateen and filled with a light cotton batting so it layers over a duvet without weight. It brings a glossy, jewel-box richness to a bed and looks best with brass and dark wood nearby.",
+    "details": [
+      "Face: 100% cotton velvet; back: cotton sateen; fill: 100% cotton batting",
+      "Channel quilting on 2\" repeat",
+      "Queen: 92\" x 96\"; King: 108\" x 96\"",
+      "Spot clean or dry clean recommended",
+      "Shams sold separately",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "cotton velvet",
+        "cotton"
+      ],
+      "colorFamily": [
+        "bold",
+        "warm"
+      ],
+      "colors": [
+        "emerald",
+        "sapphire",
+        "antique gold"
+      ],
+      "useCase": [
+        "layering",
+        "statement bed",
+        "gift"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "velvet",
+      "fluted",
+      "jewel tone",
+      "statement",
+      "layering"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-04-full-queen",
+        "label": "Full/Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-04-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "emerald velvet quilt bed",
+    "images": [
+      "/marlow/mw-bed-04.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 87,
+    "new": true
+  },
+  {
+    "id": "mw-bed-05",
+    "slug": "meadowbrook-gingham-quilt-set",
+    "name": "Meadowbrook Gingham Quilt Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 168,
+    "compareAtPrice": 215,
+    "description": "A yarn-dyed cotton gingham quilt in a small 1/4-inch check, hand-guided quilted in a simple diamond and bound in cream. It is lightweight enough for summer on its own and cozy folded at the foot of a wool-blanketed bed in winter. The checks come in a faded red, a soft sage and a sun-worn blue, and the whole set feels like a farmhouse guest room done right.",
+    "details": [
+      "100% cotton yarn-dyed gingham face and back; cotton batting fill",
+      "Set includes quilt and two matching shams (one for Twin)",
+      "Twin: 68\" x 88\"; Full/Queen: 90\" x 92\"; King: 108\" x 92\"",
+      "Pre-washed for a lived-in, puckered texture",
+      "Machine wash cold, tumble dry low",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "pastel"
+      ],
+      "colors": [
+        "barn red",
+        "sage",
+        "chambray blue"
+      ],
+      "useCase": [
+        "guest room",
+        "summer",
+        "layering",
+        "kids room"
+      ],
+      "room": [
+        "bedroom",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gingham",
+      "farmhouse",
+      "quilt",
+      "cozy",
+      "yarn-dyed"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-05-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -38
+      },
+      {
+        "id": "mw-bed-05-full-queen",
+        "label": "Full/Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-05-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "gingham bedding",
+    "images": [
+      "/marlow/mw-bed-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 304
+  },
+  {
+    "id": "mw-bed-06",
+    "slug": "casbah-block-print-duvet-set",
+    "name": "Casbah Block-Print Duvet Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 178,
+    "description": "A hand block-printed cotton duvet set made in Jaipur, where carved teak blocks are pressed one at a time so no two covers are quite the same. The pattern is a loose, repeating medallion in terracotta or indigo over a natural ground, and the cotton is a soft 200-thread-count voile that breathes. It layers happily with jute, rattan and a stack of mismatched cushions, and it only gets better as it fades.",
+    "details": [
+      "100% cotton, 200 thread count, hand block-printed with azo-free dyes",
+      "Set includes duvet cover and two pillow shams (one for Twin)",
+      "Queen duvet cover: 90\" x 92\"; King: 106\" x 92\"",
+      "Button closure, interior corner ties",
+      "Machine wash cold separately for first two washes; tumble low",
+      "Printed and sewn in Jaipur, India"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "earth",
+        "bold"
+      ],
+      "colors": [
+        "terracotta",
+        "indigo",
+        "natural"
+      ],
+      "useCase": [
+        "layering",
+        "collected look",
+        "year-round"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "block print",
+      "handmade",
+      "pattern",
+      "artisan",
+      "layered"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-06-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -40
+      },
+      {
+        "id": "mw-bed-06-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -20
+      },
+      {
+        "id": "mw-bed-06-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-06-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "block print duvet cover boho bedroom",
+    "images": [
+      "/marlow/mw-bed-06.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 193
+  },
+  {
+    "id": "mw-bed-07",
+    "slug": "tangier-sateen-sheet-set",
+    "name": "Tangier Sateen Sheet Set",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 158,
+    "description": "A 400-thread-count cotton sateen with a silky, lustrous face, dyed in colors most sheet brands are too timid to try: a saturated magenta, a mossy chartreuse and a deep peacock. The weave has a cool, slippery drape and takes dye richly, so the bed becomes the loudest and most pleasurable thing in the room. Clash it with a patterned quilt and a lacquered nightstand and let it be a bit much.",
+    "details": [
+      "100% long-staple cotton sateen, 400 thread count",
+      "Set includes fitted sheet, flat sheet and two pillowcases (one for Twin)",
+      "Fitted sheet pocket depth 17\", all-around elastic",
+      "Queen fitted: 60\" x 80\"; Queen flat: 94\" x 104\"",
+      "Machine wash cold with like colors, tumble dry low",
+      "Woven in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "cotton sateen"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "magenta",
+        "chartreuse",
+        "peacock"
+      ],
+      "useCase": [
+        "statement bed",
+        "color lovers",
+        "year-round"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "sateen",
+      "saturated color",
+      "silky",
+      "bold",
+      "clashing"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-07-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -35
+      },
+      {
+        "id": "mw-bed-07-full",
+        "label": "Full",
+        "inStock": false,
+        "priceDelta": -15
+      },
+      {
+        "id": "mw-bed-07-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-07-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 35
+      }
+    ],
+    "imageQuery": "magenta sateen sheets colorful bedroom",
+    "images": [
+      "/marlow/mw-bed-07.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 76
+  },
+  {
+    "id": "mw-bed-08",
+    "slug": "lull-down-alternative-pillow",
+    "name": "Lull Down Alternative Pillow",
+    "category": "Bedroom",
+    "subcategory": "Bedding",
+    "price": 65,
+    "description": "A plump, hypoallergenic pillow filled with fine-denier recycled polyester clusters that mimic the loft and give of down without the feathers. The shell is a smooth 300-thread-count cotton with a quiet piped edge, and it comes in three fills so side, back and stomach sleepers each get the right height. It is the unfussy, clean-lined pillow we put in every bed photo, and most people buy two.",
+    "details": [
+      "Fill: recycled polyester microfiber clusters (GRS certified); shell: 100% cotton, 300 thread count",
+      "Standard: 20\" x 26\"; King: 20\" x 36\"",
+      "Soft (approx. 22 oz), Medium (approx. 28 oz) and Firm (approx. 34 oz) fills in Standard",
+      "Machine washable, tumble dry low with dryer balls",
+      "Hypoallergenic; no feathers, no quills",
+      "Made in the USA"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "japandi"
+      ],
+      "material": [
+        "cotton",
+        "recycled polyester"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white"
+      ],
+      "useCase": [
+        "allergy-friendly",
+        "side sleepers",
+        "guest room",
+        "everyday"
+      ],
+      "room": [
+        "bedroom",
+        "kids room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "pillow",
+      "hypoallergenic",
+      "machine washable",
+      "essentials",
+      "recycled fill"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-08-standard-soft",
+        "label": "Standard / Soft",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-08-standard-medium",
+        "label": "Standard / Medium",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-08-standard-firm",
+        "label": "Standard / Firm",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-08-king-medium",
+        "label": "King / Medium",
+        "inStock": true,
+        "priceDelta": 20
+      }
+    ],
+    "imageQuery": "pillows on bed white",
+    "images": [
+      "/marlow/mw-bed-08.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 729,
+    "bestseller": true
+  },
+  {
+    "id": "mw-bed-09",
+    "slug": "lowell-walnut-platform-bed",
+    "name": "Lowell Walnut Platform Bed",
+    "category": "Bedroom",
+    "subcategory": "Bed frames",
+    "price": 1295,
+    "description": "A low, solid American black walnut platform bed with a gently curved headboard and slim tapered legs that lift the whole frame off the floor. The grain runs continuously across the headboard panels, finished with a hand-rubbed oil that deepens the chocolate tones over time. It has the quiet, organic confidence of a 1960s studio piece and pairs naturally with brass lamps and olive or mustard textiles.",
+    "details": [
+      "Solid American black walnut with walnut veneer headboard panels",
+      "Queen: 64\" W x 86\" L x 36\" H; platform height 12\"; headboard 36\"",
+      "No box spring needed; solid poplar slats spaced 2.5\" apart with center support leg",
+      "Weight capacity 800 lb",
+      "Hand-rubbed natural oil finish; wipe with a damp cloth, re-oil yearly",
+      "Assembles in about 45 minutes with included tools; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "poplar"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "walnut"
+      ],
+      "useCase": [
+        "small bedroom",
+        "no box spring",
+        "long-term investment"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "walnut",
+      "platform bed",
+      "solid wood",
+      "tapered legs",
+      "low profile"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-09-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -400
+      },
+      {
+        "id": "mw-bed-09-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -200
+      },
+      {
+        "id": "mw-bed-09-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-09-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 300
+      }
+    ],
+    "imageQuery": "wooden platform bed",
+    "images": [
+      "/marlow/mw-bed-09.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 266,
+    "bestseller": true
+  },
+  {
+    "id": "mw-bed-10",
+    "slug": "foundry-steel-bed-frame",
+    "name": "Foundry Steel Bed Frame",
+    "category": "Bedroom",
+    "subcategory": "Bed frames",
+    "price": 795,
+    "description": "A welded square-tube steel frame in a matte blackened finish, with a headboard of reclaimed Douglas fir planks still showing old saw marks and nail holes. The hardware is left exposed on purpose, a row of hex bolts along each rail, and the whole thing feels like it was built for a converted loft. It is heavier than it looks, dead silent under movement, and suits a room with concrete, brick or a lot of windows.",
+    "details": [
+      "Frame: 1.5\" square-tube steel, powder-coated matte black; headboard: reclaimed Douglas fir, clear matte sealant",
+      "Queen: 63\" W x 84\" L x 44\" H; rail height 14\"",
+      "Steel slat system included, no box spring needed",
+      "Weight capacity 1,000 lb",
+      "Exposed stainless hex-bolt hardware; adjustable leveling feet",
+      "Assembles in about 40 minutes; made in Mexico"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "steel",
+        "reclaimed wood"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "matte black",
+        "reclaimed fir"
+      ],
+      "useCase": [
+        "loft",
+        "heavy-duty",
+        "no box spring"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "steel",
+      "reclaimed wood",
+      "loft",
+      "exposed hardware",
+      "heavy-duty"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-10-twin",
+        "label": "Twin",
+        "inStock": true,
+        "priceDelta": -250
+      },
+      {
+        "id": "mw-bed-10-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -120
+      },
+      {
+        "id": "mw-bed-10-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-10-king",
+        "label": "King",
+        "inStock": false,
+        "priceDelta": 200
+      }
+    ],
+    "imageQuery": "black steel bed frame reclaimed wood headboard",
+    "images": [
+      "/marlow/mw-bed-10.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 142
+  },
+  {
+    "id": "mw-bed-11",
+    "slug": "kumo-low-platform-bed",
+    "name": "Kumo Low Platform Bed",
+    "category": "Bedroom",
+    "subcategory": "Bed frames",
+    "price": 1095,
+    "description": "A floor-hugging platform bed in solid white oak with a wide, flat surround that extends 8 inches past the mattress on each side, where a cup of tea or a stack of books can sit. The headboard is a single plain slab, no carving, no upholstery, finished in a matte water-based lacquer in natural oak or a smoky black stain that shows the grain. It makes a room feel lower, calmer and more deliberate.",
+    "details": [
+      "Solid white oak frame and headboard; oak-veneered engineered side ledges",
+      "Queen: 80\" W x 92\" L x 28\" H; platform height 9\"; ledge width 8\" each side",
+      "Solid oak slats spaced 2\" apart, no box spring needed",
+      "Weight capacity 750 lb",
+      "Matte water-based lacquer finish, low VOC",
+      "Assembles in about 60 minutes; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "white oak"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "natural oak",
+        "black oak"
+      ],
+      "useCase": [
+        "low profile",
+        "minimalist bedroom",
+        "no nightstands"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "oak",
+      "low platform",
+      "ledge",
+      "minimal",
+      "solid wood"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-11-full-natural-oak",
+        "label": "Full / Natural oak",
+        "inStock": true,
+        "priceDelta": -150
+      },
+      {
+        "id": "mw-bed-11-queen-natural-oak",
+        "label": "Queen / Natural oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-11-queen-black-oak",
+        "label": "Queen / Black oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-11-king-natural-oak",
+        "label": "King / Natural oak",
+        "inStock": true,
+        "priceDelta": 250
+      },
+      {
+        "id": "mw-bed-11-king-black-oak",
+        "label": "King / Black oak",
+        "inStock": true,
+        "priceDelta": 250
+      }
+    ],
+    "imageQuery": "low oak platform bed japandi bedroom",
+    "images": [
+      "/marlow/mw-bed-11.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 118,
+    "new": true
+  },
+  {
+    "id": "mw-bed-12",
+    "slug": "belair-boucle-bed",
+    "name": "Belair Bouclé Bed",
+    "category": "Bedroom",
+    "subcategory": "Bed frames",
+    "price": 1150,
+    "compareAtPrice": 1395,
+    "description": "A fully upholstered bed with a tall, pillowy curved headboard and rounded rails, wrapped in a chunky looped bouclé that begs to be leaned against. The cream and oatmeal fabrics read soft and warm; the burnt orange is a full commitment to a 1970s mood. Low chrome-capped feet peek out from under the skirtless base, and the whole shape is groovy without being a costume.",
+    "details": [
+      "Kiln-dried hardwood frame; high-resilience foam and polyester fiber padding",
+      "Upholstery: 65% polyester / 35% acrylic bouclé, 55,000 double rubs",
+      "Queen: 68\" W x 88\" L x 48\" H; headboard thickness 7\"",
+      "Metal slat system with center support, no box spring needed; weight capacity 700 lb",
+      "Spot clean with mild soap; vacuum with brush attachment",
+      "Assembles in about 30 minutes; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "bouclé",
+        "hardwood",
+        "chrome"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "oatmeal",
+        "burnt orange"
+      ],
+      "useCase": [
+        "reading in bed",
+        "soft headboard",
+        "statement bed"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "bouclé",
+      "upholstered",
+      "curved",
+      "chunky",
+      "70s"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-12-full",
+        "label": "Full",
+        "inStock": true,
+        "priceDelta": -150
+      },
+      {
+        "id": "mw-bed-12-queen",
+        "label": "Queen",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-12-king",
+        "label": "King",
+        "inStock": true,
+        "priceDelta": 250
+      }
+    ],
+    "imageQuery": "boucle upholstered bed curved headboard",
+    "images": [
+      "/marlow/mw-bed-12.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 94
+  },
+  {
+    "id": "mw-bed-13",
+    "slug": "ashby-oak-nightstand",
+    "name": "Ashby Oak Nightstand",
+    "category": "Bedroom",
+    "subcategory": "Nightstands",
+    "price": 295,
+    "description": "A pale, pared-back nightstand in solid white oak with a single soft-close drawer and an open shelf below, sized so a lamp, a glass of water and a book fit without crowding. The drawer front is a flush panel with a routed finger pull, so there is no hardware to catch the eye. It is light on its feet, easy to live with and quietly tidy.",
+    "details": [
+      "Solid white oak with oak-veneered drawer bottom; matte lacquer finish",
+      "20\" W x 16\" D x 24\" H; drawer interior 16\" x 12\" x 4\"",
+      "Soft-close undermount drawer slide",
+      "Open lower shelf, 7\" clearance",
+      "Wipe with a damp cloth",
+      "Arrives fully assembled; made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "white oak"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "natural oak",
+        "white oak"
+      ],
+      "useCase": [
+        "small bedroom",
+        "bedside storage",
+        "pairs"
+      ],
+      "room": [
+        "bedroom",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "oak",
+      "soft-close",
+      "pale wood",
+      "minimal",
+      "fully assembled"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-13-natural-oak",
+        "label": "Natural oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-13-white-oak",
+        "label": "White-oiled oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white oak nightstand scandinavian bedroom",
+    "images": [
+      "/marlow/mw-bed-13.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 356
+  },
+  {
+    "id": "mw-bed-14",
+    "slug": "rook-rattan-nightstand",
+    "name": "Rook Rattan Nightstand",
+    "category": "Bedroom",
+    "subcategory": "Nightstands",
+    "price": 225,
+    "description": "A mango wood nightstand with a hand-woven natural rattan cane drawer front and open cane side panels that let light and air through. The honey-toned wood is finished with a soft matte wax, and the woven texture keeps it from feeling heavy next to a bed layered with block prints and jute. It looks collected rather than bought, and it ages gracefully in a sunny room.",
+    "details": [
+      "Solid mango wood frame; natural rattan cane webbing on drawer front and sides",
+      "19\" W x 15\" D x 23\" H; one drawer, one open shelf",
+      "Matte wax finish; wood tone varies piece to piece",
+      "Keep away from direct heat; dust cane with a soft brush",
+      "Arrives fully assembled",
+      "Handmade in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "mango wood",
+        "rattan"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "honey",
+        "natural rattan"
+      ],
+      "useCase": [
+        "bedside storage",
+        "light and airy",
+        "collected look"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "rattan",
+      "cane",
+      "mango wood",
+      "handwoven",
+      "textured"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-14-honey",
+        "label": "Honey",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-14-dark-walnut-stain",
+        "label": "Dark walnut stain",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "rattan cane nightstand boho bedroom",
+    "images": [
+      "/marlow/mw-bed-14.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 201
+  },
+  {
+    "id": "mw-bed-15",
+    "slug": "monarch-fluted-nightstand",
+    "name": "Monarch Fluted Nightstand",
+    "category": "Bedroom",
+    "subcategory": "Nightstands",
+    "price": 395,
+    "description": "A two-drawer nightstand with vertically fluted drawer fronts, a polished Carrara marble top and slim brushed-brass legs. The body comes in a deep forest green or a near-black lacquer, and the fluting throws fine shadows that shift through the day. It is polished, a little theatrical, and the right bedside for a velvet quilt and a brass lamp.",
+    "details": [
+      "Engineered wood body with fluted solid-ash drawer fronts; lacquer finish",
+      "Top: 20 mm honed Carrara marble, sealed",
+      "22\" W x 16\" D x 25\" H; two soft-close drawers",
+      "Brushed brass-plated steel legs and drawer pulls",
+      "Wipe marble with a damp cloth; avoid acidic cleaners",
+      "Legs attach in 10 minutes; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "marble",
+        "brass",
+        "ash"
+      ],
+      "colorFamily": [
+        "bold",
+        "black"
+      ],
+      "colors": [
+        "forest green",
+        "ink black",
+        "brass"
+      ],
+      "useCase": [
+        "bedside storage",
+        "statement piece",
+        "hosting"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "fluted",
+      "marble",
+      "brass",
+      "lacquer",
+      "glam"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-15-forest-green",
+        "label": "Forest green",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-15-ink-black",
+        "label": "Ink black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "fluted green nightstand marble top brass",
+    "images": [
+      "/marlow/mw-bed-15.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 63
+  },
+  {
+    "id": "mw-bed-16",
+    "slug": "dalton-walnut-nightstand",
+    "name": "Dalton Walnut Nightstand",
+    "category": "Bedroom",
+    "subcategory": "Nightstands",
+    "price": 329,
+    "compareAtPrice": 389,
+    "description": "A compact walnut nightstand with a gently bowed drawer front, a slim brass lip pull and tapered legs splayed just enough to look like it is about to take a step. The top has a raised lip around the back edge so pens and phones stay put. It is a warm, low-slung companion to a platform bed and reads as period-correct without being a reproduction.",
+    "details": [
+      "Solid walnut legs and frame; walnut veneer over engineered wood case",
+      "18\" W x 15\" D x 22\" H; one drawer with brass pull",
+      "Open lower cubby, 8\" clearance",
+      "Hand-rubbed oil finish; re-oil yearly",
+      "Legs attach with four bolts; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "brass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "walnut",
+        "brass"
+      ],
+      "useCase": [
+        "small bedroom",
+        "bedside storage",
+        "pairs"
+      ],
+      "room": [
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "walnut",
+      "tapered legs",
+      "brass pull",
+      "compact",
+      "mid-century"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-16-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-16-walnut-white-drawer",
+        "label": "Walnut / White drawer",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "walnut mid century nightstand brass pull",
+    "images": [
+      "/marlow/mw-bed-16.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 284
+  },
+  {
+    "id": "mw-bed-17",
+    "slug": "nimbus-paper-table-lamp",
+    "name": "Nimbus Paper Table Lamp",
+    "category": "Bedroom",
+    "subcategory": "Bedroom lighting",
+    "price": 118,
+    "description": "A bedside lamp with a soft, rounded shade of handmade washi paper stretched over a bent-ash ring, sitting on a short oak or black-stained ash base. The paper diffuses a warm 2700K glow with no hot spots, the kind of light that makes a room feel hushed. It is calm, spare and easy to reach for, and a dimmer on the cord lets you take it almost all the way down.",
+    "details": [
+      "Shade: handmade washi paper on bent-ash ring; base: solid oak or black-stained ash",
+      "11\" diameter x 14\" H",
+      "E26 socket, max 40W; includes 6W dimmable LED bulb, 2700K",
+      "In-line rotary dimmer on 6 ft fabric cord",
+      "Dust shade with a dry cloth; keep away from moisture",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "washi paper",
+        "oak",
+        "ash"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "white",
+        "natural oak",
+        "black"
+      ],
+      "useCase": [
+        "bedside",
+        "reading",
+        "ambient light",
+        "small space"
+      ],
+      "room": [
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "paper lamp",
+      "dimmable",
+      "warm light",
+      "handmade",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-17-oak",
+        "label": "Oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-17-black-ash",
+        "label": "Black ash",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "paper lamp bedside",
+    "images": [
+      "/marlow/mw-bed-17.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 177,
+    "new": true
+  },
+  {
+    "id": "mw-bed-18",
+    "slug": "marigold-mushroom-lamp",
+    "name": "Marigold Mushroom Lamp",
+    "category": "Bedroom",
+    "subcategory": "Bedroom lighting",
+    "price": 148,
+    "description": "A squat mushroom lamp with a domed metal shade and a chunky stem in a glossy enamel, offered in burnt orange, chocolate brown and a creamy off-white. The shade throws light down in a warm pool and bounces a halo up the wall, which is exactly what you want from a 1970s bedside. It is a small, cheerful object with real weight to it, and the chrome rim and smoked-glass diffuser are the details people notice.",
+    "details": [
+      "Spun steel shade and base, glossy powder-coat enamel; chrome-plated rim",
+      "9\" diameter x 11\" H",
+      "Smoked glass diffuser disc under the shade",
+      "E12 socket, max 25W; includes 4W LED bulb, 2400K",
+      "Touch dimmer on base, three levels",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "steel",
+        "chrome",
+        "smoked glass"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "burnt orange",
+        "chocolate",
+        "cream"
+      ],
+      "useCase": [
+        "bedside",
+        "ambient light",
+        "gift",
+        "small space"
+      ],
+      "room": [
+        "bedroom",
+        "living room",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "mushroom lamp",
+      "70s",
+      "chrome",
+      "touch dimmer",
+      "playful"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-18-burnt-orange",
+        "label": "Burnt orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-18-chocolate",
+        "label": "Chocolate",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-18-cream",
+        "label": "Cream",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "orange mushroom table lamp retro",
+    "images": [
+      "/marlow/mw-bed-18.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 132
+  },
+  {
+    "id": "mw-bed-19",
+    "slug": "vesper-brass-wall-sconce",
+    "name": "Vesper Brass Wall Sconce",
+    "category": "Bedroom",
+    "subcategory": "Bedroom lighting",
+    "price": 215,
+    "description": "A plug-in bedside sconce with a slim brass arm, a short fluted-glass shade and a backplate the size of a coaster, so it clears a nightstand entirely. The unlacquered brass starts bright and mellows to a soft, polished gold; the ribbed glass scatters light in fine lines across the wall. Hang a pair either side of the bed for a geometric, grown-up look that frees up bedside space.",
+    "details": [
+      "Solid unlacquered brass arm and backplate; fluted clear or opal glass shade",
+      "Backplate 4\" diameter; projection 10\"; shade 5\" diameter x 6\" H",
+      "Plug-in with 8 ft brass-sheathed cord and in-line switch; hardwire kit included",
+      "E12 socket, max 40W; dimmable LED bulb included, 2700K",
+      "Polish or leave to patina; wipe glass with a damp cloth",
+      "Assembled in the USA"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam",
+        "mid-century"
+      ],
+      "material": [
+        "brass",
+        "glass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "unlacquered brass",
+        "clear glass",
+        "opal"
+      ],
+      "useCase": [
+        "bedside",
+        "reading",
+        "wall mounted",
+        "small nightstand"
+      ],
+      "room": [
+        "bedroom",
+        "living room",
+        "entryway"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "sconce",
+      "brass",
+      "fluted glass",
+      "plug-in",
+      "pairs"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-19-clear-fluted",
+        "label": "Clear fluted",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-19-opal-fluted",
+        "label": "Opal fluted",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brass wall sconce fluted glass bedside",
+    "images": [
+      "/marlow/mw-bed-19.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 109
+  },
+  {
+    "id": "mw-bed-20",
+    "slug": "crane-swing-arm-reading-light",
+    "name": "Crane Swing-Arm Reading Light",
+    "category": "Bedroom",
+    "subcategory": "Bedroom lighting",
+    "price": 169,
+    "description": "A wall-mounted reading light with a double-jointed blackened steel arm that reaches 20 inches over the bed and folds flat against the wall when you are done. The cone shade is spun steel with exposed brass screws and a knurled brass switch, and the raw, utilitarian look suits a room with brick, concrete or an old factory window. It puts a tight, bright beam on the page and leaves the rest of the bed dark.",
+    "details": [
+      "Blackened steel arm and spun-steel shade, matte powder coat; solid brass hardware",
+      "Arm reach 20\" fully extended; shade 5\" diameter x 6\" L; backplate 4.5\" square",
+      "Plug-in with 8 ft black fabric cord; hardwire-ready",
+      "E26 socket, max 60W; includes 8W dimmable LED bulb, 3000K",
+      "Knurled brass rotary switch on backplate",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "steel",
+        "brass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "matte black",
+        "brass"
+      ],
+      "useCase": [
+        "reading",
+        "bedside",
+        "wall mounted",
+        "task light"
+      ],
+      "room": [
+        "bedroom",
+        "home office",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "swing arm",
+      "reading light",
+      "blackened steel",
+      "plug-in",
+      "task"
+    ],
+    "variants": [
+      {
+        "id": "mw-bed-20-matte-black",
+        "label": "Matte black",
+        "inStock": true
+      },
+      {
+        "id": "mw-bed-20-raw-steel",
+        "label": "Raw steel",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black swing arm wall reading lamp bedside",
+    "images": [
+      "/marlow/mw-bed-20.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 88
+  }
+]

@@ -1,0 +1,2902 @@
+[
+  {
+    "id": "mw-liv-01",
+    "slug": "ansel-sofa",
+    "name": "Ansel Sofa",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 1495,
+    "description": "The Ansel is a low-slung three-seater with a solid walnut frame, tapered legs and a gently bowed back that curves around you. The upholstery is a tight-weave olive wool blend over high-resilience foam and feather-wrapped seat cushions, so it sits firm but softens where it counts. It suits a living room that wants one quiet, confident piece to anchor everything else.",
+    "details": [
+      "W 84 in x D 36 in x H 31 in; seat height 17 in",
+      "Kiln-dried hardwood frame with solid walnut legs and arm caps",
+      "Wool-polyester blend upholstery, 50,000 double rubs",
+      "Feather-wrapped foam seat cushions, reversible",
+      "Ships in two boxes; legs attach without tools",
+      "Frame made in Vietnam, assembled and inspected in Texas"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "wool blend",
+        "feather",
+        "foam"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "olive",
+        "mustard",
+        "oatmeal"
+      ],
+      "useCase": [
+        "everyday lounging",
+        "hosting",
+        "reading"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "three-seater",
+      "walnut",
+      "tapered legs",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-01-olive",
+        "label": "Olive",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-01-mustard",
+        "label": "Mustard",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-01-oatmeal",
+        "label": "Oatmeal",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "olive green sofa living room",
+    "images": [
+      "/marlow/mw-liv-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 412,
+    "bestseller": true
+  },
+  {
+    "id": "mw-liv-02",
+    "slug": "lund-sofa",
+    "name": "Lund Sofa",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 1195,
+    "description": "The Lund is a pared-back two-and-a-half seater on pale ash legs, with slim track arms and deep, loose back cushions in a light grey wool. The silhouette is clean enough to float in the middle of a room and soft enough to disappear into on a Sunday. It belongs in a calm, light-filled space with not much else competing for attention.",
+    "details": [
+      "W 78 in x D 35 in x H 32 in; seat height 18 in",
+      "Solid ash legs with a natural matte lacquer",
+      "100% wool upholstery, removable and dry-cleanable cushion covers",
+      "Foam-core seat cushions with fibre wrap, back cushions fibre-filled",
+      "Seats three comfortably; sleeps one guest in a pinch",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "ash",
+        "wool",
+        "foam"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "light grey",
+        "chalk",
+        "pebble"
+      ],
+      "useCase": [
+        "small apartment",
+        "everyday lounging",
+        "first home"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ash legs",
+      "wool",
+      "pale",
+      "apartment sofa",
+      "removable covers"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-02-light-grey",
+        "label": "Light grey",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-02-chalk",
+        "label": "Chalk",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-02-pebble",
+        "label": "Pebble",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "scandinavian grey wool sofa ash legs",
+    "images": [
+      "/marlow/mw-liv-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 238
+  },
+  {
+    "id": "mw-liv-03",
+    "slug": "haru-low-sofa",
+    "name": "Haru Low Sofa",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 1350,
+    "description": "The Haru sits just 14 inches off the floor on a wide white-oak platform, with a single long seat cushion and loose back bolsters in a nubby stonewashed linen. The oak is left visible as a shelf along the back, wide enough for a cup and a book. It makes a room feel spare and grounded, and it is built for people who sit cross-legged.",
+    "details": [
+      "W 86 in x D 38 in x H 27 in; seat height 14 in",
+      "Solid white oak platform frame, oiled finish",
+      "100% linen upholstery, stonewashed, removable covers",
+      "High-density foam seat with a latex top layer",
+      "Oak back ledge holds up to 15 lb",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "white oak",
+        "linen",
+        "foam",
+        "latex"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "natural linen",
+        "charcoal"
+      ],
+      "useCase": [
+        "everyday lounging",
+        "floor living",
+        "reading"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "low profile",
+      "platform sofa",
+      "linen",
+      "oak",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-03-natural-linen",
+        "label": "Natural linen",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-03-charcoal",
+        "label": "Charcoal",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "low oak platform sofa linen",
+    "images": [
+      "/marlow/mw-liv-03.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 156,
+    "new": true
+  },
+  {
+    "id": "mw-liv-04",
+    "slug": "marigold-velvet-sofa",
+    "name": "Marigold Velvet Sofa",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 1650,
+    "compareAtPrice": 1895,
+    "description": "The Marigold is a deep-buttoned three-seater in a saturated cotton velvet, with rolled arms, turned beech legs and a tight back that holds its tufting. It comes in a marigold that reads almost orange in afternoon light, a peacock teal and a raspberry pink. It is a sofa for a room with pattern on the walls, art stacked on the floor and no interest in playing it safe.",
+    "details": [
+      "W 88 in x D 37 in x H 33 in; seat height 19 in",
+      "Kiln-dried beech frame with turned legs in a dark stain",
+      "100% cotton velvet, 40,000 double rubs, spot-clean only",
+      "Hand-tufted tight back with 72 buttons",
+      "Pocket-sprung seat with foam and fibre topper",
+      "Made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic",
+        "art-deco-glam"
+      ],
+      "material": [
+        "cotton velvet",
+        "beech",
+        "pocket springs"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "marigold",
+        "peacock teal",
+        "raspberry"
+      ],
+      "useCase": [
+        "hosting",
+        "statement piece",
+        "formal living room"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "velvet",
+      "tufted",
+      "bold color",
+      "statement piece",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-04-marigold",
+        "label": "Marigold",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-04-peacock-teal",
+        "label": "Peacock teal",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-04-raspberry",
+        "label": "Raspberry",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "yellow velvet tufted sofa",
+    "images": [
+      "/marlow/mw-liv-04.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 189
+  },
+  {
+    "id": "mw-liv-05",
+    "slug": "cove-slipcovered-sofa",
+    "name": "Cove Slipcovered Sofa",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 1095,
+    "description": "The Cove is a relaxed three-seater wrapped in a loose, machine-washable linen-cotton slipcover with a skirted base and slouchy, overfilled cushions. It comes in white, sand and a soft faded blue, and it only looks better slightly rumpled. It is the sofa for a bright, breezy room where sandy feet and dogs are part of the plan.",
+    "details": [
+      "W 90 in x D 40 in x H 34 in; seat height 19 in",
+      "Solid pine and engineered hardwood frame",
+      "Linen-cotton slipcover, fully removable, machine washable cold",
+      "Down-alternative seat and back cushions, overfilled",
+      "Second slipcover available separately in any color",
+      "Made in North Carolina"
+    ],
+    "attributes": {
+      "style": [
+        "coastal",
+        "cottage-rustic"
+      ],
+      "material": [
+        "linen",
+        "cotton",
+        "pine",
+        "down alternative"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "white",
+        "sand",
+        "faded blue"
+      ],
+      "useCase": [
+        "families",
+        "pets",
+        "beach house",
+        "everyday lounging"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "slipcover",
+      "washable",
+      "family friendly",
+      "linen",
+      "airy"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-05-white",
+        "label": "White",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-05-sand",
+        "label": "Sand",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-05-faded-blue",
+        "label": "Faded blue",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white linen slipcovered sofa",
+    "images": [
+      "/marlow/mw-liv-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 521
+  },
+  {
+    "id": "mw-liv-06",
+    "slug": "bramble-armchair",
+    "name": "Bramble Armchair",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 595,
+    "description": "The Bramble is a generous wingback with a loose seat cushion, a scalloped skirt and a solid pine frame, upholstered in a brushed cotton that comes in cream, sage and a small red gingham. It has the shape of a chair that has been by the fire for fifty years, without the sag. Put it next to a reading lamp and a basket of wool and it looks like it has always been there.",
+    "details": [
+      "W 32 in x D 36 in x H 41 in; seat height 19 in",
+      "Solid pine frame with corner-blocked joints",
+      "Brushed cotton upholstery, 30,000 double rubs",
+      "Foam seat cushion with feather wrap, fibre-filled back",
+      "Matching ottoman available separately",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "pine",
+        "brushed cotton",
+        "feather"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "sage",
+        "red gingham"
+      ],
+      "useCase": [
+        "reading",
+        "fireside",
+        "cozy corner"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "wingback",
+      "gingham",
+      "reading chair",
+      "cozy",
+      "farmhouse"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-06-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-06-sage",
+        "label": "Sage",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-06-red-gingham",
+        "label": "Red gingham",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream wingback armchair cottage",
+    "images": [
+      "/marlow/mw-liv-06.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 97
+  },
+  {
+    "id": "mw-liv-07",
+    "slug": "orla-boucle-armchair",
+    "name": "Orla Bouclé Armchair",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 695,
+    "description": "The Orla is a chunky barrel chair with one continuous curved back, a thick pillowy seat and no visible legs, wrapped in a looped wool-blend bouclé. It comes in cream, burnt orange and a chocolate brown, and it swivels a full 360 degrees on a hidden chrome base. It is round, soft and a little bit groovy, and it makes a corner feel like a place to stay.",
+    "details": [
+      "W 33 in x D 31 in x H 29 in; seat height 17 in",
+      "Hidden chrome-plated steel swivel base, 360 degrees",
+      "Wool-polyester bouclé, 45,000 double rubs",
+      "High-resilience foam seat with fibre wrap",
+      "Arrives fully assembled",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "bouclé",
+        "chrome",
+        "foam"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "burnt orange",
+        "chocolate"
+      ],
+      "useCase": [
+        "reading",
+        "small apartment",
+        "cozy corner"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bouclé",
+      "swivel",
+      "barrel chair",
+      "curved",
+      "retro"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-07-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-07-burnt-orange",
+        "label": "Burnt orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-07-chocolate",
+        "label": "Chocolate",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "boucle swivel barrel armchair",
+    "images": [
+      "/marlow/mw-liv-07.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 344
+  },
+  {
+    "id": "mw-liv-08",
+    "slug": "delphine-fluted-armchair",
+    "name": "Delphine Fluted Armchair",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 795,
+    "description": "The Delphine is a curved tub chair with a vertically channel-stitched back that fans out like a shell, finished with brushed-brass sabots on tapered legs. The velvet is a dense cotton-viscose in emerald, sapphire and a dusty blush. It is polished and a little theatrical, the chair you put at an angle beside a bar cart.",
+    "details": [
+      "W 30 in x D 30 in x H 31 in; seat height 18 in",
+      "Solid beech legs with brushed-brass caps",
+      "Cotton-viscose velvet, 35,000 double rubs, spot clean",
+      "Channel-tufted back with 12 vertical flutes",
+      "Foam seat with fibre wrap",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "velvet",
+        "beech",
+        "brass"
+      ],
+      "colorFamily": [
+        "bold",
+        "pastel"
+      ],
+      "colors": [
+        "emerald",
+        "sapphire",
+        "blush"
+      ],
+      "useCase": [
+        "hosting",
+        "statement piece",
+        "dressing room"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "fluted",
+      "velvet",
+      "brass",
+      "accent chair",
+      "glam"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-08-emerald",
+        "label": "Emerald",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-08-sapphire",
+        "label": "Sapphire",
+        "inStock": false
+      },
+      {
+        "id": "mw-liv-08-blush",
+        "label": "Blush",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "emerald velvet channel tufted armchair brass",
+    "images": [
+      "/marlow/mw-liv-08.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 128
+  },
+  {
+    "id": "mw-liv-09",
+    "slug": "foundry-leather-armchair",
+    "name": "Foundry Leather Armchair",
+    "category": "Living",
+    "subcategory": "Sofas & armchairs",
+    "price": 875,
+    "description": "The Foundry is a sling-style lounge chair with a top-grain leather seat and back suspended from a blackened steel frame on exposed hex bolts. The leather is full aniline and unprotected, so it scuffs, darkens and takes on a map of where it has been. It is built for a loft with brick, concrete and tall windows, and it only gets better looking.",
+    "details": [
+      "W 28 in x D 33 in x H 30 in; seat height 16 in",
+      "Powder-coated blackened steel frame, 1 in square tube",
+      "Full-aniline top-grain leather, 3 mm, will patina",
+      "Stainless hex-bolt hardware, included wrench",
+      "Weight capacity 300 lb",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "leather",
+        "blackened steel"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "tan",
+        "black"
+      ],
+      "useCase": [
+        "loft",
+        "reading",
+        "home office"
+      ],
+      "room": [
+        "living room",
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "leather",
+      "steel frame",
+      "loft",
+      "sling chair",
+      "patina"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-09-tan",
+        "label": "Tan",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-09-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "tan leather armchair metal frame",
+    "images": [
+      "/marlow/mw-liv-09.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 73
+  },
+  {
+    "id": "mw-liv-10",
+    "slug": "hollis-coffee-table",
+    "name": "Hollis Coffee Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 495,
+    "description": "The Hollis is an oval coffee table in solid walnut with a surfboard-shaped top, a floating lower shelf and four splayed, tapered legs. The grain runs the length of the top and the edges are softened to a thumb-round profile. It is low, warm and easy to walk around, which makes it good company for a long sofa.",
+    "details": [
+      "W 48 in x D 24 in x H 16 in",
+      "Solid American walnut top and legs, hardwax-oil finish",
+      "Walnut-veneered lower shelf, 4 in clearance from floor",
+      "Weight capacity 80 lb on top, 25 lb on shelf",
+      "Legs attach with four bolts; wrench included",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "walnut"
+      ],
+      "useCase": [
+        "everyday living",
+        "hosting",
+        "small apartment"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "walnut",
+      "oval",
+      "tapered legs",
+      "two tier"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-10-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-10-smoked-oak",
+        "label": "Smoked oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "oval walnut mid century coffee table",
+    "images": [
+      "/marlow/mw-liv-10.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 376,
+    "bestseller": true
+  },
+  {
+    "id": "mw-liv-11",
+    "slug": "ren-coffee-table",
+    "name": "Ren Coffee Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 429,
+    "description": "The Ren is a low rectangular table in solid oak with a black-stained frame and a natural top, joined with visible through-tenons at each corner. The proportions are wide and squat, 13 inches high, so it reads as a platform more than a piece of furniture. It is quiet, well-made and happiest with a single stoneware bowl on it.",
+    "details": [
+      "W 47 in x D 24 in x H 13 in",
+      "Solid white oak, natural oiled top with black-stained base",
+      "Exposed through-tenon joinery, no metal fasteners",
+      "Weight capacity 100 lb",
+      "Arrives assembled",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "white oak"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "natural oak",
+        "black"
+      ],
+      "useCase": [
+        "floor living",
+        "everyday living",
+        "small apartment"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "low",
+      "oak",
+      "joinery",
+      "two tone",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-11-oak-black",
+        "label": "Oak / black",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-11-all-black",
+        "label": "All black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "low oak black japandi coffee table",
+    "images": [
+      "/marlow/mw-liv-11.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 142
+  },
+  {
+    "id": "mw-liv-12",
+    "slug": "girder-coffee-table",
+    "name": "Girder Coffee Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 549,
+    "description": "The Girder has a two-inch-thick top of reclaimed pine, planed flat but left with its nail holes and saw marks, bolted to a raw steel trestle base with a clear matte sealer. Each top is different because each one used to be a floor joist in a mill somewhere. It is heavy, utilitarian and built to be put your boots up on.",
+    "details": [
+      "W 50 in x D 26 in x H 17 in",
+      "Reclaimed pine top, 2 in thick, matte polyurethane",
+      "Hot-rolled steel base with clear wax finish, 1/4 in plate",
+      "Weight capacity 200 lb",
+      "Top and base ship separately; bolts and wrench included",
+      "Made in Pennsylvania"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "reclaimed pine",
+        "steel"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "reclaimed pine",
+        "raw steel"
+      ],
+      "useCase": [
+        "loft",
+        "families",
+        "hosting"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "reclaimed wood",
+      "steel",
+      "loft",
+      "heavy duty",
+      "one of a kind"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-12-natural-pine",
+        "label": "Natural pine",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-12-ebonized-pine",
+        "label": "Ebonized pine",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "industrial coffee table wood metal",
+    "images": [
+      "/marlow/mw-liv-12.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 88
+  },
+  {
+    "id": "mw-liv-13",
+    "slug": "soleil-side-table",
+    "name": "Soleil Side Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 329,
+    "description": "The Soleil is a round drinks table with a white Carrara marble top on a fluted brass column and a weighted brass disc base. The flutes catch lamplight along their whole height, and the marble is honed rather than polished so it does not show every ring. It is small, glossy and exactly the right height beside a velvet chair.",
+    "details": [
+      "Dia 16 in x H 22 in",
+      "Honed Carrara marble top, 3/4 in, sealed",
+      "Brass-plated steel column and base, fluted",
+      "Weight capacity 20 lb",
+      "Marble will vary in veining; wipe spills promptly",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "marble",
+        "brass"
+      ],
+      "colorFamily": [
+        "white",
+        "warm"
+      ],
+      "colors": [
+        "white marble",
+        "brass"
+      ],
+      "useCase": [
+        "drinks table",
+        "bedside",
+        "small apartment"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "marble",
+      "brass",
+      "fluted",
+      "drinks table",
+      "glam"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-13-white-marble",
+        "label": "White marble",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-13-green-marble",
+        "label": "Green marble",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "marble brass fluted side table",
+    "images": [
+      "/marlow/mw-liv-13.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 203
+  },
+  {
+    "id": "mw-liv-14",
+    "slug": "dune-rattan-side-table",
+    "name": "Dune Rattan Side Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 189,
+    "description": "The Dune is a drum-shaped side table hand-wrapped in natural rattan over a mango-wood frame, with an open cane weave around the sides and a solid wood top. The rattan is left honey-toned and lightly sealed, so it warms with sun and age. It is light enough to move with one hand and happy next to a plant, a pile of books or a bed.",
+    "details": [
+      "Dia 18 in x H 20 in",
+      "Hand-woven natural rattan over a solid mango-wood frame",
+      "Solid mango-wood top, clear matte lacquer",
+      "Weight capacity 25 lb",
+      "Weight 9 lb; arrives assembled",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "rattan",
+        "mango wood"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "honey rattan",
+        "natural"
+      ],
+      "useCase": [
+        "plant stand",
+        "bedside",
+        "small apartment"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "balcony"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "rattan",
+      "handwoven",
+      "drum table",
+      "lightweight",
+      "textured"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-14-honey",
+        "label": "Honey",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-14-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rattan drum side table",
+    "images": [
+      "/marlow/mw-liv-14.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 267
+  },
+  {
+    "id": "mw-liv-15",
+    "slug": "plinth-nesting-tables",
+    "name": "Plinth Nesting Tables (Set of 2)",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 349,
+    "description": "The Plinth set is two rectangular tables in solid ash, a larger one at 16 inches high and a smaller one that slides underneath, each a simple slab top on two slab legs with a finger-jointed corner. The wood is pale and matte with a white-oil finish that keeps it from yellowing. They pull apart for guests and tuck back together when you want the floor clear.",
+    "details": [
+      "Large: W 32 in x D 18 in x H 16 in; Small: W 24 in x D 15 in x H 13 in",
+      "Solid ash, white-pigmented hardwax oil",
+      "Finger-jointed corners, no visible hardware",
+      "Weight capacity 60 lb each",
+      "Arrives assembled",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "ash"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "white ash",
+        "natural ash"
+      ],
+      "useCase": [
+        "small apartment",
+        "hosting",
+        "flexible layout"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "nesting",
+      "ash",
+      "pale",
+      "set of 2",
+      "small space"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-15-white-ash",
+        "label": "White ash",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-15-natural-ash",
+        "label": "Natural ash",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nesting side tables",
+    "images": [
+      "/marlow/mw-liv-15.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 119,
+    "new": true
+  },
+  {
+    "id": "mw-liv-16",
+    "slug": "disco-smoked-glass-coffee-table",
+    "name": "Disco Smoked Glass Coffee Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 399,
+    "compareAtPrice": 479,
+    "description": "The Disco is a round coffee table with a 12 mm smoked bronze glass top resting on a chunky cylindrical base in chrome-finished steel. The base is a single polished drum, so the whole thing reads like a lamp from 1974 lying on its side. It is reflective, a little chunky, and looks right between a bouclé chair and a shag rug.",
+    "details": [
+      "Dia 36 in x H 15 in",
+      "12 mm tempered smoked bronze glass top, flat polished edge",
+      "Chrome-plated steel drum base, dia 16 in",
+      "Weight capacity 50 lb",
+      "Glass sits on clear rubber bumpers; ships in two boxes",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "smoked glass",
+        "chrome"
+      ],
+      "colorFamily": [
+        "earth",
+        "neutral"
+      ],
+      "colors": [
+        "smoked bronze",
+        "chrome"
+      ],
+      "useCase": [
+        "hosting",
+        "statement piece",
+        "small apartment"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "smoked glass",
+      "chrome",
+      "round",
+      "retro",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-16-chrome",
+        "label": "Chrome",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-16-brushed-brass",
+        "label": "Brushed brass",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "smoked glass chrome round coffee table",
+    "images": [
+      "/marlow/mw-liv-16.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 64
+  },
+  {
+    "id": "mw-liv-17",
+    "slug": "harbor-coffee-table",
+    "name": "Harbor Coffee Table",
+    "category": "Living",
+    "subcategory": "Coffee & side tables",
+    "price": 459,
+    "description": "The Harbor is a rectangular coffee table in whitewashed solid acacia with a slatted lower shelf and chunky square legs, finished with a wire-brushed texture that shows the grain through the wash. It looks faded by salt and sun on day one. It suits a bright room with linen, rope and a view, or one that wishes it had one.",
+    "details": [
+      "W 46 in x D 24 in x H 17 in",
+      "Solid acacia, wire-brushed with a whitewash stain and matte topcoat",
+      "Slatted lower shelf with 1/2 in gaps",
+      "Weight capacity 90 lb",
+      "Legs attach with four bolts",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "acacia"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "whitewash",
+        "driftwood grey"
+      ],
+      "useCase": [
+        "beach house",
+        "families",
+        "everyday living"
+      ],
+      "room": [
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "whitewashed",
+      "slatted",
+      "beach house",
+      "airy",
+      "storage"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-17-whitewash",
+        "label": "Whitewash",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-17-driftwood-grey",
+        "label": "Driftwood grey",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "whitewashed wood coastal coffee table",
+    "images": [
+      "/marlow/mw-liv-17.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 151
+  },
+  {
+    "id": "mw-liv-18",
+    "slug": "beam-wall-shelf",
+    "name": "Beam Wall Shelf",
+    "category": "Living",
+    "subcategory": "Shelving",
+    "price": 169,
+    "description": "The Beam is a single floating shelf of solid reclaimed oak, 2 inches thick, held on a pair of raw steel pipe brackets with exposed flange plates. The wood is sanded smooth on top but keeps its checks and old bolt holes along the face. It is a plain, strong shelf for records, cookbooks or a row of jars, and it looks right against brick.",
+    "details": [
+      "W 36 in x D 9 in x H 2 in shelf; brackets project 8 in",
+      "Solid reclaimed oak, matte sealed; each board unique",
+      "Black-finished 3/4 in steel pipe brackets with flanges",
+      "Weight capacity 60 lb when mounted into studs",
+      "Mounting screws and drywall anchors included",
+      "Shelf made in Pennsylvania; brackets made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "reclaimed oak",
+        "steel"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "reclaimed oak",
+        "black steel"
+      ],
+      "useCase": [
+        "records",
+        "kitchen storage",
+        "loft"
+      ],
+      "room": [
+        "living room",
+        "kitchen",
+        "home office"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "floating shelf",
+      "reclaimed wood",
+      "pipe bracket",
+      "loft",
+      "wall mounted"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-18-36-in",
+        "label": "36 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-18-48-in",
+        "label": "48 in",
+        "inStock": true,
+        "priceDelta": 40
+      },
+      {
+        "id": "mw-liv-18-60-in",
+        "label": "60 in",
+        "inStock": true,
+        "priceDelta": 80
+      }
+    ],
+    "imageQuery": "reclaimed wood pipe bracket wall shelf",
+    "images": [
+      "/marlow/mw-liv-18.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 312
+  },
+  {
+    "id": "mw-liv-19",
+    "slug": "fjell-bookcase",
+    "name": "Fjell Bookcase",
+    "category": "Living",
+    "subcategory": "Shelving",
+    "price": 649,
+    "description": "The Fjell is a tall, open bookcase in solid ash with slim 3/4-inch uprights and five fixed shelves that step back slightly as they rise. There is no back panel, so light passes through and the wall shows behind your books. It is pale, airy and makes a wall of books look organised rather than heavy.",
+    "details": [
+      "W 32 in x D 13 in x H 75 in",
+      "Solid ash frame and shelves, white-pigmented hardwax oil",
+      "Five fixed shelves, 14 in clearance each",
+      "Weight capacity 40 lb per shelf",
+      "Anti-tip wall strap included; assembly takes about 30 minutes",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "ash"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "white ash"
+      ],
+      "useCase": [
+        "book storage",
+        "home office",
+        "display"
+      ],
+      "room": [
+        "living room",
+        "home office",
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "bookcase",
+      "ash",
+      "open back",
+      "tall",
+      "pale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-19-single",
+        "label": "Single",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-19-double",
+        "label": "Double",
+        "inStock": false,
+        "priceDelta": 500
+      }
+    ],
+    "imageQuery": "white bookshelf living room",
+    "images": [
+      "/marlow/mw-liv-19.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 84
+  },
+  {
+    "id": "mw-liv-20",
+    "slug": "kiln-ladder-shelf",
+    "name": "Kiln Ladder Shelf",
+    "category": "Living",
+    "subcategory": "Shelving",
+    "price": 299,
+    "description": "The Kiln is a leaning ladder shelf with four solid oak shelves set into a black powder-coated steel frame that rests against the wall at a slight angle. The shelves deepen toward the floor, from 6 inches at the top to 14 at the bottom, so a plant or a stack of ceramics fits where it should. It is spare and low-key, and it takes up almost no floor.",
+    "details": [
+      "W 24 in x D 16 in x H 70 in",
+      "Solid white oak shelves, oiled; matte black steel frame",
+      "Four shelves: 6, 9, 11 and 14 in deep",
+      "Weight capacity 30 lb per shelf",
+      "Wall anchor included; must be secured",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "white oak",
+        "steel"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "natural oak",
+        "black"
+      ],
+      "useCase": [
+        "small apartment",
+        "display",
+        "plants"
+      ],
+      "room": [
+        "living room",
+        "home office",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ladder shelf",
+      "oak",
+      "black steel",
+      "small space",
+      "leaning"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-20-oak-black",
+        "label": "Oak / black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ladder shelf",
+    "images": [
+      "/marlow/mw-liv-20.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 196
+  },
+  {
+    "id": "mw-liv-21",
+    "slug": "hearth-pine-bookcase",
+    "name": "Hearth Pine Bookcase",
+    "category": "Living",
+    "subcategory": "Shelving",
+    "price": 575,
+    "compareAtPrice": 695,
+    "description": "The Hearth is a wide, low bookcase in knotty solid pine with a beaded back panel, a scalloped apron and three adjustable shelves behind an open front. It comes in a warm honey wax or a chalky cream paint that is rubbed back at the edges by hand. It is the sort of piece that holds the cookbooks in a kitchen or the games in a family room, and looks like an heirloom either way.",
+    "details": [
+      "W 48 in x D 14 in x H 40 in",
+      "Solid knotty pine with beadboard back",
+      "Three adjustable shelves on 1 in pin increments",
+      "Weight capacity 45 lb per shelf",
+      "Arrives assembled; anti-tip strap included",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "pine"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "honey pine",
+        "cream"
+      ],
+      "useCase": [
+        "families",
+        "cookbooks",
+        "display"
+      ],
+      "room": [
+        "living room",
+        "kitchen",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pine",
+      "farmhouse",
+      "beadboard",
+      "low bookcase",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-21-honey-pine",
+        "label": "Honey pine",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-21-cream",
+        "label": "Cream",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pine bookshelf rustic",
+    "images": [
+      "/marlow/mw-liv-21.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 57
+  },
+  {
+    "id": "mw-liv-22",
+    "slug": "palette-lacquered-bookcase",
+    "name": "Palette Lacquered Bookcase",
+    "category": "Living",
+    "subcategory": "Shelving",
+    "price": 895,
+    "description": "The Palette is a tall cube bookcase in a high-gloss lacquer, with sixteen asymmetric compartments of different sizes and a brass-trimmed plinth base. It comes in a glossy oxblood, a saturated cobalt and a bottle green, and it is built to hold a lot of objects at once. It is a bookcase that wants to be the loudest thing in the room, and it is.",
+    "details": [
+      "W 40 in x D 14 in x H 76 in",
+      "MDF with eight coats of polyurethane lacquer, hand-polished",
+      "Sixteen fixed compartments from 8 x 8 in to 20 x 14 in",
+      "Brass-plated steel plinth",
+      "Weight capacity 25 lb per compartment; anti-tip strap included",
+      "Made in Italy"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic",
+        "art-deco-glam"
+      ],
+      "material": [
+        "lacquer",
+        "brass"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "oxblood",
+        "cobalt",
+        "bottle green"
+      ],
+      "useCase": [
+        "display",
+        "statement piece",
+        "collections"
+      ],
+      "room": [
+        "living room",
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "lacquer",
+      "high gloss",
+      "bold color",
+      "cube storage",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-22-oxblood",
+        "label": "Oxblood",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-22-cobalt",
+        "label": "Cobalt",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-22-bottle-green",
+        "label": "Bottle green",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "glossy lacquered colorful bookcase",
+    "images": [
+      "/marlow/mw-liv-22.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 41,
+    "new": true
+  },
+  {
+    "id": "mw-liv-23",
+    "slug": "sahar-jute-rug",
+    "name": "Sahar Jute Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 249,
+    "description": "The Sahar is a hand-braided jute rug with a chunky herringbone weave and a hand-knotted fringe at both ends, in a natural tan with a thin band of terracotta cotton woven near each edge. It is springy underfoot and shows the fibre's natural variation from strand to strand. It layers under a smaller patterned rug or holds its own beneath a rattan chair and a lot of plants.",
+    "details": [
+      "Available in 5 x 8 ft, 8 x 10 ft and 9 x 12 ft",
+      "100% jute with cotton accent yarn, hand-braided",
+      "Pile height 1/2 in; rug pad recommended",
+      "Spot clean with a damp cloth; not for damp rooms",
+      "Fibre sheds lightly for the first few weeks",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "jute",
+        "cotton"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "natural",
+        "terracotta"
+      ],
+      "useCase": [
+        "layering",
+        "high traffic",
+        "plants"
+      ],
+      "room": [
+        "living room",
+        "dining room",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "jute",
+      "handwoven",
+      "natural fibre",
+      "fringe",
+      "layering"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-23-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-23-8x10",
+        "label": "8 x 10 ft",
+        "inStock": true,
+        "priceDelta": 200
+      },
+      {
+        "id": "mw-liv-23-9x12",
+        "label": "9 x 12 ft",
+        "inStock": true,
+        "priceDelta": 350
+      }
+    ],
+    "imageQuery": "braided jute rug fringe",
+    "images": [
+      "/marlow/mw-liv-23.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 488,
+    "bestseller": true
+  },
+  {
+    "id": "mw-liv-24",
+    "slug": "nordlys-wool-rug",
+    "name": "Nordlys Wool Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 395,
+    "description": "The Nordlys is a flatwoven rug in undyed New Zealand wool, with a fine tone-on-tone pinstripe in pale grey and chalk that only shows up close. It is thin, dense and lies perfectly flat, so doors clear it and chairs slide across it. It is the rug for a room that wants warmth underfoot without adding anything to look at.",
+    "details": [
+      "Available in 5 x 8 ft, 6 x 9 ft and 8 x 10 ft",
+      "100% New Zealand wool, handwoven flatweave",
+      "Pile height 1/4 in; reversible",
+      "Professional clean recommended; blot spills",
+      "Low-pile; works under doors and desk chairs",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "wool"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "pale grey",
+        "chalk"
+      ],
+      "useCase": [
+        "everyday living",
+        "home office",
+        "under dining table"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "wool",
+      "flatweave",
+      "reversible",
+      "pale",
+      "quiet"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-24-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-24-6x9",
+        "label": "6 x 9 ft",
+        "inStock": true,
+        "priceDelta": 150
+      },
+      {
+        "id": "mw-liv-24-8x10",
+        "label": "8 x 10 ft",
+        "inStock": false,
+        "priceDelta": 300
+      }
+    ],
+    "imageQuery": "grey wool flatweave rug minimal",
+    "images": [
+      "/marlow/mw-liv-24.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 212
+  },
+  {
+    "id": "mw-liv-25",
+    "slug": "tidal-stripe-rug",
+    "name": "Tidal Stripe Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 179,
+    "description": "The Tidal is a flatwoven cotton rug with wide, uneven stripes in chambray blue, sand and white, and a short tasselled fringe at each end. The cotton is yarn-dyed and stonewashed, so the colours are already a little faded and the whole thing goes in the washing machine. It suits a bright hallway, a bathroom or a sunroom where a damp towel might land on it.",
+    "details": [
+      "Available in 3 x 5 ft, 4 x 6 ft and 5 x 8 ft",
+      "100% cotton, handwoven flatweave, stonewashed",
+      "Machine washable cold on gentle; line dry",
+      "Pile height 1/4 in; use a non-slip pad on hard floors",
+      "Colours may soften slightly after washing",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "cool",
+        "neutral"
+      ],
+      "colors": [
+        "chambray blue",
+        "sand",
+        "white"
+      ],
+      "useCase": [
+        "beach house",
+        "washable",
+        "high traffic"
+      ],
+      "room": [
+        "living room",
+        "bathroom",
+        "entryway"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "striped",
+      "cotton",
+      "washable",
+      "airy",
+      "beach house"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-25-3x5",
+        "label": "3 x 5 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-25-4x6",
+        "label": "4 x 6 ft",
+        "inStock": true,
+        "priceDelta": 60
+      },
+      {
+        "id": "mw-liv-25-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true,
+        "priceDelta": 120
+      }
+    ],
+    "imageQuery": "blue white striped cotton flatweave rug",
+    "images": [
+      "/marlow/mw-liv-25.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 329
+  },
+  {
+    "id": "mw-liv-26",
+    "slug": "meadow-floral-rug",
+    "name": "Meadow Floral Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 429,
+    "description": "The Meadow is a hand-tufted wool rug with a scattered block-printed floral in faded rose, moss and ochre on a cream ground, with a narrow olive border. The pattern is loose and hand-drawn rather than repeated exactly, so it looks like something found at a farm sale. It is soft, thick and warm, and it makes a plain room feel homely at once.",
+    "details": [
+      "Available in 5 x 8 ft, 6 x 9 ft and 8 x 10 ft",
+      "100% wool pile, hand-tufted on a cotton backing",
+      "Pile height 1/2 in",
+      "Vacuum without beater bar; professional clean",
+      "Sheds lightly for the first month",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "wool",
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "pastel"
+      ],
+      "colors": [
+        "cream",
+        "faded rose",
+        "moss",
+        "ochre"
+      ],
+      "useCase": [
+        "cozy living room",
+        "bedroom",
+        "families"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "floral",
+      "wool",
+      "hand-tufted",
+      "cottage",
+      "homely"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-26-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-26-6x9",
+        "label": "6 x 9 ft",
+        "inStock": true,
+        "priceDelta": 150
+      },
+      {
+        "id": "mw-liv-26-8x10",
+        "label": "8 x 10 ft",
+        "inStock": false,
+        "priceDelta": 270
+      }
+    ],
+    "imageQuery": "cream floral wool rug cottage",
+    "images": [
+      "/marlow/mw-liv-26.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 93
+  },
+  {
+    "id": "mw-liv-27",
+    "slug": "sunburst-shag-rug",
+    "name": "Sunburst Shag Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 349,
+    "compareAtPrice": 429,
+    "description": "The Sunburst is a deep-pile wool shag with a swirl of burnt orange, caramel and cream radiating from off-centre, like a rug pulled from a 1970s conversation pit. The pile is two inches long and springy, so bare feet sink into it. It is warm, loud in the best way and works best with lots of brown wood and low furniture around it.",
+    "details": [
+      "Available in 5 x 8 ft and 8 x 10 ft; round 6 ft",
+      "100% wool shag on a cotton backing, hand-tufted",
+      "Pile height 2 in",
+      "Shake outdoors and vacuum on low; professional clean",
+      "Heavy; rug pad recommended on hard floors",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "wool",
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "burnt orange",
+        "caramel",
+        "cream"
+      ],
+      "useCase": [
+        "cozy living room",
+        "statement piece",
+        "floor seating"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "shag",
+      "wool",
+      "retro",
+      "warm",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-27-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-27-8x10",
+        "label": "8 x 10 ft",
+        "inStock": true,
+        "priceDelta": 300
+      },
+      {
+        "id": "mw-liv-27-6-ft-round",
+        "label": "6 ft round",
+        "inStock": true,
+        "priceDelta": 50
+      }
+    ],
+    "imageQuery": "orange brown shag rug retro",
+    "images": [
+      "/marlow/mw-liv-27.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 76
+  },
+  {
+    "id": "mw-liv-28",
+    "slug": "keystone-geometric-rug",
+    "name": "Keystone Geometric Rug",
+    "category": "Living",
+    "subcategory": "Rugs",
+    "price": 549,
+    "description": "The Keystone is a hand-knotted wool and viscose rug with an interlocking fan-and-chevron pattern in emerald and ink, with a fine gold-toned line tracing each shape. The viscose gives the pattern a soft sheen that shifts as you walk around it. It is sharp, formal and built for a room with velvet, brass and a mirror or two.",
+    "details": [
+      "Available in 5 x 8 ft, 6 x 9 ft and 8 x 10 ft",
+      "80% wool, 20% viscose, hand-knotted",
+      "Pile height 3/8 in",
+      "Professional clean only; blot spills immediately",
+      "Rug pad recommended",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "wool",
+        "viscose"
+      ],
+      "colorFamily": [
+        "bold",
+        "black"
+      ],
+      "colors": [
+        "emerald",
+        "ink",
+        "gold"
+      ],
+      "useCase": [
+        "formal living room",
+        "statement piece",
+        "hosting"
+      ],
+      "room": [
+        "living room",
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "geometric",
+      "art deco",
+      "wool",
+      "sheen",
+      "jewel tones"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-28-5x8",
+        "label": "5 x 8 ft",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-28-6x9",
+        "label": "6 x 9 ft",
+        "inStock": true,
+        "priceDelta": 180
+      },
+      {
+        "id": "mw-liv-28-8x10",
+        "label": "8 x 10 ft",
+        "inStock": true,
+        "priceDelta": 340
+      }
+    ],
+    "imageQuery": "emerald geometric art deco rug",
+    "images": [
+      "/marlow/mw-liv-28.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 52,
+    "new": true
+  },
+  {
+    "id": "mw-liv-29",
+    "slug": "mesa-woven-throw",
+    "name": "Mesa Woven Throw",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 89,
+    "description": "The Mesa is a handwoven cotton throw with a stepped diamond pattern in terracotta, rust and cream, finished with long twisted tassels at each end. The weave is a mid-weight dobby with a slightly slubbed hand, so it drapes over a chair arm without sliding off. It is the kind of thing you fold over the sofa and then never actually fold again.",
+    "details": [
+      "50 x 70 in",
+      "100% cotton, handloomed",
+      "Twisted tassel fringe, 4 in",
+      "Machine wash cold, tumble dry low",
+      "Weight 2.2 lb",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "terracotta",
+        "rust",
+        "cream"
+      ],
+      "useCase": [
+        "sofa throw",
+        "layering",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "handwoven",
+      "tassels",
+      "terracotta",
+      "layering",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-29-terracotta",
+        "label": "Terracotta",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-29-indigo",
+        "label": "Indigo",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "terracotta woven cotton throw tassels",
+    "images": [
+      "/marlow/mw-liv-29.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 274
+  },
+  {
+    "id": "mw-liv-30",
+    "slug": "alder-wool-throw",
+    "name": "Alder Wool Throw",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 139,
+    "description": "The Alder is a brushed lambswool throw in a single pale colour with a narrow blanket-stitched edge and nothing else going on. It is light, warm and soft against the skin, and it comes in light grey, oatmeal and a chalky white. It suits a quiet bedroom or a pale sofa, and it is the first thing you reach for on a cold evening.",
+    "details": [
+      "55 x 75 in",
+      "100% lambswool, brushed",
+      "Blanket-stitched edge in matching yarn",
+      "Dry clean or hand wash cold and lay flat",
+      "Weight 1.8 lb",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "lambswool"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "light grey",
+        "oatmeal",
+        "chalk"
+      ],
+      "useCase": [
+        "sofa throw",
+        "bedroom",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lambswool",
+      "brushed",
+      "pale",
+      "soft",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-30-light-grey",
+        "label": "Light grey",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-30-oatmeal",
+        "label": "Oatmeal",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-30-chalk",
+        "label": "Chalk",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "grey lambswool throw blanket",
+    "images": [
+      "/marlow/mw-liv-30.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 391,
+    "bestseller": true
+  },
+  {
+    "id": "mw-liv-31",
+    "slug": "peony-velvet-cushion",
+    "name": "Peony Velvet Cushion",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 65,
+    "description": "The Peony is a 20-inch square cushion in a thick cotton velvet with a contrast piped edge, in fuchsia with chartreuse piping, cobalt with coral, and tangerine with plum. The velvet is dense and short-pile, so the colour reads flat and saturated rather than shiny. Pile three on a sofa and they argue with each other in the best way.",
+    "details": [
+      "20 x 20 in",
+      "100% cotton velvet cover with contrast cotton piping",
+      "Feather-and-down insert included, 10% down",
+      "Hidden zip; cover spot clean or dry clean",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "cotton velvet",
+        "feather",
+        "down"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "fuchsia",
+        "cobalt",
+        "tangerine"
+      ],
+      "useCase": [
+        "sofa styling",
+        "color pop",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "velvet",
+      "piped",
+      "bold color",
+      "feather insert",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-31-fuchsia-chartreuse",
+        "label": "Fuchsia / chartreuse",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-31-cobalt-coral",
+        "label": "Cobalt / coral",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-31-tangerine-plum",
+        "label": "Tangerine / plum",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "bright velvet cushion contrast piping",
+    "images": [
+      "/marlow/mw-liv-31.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 168
+  },
+  {
+    "id": "mw-liv-32",
+    "slug": "orchard-gingham-cushion-set",
+    "name": "Orchard Gingham Cushion Set (Set of 2)",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 78,
+    "description": "The Orchard set is two 18-inch cushions in a yarn-dyed cotton gingham, one in a small check and one in a large check of the same colour, with a frilled edge and a plain linen back. They come in sage, red and a soft butter yellow, each on cream. They belong on a window seat or a pine bench, and they get softer with every wash.",
+    "details": [
+      "18 x 18 in, set of two",
+      "100% yarn-dyed cotton gingham front, linen-cotton back",
+      "1.5 in self-frill edge",
+      "Polyester fibre inserts included",
+      "Machine wash cold, tumble dry low",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "cotton",
+        "linen"
+      ],
+      "colorFamily": [
+        "pastel",
+        "neutral"
+      ],
+      "colors": [
+        "sage",
+        "red",
+        "butter"
+      ],
+      "useCase": [
+        "window seat",
+        "families",
+        "kitchen bench"
+      ],
+      "room": [
+        "living room",
+        "kitchen",
+        "kids room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "gingham",
+      "frilled",
+      "set of 2",
+      "farmhouse",
+      "washable"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-32-sage",
+        "label": "Sage",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-32-red",
+        "label": "Red",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-32-butter",
+        "label": "Butter",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "gingham frilled cushion cottage",
+    "images": [
+      "/marlow/mw-liv-32.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 112
+  },
+  {
+    "id": "mw-liv-33",
+    "slug": "seaglass-linen-cushion",
+    "name": "Seaglass Linen Cushion",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 55,
+    "compareAtPrice": 68,
+    "description": "The Seaglass is a 22-inch cushion in a heavyweight stonewashed European linen with a raw, fraying flange edge and a simple tie closure at the back. It comes in a pale sea-green, a washed denim blue and white, all slightly uneven in colour the way good linen is. It looks right against a slipcovered sofa with a window open behind it.",
+    "details": [
+      "22 x 22 in",
+      "100% European linen, stonewashed, 7 oz",
+      "1 in raw-edge flange, cotton tie closure",
+      "Feather-and-down insert included",
+      "Machine wash cold, line dry",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "linen",
+        "feather",
+        "down"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "sea green",
+        "washed denim",
+        "white"
+      ],
+      "useCase": [
+        "sofa styling",
+        "beach house",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "linen",
+      "stonewashed",
+      "raw edge",
+      "airy",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-33-sea-green",
+        "label": "Sea green",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-33-washed-denim",
+        "label": "Washed denim",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-33-white",
+        "label": "White",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pale blue linen cushion raw edge",
+    "images": [
+      "/marlow/mw-liv-33.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 205
+  },
+  {
+    "id": "mw-liv-34",
+    "slug": "sumi-linen-cushion",
+    "name": "Sumi Linen Cushion",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 58,
+    "description": "The Sumi is a rectangular lumbar cushion in a heavy natural linen with a single hand-painted brushstroke in charcoal across the front, so no two are quite the same. The back is plain and the edges are knife-finished with no piping. It is spare, textural and sits well on a low sofa or at the head of a futon.",
+    "details": [
+      "14 x 24 in lumbar",
+      "100% linen, natural, hand-painted with water-based pigment",
+      "Feather-and-down insert included",
+      "Hidden zip; dry clean only to protect the brushwork",
+      "Each piece is unique",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "linen",
+        "feather",
+        "down"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "natural linen",
+        "charcoal"
+      ],
+      "useCase": [
+        "sofa styling",
+        "lumbar support",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lumbar",
+      "hand-painted",
+      "linen",
+      "wabi-sabi",
+      "one of a kind"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-34-natural-charcoal",
+        "label": "Natural / charcoal",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-34-charcoal-natural",
+        "label": "Charcoal / natural",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "neutral linen pillows couch",
+    "images": [
+      "/marlow/mw-liv-34.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 86,
+    "new": true
+  },
+  {
+    "id": "mw-liv-35",
+    "slug": "tangerine-boucle-cushion",
+    "name": "Tangerine Bouclé Cushion",
+    "category": "Living",
+    "subcategory": "Throws & cushions",
+    "price": 59,
+    "description": "The Tangerine is a round 18-inch cushion in a nubby wool-blend bouclé with a fabric-covered button pulled into the centre, in burnt orange, chocolate and cream. The looped texture catches light unevenly and feels like a sheep's fleece under your hand. It is a small, chunky, cheerful thing that belongs on a curved chair.",
+    "details": [
+      "18 in round, 4 in deep",
+      "Wool-polyester bouclé cover, centre button",
+      "Polyester fibre insert included",
+      "Hidden zip; spot clean only",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "bouclé",
+        "wool blend"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "burnt orange",
+        "chocolate",
+        "cream"
+      ],
+      "useCase": [
+        "chair styling",
+        "color pop",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "bouclé",
+      "round cushion",
+      "retro",
+      "textured",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-35-burnt-orange",
+        "label": "Burnt orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-35-chocolate",
+        "label": "Chocolate",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-35-cream",
+        "label": "Cream",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "orange cushion sofa",
+    "images": [
+      "/marlow/mw-liv-35.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 139
+  },
+  {
+    "id": "mw-liv-36",
+    "slug": "rivet-steel-mirror",
+    "name": "Rivet Steel Mirror",
+    "category": "Living",
+    "subcategory": "Wall art & mirrors",
+    "price": 329,
+    "description": "The Rivet is a tall rectangular mirror in a 1-inch blackened steel frame with exposed hex-head rivets at each corner and a lightly distressed, hand-waxed finish. The glass is 5 mm with a bevelled edge, and the whole thing can lean against a wall or hang from heavy-duty D-rings. It is plain, heavy and looks right in a hallway with concrete floors.",
+    "details": [
+      "W 24 in x H 60 in x D 1.5 in",
+      "Hot-rolled steel frame, blackened and waxed",
+      "5 mm mirror glass with 1/2 in bevel, MDF backing",
+      "Two D-ring hangers; can also lean",
+      "Weight 42 lb; wall anchors included",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "steel",
+        "glass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black steel"
+      ],
+      "useCase": [
+        "entryway",
+        "full length",
+        "loft"
+      ],
+      "room": [
+        "entryway",
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "full length mirror",
+      "steel frame",
+      "leaning",
+      "loft",
+      "riveted"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-36-24-x-60",
+        "label": "24 x 60 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-36-30-x-72",
+        "label": "30 x 72 in",
+        "inStock": true,
+        "priceDelta": 120
+      }
+    ],
+    "imageQuery": "black frame floor mirror",
+    "images": [
+      "/marlow/mw-liv-36.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 181
+  },
+  {
+    "id": "mw-liv-37",
+    "slug": "fan-fluted-brass-mirror",
+    "name": "Fan Fluted Brass Mirror",
+    "category": "Living",
+    "subcategory": "Wall art & mirrors",
+    "price": 395,
+    "description": "The Fan is a half-round wall mirror with a brass frame worked into radiating flutes, so the mirror sits inside a sunburst of ridged metal. The brass is brushed and lacquered to keep its warmth without tarnishing, and the mirror is a clear, high-silver glass. It is a polished, geometric piece for above a console or a fireplace with a velvet chair nearby.",
+    "details": [
+      "W 36 in x H 20 in x D 2 in",
+      "Brass-plated steel frame, brushed and lacquered",
+      "4 mm mirror glass",
+      "Flush-mount keyhole hanger",
+      "Weight 14 lb; wall anchors included",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "brass",
+        "glass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "brushed brass"
+      ],
+      "useCase": [
+        "above console",
+        "entryway",
+        "statement piece"
+      ],
+      "room": [
+        "entryway",
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "fluted",
+      "brass",
+      "half round",
+      "art deco",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-37-brushed-brass",
+        "label": "Brushed brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-37-polished-nickel",
+        "label": "Polished nickel",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "fluted brass half round wall mirror",
+    "images": [
+      "/marlow/mw-liv-37.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 94
+  },
+  {
+    "id": "mw-liv-38",
+    "slug": "arc-walnut-mirror",
+    "name": "Arc Walnut Mirror",
+    "category": "Living",
+    "subcategory": "Wall art & mirrors",
+    "price": 279,
+    "description": "The Arc is an arched wall mirror in a slim solid walnut frame, steam-bent around the top and finished with a hand-rubbed oil that brings out the grain. The frame is just an inch wide, so the shape does the talking. It is warm and organic, and it brings a little mid-century softness to a hallway or above a low sideboard.",
+    "details": [
+      "W 22 in x H 40 in x D 1 in",
+      "Solid American walnut frame, steam-bent arch, oiled",
+      "4 mm mirror glass with a flat polished edge",
+      "Two D-ring hangers",
+      "Weight 11 lb",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "glass"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "walnut"
+      ],
+      "useCase": [
+        "entryway",
+        "above sideboard",
+        "bedroom"
+      ],
+      "room": [
+        "entryway",
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "arched mirror",
+      "walnut",
+      "steam-bent",
+      "organic",
+      "warm"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-38-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-38-white-oak",
+        "label": "White oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "arched walnut frame wall mirror",
+    "images": [
+      "/marlow/mw-liv-38.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 227,
+    "bestseller": true
+  },
+  {
+    "id": "mw-liv-39",
+    "slug": "menagerie-print-set",
+    "name": "Menagerie Print Set (Set of 3)",
+    "category": "Living",
+    "subcategory": "Wall art & mirrors",
+    "price": 189,
+    "compareAtPrice": 225,
+    "description": "The Menagerie set is three giclée prints of oversized gouache animals, a tiger, a flamingo and a leopard, each on a different saturated ground of cobalt, hot pink and mustard. They come matted in white and framed in a glossy black lacquer that nods at chinoiserie. Hang them in a row or scatter them into a gallery wall that already has too much going on.",
+    "details": [
+      "Three prints, each 16 x 20 in framed, 11 x 14 in image",
+      "Archival giclée on 310 gsm cotton rag paper",
+      "Gloss black lacquered wood frames with acrylic glazing",
+      "White 8-ply mat; sawtooth hangers",
+      "Printed in Oregon; framed in Vermont"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "paper",
+        "lacquered wood",
+        "acrylic"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "cobalt",
+        "hot pink",
+        "mustard",
+        "black"
+      ],
+      "useCase": [
+        "gallery wall",
+        "color pop",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "kids room",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "print set",
+      "gallery wall",
+      "bold color",
+      "framed",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-39-black-lacquer",
+        "label": "Black lacquer",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-39-natural-oak",
+        "label": "Natural oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "colorful framed animal art prints",
+    "images": [
+      "/marlow/mw-liv-39.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 48
+  },
+  {
+    "id": "mw-liv-40",
+    "slug": "enso-ink-print",
+    "name": "Enso Ink Print",
+    "category": "Living",
+    "subcategory": "Wall art & mirrors",
+    "price": 145,
+    "description": "The Enso is a single sumi-ink circle printed in large format on heavyweight washi paper, with the brush's dry edges and uneven ink load preserved from the original painting. It is mounted on a solid black-stained oak hanger bar at top and bottom, so it hangs like a scroll with no glass. It is quiet, graphic and gives a wall one thing to look at.",
+    "details": [
+      "W 24 in x H 36 in",
+      "Archival pigment print on 120 gsm washi",
+      "Solid oak hanger bars, black stain, with cotton cord",
+      "No glass; keep out of direct sun and damp",
+      "Printed in Japan; bars made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "washi paper",
+        "oak"
+      ],
+      "colorFamily": [
+        "black",
+        "white"
+      ],
+      "colors": [
+        "ink",
+        "natural white"
+      ],
+      "useCase": [
+        "focal wall",
+        "calm space",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ink",
+      "scroll",
+      "washi",
+      "minimal",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-liv-40-black-oak",
+        "label": "Black oak bars",
+        "inStock": true
+      },
+      {
+        "id": "mw-liv-40-natural-oak",
+        "label": "Natural oak bars",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "enso ink circle scroll wall art",
+    "images": [
+      "/marlow/mw-liv-40.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 69
+  }
+]

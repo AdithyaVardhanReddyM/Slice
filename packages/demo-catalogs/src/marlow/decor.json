@@ -1,0 +1,1830 @@
+[
+  {
+    "id": "mw-dec-01",
+    "slug": "orchard-candle-fig-cedar-black-tea",
+    "name": "Orchard Candle — Fig, Cedar & Black Tea",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 38,
+    "description": "A soy and coconut wax candle poured into a matte oatmeal stoneware cup, with a scent that opens on green fig and settles into cedarwood and black tea. The throw is quiet rather than sweet, so it reads as calm and clean in a small room. The cup is made to be kept and reused for pens or a single stem once the wax is gone.",
+    "details": [
+      "8 oz / 227 g, approx. 45 hours burn time",
+      "Soy and coconut wax blend with a cotton wick",
+      "Scent notes: green fig, cedarwood, black tea, a trace of smoke",
+      "Reusable matte stoneware vessel, dishwasher safe once cleaned out",
+      "Trim wick to 5 mm before each burn",
+      "Hand-poured in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "soy wax",
+        "coconut wax",
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "oatmeal",
+        "charcoal"
+      ],
+      "useCase": [
+        "gift",
+        "winding down",
+        "hosting"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "hand-poured",
+      "soy wax",
+      "stoneware",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-01-8-oz",
+        "label": "8 oz",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-01-14-oz",
+        "label": "14 oz",
+        "inStock": true,
+        "priceDelta": 18
+      }
+    ],
+    "imageQuery": "lit candle stoneware",
+    "images": [
+      "/marlow/mw-dec-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 412,
+    "bestseller": true
+  },
+  {
+    "id": "mw-dec-02",
+    "slug": "tidewater-candle-sea-salt-driftwood",
+    "name": "Tidewater Candle — Sea Salt, Driftwood & White Musk",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 35,
+    "description": "A frosted sea-glass tumbler filled with a clean, airy scent: sea salt and driftwood up front, white musk and a little pale citrus underneath. It smells like a window left open on a bright morning, which makes it an easy one to burn in a bathroom or by the bed. Light enough to run every day without taking over a room.",
+    "details": [
+      "7 oz / 198 g, approx. 40 hours burn time",
+      "Soy wax with a cotton wick",
+      "Scent notes: sea salt, driftwood, white musk, pale grapefruit",
+      "Frosted glass tumbler with a bamboo lid",
+      "Keep away from drafts for an even burn",
+      "Hand-poured in Maine"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "soy wax",
+        "frosted glass",
+        "bamboo"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "sea glass",
+        "white"
+      ],
+      "useCase": [
+        "gift",
+        "summer evenings",
+        "bathroom"
+      ],
+      "room": [
+        "bathroom",
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "beach house",
+      "soy wax",
+      "airy",
+      "hand-poured"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-02-frosted-glass",
+        "label": "Frosted glass",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-02-sand-ceramic",
+        "label": "Sand ceramic",
+        "inStock": true,
+        "priceDelta": 6
+      }
+    ],
+    "imageQuery": "frosted glass candle coastal bathroom",
+    "images": [
+      "/marlow/mw-dec-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 188
+  },
+  {
+    "id": "mw-dec-03",
+    "slug": "harlow-candle-amber-tobacco-leaf-vetiver",
+    "name": "Harlow Candle — Amber, Tobacco Leaf & Vetiver",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 48,
+    "compareAtPrice": 58,
+    "description": "A moody, grown-up candle in a fluted black glass vessel with a polished brass lid. Amber and tobacco leaf lead, with bergamot on top and a dry vetiver base that lingers after the flame is out. It sits well on a bar cart or a velvet-heavy living room, and the lid keeps the scent sealed between burns.",
+    "details": [
+      "10 oz / 283 g, approx. 55 hours burn time",
+      "Coconut and apricot wax blend, double cotton wick",
+      "Scent notes: amber, tobacco leaf, bergamot, vetiver, a touch of clove",
+      "Fluted glass vessel with a weighted brass lid",
+      "Vessel can be cleaned and reused as a stash jar",
+      "Hand-poured in Brooklyn, New York"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam",
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "coconut wax",
+        "glass",
+        "brass"
+      ],
+      "colorFamily": [
+        "black",
+        "warm"
+      ],
+      "colors": [
+        "black",
+        "brass"
+      ],
+      "useCase": [
+        "gift",
+        "hosting",
+        "evenings in"
+      ],
+      "room": [
+        "living room",
+        "dining room",
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "gift",
+      "moody",
+      "brass lid",
+      "fluted",
+      "statement scent"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-03-black-glass",
+        "label": "Black glass",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-03-emerald-glass",
+        "label": "Emerald glass",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black fluted glass candle brass lid",
+    "images": [
+      "/marlow/mw-dec-03.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 96
+  },
+  {
+    "id": "mw-dec-04",
+    "slug": "hearth-candle-woodsmoke-clove-dried-orange",
+    "name": "Hearth Candle — Woodsmoke, Clove & Dried Orange",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 28,
+    "description": "A travel-sized soy candle in a lidded enamel tin, scented like a farmhouse kitchen in December: woodsmoke, clove and dried orange peel over a soft pine base. The cream tin with its dark green rim looks at home on a windowsill or a stack of cookbooks. It is small and sturdy enough to toss into a weekend bag.",
+    "details": [
+      "5 oz / 142 g, approx. 30 hours burn time",
+      "Soy wax with a cotton wick",
+      "Scent notes: woodsmoke, clove, dried orange peel, balsam pine",
+      "Enameled steel tin with a snap-fit lid",
+      "Do not burn for more than 3 hours at a time",
+      "Hand-poured in Vermont"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "soy wax",
+        "enameled steel"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "cream",
+        "forest green"
+      ],
+      "useCase": [
+        "gift",
+        "winter",
+        "stocking stuffer"
+      ],
+      "room": [
+        "kitchen",
+        "living room",
+        "entryway"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "gift",
+      "farmhouse",
+      "tin candle",
+      "travel size",
+      "winter"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-04-cream-tin",
+        "label": "Cream tin",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-04-forest-green-tin",
+        "label": "Forest green tin",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "candle in tin lit",
+    "images": [
+      "/marlow/mw-dec-04.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 274
+  },
+  {
+    "id": "mw-dec-05",
+    "slug": "ilse-reed-diffuser-bergamot-hinoki-white-tea",
+    "name": "Ilse Reed Diffuser — Bergamot, Hinoki & White Tea",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 40,
+    "description": "A flame-free diffuser in a slim clear glass bottle with a pale oak collar and natural rattan reeds. The scent is spare and green: bergamot first, then the soft cedar-like warmth of hinoki wood and a clean white tea finish. It is the kind of scent that makes a hallway or bathroom feel freshly cleaned without smelling like soap.",
+    "details": [
+      "100 ml bottle, lasts approx. 3 months with 6 reeds",
+      "Fragrance oil in a plant-based carrier, alcohol free",
+      "Scent notes: bergamot, hinoki cypress, white tea, a hint of yuzu",
+      "Clear glass bottle with a solid oak collar and 8 rattan reeds",
+      "Flip the reeds weekly to refresh the throw",
+      "Blended in Kyoto, bottled in California"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "glass",
+        "oak",
+        "rattan"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "clear",
+        "natural oak"
+      ],
+      "useCase": [
+        "gift",
+        "entryway",
+        "flame-free scent"
+      ],
+      "room": [
+        "entryway",
+        "bathroom",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "reed diffuser",
+      "flame-free",
+      "hinoki",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-05-100-ml",
+        "label": "100 ml",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-05-200-ml",
+        "label": "200 ml",
+        "inStock": true,
+        "priceDelta": 20
+      }
+    ],
+    "imageQuery": "reed diffuser glass bottle oak",
+    "images": [
+      "/marlow/mw-dec-05.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 131
+  },
+  {
+    "id": "mw-dec-06",
+    "slug": "kasbah-incense-set-with-terracotta-holder",
+    "name": "Kasbah Incense Set with Terracotta Holder",
+    "category": "Decor",
+    "subcategory": "Candles & scent",
+    "price": 25,
+    "description": "Hand-rolled incense sticks packed in a kraft box with a small hand-formed terracotta holder, the kind of thing that ends up on a stack of books next to a trailing plant. The sandalwood is creamy and slow, the palo santo sweet and resinous, and the cedar and sage blend dry and a little smoky. Each stick burns for about forty minutes and leaves a warm, collected feel in the room.",
+    "details": [
+      "40 sticks per box, approx. 40 minutes burn time each",
+      "Bamboo core rolled in natural resin, wood powder and essential oils",
+      "Unglazed terracotta holder included, 9 cm diameter",
+      "Sampler box contains 15 sticks each of sandalwood, palo santo and cedar & sage",
+      "Burn on a heat-safe surface in a ventilated room",
+      "Rolled in Jaipur, India"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "bamboo",
+        "natural resin",
+        "terracotta"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "terracotta",
+        "natural"
+      ],
+      "useCase": [
+        "gift",
+        "ritual",
+        "winding down"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "balcony"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "gift",
+      "incense",
+      "hand-rolled",
+      "terracotta",
+      "collected"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-06-sandalwood",
+        "label": "Sandalwood",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-06-palo-santo",
+        "label": "Palo santo",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-06-cedar-sage",
+        "label": "Cedar & sage",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-06-sampler",
+        "label": "Sampler",
+        "inStock": true,
+        "priceDelta": 4
+      }
+    ],
+    "imageQuery": "incense sticks terracotta holder",
+    "images": [
+      "/marlow/mw-dec-06.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 218
+  },
+  {
+    "id": "mw-dec-07",
+    "slug": "nord-ash-vase",
+    "name": "Nord Ash Vase",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 45,
+    "description": "A tall, narrow-necked stoneware vase in a soft matte glaze that catches light the way chalk does. The silhouette is clean and slightly tapered, made to hold a single eucalyptus branch or three stems of dried grass without fuss. It is pale and quiet enough to sit on a white oak shelf and disappear until you notice it.",
+    "details": [
+      "Small: 18 cm H x 9 cm W; Large: 28 cm H x 12 cm W",
+      "Stoneware with a matte food-safe glaze, watertight",
+      "Opening 3.5 cm, suits single branches and slim bunches",
+      "Hand-wash only",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "chalk white",
+        "fog grey"
+      ],
+      "useCase": [
+        "gift",
+        "dried stems",
+        "shelf styling"
+      ],
+      "room": [
+        "living room",
+        "dining room",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "matte glaze",
+      "single stem",
+      "quiet",
+      "shelf"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-07-chalk-white-18-cm",
+        "label": "Chalk white, 18 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-07-chalk-white-28-cm",
+        "label": "Chalk white, 28 cm",
+        "inStock": true,
+        "priceDelta": 25
+      },
+      {
+        "id": "mw-dec-07-fog-grey-18-cm",
+        "label": "Fog grey, 18 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-07-fog-grey-28-cm",
+        "label": "Fog grey, 28 cm",
+        "inStock": true,
+        "priceDelta": 25
+      }
+    ],
+    "imageQuery": "white matte stoneware vase minimal",
+    "images": [
+      "/marlow/mw-dec-07.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 203
+  },
+  {
+    "id": "mw-dec-08",
+    "slug": "juno-bud-vases-set-of-3",
+    "name": "Juno Bud Vases (Set of 3)",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 38,
+    "description": "Three small glazed stoneware bud vases in mustard, olive and teal, each a slightly different organic shape so they read as a family rather than a matching set. They line up on a windowsill or a walnut sideboard and look lived-in with a single sprig in each. The glazes are glossy and a little pooled at the base, which is where the hand-dipped character shows.",
+    "details": [
+      "Heights 9 cm, 11 cm and 13 cm; openings 1.5–2.5 cm",
+      "Stoneware, hand-dipped in glossy glaze",
+      "Watertight, suited to fresh single stems",
+      "Hand-wash only; glaze variation is expected",
+      "Set of 3, gift boxed",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "glazed stoneware"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "mustard",
+        "olive",
+        "teal"
+      ],
+      "useCase": [
+        "gift",
+        "windowsill",
+        "hosting"
+      ],
+      "room": [
+        "dining room",
+        "kitchen",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "set of 3",
+      "bud vase",
+      "hand-glazed",
+      "windowsill"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-08-mustard-olive-teal",
+        "label": "Mustard / olive / teal",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-08-brown-cream-rust",
+        "label": "Walnut brown / cream / rust",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ceramic bud vases set mustard olive",
+    "images": [
+      "/marlow/mw-dec-08.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 356,
+    "bestseller": true
+  },
+  {
+    "id": "mw-dec-09",
+    "slug": "sora-wabi-vase",
+    "name": "Sora Wabi Vase",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 68,
+    "description": "A hand-thrown black stoneware vase with a low, wide belly and a raw unglazed band around the shoulder where the clay shows through. No two are quite alike; the throwing lines and the slight lean are left in rather than smoothed away. It holds one bare branch well and looks right on an oak console in a spare, calm entryway.",
+    "details": [
+      "22 cm H x 16 cm W at the belly; opening 5 cm",
+      "Black stoneware with a matte glaze and an unglazed raw band",
+      "Hand-thrown; expect variation in height and surface",
+      "Watertight; hand-wash only",
+      "Made in a family workshop in Mashiko, Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "black stoneware"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "matte black",
+        "raw clay"
+      ],
+      "useCase": [
+        "gift",
+        "single branch",
+        "entryway styling"
+      ],
+      "room": [
+        "living room",
+        "entryway",
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "gift",
+      "hand-thrown",
+      "wabi-sabi",
+      "one of a kind",
+      "dried stems"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-09-matte-black",
+        "label": "Matte black",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-09-ash-glaze",
+        "label": "Ash glaze",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black stoneware vase wabi sabi",
+    "images": [
+      "/marlow/mw-dec-09.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 87
+  },
+  {
+    "id": "mw-dec-10",
+    "slug": "odessa-fluted-vase",
+    "name": "Odessa Fluted Vase",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 85,
+    "description": "A tall ribbed glass vase in deep emerald with a polished brass band at the foot and the rim. The fluting runs vertically so it throws stripes of light across a table when a lamp is on nearby, and the weighted base keeps a full bunch of ranunculus steady. It is polished and a little theatrical, the piece you put at the center of a dinner table.",
+    "details": [
+      "30 cm H x 14 cm W; opening 10 cm",
+      "Mouth-blown fluted glass with brass-plated steel bands",
+      "Weighted base, approx. 1.6 kg",
+      "Hand-wash only; wipe brass dry after cleaning",
+      "Made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "glass",
+        "brass"
+      ],
+      "colorFamily": [
+        "bold",
+        "warm"
+      ],
+      "colors": [
+        "emerald",
+        "brass"
+      ],
+      "useCase": [
+        "gift",
+        "hosting",
+        "centerpiece"
+      ],
+      "room": [
+        "dining room",
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "gift",
+      "fluted",
+      "brass",
+      "jewel tone",
+      "statement"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-10-emerald",
+        "label": "Emerald",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-10-smoky-topaz",
+        "label": "Smoky topaz",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-10-clear",
+        "label": "Clear",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "emerald fluted glass vase brass",
+    "images": [
+      "/marlow/mw-dec-10.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 64
+  },
+  {
+    "id": "mw-dec-11",
+    "slug": "solace-smoked-glass-vase",
+    "name": "Solace Smoked Glass Vase",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 58,
+    "description": "A chunky, bulbous vase in mouth-blown smoked glass that goes from amber at the rim to a deep tobacco brown at the base. The curve is round and heavy in the hand, with a short flared neck that suits a few stems of pampas or a loose bunch of dried wheat. It warms up a shelf next to a bouclé chair and looks straight out of a 1974 living room, in the good way.",
+    "details": [
+      "20 cm H x 18 cm W; opening 7 cm",
+      "Mouth-blown smoked glass; small bubbles are part of the process",
+      "Approx. 1.1 kg",
+      "Watertight; hand-wash only",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "smoked glass"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "amber",
+        "smoke brown"
+      ],
+      "useCase": [
+        "gift",
+        "dried stems",
+        "shelf styling"
+      ],
+      "room": [
+        "living room",
+        "dining room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "smoked glass",
+      "mouth-blown",
+      "curved",
+      "70s",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-11-amber",
+        "label": "Amber",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-11-smoke-brown",
+        "label": "Smoke brown",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "amber smoked glass vase retro",
+    "images": [
+      "/marlow/mw-dec-11.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 42,
+    "new": true
+  },
+  {
+    "id": "mw-dec-12",
+    "slug": "meadow-jug-vase",
+    "name": "Meadow Jug Vase",
+    "category": "Decor",
+    "subcategory": "Vases",
+    "price": 40,
+    "description": "A pitcher-shaped stoneware vase in a cream glaze with a comfortable loop handle and a pulled spout. It looks like something off a farmhouse dresser and holds a big armful of wildflowers, cow parsley or a bundle of garden herbs by the sink. Homely and unfussy, and it works as an actual jug for water or lemonade too.",
+    "details": [
+      "24 cm H x 15 cm W; holds 1.4 L",
+      "Stoneware with a food-safe glaze",
+      "Dishwasher and microwave safe",
+      "Speckled oat glaze has visible iron flecks",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "speckled oat"
+      ],
+      "useCase": [
+        "gift",
+        "wildflowers",
+        "kitchen table"
+      ],
+      "room": [
+        "kitchen",
+        "dining room",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "farmhouse",
+      "pitcher",
+      "wildflowers",
+      "hand-glazed"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-12-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-12-speckled-oat",
+        "label": "Speckled oat",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream stoneware jug wildflowers",
+    "images": [
+      "/marlow/mw-dec-12.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 159
+  },
+  {
+    "id": "mw-dec-13",
+    "slug": "tierra-terracotta-planter",
+    "name": "Tierra Terracotta Planter",
+    "category": "Decor",
+    "subcategory": "Planters",
+    "price": 28,
+    "description": "A classic unglazed terracotta pot with a matching saucer, thicker-walled than the garden-center kind and with a slightly rolled rim. The clay breathes, so roots stay healthy, and it picks up a soft patina of mineral bloom over time that only makes it look more collected. Line up three sizes on a balcony or cluster them by a sunny window with trailing pothos.",
+    "details": [
+      "15 cm, 20 cm and 28 cm diameters; saucer included",
+      "Unglazed terracotta, fired at high temperature",
+      "Drainage hole in the base",
+      "Frost resistant to -5°C; bring indoors in hard winters",
+      "Made in Tuscany, Italy"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "terracotta"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "terracotta"
+      ],
+      "useCase": [
+        "houseplants",
+        "balcony",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "balcony",
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "drainage hole",
+      "saucer included",
+      "houseplants",
+      "balcony",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-13-15-cm",
+        "label": "15 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-13-20-cm",
+        "label": "20 cm",
+        "inStock": true,
+        "priceDelta": 10
+      },
+      {
+        "id": "mw-dec-13-28-cm",
+        "label": "28 cm",
+        "inStock": true,
+        "priceDelta": 28
+      }
+    ],
+    "imageQuery": "terracotta plant pot saucer",
+    "images": [
+      "/marlow/mw-dec-13.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 487,
+    "bestseller": true
+  },
+  {
+    "id": "mw-dec-14",
+    "slug": "foundry-concrete-planter",
+    "name": "Foundry Concrete Planter",
+    "category": "Decor",
+    "subcategory": "Planters",
+    "price": 48,
+    "description": "A straight-sided cylinder cast in fiber-reinforced concrete, left raw with the pour marks and tiny air pockets showing. It has a utilitarian, loft-floor look that suits a snake plant or a rubber tree beside a steel-framed shelf. Heavier than ceramic at the same size, which keeps tall plants from tipping.",
+    "details": [
+      "20 cm: 20 cm dia x 19 cm H, 2.4 kg; 30 cm: 30 cm dia x 28 cm H, 5.8 kg",
+      "Fiber-reinforced concrete, sealed inside",
+      "Drainage hole with a rubber plug for indoor use",
+      "Suitable for covered outdoor spaces",
+      "Cast in Ohio, USA"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "fiber concrete"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "raw grey",
+        "charcoal"
+      ],
+      "useCase": [
+        "houseplants",
+        "indoor outdoor",
+        "loft apartment"
+      ],
+      "room": [
+        "living room",
+        "home office",
+        "balcony"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "concrete",
+      "loft",
+      "indoor outdoor",
+      "drainage hole",
+      "raw"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-14-raw-grey-20-cm",
+        "label": "Raw grey, 20 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-14-raw-grey-30-cm",
+        "label": "Raw grey, 30 cm",
+        "inStock": true,
+        "priceDelta": 30
+      },
+      {
+        "id": "mw-dec-14-charcoal-20-cm",
+        "label": "Charcoal, 20 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-14-charcoal-30-cm",
+        "label": "Charcoal, 30 cm",
+        "inStock": false,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "concrete cylinder planter industrial",
+    "images": [
+      "/marlow/mw-dec-14.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 112
+  },
+  {
+    "id": "mw-dec-15",
+    "slug": "cove-hanging-rattan-planter",
+    "name": "Cove Hanging Rattan Planter",
+    "category": "Decor",
+    "subcategory": "Planters",
+    "price": 35,
+    "description": "A loosely woven rattan basket on a thick twisted cotton rope, with a removable plastic liner so you can hang a real pot inside without drips. The weave is open and sun-bleached in the whitewash finish, breezy and textured in the natural. It makes a trailing string-of-hearts look like it belongs in a light-filled corner or a bathroom with a skylight.",
+    "details": [
+      "Basket 22 cm dia x 16 cm H; hangs 70 cm from the hook",
+      "Hand-woven rattan with a cotton rope hanger and brass hook",
+      "Removable waterproof liner included; fits pots up to 18 cm",
+      "Holds up to 4 kg",
+      "Woven in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global",
+        "coastal"
+      ],
+      "material": [
+        "rattan",
+        "cotton rope",
+        "brass"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "natural",
+        "whitewash"
+      ],
+      "useCase": [
+        "trailing plants",
+        "small space",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "balcony",
+        "bathroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "hanging planter",
+      "trailing plants",
+      "rope",
+      "small space",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-15-natural",
+        "label": "Natural",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-15-whitewash",
+        "label": "Whitewash",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "hanging rattan planter rope",
+    "images": [
+      "/marlow/mw-dec-15.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 98
+  },
+  {
+    "id": "mw-dec-16",
+    "slug": "linden-planter-with-stand",
+    "name": "Linden Planter with Stand",
+    "category": "Decor",
+    "subcategory": "Planters",
+    "price": 89,
+    "compareAtPrice": 110,
+    "description": "A glossy glazed ceramic pot set into a solid walnut stand with three gently tapered legs, lifting the plant about 20 cm off the floor. It gives a fiddle-leaf fig or a bird of paradise the low-slung, organic look of a 1960s living room, and the stand keeps the pot off cold floors. The white glaze is the quiet option; olive and mustard are for people who already own a teal sofa.",
+    "details": [
+      "Pot 25 cm dia x 23 cm H; overall height 43 cm with stand",
+      "Solid walnut stand with an oiled finish",
+      "Glazed stoneware pot with a drainage hole and saucer",
+      "Stand holds up to 15 kg",
+      "Simple assembly, legs screw in",
+      "Stand made in North Carolina; pot made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "glazed stoneware"
+      ],
+      "colorFamily": [
+        "warm",
+        "white"
+      ],
+      "colors": [
+        "walnut",
+        "white"
+      ],
+      "useCase": [
+        "large houseplants",
+        "statement corner",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "home office",
+        "entryway"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "plant stand",
+      "tapered legs",
+      "walnut",
+      "fiddle leaf",
+      "statement"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-16-walnut-white",
+        "label": "Walnut / white",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-16-walnut-olive",
+        "label": "Walnut / olive",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-16-walnut-mustard",
+        "label": "Walnut / mustard",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "mid century plant stand walnut ceramic pot",
+    "images": [
+      "/marlow/mw-dec-16.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 73
+  },
+  {
+    "id": "mw-dec-17",
+    "slug": "bloom-glazed-planter",
+    "name": "Bloom Glazed Planter",
+    "category": "Decor",
+    "subcategory": "Planters",
+    "price": 38,
+    "description": "A squat stoneware planter with a wavy, scalloped rim and a high-gloss glaze in colors that do not apologize: cobalt, fuchsia or lime. It is playful and a bit loud on its own, and even better in a group of mismatched colors on a crowded shelf. Put a calathea in it and let the leaves clash.",
+    "details": [
+      "17 cm dia x 15 cm H; fits a 14 cm nursery pot",
+      "Stoneware with a glossy glaze",
+      "Drainage hole with a matching saucer included",
+      "Hand-wash only",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "glazed stoneware"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "cobalt",
+        "fuchsia",
+        "lime"
+      ],
+      "useCase": [
+        "houseplants",
+        "gift",
+        "small space"
+      ],
+      "room": [
+        "living room",
+        "kids room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bold color",
+      "wavy rim",
+      "playful",
+      "gift",
+      "small space"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-17-cobalt",
+        "label": "Cobalt",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-17-fuchsia",
+        "label": "Fuchsia",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-17-lime",
+        "label": "Lime",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "colorful glazed ceramic planter scalloped",
+    "images": [
+      "/marlow/mw-dec-17.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 29,
+    "new": true
+  },
+  {
+    "id": "mw-dec-18",
+    "slug": "tempo-wall-clock",
+    "name": "Tempo Wall Clock",
+    "category": "Decor",
+    "subcategory": "Clocks",
+    "price": 98,
+    "description": "A round wall clock with a solid walnut case, a cream face with slim brass hour markers and tapered brass hands. The silent sweep movement means no ticking in a home office or a bedroom. It is low-key and warm, the sort of clock that looks right above a walnut credenza with a mustard lamp beside it.",
+    "details": [
+      "30 cm diameter x 5 cm deep",
+      "Solid walnut case with an oiled finish, domed glass lens",
+      "Quartz silent sweep movement, runs on 1 AA battery (included)",
+      "Keyhole hanger on the back",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "brass",
+        "glass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "walnut",
+        "brass",
+        "cream"
+      ],
+      "useCase": [
+        "gift",
+        "home office",
+        "silent clock"
+      ],
+      "room": [
+        "living room",
+        "kitchen",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "silent sweep",
+      "wall clock",
+      "brass hands",
+      "walnut",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-18-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-18-black-ash",
+        "label": "Black ash",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "walnut wall clock mid century",
+    "images": [
+      "/marlow/mw-dec-18.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 145
+  },
+  {
+    "id": "mw-dec-19",
+    "slug": "gantry-wall-clock",
+    "name": "Gantry Wall Clock",
+    "category": "Decor",
+    "subcategory": "Clocks",
+    "price": 110,
+    "description": "An oversized open-face wall clock made from a ring of blackened steel with the numerals cut out and the hands and movement left exposed, so the wall shows through. It reads from across a loft or a long kitchen and has the raw, workshop look of a factory clock without the weight. Rivets and finish marks are left visible.",
+    "details": [
+      "40 cm or 60 cm diameter, 4 cm deep",
+      "Laser-cut steel with a blackened or raw waxed finish",
+      "Quartz silent sweep movement, 1 AA battery (included)",
+      "Wall mount with a single screw; hardware included",
+      "Made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "blackened steel",
+        "steel"
+      ],
+      "colorFamily": [
+        "black",
+        "neutral"
+      ],
+      "colors": [
+        "black",
+        "raw steel"
+      ],
+      "useCase": [
+        "loft apartment",
+        "kitchen",
+        "statement wall"
+      ],
+      "room": [
+        "kitchen",
+        "home office",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "loft",
+      "oversized",
+      "exposed hardware",
+      "steel",
+      "statement"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-19-blackened-40-cm",
+        "label": "Blackened steel, 40 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-19-raw-steel-40-cm",
+        "label": "Raw steel, 40 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-19-blackened-60-cm",
+        "label": "Blackened steel, 60 cm",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "black steel skeleton wall clock industrial",
+    "images": [
+      "/marlow/mw-dec-19.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 67
+  },
+  {
+    "id": "mw-dec-20",
+    "slug": "lumen-mantel-clock",
+    "name": "Lumen Mantel Clock",
+    "category": "Decor",
+    "subcategory": "Clocks",
+    "price": 165,
+    "description": "A small mantel clock with a fluted brass case standing on a slab of white marble, the face a deep black enamel with gold batons. It is geometric and polished, built to catch lamplight on a mantel or a nightstand, and it is heavier than it looks. The kind of gift that gets kept for decades.",
+    "details": [
+      "18 cm H x 14 cm W x 7 cm D; approx. 1.9 kg",
+      "Brass-plated fluted zinc case on a solid marble base",
+      "Quartz silent sweep movement, 1 AA battery (included)",
+      "Marble veining varies; no two bases match",
+      "Gift boxed",
+      "Assembled in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "brass",
+        "marble",
+        "enamel"
+      ],
+      "colorFamily": [
+        "warm",
+        "white"
+      ],
+      "colors": [
+        "brass",
+        "white marble",
+        "black"
+      ],
+      "useCase": [
+        "gift",
+        "mantel",
+        "nightstand"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "entryway"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "gift",
+      "statement",
+      "mantel clock",
+      "marble",
+      "fluted"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-20-white-marble-brass",
+        "label": "White marble / brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-20-black-marble-brass",
+        "label": "Black marble / brass",
+        "inStock": true,
+        "priceDelta": 15
+      }
+    ],
+    "imageQuery": "brass marble mantel clock art deco",
+    "images": [
+      "/marlow/mw-dec-20.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 38
+  },
+  {
+    "id": "mw-dec-21",
+    "slug": "marrakech-seagrass-baskets-set-of-3",
+    "name": "Marrakech Seagrass Baskets (Set of 3)",
+    "category": "Decor",
+    "subcategory": "Baskets & storage",
+    "price": 58,
+    "compareAtPrice": 68,
+    "description": "Three nesting baskets handwoven from seagrass and palm leaf with sturdy wrapped handles, in natural tones with an optional black chevron woven through. They are soft-sided but hold their shape, and the biggest one takes a full load of laundry or a large floor plant. Stacked in a corner or scattered through a layered living room, they add the warm, collected texture that makes a space feel settled.",
+    "details": [
+      "Large 40 cm dia x 36 cm H; medium 33 x 30 cm; small 26 x 24 cm",
+      "Handwoven seagrass and palm leaf, no dye in the natural version",
+      "Wrapped palm handles",
+      "Spot clean with a damp cloth; keep dry",
+      "Woven by a fair-trade cooperative in Morocco"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "seagrass",
+        "palm leaf"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "natural",
+        "black stripe"
+      ],
+      "useCase": [
+        "laundry",
+        "plant basket",
+        "blanket storage"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "set of 3",
+      "handwoven",
+      "laundry",
+      "plant basket",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-21-natural",
+        "label": "Natural",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-21-natural-black-stripe",
+        "label": "Natural with black stripe",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "seagrass woven baskets set handles",
+    "images": [
+      "/marlow/mw-dec-21.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 231
+  },
+  {
+    "id": "mw-dec-22",
+    "slug": "halden-felt-storage-bins-set-of-2",
+    "name": "Halden Felt Storage Bins (Set of 2)",
+    "category": "Decor",
+    "subcategory": "Baskets & storage",
+    "price": 30,
+    "description": "Two cube bins in thick pressed wool felt, pale grey with blind-stitched seams and a soft structure that stands up on its own but folds flat when empty. They slide into a shelving cube or sit on the floor of a nursery holding blocks, cables or spare bedding. Quiet, soft and easy to live with, in a way that plastic bins never are.",
+    "details": [
+      "28 cm W x 28 cm D x 28 cm H each",
+      "4 mm pressed wool-blend felt, 60% wool / 40% recycled polyester",
+      "Folds flat for storage",
+      "Spot clean only",
+      "Set of 2",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "wool felt"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "light grey",
+        "oatmeal",
+        "charcoal"
+      ],
+      "useCase": [
+        "shelf storage",
+        "nursery",
+        "small space"
+      ],
+      "room": [
+        "bedroom",
+        "kids room",
+        "home office"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "shelf storage",
+      "foldable",
+      "nursery",
+      "soft",
+      "small space"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-22-light-grey",
+        "label": "Light grey",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-22-oatmeal",
+        "label": "Oatmeal",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-22-charcoal",
+        "label": "Charcoal",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "felt storage basket",
+    "images": [
+      "/marlow/mw-dec-22.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 176
+  },
+  {
+    "id": "mw-dec-23",
+    "slug": "dockside-rope-basket",
+    "name": "Dockside Rope Basket",
+    "category": "Decor",
+    "subcategory": "Baskets & storage",
+    "price": 45,
+    "description": "A wide, low basket coiled from thick cotton rope and stitched with a single soft blue stripe near the rim, with two generous rope handles. It is light and airy, holds a pile of throws by the sofa or towels in a bathroom, and takes being dragged around a beach house without complaint. Machine washable, which is rare for a basket this size.",
+    "details": [
+      "45 cm dia x 30 cm H",
+      "100% cotton rope, coiled and stitched",
+      "Two integrated rope handles",
+      "Machine wash cold, reshape while damp",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "cotton rope"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "natural",
+        "soft blue"
+      ],
+      "useCase": [
+        "blanket storage",
+        "towels",
+        "gift"
+      ],
+      "room": [
+        "living room",
+        "bathroom",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "rope basket",
+      "blanket storage",
+      "handles",
+      "beach house",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-23-natural",
+        "label": "Natural",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-23-natural-blue-stripe",
+        "label": "Natural with blue stripe",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-23-sand",
+        "label": "Sand",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "cotton rope basket blue stripe",
+    "images": [
+      "/marlow/mw-dec-23.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 143
+  },
+  {
+    "id": "mw-dec-24",
+    "slug": "fenwick-wire-crate",
+    "name": "Fenwick Wire Crate",
+    "category": "Decor",
+    "subcategory": "Baskets & storage",
+    "price": 65,
+    "description": "A stackable storage crate in black powder-coated steel wire with a lid of reclaimed pine planks that doubles as a shelf for the crate above. The wire shows what is inside, so it works for pantry overflow, firewood kindling or boots by the door. Raw and practical, with the pine softening the steel just enough to sit in a farmhouse kitchen or a loft.",
+    "details": [
+      "45 cm W x 30 cm D x 28 cm H",
+      "Powder-coated steel wire frame, 4 mm gauge",
+      "Reclaimed pine lid with a brushed wax finish",
+      "Stacks up to 3 high; holds up to 20 kg",
+      "Wipe clean",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "industrial",
+        "cottage-rustic"
+      ],
+      "material": [
+        "steel wire",
+        "reclaimed pine"
+      ],
+      "colorFamily": [
+        "black",
+        "warm"
+      ],
+      "colors": [
+        "black",
+        "pine",
+        "galvanized"
+      ],
+      "useCase": [
+        "pantry",
+        "entryway",
+        "stackable storage"
+      ],
+      "room": [
+        "kitchen",
+        "entryway",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "stackable",
+      "farmhouse",
+      "pantry",
+      "reclaimed wood",
+      "wire crate"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-24-black-pine",
+        "label": "Black / pine",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-24-galvanized-pine",
+        "label": "Galvanized / pine",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "wire basket storage",
+    "images": [
+      "/marlow/mw-dec-24.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 58
+  },
+  {
+    "id": "mw-dec-25",
+    "slug": "groove-storage-pouf",
+    "name": "Groove Storage Pouf",
+    "category": "Decor",
+    "subcategory": "Baskets & storage",
+    "price": 139,
+    "description": "A round, chunky pouf upholstered in nubby bouclé with a lift-off lid and a deep hollow underneath for blankets, board games or the things you do not want on show. The curved shape and the burnt orange color are pure 1970s, warm and a little groovy, and it works as a footstool or an extra seat when people come over. Cream and chocolate are the quieter options.",
+    "details": [
+      "45 cm dia x 40 cm H; storage cavity 38 cm dia x 28 cm deep",
+      "Bouclé upholstery, 70% polyester / 30% wool, over a pine frame",
+      "High-density foam seat, holds up to 120 kg",
+      "Lid lifts off; no hinge",
+      "Spot clean only",
+      "Upholstered in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "bouclé",
+        "pine",
+        "foam"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "burnt orange",
+        "cream",
+        "chocolate"
+      ],
+      "useCase": [
+        "hidden storage",
+        "extra seating",
+        "footstool"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "storage ottoman",
+      "bouclé",
+      "footstool",
+      "hidden storage",
+      "statement"
+    ],
+    "variants": [
+      {
+        "id": "mw-dec-25-burnt-orange",
+        "label": "Burnt orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-25-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-dec-25-chocolate",
+        "label": "Chocolate",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "boucle storage ottoman burnt orange",
+    "images": [
+      "/marlow/mw-dec-25.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 51,
+    "new": true
+  }
+]

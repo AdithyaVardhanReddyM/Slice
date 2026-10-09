@@ -1,0 +1,699 @@
+[
+  {
+    "id": "mw-out-01",
+    "slug": "tidewater-teak-lounge-chair",
+    "name": "Tidewater Teak Lounge Chair",
+    "category": "Outdoor",
+    "subcategory": "Seating",
+    "price": 495,
+    "description": "A low, wide lounge chair in grade-A teak with a slatted back and a sand-colored cushion in UV-stable, quick-drying fabric. The frame is left unfinished so it silvers to a soft driftwood grey over a season or two, and the loose rope detail on the arms keeps it breezy. It is the chair you sit in with coffee while the balcony is still in shade.",
+    "details": [
+      "72 cm W x 84 cm D x 78 cm H; seat height 38 cm",
+      "Solid plantation teak, naturally oil-rich and rot resistant; weathers to silver-grey or keep golden with annual teak oil",
+      "Cushion in solution-dyed acrylic, fade and mildew resistant; cover zips off for washing",
+      "Marine-grade stainless steel fixings",
+      "Weight capacity 140 kg",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "teak",
+        "solution-dyed acrylic",
+        "rope"
+      ],
+      "colorFamily": [
+        "neutral",
+        "pastel"
+      ],
+      "colors": [
+        "teak",
+        "sand",
+        "soft blue"
+      ],
+      "useCase": [
+        "balcony lounging",
+        "morning coffee",
+        "small outdoor space"
+      ],
+      "room": [
+        "balcony",
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "teak",
+      "weather resistant",
+      "lounge chair",
+      "airy"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-01-sand-cushion",
+        "label": "Sand cushion",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-01-soft-blue-cushion",
+        "label": "Soft blue cushion",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-01-no-cushion",
+        "label": "No cushion",
+        "inStock": true,
+        "priceDelta": -60
+      }
+    ],
+    "imageQuery": "teak outdoor lounge chair balcony",
+    "images": [
+      "/marlow/mw-out-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 187,
+    "bestseller": true
+  },
+  {
+    "id": "mw-out-02",
+    "slug": "dune-bistro-set",
+    "name": "Dune Bistro Set",
+    "category": "Outdoor",
+    "subcategory": "Seating",
+    "price": 360,
+    "description": "A round table and two stacking chairs in olive powder-coated aluminum with tapered legs and gently curved seat shells. The set is light enough to carry through a door and sized to fit a narrow balcony, with a slatted table top that sheds rain. It has a low-slung, 1960s café look that works with a plant or two and not much else.",
+    "details": [
+      "Table 60 cm diameter x 72 cm H; chairs 52 cm W x 55 cm D x 78 cm H",
+      "Powder-coated aluminum, rust-proof and UV stable; wipe clean",
+      "Chairs stack up to four high",
+      "Adjustable glides for uneven decking",
+      "Chair weight capacity 120 kg each",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "powder-coated aluminum"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "olive",
+        "mustard"
+      ],
+      "useCase": [
+        "small outdoor space",
+        "outdoor dining",
+        "two people"
+      ],
+      "room": [
+        "balcony"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bistro set",
+      "stackable",
+      "small space",
+      "weather resistant"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-02-olive",
+        "label": "Olive",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-02-mustard",
+        "label": "Mustard",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-02-charcoal",
+        "label": "Charcoal",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "olive green bistro set balcony aluminum",
+    "images": [
+      "/marlow/mw-out-02.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 243
+  },
+  {
+    "id": "mw-out-03",
+    "slug": "nook-rope-lounge-chair",
+    "name": "Nook Rope Lounge Chair",
+    "category": "Outdoor",
+    "subcategory": "Seating",
+    "price": 295,
+    "compareAtPrice": 350,
+    "description": "A cocooning armchair hand-wrapped in terracotta all-weather rope over a matte black aluminum frame, with a woven jute-look cushion. The open weave lets air and light through and gives it a relaxed, collected-on-your-travels feel. It is wide enough to tuck your feet up in and light enough to move with the sun.",
+    "details": [
+      "76 cm W x 78 cm D x 72 cm H; seat height 36 cm",
+      "Powder-coated aluminum frame, rust-proof",
+      "Polyolefin rope, UV stable and colorfast; hose down to clean",
+      "Cushion in UV-stable olefin fabric with quick-dry foam",
+      "Weight capacity 125 kg",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "polyolefin rope",
+        "powder-coated aluminum",
+        "olefin"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "terracotta",
+        "black",
+        "natural"
+      ],
+      "useCase": [
+        "balcony lounging",
+        "reading nook",
+        "small outdoor space"
+      ],
+      "room": [
+        "balcony"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "woven",
+      "rope",
+      "relaxed",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-03-terracotta",
+        "label": "Terracotta",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-03-natural",
+        "label": "Natural",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "terracotta rope outdoor armchair",
+    "images": [
+      "/marlow/mw-out-03.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 118
+  },
+  {
+    "id": "mw-out-04",
+    "slug": "pier-teak-bench",
+    "name": "Pier Teak Bench",
+    "category": "Outdoor",
+    "subcategory": "Seating",
+    "price": 480,
+    "description": "A plain, beautifully joined teak bench with square legs and a slatted seat, no arms, no back, nothing extra. The pale honey wood and the clean proportions suit a spare balcony where a bench doubles as a plant stand or a low table. Leave it out year-round; teak looks after itself.",
+    "details": [
+      "120 cm W x 38 cm D x 45 cm H",
+      "Solid plantation teak with mortise-and-tenon joints; left unfinished",
+      "Naturally weather resistant; weathers to silver-grey outdoors",
+      "Stainless steel hardware",
+      "Weight capacity 200 kg",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "japandi"
+      ],
+      "material": [
+        "teak"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "teak",
+        "honey"
+      ],
+      "useCase": [
+        "small outdoor space",
+        "plant stand",
+        "entryway seat"
+      ],
+      "room": [
+        "balcony",
+        "entryway"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "teak",
+      "bench",
+      "minimal",
+      "weather resistant"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-04-120-cm",
+        "label": "120 cm",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-04-150-cm",
+        "label": "150 cm",
+        "inStock": true,
+        "priceDelta": 95
+      }
+    ],
+    "imageQuery": "teak slatted outdoor bench minimal",
+    "images": [
+      "/marlow/mw-out-04.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 96
+  },
+  {
+    "id": "mw-out-05",
+    "slug": "cove-fiberstone-planter",
+    "name": "Cove Fiberstone Planter",
+    "category": "Outdoor",
+    "subcategory": "Planters",
+    "price": 78,
+    "description": "A tall, tapered planter cast in fiberstone with a mottled, stone-grey surface that looks like weathered concrete at a fraction of the weight. The matte finish and quiet silhouette sit well behind an olive or a grass and leave the plant to do the talking. It is frost-proof and UV stable, so it can stay on a balcony through winter.",
+    "details": [
+      "35 cm diameter x 50 cm H; 6 kg",
+      "Fiberstone (fiberglass-reinforced stone composite), frost and UV resistant",
+      "Pre-drilled drainage hole with removable plug",
+      "Fits a 30 cm nursery pot",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "fiberstone"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "stone grey",
+        "black"
+      ],
+      "useCase": [
+        "large plants",
+        "balcony garden",
+        "entryway"
+      ],
+      "room": [
+        "balcony",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "frost proof",
+      "lightweight",
+      "concrete look",
+      "calm"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-05-stone-grey",
+        "label": "Stone grey",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-05-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-05-stone-grey-tall",
+        "label": "Stone grey / 70 cm",
+        "inStock": true,
+        "priceDelta": 42
+      }
+    ],
+    "imageQuery": "grey tall fiberstone planter balcony",
+    "images": [
+      "/marlow/mw-out-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 134
+  },
+  {
+    "id": "mw-out-06",
+    "slug": "rialto-fluted-planter",
+    "name": "Rialto Fluted Planter",
+    "category": "Outdoor",
+    "subcategory": "Planters",
+    "price": 95,
+    "description": "A deep green glazed planter with vertical fluting and a brushed brass rim, shaped like a scaled-up cocktail glass. The high-gloss glaze catches afternoon light, and the geometric ribs make even a plain fern look dressed up. It is the planter for a balcony that leans toward polished rather than rustic.",
+    "details": [
+      "32 cm diameter x 32 cm H; 5 kg",
+      "Frost-resistant glazed stoneware with powder-coated aluminum rim",
+      "Drainage hole and matching saucer included",
+      "Glaze is UV stable; wipe clean",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "glazed stoneware",
+        "powder-coated aluminum"
+      ],
+      "colorFamily": [
+        "bold",
+        "cool"
+      ],
+      "colors": [
+        "emerald",
+        "brass"
+      ],
+      "useCase": [
+        "statement plant",
+        "balcony garden",
+        "gift"
+      ],
+      "room": [
+        "balcony",
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "fluted",
+      "glazed",
+      "jewel tone",
+      "brass"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-06-emerald",
+        "label": "Emerald",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-06-navy",
+        "label": "Navy",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "green fluted ceramic planter brass",
+    "images": [
+      "/marlow/mw-out-06.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 62,
+    "new": true
+  },
+  {
+    "id": "mw-out-07",
+    "slug": "mesa-terracotta-pots-set-of-3",
+    "name": "Mesa Terracotta Pots (Set of 3)",
+    "category": "Outdoor",
+    "subcategory": "Planters",
+    "price": 42,
+    "description": "Three hand-thrown terracotta pots in graduated sizes, each with a slightly flared rim and a raw, chalky surface that blooms with white mineral marks as the plant drinks. They look like a potting shed in the south of Spain, and they are fired hot enough to shrug off frost. Fill them with herbs and line them along a railing.",
+    "details": [
+      "Large 22 cm, medium 17 cm, small 13 cm diameter; heights to match",
+      "High-fired terracotta, frost resistant to -10 °C",
+      "Drainage holes; saucers sold separately",
+      "Each pot varies in color and thickness",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic",
+        "boho-global"
+      ],
+      "material": [
+        "terracotta"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "terracotta"
+      ],
+      "useCase": [
+        "herb garden",
+        "balcony garden",
+        "gift"
+      ],
+      "room": [
+        "balcony",
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "terracotta",
+      "hand-thrown",
+      "set",
+      "herbs"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-07-set-of-3",
+        "label": "Set of 3",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-07-set-of-3-with-saucers",
+        "label": "Set of 3 with saucers",
+        "inStock": true,
+        "priceDelta": 12
+      }
+    ],
+    "imageQuery": "terracotta plant pots set herbs",
+    "images": [
+      "/marlow/mw-out-07.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 389
+  },
+  {
+    "id": "mw-out-08",
+    "slug": "beacon-steel-lantern",
+    "name": "Beacon Steel Lantern",
+    "category": "Outdoor",
+    "subcategory": "Lanterns",
+    "price": 68,
+    "description": "A square lantern in blackened powder-coated steel with riveted corners, a hinged door and tempered glass panels. It holds a chunky pillar candle or a battery LED and throws a moody, caged light across a railing or a table. The raw, utilitarian build means it can sit out in rain without fuss.",
+    "details": [
+      "18 cm W x 18 cm D x 36 cm H; 2.4 kg",
+      "Powder-coated steel, rust resistant; tempered glass panels",
+      "Fits pillar candles up to 10 cm diameter; candle not included",
+      "Carry handle on top; hang from a hook or set on a table",
+      "Wipe dry after heavy rain",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "powder-coated steel",
+        "tempered glass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "matte black"
+      ],
+      "useCase": [
+        "evening light",
+        "balcony dining",
+        "entryway"
+      ],
+      "room": [
+        "balcony",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lantern",
+      "candle",
+      "moody",
+      "weather resistant"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-08-matte-black",
+        "label": "Matte black",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-08-matte-black-large",
+        "label": "Matte black / 50 cm",
+        "inStock": true,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "black metal lantern candle",
+    "images": [
+      "/marlow/mw-out-08.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 151
+  },
+  {
+    "id": "mw-out-09",
+    "slug": "shoal-rope-lantern",
+    "name": "Shoal Rope Lantern",
+    "category": "Outdoor",
+    "subcategory": "Lanterns",
+    "price": 48,
+    "description": "A whitewashed wood lantern with a thick rope handle and clear glass sides, sized for a tealight cluster or a small LED pillar. The pale, slightly chalky finish and the nautical rope give it the light, airy feel of a beach-house porch. Hang it from a hook or set a few along a balcony wall for a soft evening glow.",
+    "details": [
+      "15 cm W x 15 cm D x 30 cm H",
+      "Acacia wood with a UV-stable whitewash sealant; tempered glass",
+      "Jute-look polyester rope handle, weatherproof",
+      "Fits tealights or pillars up to 8 cm diameter; candle not included",
+      "Bring inside in prolonged heavy rain",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "acacia wood",
+        "rope",
+        "tempered glass"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "whitewash",
+        "natural rope"
+      ],
+      "useCase": [
+        "evening light",
+        "hosting",
+        "gift"
+      ],
+      "room": [
+        "balcony",
+        "living room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lantern",
+      "whitewashed",
+      "rope",
+      "airy"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-09-whitewash",
+        "label": "Whitewash",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-09-driftwood-grey",
+        "label": "Driftwood grey",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "whitewashed wood lantern rope handle",
+    "images": [
+      "/marlow/mw-out-09.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 77
+  },
+  {
+    "id": "mw-out-10",
+    "slug": "solis-smoked-glass-solar-lantern",
+    "name": "Solis Smoked Glass Solar Lantern",
+    "category": "Outdoor",
+    "subcategory": "Lanterns",
+    "price": 85,
+    "description": "A globe lantern in smoked amber glass on a burnt-orange powder-coated aluminum base with a solar panel hidden in the lid. It charges through the day and glows a warm, low amber at dusk, like a 1970s hotel bar lamp that wandered outside. The chunky, rounded shape looks as good unlit on a table as it does glowing on a railing.",
+    "details": [
+      "22 cm diameter x 28 cm H",
+      "Smoked tempered glass globe, UV stable; powder-coated aluminum base and lid",
+      "Integrated solar panel and 2700 K LED; up to 8 hours light on a full charge",
+      "IP44 weather rating; auto on at dusk",
+      "No candle needed; replaceable rechargeable battery",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "smoked glass",
+        "powder-coated aluminum"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "amber",
+        "burnt orange"
+      ],
+      "useCase": [
+        "evening light",
+        "hosting",
+        "no power outlet"
+      ],
+      "room": [
+        "balcony"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "solar",
+      "smoked glass",
+      "groovy",
+      "weather resistant"
+    ],
+    "variants": [
+      {
+        "id": "mw-out-10-burnt-orange",
+        "label": "Burnt orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-out-10-chocolate",
+        "label": "Chocolate",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "smoked amber glass globe solar lantern",
+    "images": [
+      "/marlow/mw-out-10.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 43
+  }
+]

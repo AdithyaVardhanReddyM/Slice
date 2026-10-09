@@ -1,0 +1,2536 @@
+[
+  {
+    "id": "mw-kit-01",
+    "slug": "harlan-enameled-cast-iron-dutch-oven",
+    "name": "Harlan Enameled Cast Iron Dutch Oven",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 189,
+    "description": "A 5.5-quart cast iron pot with a satin enamel glaze in farmhouse colors, built for slow braises, no-knead bread and Sunday soups. The heavy lid traps steam and the wide loop handles clear oven mitts with room to spare. It lives on the stovetop between meals and looks right doing so in a warm, cozy kitchen.",
+    "details": [
+      "Capacity 5.5 qt / 5.2 L; 10.25 in diameter, 4.5 in deep",
+      "Cast iron with three-layer porcelain enamel; cream interior",
+      "Oven safe to 500°F; works on gas, electric and induction",
+      "Hand wash recommended; dishwasher safe but enamel will dull over time",
+      "Weight 12.4 lb with lid",
+      "Made in France"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic",
+        "coastal"
+      ],
+      "material": [
+        "cast iron",
+        "porcelain enamel"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "oatmeal",
+        "sage",
+        "flame",
+        "sea salt"
+      ],
+      "useCase": [
+        "braising",
+        "bread baking",
+        "hosting",
+        "batch cooking"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "cast iron",
+      "slow cooking",
+      "gift",
+      "heirloom",
+      "oven to table"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-01-oatmeal",
+        "label": "Oatmeal",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-01-sage",
+        "label": "Sage",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-01-flame",
+        "label": "Flame",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-01-sea-salt",
+        "label": "Sea Salt",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "dutch oven cooking",
+    "images": [
+      "/marlow/mw-kit-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 612,
+    "bestseller": true
+  },
+  {
+    "id": "mw-kit-02",
+    "slug": "nakata-carbon-steel-skillet",
+    "name": "Nakata Carbon Steel Skillet",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 78,
+    "description": "A spun carbon steel pan with a riveted black steel handle and a blued-metal finish that darkens with every use. It heats fast, sears hard and gets more non-stick the longer you own it, like a cast iron pan that weighs half as much. Spare and utilitarian, it hangs on a rail and suits a calm, pared-back kitchen.",
+    "details": [
+      "10 in diameter (8.25 in cooking surface), 1.75 in deep; 12 in size also available",
+      "2 mm carbon steel; pre-seasoned with flaxseed oil",
+      "Induction, gas, electric and open-flame compatible; oven safe to 600°F",
+      "Hand wash only, dry immediately and oil lightly; never dishwasher",
+      "Weight 2.9 lb (10 in)",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "industrial"
+      ],
+      "material": [
+        "carbon steel"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "blued steel",
+        "black"
+      ],
+      "useCase": [
+        "searing",
+        "everyday cooking",
+        "camping",
+        "small apartment"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "carbon steel",
+      "pre-seasoned",
+      "lightweight",
+      "high heat",
+      "hangs on rail"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-02-10-in",
+        "label": "10 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-02-12-in",
+        "label": "12 in",
+        "inStock": true,
+        "priceDelta": 20
+      }
+    ],
+    "imageQuery": "cast iron skillet",
+    "images": [
+      "/marlow/mw-kit-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 184,
+    "new": true
+  },
+  {
+    "id": "mw-kit-03",
+    "slug": "lindqvist-stainless-saucepan",
+    "name": "Lindqvist Stainless Saucepan",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 95,
+    "description": "A 3-quart tri-ply saucepan with a brushed stainless body and a pale ash wood handle that stays cool on the stovetop. The straight sides and tight-fitting lid make it the pan for rice, grains, sauces and reheating soup, and the brushed finish hides water spots. Quiet and clean, it was designed to sit on open shelving without asking for attention.",
+    "details": [
+      "Capacity 3 qt / 2.8 L; 7.5 in diameter, 4.25 in deep",
+      "Tri-ply 18/10 stainless steel with full aluminum core",
+      "Oiled ash handle on a stainless tang; lid in stainless with ash knob",
+      "Body is dishwasher safe; hand wash the handle to preserve the wood",
+      "Induction compatible; oven safe to 350°F",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "stainless steel",
+        "ash wood"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "brushed steel",
+        "pale ash"
+      ],
+      "useCase": [
+        "everyday cooking",
+        "grains and sauces",
+        "open shelving",
+        "small apartment"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "tri-ply",
+      "wood handle",
+      "induction",
+      "minimal",
+      "open shelving"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-03-1-5-qt",
+        "label": "1.5 qt",
+        "inStock": true,
+        "priceDelta": -25
+      },
+      {
+        "id": "mw-kit-03-3-qt",
+        "label": "3 qt",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-03-4-qt",
+        "label": "4 qt",
+        "inStock": true,
+        "priceDelta": 20
+      }
+    ],
+    "imageQuery": "stainless steel saucepan wooden handle",
+    "images": [
+      "/marlow/mw-kit-03.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 97
+  },
+  {
+    "id": "mw-kit-04",
+    "slug": "orla-enameled-steel-stockpot",
+    "name": "Orla Enameled Steel Stockpot",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 89,
+    "compareAtPrice": 110,
+    "description": "An 8-quart enameled steel pot in burnt orange with a cream interior and a chunky cream-capped knob, lifted from the pots your grandmother boiled pasta in. It is light enough to carry full to the sink and the glossy glaze wipes clean of tomato sauce. Warm, a little groovy and happy to be left out on the back burner.",
+    "details": [
+      "Capacity 8 qt / 7.6 L; 10 in diameter, 7.5 in deep",
+      "Carbon steel body with vitreous enamel inside and out",
+      "Lid included; phenolic knob rated to 400°F",
+      "Dishwasher safe; avoid metal utensils on the enamel",
+      "Weight 4.6 lb with lid",
+      "Made in Turkey"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "enameled steel"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "burnt orange",
+        "cream",
+        "olive"
+      ],
+      "useCase": [
+        "pasta night",
+        "stock and soup",
+        "batch cooking",
+        "hosting"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "enamel",
+      "retro",
+      "lightweight",
+      "big batch",
+      "colorful"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-04-burnt-orange",
+        "label": "Burnt Orange",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-04-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-04-olive",
+        "label": "Olive",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "enamel cooking pot",
+    "images": [
+      "/marlow/mw-kit-04.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 143
+  },
+  {
+    "id": "mw-kit-05",
+    "slug": "volta-ceramic-nonstick-fry-pan",
+    "name": "Volta Ceramic Nonstick Fry Pan",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 55,
+    "description": "A cast aluminum fry pan with a PFAS-free ceramic coating and an exterior that comes in cobalt, pomegranate and chartreuse, with a bakelite handle in a clashing second color. Eggs slide, cleanup is a rinse, and the pan weighs less than a bag of flour. It is the loud, playful piece on a stove full of grey.",
+    "details": [
+      "10 in diameter, 2 in deep; 8 in size also available",
+      "Cast aluminum body with sol-gel ceramic nonstick interior; no PTFE or PFAS",
+      "Stay-cool bakelite handle; oven safe to 350°F",
+      "Dishwasher safe; hand washing extends the coating's life",
+      "Induction compatible via bonded stainless base",
+      "Weight 1.9 lb (10 in)"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "cast aluminum",
+        "ceramic coating"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "cobalt",
+        "pomegranate",
+        "chartreuse"
+      ],
+      "useCase": [
+        "eggs and pancakes",
+        "everyday cooking",
+        "first apartment",
+        "quick cleanup"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "nonstick",
+      "pfas-free",
+      "colorful",
+      "lightweight",
+      "easy clean"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-05-cobalt",
+        "label": "Cobalt",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-05-pomegranate",
+        "label": "Pomegranate",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-05-chartreuse",
+        "label": "Chartreuse",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "nonstick pan eggs",
+    "images": [
+      "/marlow/mw-kit-05.jpg"
+    ],
+    "rating": 4.2,
+    "reviewCount": 231
+  },
+  {
+    "id": "mw-kit-06",
+    "slug": "fenwick-copper-saute-pan",
+    "name": "Fenwick Copper Sauté Pan",
+    "category": "Kitchen & dining",
+    "subcategory": "Cookware",
+    "price": 185,
+    "description": "A 3.5-quart sauté pan in polished copper with a brass handle and a tin-lined interior that responds to the flame the moment you touch the dial. It develops a soft rose patina if you let it and polishes back to a mirror if you don't. Glamorous enough to hang on the wall, serious enough to make a proper pan sauce.",
+    "details": [
+      "Capacity 3.5 qt / 3.3 L; 11 in diameter, 2.5 in deep",
+      "2 mm solid copper with hand-tinned interior; cast brass handle and lid knob",
+      "Not induction compatible; gas and electric only; oven safe to 450°F",
+      "Hand wash only; polish with copper cream to keep the shine",
+      "Weight 4.1 lb with lid",
+      "Made in Italy"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "copper",
+        "brass",
+        "tin"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "polished copper",
+        "brass"
+      ],
+      "useCase": [
+        "pan sauces",
+        "hosting",
+        "display cookware",
+        "gift"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "copper",
+      "brass",
+      "statement piece",
+      "gift",
+      "hand-tinned"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-06-polished",
+        "label": "Polished",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-06-hammered",
+        "label": "Hammered",
+        "inStock": true,
+        "priceDelta": 25
+      }
+    ],
+    "imageQuery": "copper pan kitchen",
+    "images": [
+      "/marlow/mw-kit-06.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 58
+  },
+  {
+    "id": "mw-kit-07",
+    "slug": "ridge-stoneware-dinner-plate-set-of-4",
+    "name": "Ridge Stoneware Dinner Plate (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 68,
+    "description": "Four wheel-thrown stoneware plates with a low lip and a speckled Oat glaze that pools slightly darker toward the center. The clay is a dark-firing stoneware, so each unglazed foot ring shows the iron underneath, and no two plates match exactly. Calm, matte and quietly imperfect, they make an ordinary weeknight look considered.",
+    "details": [
+      "10.5 in diameter, 1 in rim height; set of 4",
+      "Iron-rich stoneware clay, reduction-fired to cone 10",
+      "Glazes: Oat (speckled cream), Ink (satin black), Ash (pale grey)",
+      "Dishwasher and microwave safe; oven safe to 400°F",
+      "Slight variation in glaze and form is part of the piece",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "oat",
+        "ink",
+        "ash"
+      ],
+      "useCase": [
+        "everyday dining",
+        "hosting",
+        "wedding registry",
+        "open shelving"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "hand-glazed",
+      "speckled",
+      "wabi-sabi",
+      "registry",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-07-oat",
+        "label": "Oat",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-07-ink",
+        "label": "Ink",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-07-ash",
+        "label": "Ash",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "speckled stoneware dinner plates stacked",
+    "images": [
+      "/marlow/mw-kit-07.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 744,
+    "bestseller": true
+  },
+  {
+    "id": "mw-kit-08",
+    "slug": "mabry-stoneware-cereal-bowl-set-of-4",
+    "name": "Mabry Stoneware Cereal Bowl (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 48,
+    "description": "Four deep, generous bowls in a glossy cream glaze with a hand-painted stripe at the rim in cornflower blue or barn red. They take porridge, chili and a pint of ice cream equally well and stack without rattling. Homely, cheerful and heavy enough in the hand to feel like something that will outlast the kitchen.",
+    "details": [
+      "6.25 in diameter, 3 in tall; holds 24 oz / 710 ml; set of 4",
+      "Buff stoneware clay with a lead-free glossy cream glaze",
+      "Rim stripe hand-painted under the glaze, so it will not wear off",
+      "Dishwasher, microwave and freezer safe",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "white",
+        "cool"
+      ],
+      "colors": [
+        "cream",
+        "cornflower blue",
+        "barn red"
+      ],
+      "useCase": [
+        "breakfast",
+        "soup and chili",
+        "family kitchen",
+        "everyday dining"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "farmhouse",
+      "hand-painted",
+      "stackable",
+      "family",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-08-cornflower-stripe",
+        "label": "Cornflower Stripe",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-08-barn-red-stripe",
+        "label": "Barn Red Stripe",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream stoneware bowls blue rim farmhouse",
+    "images": [
+      "/marlow/mw-kit-08.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 318
+  },
+  {
+    "id": "mw-kit-09",
+    "slug": "tide-porcelain-dinnerware-set-16-piece",
+    "name": "Tide Porcelain Dinnerware Set (16-Piece)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 168,
+    "compareAtPrice": 198,
+    "description": "A four-place setting in thin, light porcelain with an organic coupe edge, glazed in a watery Seafoam that fades to white at the rim. It reads like beach glass on a linen tablecloth and is thin enough to feel refined without being precious. Airy and bright, it suits a dining room that gets a lot of morning light.",
+    "details": [
+      "Includes 4 dinner plates (10.75 in), 4 salad plates (8.5 in), 4 bowls (7 in, 28 oz), 4 mugs (12 oz)",
+      "High-fired porcelain, chip-resistant and non-porous",
+      "Glazes: Seafoam, Sand, White",
+      "Dishwasher, microwave and oven safe to 350°F",
+      "Open stock available for replacements",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "porcelain"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "seafoam",
+        "sand",
+        "white"
+      ],
+      "useCase": [
+        "wedding registry",
+        "hosting",
+        "everyday dining",
+        "beach house"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "dinnerware set",
+      "porcelain",
+      "registry",
+      "coupe",
+      "open stock"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-09-seafoam",
+        "label": "Seafoam",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-09-sand",
+        "label": "Sand",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-09-white",
+        "label": "White",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pale blue porcelain dinnerware set table",
+    "images": [
+      "/marlow/mw-kit-09.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 205
+  },
+  {
+    "id": "mw-kit-10",
+    "slug": "sunniva-pasta-bowl-set-of-4",
+    "name": "Sunniva Pasta Bowl (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 60,
+    "description": "Four wide, shallow bowls in a matte white or pale grey glaze with a clean, unfussy rim and nothing else to look at. The shape holds a nest of pasta, a grain bowl or a Saturday salad and gives you room to get a fork under it. Soft, pale and restful, it disappears into a quiet table so the food can do the talking.",
+    "details": [
+      "9 in diameter, 2 in deep; holds 32 oz / 950 ml; set of 4",
+      "White stoneware clay with a satin-matte glaze",
+      "Glazes: Chalk (white), Fog (pale grey)",
+      "Dishwasher and microwave safe",
+      "Stackable to 1.5 in per bowl",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "chalk",
+        "fog"
+      ],
+      "useCase": [
+        "pasta night",
+        "grain bowls",
+        "everyday dining",
+        "small apartment"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "matte",
+      "minimal",
+      "stackable",
+      "pasta bowl",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-10-chalk",
+        "label": "Chalk",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-10-fog",
+        "label": "Fog",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "matte white stoneware pasta bowls",
+    "images": [
+      "/marlow/mw-kit-10.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 129
+  },
+  {
+    "id": "mw-kit-11",
+    "slug": "bellamy-terracotta-serving-platter",
+    "name": "Bellamy Terracotta Serving Platter",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 58,
+    "description": "A long oval platter in red terracotta clay with a hand-painted border of white dashes and dots, glazed only on the inside so the rough clay shows at the edge. It carries roasted vegetables, a whole fish or a spread of mezze from oven to the middle of the table. Earthy, textured and a little sun-faded, like something carried home from a market.",
+    "details": [
+      "16 in long, 10 in wide, 1.75 in deep",
+      "Red terracotta clay, interior glazed in Bone white with hand-painted motif",
+      "Oven safe to 400°F; not microwave safe (unglazed exterior)",
+      "Hand wash; the unglazed rim will absorb water and dry naturally",
+      "Each piece painted by hand; motifs vary",
+      "Made in Tunisia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "terracotta"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "terracotta",
+        "bone"
+      ],
+      "useCase": [
+        "hosting",
+        "family style serving",
+        "mezze",
+        "oven to table"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "terracotta",
+      "hand-painted",
+      "serving",
+      "global",
+      "oven to table"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-11-dash",
+        "label": "Dash",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-11-dot",
+        "label": "Dot",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "terracotta oval serving platter hand painted",
+    "images": [
+      "/marlow/mw-kit-11.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 88
+  },
+  {
+    "id": "mw-kit-12",
+    "slug": "juno-dessert-plate-set-of-4",
+    "name": "Juno Dessert Plate (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 58,
+    "description": "Four scalloped-edge dessert plates, each in a different high-gloss glaze: Emerald, Fuchsia, Saffron and Lapis, with a hand-painted gold squiggle across the center. They are for cake, for cheese, for a 4 pm biscuit, and for a table where nothing is expected to match. Bold, playful and more is more.",
+    "details": [
+      "8 in diameter with 12-point scalloped rim; set of 4 (one of each color)",
+      "White earthenware with lead-free gloss glazes",
+      "22k gold luster accent; hand wash only, not microwave safe",
+      "Stackable; slight glaze pooling at the scallops is normal",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "earthenware",
+        "gold luster"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "emerald",
+        "fuchsia",
+        "saffron",
+        "lapis"
+      ],
+      "useCase": [
+        "dessert",
+        "cheese course",
+        "gift",
+        "mixed table"
+      ],
+      "room": [
+        "dining room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "scalloped",
+      "gold accent",
+      "colorful",
+      "gift",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-12-mixed-set",
+        "label": "Mixed Set",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "colorful scalloped dessert plates gold",
+    "images": [
+      "/marlow/mw-kit-12.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 41,
+    "new": true
+  },
+  {
+    "id": "mw-kit-13",
+    "slug": "atlas-reactive-glaze-mug-set-of-4",
+    "name": "Atlas Reactive Glaze Mug (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 40,
+    "description": "Four tapered mugs with a squared-off handle and a reactive glaze that breaks from mustard to olive, or teal to walnut brown, where the clay is thinnest. The shape tips back toward the diner mugs of the 1960s, with a slightly flared lip that drinks well. Warm, retro and a little different each time you pull one from the cupboard.",
+    "details": [
+      "Holds 12 oz / 355 ml; 3.75 in tall, 3.25 in diameter",
+      "Buff stoneware with a two-tone reactive glaze; set of 4 in one colorway",
+      "Colorways: Mustard/Olive, Teal/Walnut",
+      "Dishwasher and microwave safe",
+      "Reactive glaze means variation between mugs is expected",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "mustard",
+        "olive",
+        "teal",
+        "walnut brown"
+      ],
+      "useCase": [
+        "morning coffee",
+        "gift",
+        "everyday",
+        "open shelving"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "reactive glaze",
+      "retro",
+      "mug",
+      "gift",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-13-mustard-olive",
+        "label": "Mustard / Olive",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-13-teal-walnut",
+        "label": "Teal / Walnut",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "mustard reactive glaze stoneware mugs",
+    "images": [
+      "/marlow/mw-kit-13.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 402
+  },
+  {
+    "id": "mw-kit-14",
+    "slug": "solenne-gilded-side-plate-set-of-4",
+    "name": "Solenne Gilded Side Plate (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 88,
+    "description": "Four fine bone china side plates with a fluted rim and a hand-applied band of burnished gold, in Noir, Emerald or Ivory. The fluting catches candlelight in a way flat plates never do, and the china rings when you tap it. Polished, geometric and made for the dinner party you keep meaning to throw.",
+    "details": [
+      "8.5 in diameter with 24 flutes; set of 4",
+      "Bone china, translucent at the rim",
+      "22k gold band applied by hand and fired a third time",
+      "Hand wash only; not microwave safe",
+      "Gift boxed",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "bone china",
+        "gold"
+      ],
+      "colorFamily": [
+        "black",
+        "bold"
+      ],
+      "colors": [
+        "noir",
+        "emerald",
+        "ivory",
+        "gold"
+      ],
+      "useCase": [
+        "dinner party",
+        "gift",
+        "wedding registry",
+        "holiday table"
+      ],
+      "room": [
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "fluted",
+      "gold rim",
+      "bone china",
+      "gift boxed",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-14-noir",
+        "label": "Noir",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-14-emerald",
+        "label": "Emerald",
+        "inStock": false
+      },
+      {
+        "id": "mw-kit-14-ivory",
+        "label": "Ivory",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black ceramic plate table",
+    "images": [
+      "/marlow/mw-kit-14.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 66
+  },
+  {
+    "id": "mw-kit-15",
+    "slug": "foundry-stoneware-serving-bowl",
+    "name": "Foundry Stoneware Serving Bowl",
+    "category": "Kitchen & dining",
+    "subcategory": "Tableware & ceramics",
+    "price": 65,
+    "description": "A deep, straight-sided serving bowl in a grey stoneware that looks like poured concrete, with a raw unglazed exterior and a slick charcoal glaze inside. The heft is real: this is a bowl for a family-size salad or a mound of roast potatoes, set down with a thud in the middle of a reclaimed-wood table. Raw, honest and built like something from a workshop.",
+    "details": [
+      "11 in diameter, 4.5 in deep; holds 4 qt / 3.8 L",
+      "Grey stoneware with grog for texture; exterior left unglazed and sanded smooth",
+      "Interior satin charcoal glaze",
+      "Dishwasher safe; unglazed exterior may show water marks briefly",
+      "Weight 4.2 lb",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "concrete grey",
+        "charcoal"
+      ],
+      "useCase": [
+        "family style serving",
+        "salad",
+        "hosting",
+        "loft kitchen"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "unglazed",
+      "concrete look",
+      "serving bowl",
+      "heavy",
+      "loft"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-15-concrete",
+        "label": "Concrete",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-15-rust",
+        "label": "Rust",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "grey ceramic bowl",
+    "images": [
+      "/marlow/mw-kit-15.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 52
+  },
+  {
+    "id": "mw-kit-16",
+    "slug": "soren-stemless-wine-glass-set-of-4",
+    "name": "Soren Stemless Wine Glass (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Glassware",
+    "price": 48,
+    "description": "Four stemless glasses in thin, seamless crystal with a gently tapered bowl that works for a Riesling at lunch and water with dinner. The walls are fine enough to feel light in the hand but the base is weighted so they do not tip on a linen cloth. Clear, quiet and easy to stack in a small cupboard.",
+    "details": [
+      "Holds 15 oz / 445 ml; 4.5 in tall, 3.25 in widest diameter; set of 4",
+      "Lead-free crystal glass, machine blown with a laser-cut rim",
+      "Dishwasher safe on the top rack",
+      "Weight 5.6 oz each",
+      "Made in Slovakia"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "japandi"
+      ],
+      "material": [
+        "crystal glass"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "clear"
+      ],
+      "useCase": [
+        "everyday wine",
+        "water glass",
+        "small apartment",
+        "hosting"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "stemless",
+      "crystal",
+      "dishwasher safe",
+      "everyday",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-16-clear",
+        "label": "Clear",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-16-smoke",
+        "label": "Smoke",
+        "inStock": true,
+        "priceDelta": 5
+      }
+    ],
+    "imageQuery": "stemless wine glasses clear crystal",
+    "images": [
+      "/marlow/mw-kit-16.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 537,
+    "bestseller": true
+  },
+  {
+    "id": "mw-kit-17",
+    "slug": "ember-smoked-glass-tumbler-set-of-4",
+    "name": "Ember Smoked Glass Tumbler (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Glassware",
+    "price": 45,
+    "compareAtPrice": 55,
+    "description": "Four chunky tumblers in smoked amber or bronze glass with a slightly bulged profile and a thick base, pulled straight from a 1970s sideboard bar. They turn an ordinary iced coffee or whisky soda the color of late afternoon. Warm, curved and heavy enough to feel like something.",
+    "details": [
+      "Holds 11 oz / 325 ml; 3.75 in tall, 3.25 in diameter; set of 4",
+      "Soda-lime glass, color through the body (not a coating)",
+      "Colors: Amber, Bronze, Olive",
+      "Dishwasher safe",
+      "Weight 9.5 oz each",
+      "Made in Turkey"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "glass"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "amber",
+        "bronze",
+        "olive"
+      ],
+      "useCase": [
+        "cocktails",
+        "iced coffee",
+        "bar cart",
+        "everyday"
+      ],
+      "room": [
+        "dining room",
+        "kitchen",
+        "living room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "smoked glass",
+      "retro",
+      "bar cart",
+      "tumbler",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-17-amber",
+        "label": "Amber",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-17-bronze",
+        "label": "Bronze",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-17-olive",
+        "label": "Olive",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "amber smoked glass tumblers retro",
+    "images": [
+      "/marlow/mw-kit-17.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 276
+  },
+  {
+    "id": "mw-kit-18",
+    "slug": "marin-recycled-glass-tumbler-set-of-6",
+    "name": "Marin Recycled Glass Tumbler (Set of 6)",
+    "category": "Kitchen & dining",
+    "subcategory": "Glassware",
+    "price": 38,
+    "description": "Six hand-blown tumblers made from 100% recycled bottles, with a faint sea-green tint and the tiny bubbles that come with it. They are tall enough for iced tea and sturdy enough to carry out to the porch in a stack. Light-filled, breezy and the kind of glass you stop worrying about.",
+    "details": [
+      "Holds 13 oz / 385 ml; 4.75 in tall, 3 in diameter; set of 6",
+      "100% post-consumer recycled glass, hand blown; bubbles and slight size variation are normal",
+      "Tints: Sea Green, Clear, Sky",
+      "Dishwasher safe",
+      "Made in Mexico"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "recycled glass"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "sea green",
+        "clear",
+        "sky"
+      ],
+      "useCase": [
+        "everyday",
+        "outdoor dining",
+        "iced drinks",
+        "beach house"
+      ],
+      "room": [
+        "kitchen",
+        "dining room",
+        "balcony"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "recycled",
+      "hand blown",
+      "casual",
+      "outdoor",
+      "set of 6"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-18-sea-green",
+        "label": "Sea Green",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-18-clear",
+        "label": "Clear",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-18-sky",
+        "label": "Sky",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "recycled green glass tumblers bubbles",
+    "images": [
+      "/marlow/mw-kit-18.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 193
+  },
+  {
+    "id": "mw-kit-19",
+    "slug": "vesper-fluted-coupe-set-of-2",
+    "name": "Vesper Fluted Coupe (Set of 2)",
+    "category": "Kitchen & dining",
+    "subcategory": "Glassware",
+    "price": 58,
+    "description": "A pair of champagne coupes with a vertically fluted bowl, a faceted stem and an optional gilded rim, modeled on the glasses in a 1930s hotel bar. The ridges throw light around the table and the wide bowl is just as good for a gimlet as it is for fizz. Polished, geometric and a reason to open the good bottle.",
+    "details": [
+      "Holds 7 oz / 210 ml; 6 in tall, 4 in diameter; set of 2",
+      "Lead-free crystal, mouth blown and hand cut",
+      "Clear or with 24k gold rim",
+      "Hand wash only (gold rim); clear version is top-rack dishwasher safe",
+      "Gift boxed",
+      "Made in Czech Republic"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "crystal glass",
+        "gold"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "clear",
+        "gold rim"
+      ],
+      "useCase": [
+        "cocktails",
+        "celebration",
+        "gift",
+        "bar cart"
+      ],
+      "room": [
+        "dining room",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "fluted",
+      "coupe",
+      "gold rim",
+      "gift boxed",
+      "set of 2"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-19-clear",
+        "label": "Clear",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-19-gold-rim",
+        "label": "Gold Rim",
+        "inStock": true,
+        "priceDelta": 12
+      }
+    ],
+    "imageQuery": "fluted crystal champagne coupe glasses",
+    "images": [
+      "/marlow/mw-kit-19.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 112
+  },
+  {
+    "id": "mw-kit-20",
+    "slug": "bastion-heavy-base-rocks-glass-set-of-4",
+    "name": "Bastion Heavy-Base Rocks Glass (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Glassware",
+    "price": 35,
+    "description": "Four straight-sided rocks glasses with a thick, slightly off-level base that looks like it was cast rather than blown. The glass is clear and heavy, with a faint grey cast, and takes a large ice cube with room for two fingers of whatever. Utilitarian, unornamented and right at home on a steel bar cart.",
+    "details": [
+      "Holds 10 oz / 295 ml; 3.5 in tall, 3.25 in diameter; set of 4",
+      "Pressed soda-lime glass with a 1 in solid base",
+      "Dishwasher safe",
+      "Weight 14 oz each",
+      "Made in USA"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "glass"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "clear",
+        "smoke grey"
+      ],
+      "useCase": [
+        "whisky",
+        "cocktails",
+        "bar cart",
+        "everyday"
+      ],
+      "room": [
+        "kitchen",
+        "dining room",
+        "living room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "rocks glass",
+      "heavy base",
+      "whisky",
+      "made in usa",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-20-clear",
+        "label": "Clear",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-20-smoke-grey",
+        "label": "Smoke Grey",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "heavy base whiskey rocks glasses",
+    "images": [
+      "/marlow/mw-kit-20.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 158
+  },
+  {
+    "id": "mw-kit-21",
+    "slug": "tamsin-walnut-end-grain-cutting-board",
+    "name": "Tamsin Walnut End-Grain Cutting Board",
+    "category": "Kitchen & dining",
+    "subcategory": "Utensils & boards",
+    "price": 120,
+    "description": "A thick end-grain board in black walnut, with a checkered pattern that comes from how the blocks are glued up rather than any stain. End grain is kind to knives and heals its own cut marks, and the walnut deepens to a dark chocolate with oil. Low, warm and organic, it stays out on the counter as the thing people lean on while you cook.",
+    "details": [
+      "16 x 12 x 1.75 in; 14 x 10 size also available",
+      "Solid black walnut, end-grain construction; rubber feet on the underside",
+      "Finished with food-grade mineral oil and beeswax",
+      "Hand wash and dry upright; re-oil monthly; never dishwasher or soaked",
+      "Weight 8.5 lb (16 x 12)",
+      "Made in USA"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "walnut"
+      ],
+      "useCase": [
+        "everyday prep",
+        "serving",
+        "gift",
+        "wedding registry"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "end grain",
+      "walnut",
+      "knife friendly",
+      "heirloom",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-21-14-x-10",
+        "label": "14 x 10 in",
+        "inStock": true,
+        "priceDelta": -30
+      },
+      {
+        "id": "mw-kit-21-16-x-12",
+        "label": "16 x 12 in",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "walnut end grain cutting board",
+    "images": [
+      "/marlow/mw-kit-21.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 221,
+    "bestseller": true
+  },
+  {
+    "id": "mw-kit-22",
+    "slug": "kiso-hinoki-cutting-board",
+    "name": "Kiso Hinoki Cutting Board",
+    "category": "Kitchen & dining",
+    "subcategory": "Utensils & boards",
+    "price": 68,
+    "description": "A single plank of pale Japanese cypress, planed smooth and left unfinished so the wood's faint lemon scent comes through when it gets wet. Hinoki is soft enough to be gentle on a sharp knife and naturally resists bacteria, which is why Japanese kitchens have used it for centuries. Spare, pale and calm, it is a board for someone who owns one good knife.",
+    "details": [
+      "15 x 9.5 x 1 in",
+      "Solid hinoki (Japanese cypress), single plank, no glue or finish",
+      "Hand wash with cold water and dry on edge; never soak or dishwasher",
+      "Will lighten and mark with use; sand lightly to refresh",
+      "Weight 2.1 lb",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "hinoki cypress"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "pale cypress"
+      ],
+      "useCase": [
+        "everyday prep",
+        "sushi and vegetables",
+        "small apartment",
+        "gift"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "hinoki",
+      "japanese",
+      "single plank",
+      "knife friendly",
+      "unfinished wood"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-22-standard",
+        "label": "Standard",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-22-large",
+        "label": "Large",
+        "inStock": true,
+        "priceDelta": 24
+      }
+    ],
+    "imageQuery": "hinoki wood cutting board japanese",
+    "images": [
+      "/marlow/mw-kit-22.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 134
+  },
+  {
+    "id": "mw-kit-23",
+    "slug": "hearth-acacia-serving-board",
+    "name": "Hearth Acacia Serving Board",
+    "category": "Kitchen & dining",
+    "subcategory": "Utensils & boards",
+    "price": 40,
+    "description": "A long, live-edge board in acacia with a tan-and-walnut grain that runs like a map, finished with a hand-wrapped jute cord through the handle hole. It was made for a cheese spread, a loaf of bread or a row of tacos passed down a crowded table. Layered, textured and happy to sit on a stack of other boards.",
+    "details": [
+      "20 x 8 in, 0.75 in thick, with a natural live edge on one side",
+      "Solid acacia with a food-safe oil finish; jute hanging cord",
+      "Hand wash and dry; re-oil every few months",
+      "Grain and edge vary piece to piece",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global",
+        "cottage-rustic"
+      ],
+      "material": [
+        "acacia",
+        "jute"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "acacia",
+        "tan"
+      ],
+      "useCase": [
+        "cheese board",
+        "bread",
+        "hosting",
+        "gift"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "live edge",
+      "acacia",
+      "serving board",
+      "cheese board",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-23-live-edge",
+        "label": "Live Edge",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-23-straight-edge",
+        "label": "Straight Edge",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "acacia live edge serving board",
+    "images": [
+      "/marlow/mw-kit-23.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 266
+  },
+  {
+    "id": "mw-kit-24",
+    "slug": "bergen-ash-utensil-set-set-of-5",
+    "name": "Bergen Ash Utensil Set (Set of 5)",
+    "category": "Kitchen & dining",
+    "subcategory": "Utensils & boards",
+    "price": 45,
+    "description": "Five pale ash utensils turned from a single species of wood so they all age together: a spatula, a slotted turner, a spoon, a tasting spoon and a stirring paddle. The handles are slim, oval and sanded to a soft hand, and the whole set stands in the included crock. Clean, quiet and light in the hand, the way a wooden spoon should be.",
+    "details": [
+      "Spatula 12.5 in, slotted turner 12 in, spoon 12 in, paddle 11 in, tasting spoon 7 in",
+      "Solid European ash with a food-safe linseed oil finish",
+      "Includes a matte white stoneware crock, 5.5 in tall",
+      "Hand wash and air dry; re-oil as needed; not dishwasher safe",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "ash wood",
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "pale ash",
+        "white"
+      ],
+      "useCase": [
+        "everyday cooking",
+        "first apartment",
+        "gift",
+        "nonstick safe"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ash",
+      "utensil set",
+      "with crock",
+      "minimal",
+      "set of 5"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-24-ash",
+        "label": "Ash",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-24-smoked-ash",
+        "label": "Smoked Ash",
+        "inStock": true,
+        "priceDelta": 8
+      }
+    ],
+    "imageQuery": "wooden kitchen utensils jar",
+    "images": [
+      "/marlow/mw-kit-24.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 177
+  },
+  {
+    "id": "mw-kit-25",
+    "slug": "hollowell-beech-bread-board",
+    "name": "Hollowell Beech Bread Board",
+    "category": "Kitchen & dining",
+    "subcategory": "Utensils & boards",
+    "price": 48,
+    "description": "A paddle-shaped board in pale steamed beech with a long handle, a hanging hole and a shallow crumb groove routed around the edge. It is the right size for a sourdough loaf and the right look for hanging on a hook by the stove. Homely, cream-toned and a little old-fashioned, in the best way.",
+    "details": [
+      "22 x 9 in including handle, 0.75 in thick",
+      "Solid steamed beech with a food-safe oil finish",
+      "Crumb groove on the cutting face; hanging hole in the handle",
+      "Hand wash and dry on edge; re-oil every few months",
+      "Weight 1.8 lb",
+      "Made in Romania"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "beech"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "pale beech"
+      ],
+      "useCase": [
+        "bread",
+        "serving",
+        "hanging storage",
+        "gift"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bread board",
+      "beech",
+      "farmhouse",
+      "hangs on hook",
+      "crumb groove"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-25-natural",
+        "label": "Natural",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-25-dark-wax",
+        "label": "Dark Wax",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "beech wood bread board handle",
+    "images": [
+      "/marlow/mw-kit-25.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 93
+  },
+  {
+    "id": "mw-kit-26",
+    "slug": "lisle-washed-linen-napkin-set-of-4",
+    "name": "Lisle Washed Linen Napkin (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Table linens",
+    "price": 38,
+    "description": "Four generously sized napkins in stonewashed European flax, with a raw-edge hem that frays softly with washing. They come in sand, sea blue and white, the palette of a beach house in October, and get softer and more rumpled every time they go through the machine. Airy, breezy and fine to leave slightly creased.",
+    "details": [
+      "20 x 20 in; set of 4",
+      "100% European flax linen, stonewashed; 185 gsm",
+      "Colors: Sand, Sea Blue, White, Oat Stripe",
+      "Machine wash cold, tumble dry low; no need to iron",
+      "Oeko-Tex certified",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal",
+        "scandi-minimal"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "sand",
+        "sea blue",
+        "white",
+        "oat stripe"
+      ],
+      "useCase": [
+        "everyday table",
+        "hosting",
+        "beach house",
+        "gift"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "linen",
+      "stonewashed",
+      "raw edge",
+      "napkins",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-26-sand",
+        "label": "Sand",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-26-sea-blue",
+        "label": "Sea Blue",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-26-white",
+        "label": "White",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-26-oat-stripe",
+        "label": "Oat Stripe",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen napkin plate",
+    "images": [
+      "/marlow/mw-kit-26.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 388
+  },
+  {
+    "id": "mw-kit-27",
+    "slug": "marigold-block-print-tablecloth",
+    "name": "Marigold Block-Print Tablecloth",
+    "category": "Kitchen & dining",
+    "subcategory": "Table linens",
+    "price": 78,
+    "compareAtPrice": 95,
+    "description": "A heavy cotton tablecloth hand block-printed in Jaipur with a repeating marigold-and-vine motif in terracotta and indigo on a natural ground. The print is slightly uneven at the edges, which is how you know it was stamped by hand, and the cotton drapes with real weight. Collected, layered and warm, it turns a plain table into the center of the room.",
+    "details": [
+      "Rectangle 60 x 90 in (seats 6) or 60 x 120 in (seats 8)",
+      "100% cotton canvas, 220 gsm, hand block-printed with azo-free dyes",
+      "Colorways: Terracotta, Indigo",
+      "Machine wash cold on gentle, line dry; colors will soften with washing",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "earth",
+        "bold"
+      ],
+      "colors": [
+        "terracotta",
+        "indigo",
+        "natural"
+      ],
+      "useCase": [
+        "hosting",
+        "holiday table",
+        "everyday table",
+        "gift"
+      ],
+      "room": [
+        "dining room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "block print",
+      "hand printed",
+      "global",
+      "tablecloth",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-27-terracotta-60-x-90",
+        "label": "Terracotta, 60 x 90 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-27-terracotta-60-x-120",
+        "label": "Terracotta, 60 x 120 in",
+        "inStock": true,
+        "priceDelta": 22
+      },
+      {
+        "id": "mw-kit-27-indigo-60-x-90",
+        "label": "Indigo, 60 x 90 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-27-indigo-60-x-120",
+        "label": "Indigo, 60 x 120 in",
+        "inStock": false,
+        "priceDelta": 22
+      }
+    ],
+    "imageQuery": "block print cotton tablecloth terracotta",
+    "images": [
+      "/marlow/mw-kit-27.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 149
+  },
+  {
+    "id": "mw-kit-28",
+    "slug": "thistle-gingham-table-runner",
+    "name": "Thistle Gingham Table Runner",
+    "category": "Kitchen & dining",
+    "subcategory": "Table linens",
+    "price": 35,
+    "description": "A yarn-dyed cotton runner in a half-inch gingham check, with a simple folded hem and a ticking stripe on the reverse so it can be flipped. It is the runner for a pine kitchen table, a jar of wildflowers and a pie cooling in the middle. Cozy, homely and already worn in.",
+    "details": [
+      "14 x 72 in; 14 x 108 in also available",
+      "100% cotton, yarn-dyed gingham front, ticking stripe back",
+      "Colors: Sage Check, Butter Check, Navy Check",
+      "Machine wash warm, tumble dry; iron on medium if you must",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "pastel",
+        "warm"
+      ],
+      "colors": [
+        "sage",
+        "butter",
+        "navy",
+        "cream"
+      ],
+      "useCase": [
+        "everyday table",
+        "farmhouse kitchen",
+        "picnic",
+        "gift"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "gingham",
+      "reversible",
+      "farmhouse",
+      "table runner",
+      "cotton"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-28-sage-72",
+        "label": "Sage Check, 72 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-28-butter-72",
+        "label": "Butter Check, 72 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-28-navy-72",
+        "label": "Navy Check, 72 in",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-28-sage-108",
+        "label": "Sage Check, 108 in",
+        "inStock": true,
+        "priceDelta": 12
+      }
+    ],
+    "imageQuery": "gingham cotton table runner farmhouse",
+    "images": [
+      "/marlow/mw-kit-28.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 212
+  },
+  {
+    "id": "mw-kit-29",
+    "slug": "carnival-jacquard-napkin-set-of-4",
+    "name": "Carnival Jacquard Napkin (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Table linens",
+    "price": 45,
+    "description": "Four cotton-linen napkins woven on a jacquard loom with an oversized leopard-and-stripe pattern in magenta, tangerine and plum, each one finished with a contrasting mitered border. They are built to be mixed with the florals, the gold flatware and whatever plates you fell in love with on vacation. Bold, playful and loud at the table in the best way.",
+    "details": [
+      "18 x 18 in; set of 4 in one pattern",
+      "55% linen, 45% cotton jacquard; 240 gsm",
+      "Patterns: Leopard (magenta/tangerine), Stripe (plum/tangerine)",
+      "Machine wash cold, tumble dry low; may be ironed on reverse",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "linen",
+        "cotton"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "magenta",
+        "tangerine",
+        "plum"
+      ],
+      "useCase": [
+        "dinner party",
+        "mixed table",
+        "gift",
+        "holiday table"
+      ],
+      "room": [
+        "dining room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "jacquard",
+      "leopard",
+      "colorful",
+      "napkins",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-29-leopard",
+        "label": "Leopard",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-29-stripe",
+        "label": "Stripe",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "bold patterned jacquard napkins magenta",
+    "images": [
+      "/marlow/mw-kit-29.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 37,
+    "new": true
+  },
+  {
+    "id": "mw-kit-30",
+    "slug": "hask-striped-linen-placemat-set-of-4",
+    "name": "Hask Striped Linen Placemat (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Table linens",
+    "price": 38,
+    "description": "Four heavyweight linen placemats woven with wide bands of burnt orange, chocolate and cream, in the proportions of a 1970s kitchen curtain. The linen is thick enough to lie flat under a plate and the stripes run lengthwise so they line up down a long table. Warm, chunky and groovy without trying too hard.",
+    "details": [
+      "14 x 19 in; set of 4",
+      "100% European linen, yarn-dyed stripe; 320 gsm",
+      "Colorways: Sunset (orange/brown/cream), Moss (olive/brown/cream)",
+      "Machine wash cold, tumble dry low; iron on reverse for a crisp finish",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "burnt orange",
+        "chocolate",
+        "cream",
+        "olive"
+      ],
+      "useCase": [
+        "everyday table",
+        "hosting",
+        "small apartment",
+        "gift"
+      ],
+      "room": [
+        "dining room",
+        "kitchen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "striped",
+      "linen",
+      "retro",
+      "placemats",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-30-sunset",
+        "label": "Sunset",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-30-moss",
+        "label": "Moss",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "striped linen placemats orange brown",
+    "images": [
+      "/marlow/mw-kit-30.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 71
+  },
+  {
+    "id": "mw-kit-31",
+    "slug": "halden-stoneware-pour-over-dripper",
+    "name": "Halden Stoneware Pour-Over Dripper",
+    "category": "Kitchen & dining",
+    "subcategory": "Coffee & tea",
+    "price": 48,
+    "description": "A cone-shaped pour-over in black stoneware with a thick wall that holds heat through the bloom and a single ridge inside for even drainage. It sits on any mug or carafe and takes a standard size 02 paper filter. Slow, low and spare, it belongs to a quiet morning rather than a rushed one.",
+    "details": [
+      "Fits size 02 cone filters; brews 1 to 2 cups (up to 20 oz / 600 ml)",
+      "4.5 in tall, 4.75 in diameter at the rim",
+      "Black stoneware with a matte Ink glaze inside and out; Oat also available",
+      "Dishwasher safe",
+      "Includes 20 unbleached paper filters",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "black",
+        "neutral"
+      ],
+      "colors": [
+        "ink",
+        "oat"
+      ],
+      "useCase": [
+        "morning coffee",
+        "slow brewing",
+        "small apartment",
+        "gift"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pour over",
+      "stoneware",
+      "coffee",
+      "gift",
+      "slow mornings"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-31-ink",
+        "label": "Ink",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-31-oat",
+        "label": "Oat",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ceramic coffee dripper",
+    "images": [
+      "/marlow/mw-kit-31.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 156,
+    "new": true
+  },
+  {
+    "id": "mw-kit-32",
+    "slug": "elba-brass-french-press",
+    "name": "Elba Brass French Press",
+    "category": "Kitchen & dining",
+    "subcategory": "Coffee & tea",
+    "price": 95,
+    "description": "A 34-ounce French press with a fluted brass-finish stainless housing, a polished black knob and a borosilicate glass beaker you can see the bloom through. The ridges run top to bottom like a column and the plunger has a satisfying weight. Polished and a little theatrical, it belongs on a tray next to the good cups.",
+    "details": [
+      "Capacity 34 oz / 1 L (8 cups); 9.5 in tall, 4 in diameter",
+      "Stainless steel housing with PVD brass finish; borosilicate glass beaker",
+      "Double-mesh stainless filter; replacement beaker available",
+      "Beaker and filter are dishwasher safe; hand wash the housing",
+      "Also in 17 oz / 500 ml",
+      "Gift boxed"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "stainless steel",
+        "brass finish",
+        "borosilicate glass"
+      ],
+      "colorFamily": [
+        "warm",
+        "black"
+      ],
+      "colors": [
+        "brass",
+        "black"
+      ],
+      "useCase": [
+        "morning coffee",
+        "hosting brunch",
+        "gift",
+        "bar cart"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "french press",
+      "brass",
+      "fluted",
+      "gift boxed",
+      "coffee"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-32-34-oz",
+        "label": "34 oz",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-32-17-oz",
+        "label": "17 oz",
+        "inStock": true,
+        "priceDelta": -20
+      }
+    ],
+    "imageQuery": "brass fluted french press coffee",
+    "images": [
+      "/marlow/mw-kit-32.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 84
+  },
+  {
+    "id": "mw-kit-33",
+    "slug": "orbit-stoneware-teapot",
+    "name": "Orbit Stoneware Teapot",
+    "category": "Kitchen & dining",
+    "subcategory": "Coffee & tea",
+    "price": 75,
+    "compareAtPrice": 88,
+    "description": "A squat, round-bellied teapot in a glossy mustard or olive glaze, with a tapered spout, a bent walnut handle and a stainless infuser basket that lifts out with one finger. It pours clean and holds four cups, which is exactly enough for two people and a second round. Warm, curvy and a little bit 1962.",
+    "details": [
+      "Holds 32 oz / 950 ml (4 cups); 5.5 in tall, 7.5 in spout to handle",
+      "Stoneware body with lead-free gloss glaze; removable stainless infuser",
+      "Bent solid walnut handle with brass fittings",
+      "Hand wash the pot to protect the handle; infuser is dishwasher safe",
+      "Glazes: Mustard, Olive, Teal",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "stoneware",
+        "walnut",
+        "stainless steel"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "mustard",
+        "olive",
+        "teal",
+        "walnut"
+      ],
+      "useCase": [
+        "afternoon tea",
+        "loose leaf",
+        "gift",
+        "hosting"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "teapot",
+      "walnut handle",
+      "infuser",
+      "retro",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-33-mustard",
+        "label": "Mustard",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-33-olive",
+        "label": "Olive",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-33-teal",
+        "label": "Teal",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "mustard stoneware teapot wooden handle",
+    "images": [
+      "/marlow/mw-kit-33.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 118
+  },
+  {
+    "id": "mw-kit-34",
+    "slug": "ferro-stovetop-kettle",
+    "name": "Ferro Stovetop Kettle",
+    "category": "Kitchen & dining",
+    "subcategory": "Coffee & tea",
+    "price": 68,
+    "description": "A 1.7-liter stovetop kettle in powder-coated black steel with exposed rivets, a walnut-wrapped handle and a gooseneck spout slow enough for pour-over. It whistles, it works on induction, and it looks like it came out of a machine shop. Raw, utilitarian and built to sit on the back burner for a decade.",
+    "details": [
+      "Capacity 57 oz / 1.7 L; 9 in tall, 8.5 in spout to handle",
+      "18/8 stainless steel body with matte black powder coat; walnut handle grip",
+      "Gooseneck spout; removable whistle cap",
+      "Works on gas, electric and induction; hand wash the exterior",
+      "Weight 2.4 lb",
+      "Finishes: Matte Black, Raw Steel"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "stainless steel",
+        "walnut"
+      ],
+      "colorFamily": [
+        "black",
+        "neutral"
+      ],
+      "colors": [
+        "matte black",
+        "raw steel",
+        "walnut"
+      ],
+      "useCase": [
+        "pour over",
+        "tea",
+        "everyday",
+        "loft kitchen"
+      ],
+      "room": [
+        "kitchen"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "kettle",
+      "gooseneck",
+      "induction",
+      "matte black",
+      "stovetop"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-34-matte-black",
+        "label": "Matte Black",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-34-raw-steel",
+        "label": "Raw Steel",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "matte black gooseneck stovetop kettle",
+    "images": [
+      "/marlow/mw-kit-34.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 203
+  },
+  {
+    "id": "mw-kit-35",
+    "slug": "zahra-hand-painted-espresso-cup-set-of-4",
+    "name": "Zahra Hand-Painted Espresso Cup (Set of 4)",
+    "category": "Kitchen & dining",
+    "subcategory": "Coffee & tea",
+    "price": 38,
+    "description": "Four small handleless cups in red terracotta, each painted by hand with a different geometric pattern in cobalt, ochre and white over a cream slip. They hold a double shot or a pour of mint tea and stack into a short, cheerful tower on the counter. Collected, textured and a reminder of somewhere warmer.",
+    "details": [
+      "Holds 3 oz / 90 ml; 2.5 in tall, 2.5 in diameter; set of 4 (patterns vary)",
+      "Terracotta clay with cream slip and hand-painted underglaze; clear gloss glaze",
+      "Dishwasher safe on the top rack; microwave safe",
+      "Patterns are painted freehand and no two cups are alike",
+      "Made in Morocco"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "terracotta"
+      ],
+      "colorFamily": [
+        "earth",
+        "bold"
+      ],
+      "colors": [
+        "terracotta",
+        "cobalt",
+        "ochre",
+        "cream"
+      ],
+      "useCase": [
+        "espresso",
+        "mint tea",
+        "gift",
+        "small apartment"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "hand-painted",
+      "espresso",
+      "terracotta",
+      "global",
+      "set of 4"
+    ],
+    "variants": [
+      {
+        "id": "mw-kit-35-mixed-patterns",
+        "label": "Mixed Patterns",
+        "inStock": true
+      },
+      {
+        "id": "mw-kit-35-cobalt-only",
+        "label": "Cobalt Only",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "hand painted terracotta espresso cups moroccan",
+    "images": [
+      "/marlow/mw-kit-35.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 109
+  }
+]

@@ -1,0 +1,132 @@
+{
+  "id": "marlow",
+  "name": "Marlow",
+  "tagline": "Furniture and homewares, made to be lived with.",
+  "description": "Marlow is a direct-to-consumer home and living brand. Everything is designed in-house and made by a small group of workshops we've worked with for years: solid-wood furniture, hand-glazed ceramics, woven textiles and lighting that's meant to stay out of the landfill. Free shipping over $75, 100-day returns.",
+  "currency": "USD",
+  "styles": [
+    {
+      "id": "scandi-minimal",
+      "label": "Scandinavian minimal",
+      "description": "Pale woods, white and grey, clean lines, soft textiles, nothing extra."
+    },
+    {
+      "id": "mid-century",
+      "label": "Mid-century modern",
+      "description": "Walnut, tapered legs, organic curves, mustard and olive, 1950s–60s silhouettes."
+    },
+    {
+      "id": "japandi",
+      "label": "Japandi",
+      "description": "Low profiles, oak and black, stoneware, wabi-sabi texture, calm and spare."
+    },
+    {
+      "id": "boho-global",
+      "label": "Boho / global",
+      "description": "Rattan, jute, woven patterns, terracotta, plants, collected-over-time feel."
+    },
+    {
+      "id": "industrial",
+      "label": "Industrial",
+      "description": "Blackened steel, reclaimed wood, concrete, exposed hardware, loft feel."
+    },
+    {
+      "id": "maximalist-eclectic",
+      "label": "Maximalist / eclectic",
+      "description": "Saturated color, bold pattern, velvet, mixed eras, more is more."
+    },
+    {
+      "id": "coastal",
+      "label": "Coastal",
+      "description": "Whitewashed wood, soft blues and sand, linen, rope, light and airy."
+    },
+    {
+      "id": "cottage-rustic",
+      "label": "Cottage / rustic",
+      "description": "Warm pine, stoneware, gingham and florals, wool, farmhouse comfort."
+    },
+    {
+      "id": "art-deco-glam",
+      "label": "Art deco / glam",
+      "description": "Brass and gold, velvet, marble, fluted and geometric shapes, jewel tones."
+    },
+    {
+      "id": "retro-70s",
+      "label": "Retro 70s",
+      "description": "Burnt orange, brown and cream, bouclé, chrome, smoked glass, curved shapes."
+    }
+  ],
+  "rooms": [
+    "living room",
+    "bedroom",
+    "kitchen",
+    "dining room",
+    "home office",
+    "bathroom",
+    "entryway",
+    "balcony",
+    "kids room"
+  ],
+  "nav": [
+    {
+      "label": "Living",
+      "category": "Living",
+      "subcategories": [
+        "Sofas & armchairs",
+        "Coffee & side tables",
+        "Shelving",
+        "Rugs",
+        "Throws & cushions",
+        "Wall art & mirrors"
+      ]
+    },
+    {
+      "label": "Bedroom",
+      "category": "Bedroom",
+      "subcategories": [
+        "Bedding",
+        "Bed frames",
+        "Nightstands",
+        "Bedroom lighting"
+      ]
+    },
+    {
+      "label": "Kitchen & dining",
+      "category": "Kitchen & dining",
+      "subcategories": [
+        "Cookware",
+        "Tableware & ceramics",
+        "Glassware",
+        "Utensils & boards",
+        "Table linens",
+        "Coffee & tea"
+      ]
+    },
+    {
+      "label": "Lighting",
+      "category": "Lighting",
+      "subcategories": ["Floor lamps", "Table lamps", "Pendants"]
+    },
+    {
+      "label": "Decor",
+      "category": "Decor",
+      "subcategories": [
+        "Candles & scent",
+        "Vases",
+        "Planters",
+        "Clocks",
+        "Baskets & storage"
+      ]
+    },
+    {
+      "label": "Workspace",
+      "category": "Workspace",
+      "subcategories": ["Desks", "Desk chairs", "Organizers", "Stationery"]
+    },
+    {
+      "label": "Outdoor",
+      "category": "Outdoor",
+      "subcategories": ["Seating", "Planters", "Lanterns"]
+    }
+  ]
+}

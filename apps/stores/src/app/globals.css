@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/* Marlow: design-house catalog. Chalk paper, hairline grid, one grotesk in two
+   widths (ultra-condensed display / regular body), a mono for numbers and
+   specs, and a single cobalt accent used sparingly. */
+@theme {
+  --color-chalk: #f1efe9;
+  --color-stone: #e4e1d9;
+  --color-ink: #121212;
+  --color-mute: #6d6a63;
+  --color-rule: #c9c5bc;
+  --color-cobalt: #1f3ad6;
+  --color-cobalt-deep: #142aa6;
+
+  --font-sans: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-chalk);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 100;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-cobalt);
+  color: var(--color-chalk);
+}
+
+/* Condensed display cut of the same family. */
+@utility display {
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 62;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+
+@utility display-wide {
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 110;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+@utility mono {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility mono-lg {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hairline grid: parent sets gap-px + bg-rule, children paint bg-chalk. */
+@utility rule-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--color-rule);
+  & > * {
+    background: var(--color-chalk);
+  }
+}
+
+@utility link-rule {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.25s var(--ease-out-soft);
+  &:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility rise {
+  animation: rise 0.8s var(--ease-out-soft) both;
+}
+
+@utility rise-delay-* {
+  animation-delay: calc(--value(integer) * 80ms);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@utility marquee {
+  animation: marquee 40s linear infinite;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* No fill mode on these: if the browser defers the animation (hidden tab), the
+   element's resting state is already the visible one. */
+@utility drawer-in {
+  animation: drawer-in 0.4s var(--ease-out-soft);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility fade-in {
+  animation: fade-in 0.3s ease-out;
+}

@@ -9,9 +9,11 @@ apps/
   web/        Next.js 16 — marketing site, merchant dashboard (Clerk), and /embed/* (the concierge UI the widget iframes)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
   agent/      Python ADK concierge agent (Gemini 3.8 Flash on Vertex AI); deployed to Agent Runtime
+  stores/     Demo storefronts the widget is tested on (Marlow at /marlow); each embeds slice.js like a real merchant
 packages/
   backend/    Convex — schema, queries/mutations/actions, auth config
   qloo/       Typed client for the Qloo API
+  demo-catalogs/  Product catalogs for the demo stores (JSON + types), validator, Pexels image fetcher
 ```
 
 How the pieces talk:
@@ -81,6 +83,7 @@ pnpm dev
 | ----------------------------------- | --------------------------------------------- |
 | Web (site + dashboard)              | http://localhost:3000                         |
 | Widget playground (demo storefront) | http://localhost:5173                         |
+| Demo stores (Marlow)                | http://localhost:3002/marlow                  |
 | Agent (ADK dev UI + API)            | http://localhost:8000                         |
 | Convex dashboard                    | `cd packages/backend && npx convex dashboard` |
 
@@ -92,6 +95,8 @@ pnpm dev
 |                               | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`          | Clerk API keys                                                     |
 |                               | `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-in`, `/sign-up`                                             |
 | `apps/widget/.env.local`      | `VITE_SLICE_APP_URL`                                             | Where the web app runs; the widget iframes `{url}/embed/concierge` |
+| `apps/stores/.env.local`      | `NEXT_PUBLIC_SLICE_SCRIPT_URL`                                   | Where the demo stores load `slice.js` from (dev: the vite source)  |
+| `packages/demo-catalogs/.env` | `PEXELS_API_KEY`                                                 | Only for `pnpm --filter @slice/demo-catalogs fetch-images`         |
 | Convex (`npx convex env set`) | `CLERK_JWT_ISSUER_DOMAIN`                                        | Clerk Frontend API URL                                             |
 | `apps/agent/.env`             | `GOOGLE_GENAI_USE_ENTERPRISE`                                    | `true`: Gemini through Vertex AI, not AI Studio                    |
 |                               | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`                  | Location must be `global` for `gemini-3.8-flash`                   |
@@ -108,6 +113,8 @@ Server-side secrets (Google credentials, Qloo) live only in the agent and Convex
 | `pnpm build`                   | Production builds (web, widget)                  |
 | `pnpm typecheck` / `pnpm lint` | Across all packages                              |
 | `pnpm format`                  | Prettier                                         |
+| `pnpm --filter @slice/demo-catalogs validate` | Schema + style-coverage check on the demo catalogs |
+| `pnpm --filter @slice/demo-catalogs fetch-images marlow` | Fetch a Pexels photo per product (needs `PEXELS_API_KEY`) |
 
 ## Embedding the widget
 

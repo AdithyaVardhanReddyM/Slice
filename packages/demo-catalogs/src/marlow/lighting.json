@@ -1,0 +1,1128 @@
+[
+  {
+    "id": "mw-lgt-01",
+    "slug": "arlo-arc-floor-lamp",
+    "name": "Arlo Arc Floor Lamp",
+    "category": "Lighting",
+    "subcategory": "Floor lamps",
+    "price": 298,
+    "description": "A long, low-slung arc in brushed brass that reaches over a sofa or reading chair from a weighted walnut-capped base. The smoked-glass dome throws a warm, pooled light rather than a glare, so it reads like a 1960s den after dark. Suits a mid-century living room that needs overhead light without the ceiling work.",
+    "details": [
+      "Bulb: 1 x E26, max 60W (LED recommended), dimmable with a compatible bulb",
+      "Shade: smoked glass dome, 12 in diameter",
+      "Dimensions: 78 in H x 54 in reach x 12 in base diameter",
+      "Base: cast iron with walnut veneer cap, 28 lb",
+      "Cord: 8 ft fabric-wrapped cord with inline foot dimmer",
+      "Wipe with a dry cloth; assembled in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century",
+        "retro-70s"
+      ],
+      "material": [
+        "brass",
+        "smoked glass",
+        "walnut",
+        "cast iron"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "brushed brass",
+        "smoke",
+        "walnut"
+      ],
+      "useCase": [
+        "over the sofa",
+        "reading corner",
+        "no ceiling fixture"
+      ],
+      "room": [
+        "living room",
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "arc lamp",
+      "statement piece",
+      "dimmable",
+      "reading light"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-01-brass",
+        "label": "Brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-01-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-01-nickel",
+        "label": "Nickel",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "brass arc floor lamp living room",
+    "images": [
+      "/marlow/mw-lgt-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 212
+  },
+  {
+    "id": "mw-lgt-02",
+    "slug": "haldane-tripod-floor-lamp",
+    "name": "Haldane Tripod Floor Lamp",
+    "category": "Lighting",
+    "subcategory": "Floor lamps",
+    "price": 129,
+    "description": "Three tapered legs of pale solid ash hold a wide, soft-white linen drum at reading height. The light is quiet and diffuse, the kind that makes a pale, uncluttered room feel calm at night. Light enough to carry from the sofa to the bedroom, it suits small apartments and airy, light-filled rooms.",
+    "details": [
+      "Bulb: 1 x E26, max 60W, dimmable with a compatible bulb",
+      "Shade: washed linen over a white polypropylene liner, 18 in diameter x 11 in H",
+      "Dimensions: 58 in H x 22 in W at the feet",
+      "Legs: solid ash with a clear matte lacquer, 9 lb total",
+      "Cord: 6 ft cord with inline rocker switch",
+      "Spot clean the shade; assembled in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "coastal"
+      ],
+      "material": [
+        "ash",
+        "linen"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "natural ash",
+        "white linen"
+      ],
+      "useCase": [
+        "small apartment",
+        "reading corner",
+        "soft ambient light"
+      ],
+      "room": [
+        "living room",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "tripod",
+      "small space",
+      "linen shade",
+      "light wood"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-02-white-linen",
+        "label": "White linen",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-02-natural-linen",
+        "label": "Natural linen",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-02-soft-grey",
+        "label": "Soft grey",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ash wood tripod floor lamp linen shade",
+    "images": [
+      "/marlow/mw-lgt-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 487,
+    "bestseller": true
+  },
+  {
+    "id": "mw-lgt-03",
+    "slug": "foundry-floor-lamp",
+    "name": "Foundry Floor Lamp",
+    "category": "Lighting",
+    "subcategory": "Floor lamps",
+    "price": 219,
+    "compareAtPrice": 259,
+    "description": "A blackened-steel column on a block of reclaimed oak, topped with a swiveling spun-metal shade and visible knurled hardware. It has the raw, utilitarian look of a workshop task light and throws a focused beam wherever you aim it. Made for a loft, a studio desk, or anyone who likes their lighting exposed rather than dressed up.",
+    "details": [
+      "Bulb: 1 x E26, max 75W, dimmable with a compatible bulb",
+      "Shade: spun steel with a matte black exterior and white interior, 10 in diameter, swivels 180 degrees",
+      "Dimensions: 64 in H x 14 in W x 12 in D",
+      "Base: reclaimed white oak block with exposed bolt heads, 16 lb",
+      "Cord: 7 ft black braided cord with inline rotary dimmer",
+      "Steel wiped with oil at the factory; made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "blackened steel",
+        "reclaimed oak"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "matte black",
+        "reclaimed oak"
+      ],
+      "useCase": [
+        "loft",
+        "task lighting",
+        "studio"
+      ],
+      "room": [
+        "living room",
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "loft",
+      "task light",
+      "reclaimed wood",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-03-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-03-aged-brass",
+        "label": "Aged brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-03-raw-steel",
+        "label": "Raw steel",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black floor lamp living room",
+    "images": [
+      "/marlow/mw-lgt-03.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 96
+  },
+  {
+    "id": "mw-lgt-04",
+    "slug": "sable-paper-floor-lamp",
+    "name": "Sable Paper Floor Lamp",
+    "category": "Lighting",
+    "subcategory": "Floor lamps",
+    "price": 178,
+    "description": "A tall, narrow column of hand-folded washi paper on a slim black-stained oak frame, with the paper left slightly uneven so each one is a little different. It glows rather than shines, filling a corner with a soft, even light that makes a spare room feel settled. For a calm bedroom or a low, quiet living room with very little else in it.",
+    "details": [
+      "Bulb: 2 x E26, max 40W each (LED recommended), dimmable with compatible bulbs",
+      "Shade: mulberry washi paper on a steel wire frame, fire-retardant treated",
+      "Dimensions: 60 in H x 11 in W x 11 in D",
+      "Frame: solid oak, black-stained or natural, 7 lb",
+      "Cord: 6 ft cord with inline step dimmer (3 levels)",
+      "Dust with a soft brush; keep away from damp; made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "washi paper",
+        "oak",
+        "steel"
+      ],
+      "colorFamily": [
+        "white",
+        "black"
+      ],
+      "colors": [
+        "natural paper",
+        "black oak"
+      ],
+      "useCase": [
+        "ambient light",
+        "calm bedroom",
+        "corner lamp"
+      ],
+      "room": [
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "paper lantern",
+      "wabi-sabi",
+      "ambient",
+      "handmade"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-04-black-oak",
+        "label": "Black oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-04-natural-oak",
+        "label": "Natural oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "paper floor lamp",
+    "images": [
+      "/marlow/mw-lgt-04.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 143
+  },
+  {
+    "id": "mw-lgt-05",
+    "slug": "castellan-fluted-floor-lamp",
+    "name": "Castellan Fluted Floor Lamp",
+    "category": "Lighting",
+    "subcategory": "Floor lamps",
+    "price": 349,
+    "description": "A fluted brass column rises from a disc of honed Carrara marble to a wide pleated shade in deep emerald velvet. Every detail is polished and geometric, and the shade turns the light a rich, flattering gold once evening sets in. A glamorous anchor for a formal living room or a bedroom that leans into jewel tones.",
+    "details": [
+      "Bulb: 1 x E26, max 100W (LED recommended), dimmable with a compatible bulb",
+      "Shade: pleated cotton velvet over a gold-lined interior, 20 in diameter x 12 in H",
+      "Dimensions: 66 in H x 20 in W",
+      "Base: honed Carrara marble, 11 in diameter, 24 lb; fluted solid brass column",
+      "Cord: 8 ft gold fabric-wrapped cord with inline foot switch",
+      "Dust the shade with a lint brush; marble is sealed; assembled in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "brass",
+        "marble",
+        "velvet"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "polished brass",
+        "emerald",
+        "white marble"
+      ],
+      "useCase": [
+        "formal living room",
+        "statement piece",
+        "hosting"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "fluted",
+      "marble base",
+      "velvet shade",
+      "glam"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-05-brass-emerald",
+        "label": "Brass / emerald",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-05-brass-sapphire",
+        "label": "Brass / sapphire",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-05-nickel-black",
+        "label": "Nickel / black",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-05-brass-blush",
+        "label": "Brass / blush",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "fluted brass floor lamp marble base velvet shade",
+    "images": [
+      "/marlow/mw-lgt-05.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 58
+  },
+  {
+    "id": "mw-lgt-06",
+    "slug": "juniper-rattan-table-lamp",
+    "name": "Juniper Rattan Table Lamp",
+    "category": "Lighting",
+    "subcategory": "Table lamps",
+    "price": 118,
+    "description": "A rounded terracotta stoneware base with a hand-woven rattan shade that scatters warm, dappled light across the wall at night. It looks like something picked up on a trip and lived with for years, relaxed and textured, and it pairs easily with jute, plants and layered cottons. For a sideboard, a bedside, or a sunny reading spot.",
+    "details": [
+      "Bulb: 1 x E26, max 60W, dimmable with a compatible bulb",
+      "Shade: hand-woven natural rattan, open weave, 14 in diameter x 9 in H",
+      "Dimensions: 22 in H x 14 in W",
+      "Base: glazed stoneware, 6 lb; felt pad underneath",
+      "Cord: 6 ft natural cotton-braided cord with inline rocker switch",
+      "Dust the rattan with a soft brush; shade woven in Indonesia, base thrown in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "rattan",
+        "stoneware"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "terracotta",
+        "natural rattan"
+      ],
+      "useCase": [
+        "bedside",
+        "sideboard",
+        "warm ambient light"
+      ],
+      "room": [
+        "bedroom",
+        "living room",
+        "entryway"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "rattan",
+      "hand-woven",
+      "textured",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-06-terracotta",
+        "label": "Terracotta",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-06-sand",
+        "label": "Sand",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-06-olive",
+        "label": "Olive",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rattan shade table lamp terracotta base",
+    "images": [
+      "/marlow/mw-lgt-06.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 321
+  },
+  {
+    "id": "mw-lgt-07",
+    "slug": "wren-stoneware-table-lamp",
+    "name": "Wren Stoneware Table Lamp",
+    "category": "Lighting",
+    "subcategory": "Table lamps",
+    "price": 139,
+    "description": "A pot-bellied stoneware base in a creamy, speckled glaze under a gathered gingham cotton shade. It is homely and a little old-fashioned in the best way, the sort of lamp that makes a farmhouse kitchen corner or a guest bedroom feel cozy and cared for. Pairs well with pine, wool throws and a stack of well-read books.",
+    "details": [
+      "Bulb: 1 x E26, max 60W, dimmable with a compatible bulb",
+      "Shade: gathered cotton gingham over a cotton liner, 13 in diameter x 9 in H",
+      "Dimensions: 20 in H x 13 in W",
+      "Base: hand-glazed reactive stoneware with a speckled cream finish, 5 lb",
+      "Cord: 6 ft cream fabric-wrapped cord with inline rocker switch",
+      "Shade spot clean only; each glaze varies slightly; base made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "stoneware",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "oatmeal gingham"
+      ],
+      "useCase": [
+        "guest bedroom",
+        "farmhouse kitchen",
+        "bedside"
+      ],
+      "room": [
+        "bedroom",
+        "kitchen",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "hand-glazed",
+      "gingham",
+      "farmhouse",
+      "cozy"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-07-oatmeal-gingham",
+        "label": "Oatmeal gingham",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-07-sage-gingham",
+        "label": "Sage gingham",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-07-red-gingham",
+        "label": "Red gingham",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ceramic table lamp",
+    "images": [
+      "/marlow/mw-lgt-07.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 174
+  },
+  {
+    "id": "mw-lgt-08",
+    "slug": "zinnia-lacquer-table-lamp",
+    "name": "Zinnia Lacquer Table Lamp",
+    "category": "Lighting",
+    "subcategory": "Table lamps",
+    "price": 149,
+    "description": "A chunky gourd-shaped base in high-gloss lacquer, in a color that refuses to blend in, topped with a scalloped-edge pleated shade. It is bold and playful and looks best when mixed with pattern, velvet and a few things from other decades. Buy one for a console, or two in clashing colors for a bedroom that is anything but quiet.",
+    "details": [
+      "Bulb: 1 x E26, max 60W, dimmable with a compatible bulb",
+      "Shade: pleated cotton with a scalloped hem over a white liner, 14 in diameter x 9 in H",
+      "Dimensions: 23 in H x 14 in W",
+      "Base: resin with a hand-applied high-gloss lacquer, 6 lb",
+      "Cord: 6 ft cord with inline rocker switch",
+      "Wipe the base with a damp cloth; made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "lacquer",
+        "resin",
+        "cotton"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "cobalt",
+        "fuchsia",
+        "mustard",
+        "emerald"
+      ],
+      "useCase": [
+        "console lamp",
+        "color statement",
+        "bedside pair"
+      ],
+      "room": [
+        "living room",
+        "bedroom",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lacquer",
+      "colorful",
+      "scalloped",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-08-cobalt",
+        "label": "Cobalt",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-08-fuchsia",
+        "label": "Fuchsia",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-08-mustard",
+        "label": "Mustard",
+        "inStock": false
+      },
+      {
+        "id": "mw-lgt-08-emerald",
+        "label": "Emerald",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "glossy colorful ceramic table lamp pleated shade",
+    "images": [
+      "/marlow/mw-lgt-08.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 41,
+    "new": true
+  },
+  {
+    "id": "mw-lgt-09",
+    "slug": "orbit-mushroom-table-lamp",
+    "name": "Orbit Mushroom Table Lamp",
+    "category": "Lighting",
+    "subcategory": "Table lamps",
+    "price": 229,
+    "description": "A chunky mushroom lamp with a mirror-polished chrome stem and a hand-blown smoked-glass dome that glows a warm amber when lit. The curves are soft and unmistakably 1970s, and it takes a bedside or a bar cart from plain to groovy without trying too hard. Sits happily beside bouclé, walnut and a burnt-orange anything.",
+    "details": [
+      "Bulb: 1 x E26, max 40W (LED recommended), dimmable with a compatible bulb",
+      "Shade: hand-blown smoked glass dome, 12 in diameter",
+      "Dimensions: 16 in H x 12 in W",
+      "Base: steel with a polished chrome plate, weighted, 8 lb",
+      "Cord: 6 ft clear cord with touch dimmer in the base (3 levels)",
+      "Glass varies slightly piece to piece; made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s",
+        "mid-century"
+      ],
+      "material": [
+        "chrome",
+        "smoked glass",
+        "steel"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "chrome",
+        "smoke",
+        "amber"
+      ],
+      "useCase": [
+        "bedside",
+        "bar cart",
+        "mood lighting"
+      ],
+      "room": [
+        "bedroom",
+        "living room",
+        "dining room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "mushroom lamp",
+      "smoked glass",
+      "touch dimmer",
+      "groovy"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-09-chrome-smoke",
+        "label": "Chrome / smoke",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-09-brass-amber",
+        "label": "Brass / amber",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-09-black-smoke",
+        "label": "Black / smoke",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "mushroom lamp",
+    "images": [
+      "/marlow/mw-lgt-09.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 263
+  },
+  {
+    "id": "mw-lgt-10",
+    "slug": "tove-oak-table-lamp",
+    "name": "Tove Oak Table Lamp",
+    "category": "Lighting",
+    "subcategory": "Table lamps",
+    "price": 89,
+    "description": "A slim turned-oak stem on a flat disc base, with a short white linen drum that keeps the light low and even. Nothing is extra, and the pale wood and clean proportions make it almost disappear into a quiet bedroom or a tidy desk. The black-stained version reads a little more spare and calm, closer to a Japanese inn than a Scandinavian cabin.",
+    "details": [
+      "Bulb: 1 x E26, max 40W, dimmable with a compatible bulb",
+      "Shade: white washed linen over a polypropylene liner, 10 in diameter x 7 in H",
+      "Dimensions: 17 in H x 10 in W",
+      "Base: solid white oak, turned and oiled, 3 lb",
+      "Cord: 6 ft white cord with inline rocker switch",
+      "Wipe the wood with a dry cloth; re-oil yearly; made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "japandi"
+      ],
+      "material": [
+        "white oak",
+        "linen"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "white oak",
+        "white linen",
+        "black oak"
+      ],
+      "useCase": [
+        "bedside",
+        "desk lamp",
+        "small apartment"
+      ],
+      "room": [
+        "bedroom",
+        "home office",
+        "kids room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "small space",
+      "light wood",
+      "minimal",
+      "bedside"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-10-white-oak",
+        "label": "White oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-10-black-oak",
+        "label": "Black oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "small oak table lamp white linen shade",
+    "images": [
+      "/marlow/mw-lgt-10.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 388
+  },
+  {
+    "id": "mw-lgt-11",
+    "slug": "marin-rope-pendant",
+    "name": "Marin Rope Pendant",
+    "category": "Lighting",
+    "subcategory": "Pendants",
+    "price": 168,
+    "description": "A wide open dome wrapped in coils of natural jute rope, hung from a whitewashed oak canopy on a cotton-covered cord. In daylight it is pale, breezy and textured; at night the rope throws soft rings of light onto the ceiling. Hang it over a dining table in a beach house, or anywhere that wants to feel like one.",
+    "details": [
+      "Bulb: 1 x E26, max 60W, dimmable with a compatible bulb and wall dimmer",
+      "Shade: hand-wrapped natural jute rope on a steel frame, 20 in diameter x 11 in H",
+      "Cord: 72 in natural cotton-covered cord, cut to length at install; hardwired",
+      "Canopy: whitewashed solid oak, 5 in diameter",
+      "Weight: 6 lb; suitable for 8 to 10 ft ceilings",
+      "Dust with a soft brush; shade wrapped in India"
+    ],
+    "attributes": {
+      "style": [
+        "coastal",
+        "boho-global"
+      ],
+      "material": [
+        "jute",
+        "oak",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "natural jute",
+        "whitewashed oak"
+      ],
+      "useCase": [
+        "over the dining table",
+        "beach house",
+        "kitchen island"
+      ],
+      "room": [
+        "dining room",
+        "kitchen",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "rope",
+      "woven",
+      "airy",
+      "hardwired"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-11-natural",
+        "label": "Natural",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-11-bleached",
+        "label": "Bleached",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "jute rope dome pendant light coastal",
+    "images": [
+      "/marlow/mw-lgt-11.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 127
+  },
+  {
+    "id": "mw-lgt-12",
+    "slug": "ferrule-cage-pendant",
+    "name": "Ferrule Cage Pendant",
+    "category": "Lighting",
+    "subcategory": "Pendants",
+    "price": 125,
+    "description": "An open wire cage of blackened steel with a knurled brass socket collar and a braided cord, built to show off a big filament bulb rather than hide it. It is raw and utilitarian, and it comes into its own hung in a row of three over a kitchen island or a workbench-style dining table. Made for lofts, exposed brick and anyone who prefers hardware to shades.",
+    "details": [
+      "Bulb: 1 x E26, max 60W (vintage-style LED filament recommended, not included), dimmable with a compatible bulb and wall dimmer",
+      "Shade: powder-coated steel wire cage, 7 in diameter x 11 in H",
+      "Cord: 96 in black braided cord, adjustable at the canopy; hardwired",
+      "Canopy: 5 in steel disc with exposed screw heads, matched finish",
+      "Weight: 2 lb; suitable for 8 to 12 ft ceilings",
+      "Wipe with a dry cloth; made in India"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "blackened steel",
+        "brass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "matte black",
+        "aged brass"
+      ],
+      "useCase": [
+        "kitchen island",
+        "loft",
+        "hang in a row"
+      ],
+      "room": [
+        "kitchen",
+        "dining room",
+        "home office"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "cage",
+      "loft",
+      "exposed bulb",
+      "hardwired"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-12-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-12-aged-brass",
+        "label": "Aged brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-12-galvanized",
+        "label": "Galvanized",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black wire cage pendant light industrial",
+    "images": [
+      "/marlow/mw-lgt-12.jpg"
+    ],
+    "rating": 4.2,
+    "reviewCount": 203
+  },
+  {
+    "id": "mw-lgt-13",
+    "slug": "oona-fluted-glass-pendant",
+    "name": "Oona Fluted Glass Pendant",
+    "category": "Lighting",
+    "subcategory": "Pendants",
+    "price": 289,
+    "description": "A hand-blown globe of deeply ribbed glass held in a polished brass collar, with a fluted brass stem and a matching domed canopy. Lit, the ribs break the light into bright, geometric bands across the ceiling, which is pure deco. Hang one over a round dining table or a pair above a bar, especially in a room with velvet, marble and a bit of nerve.",
+    "details": [
+      "Bulb: 1 x E26, max 60W (globe LED recommended), dimmable with a compatible bulb and wall dimmer",
+      "Shade: hand-blown fluted glass globe, 12 in diameter",
+      "Stem: fluted solid brass, 3 ft rod, cuttable at install; hardwired",
+      "Canopy: 5 in domed brass canopy with fluted edge",
+      "Weight: 9 lb; suitable for 8 to 11 ft ceilings",
+      "Clean the glass with a microfiber cloth; made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam",
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "glass",
+        "brass"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "polished brass",
+        "clear",
+        "smoke",
+        "amber"
+      ],
+      "useCase": [
+        "over the dining table",
+        "bar area",
+        "hosting"
+      ],
+      "room": [
+        "dining room",
+        "living room",
+        "entryway"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "fluted",
+      "hand-blown",
+      "glam",
+      "geometric"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-13-brass-clear",
+        "label": "Brass / clear",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-13-brass-amber",
+        "label": "Brass / amber",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-13-black-smoke",
+        "label": "Black / smoke",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-13-nickel-opal",
+        "label": "Nickel / opal",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "fluted glass globe pendant brass",
+    "images": [
+      "/marlow/mw-lgt-13.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 156,
+    "bestseller": true
+  },
+  {
+    "id": "mw-lgt-14",
+    "slug": "hearth-enamel-pendant",
+    "name": "Hearth Enamel Pendant",
+    "category": "Lighting",
+    "subcategory": "Pendants",
+    "price": 129,
+    "compareAtPrice": 159,
+    "description": "A classic farmhouse dome in cream enameled steel with a contrasting black rim and a white interior that bounces a warm, generous light downward. It is homely and practical, the kind of fixture that belongs over a scrubbed pine table or a deep kitchen sink. Mixes easily with stoneware, gingham and wool.",
+    "details": [
+      "Bulb: 1 x E26, max 75W, dimmable with a compatible bulb and wall dimmer",
+      "Shade: spun steel with a baked enamel finish, 14 in diameter x 8 in H",
+      "Cord: 72 in black cloth-covered cord, adjustable at the canopy; hardwired",
+      "Canopy: 5 in enameled steel disc, matched to the shade",
+      "Weight: 4 lb; suitable for 8 to 10 ft ceilings",
+      "Wipe with a damp cloth; made in Turkey"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "enameled steel"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "sage",
+        "black"
+      ],
+      "useCase": [
+        "over the kitchen table",
+        "farmhouse kitchen",
+        "over the sink"
+      ],
+      "room": [
+        "kitchen",
+        "dining room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "farmhouse",
+      "enamel",
+      "kitchen",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-14-cream",
+        "label": "Cream",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-14-sage",
+        "label": "Sage",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-14-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream enamel dome pendant farmhouse kitchen",
+    "images": [
+      "/marlow/mw-lgt-14.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 342
+  },
+  {
+    "id": "mw-lgt-15",
+    "slug": "kaede-paper-pendant",
+    "name": "Kaede Paper Pendant",
+    "category": "Lighting",
+    "subcategory": "Pendants",
+    "price": 198,
+    "description": "A large, softly squashed sphere of hand-pleated washi paper suspended from a slim black-stained oak ring on a black cord. The light is milky and even, with no hot spot, and the slightly irregular pleats give it a quiet, handmade calm. For a low dining table, a bedroom, or a pale, spare living room that wants one gentle shape in the air.",
+    "details": [
+      "Bulb: 1 x E26, max 60W (LED recommended), dimmable with a compatible bulb and wall dimmer",
+      "Shade: hand-pleated mulberry washi paper on a steel wire frame, fire-retardant treated, 20 in diameter x 16 in H",
+      "Cord: 80 in black cloth-covered cord, adjustable at the canopy; hardwired",
+      "Canopy and ring: solid oak, black-stained or natural, 5 in canopy",
+      "Weight: 3 lb; suitable for 8 to 10 ft ceilings",
+      "Dust with a soft brush; keep away from steam; shade made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "washi paper",
+        "oak"
+      ],
+      "colorFamily": [
+        "white",
+        "black"
+      ],
+      "colors": [
+        "natural paper",
+        "black oak"
+      ],
+      "useCase": [
+        "over the dining table",
+        "calm bedroom",
+        "soft ambient light"
+      ],
+      "room": [
+        "dining room",
+        "bedroom",
+        "living room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "paper lantern",
+      "wabi-sabi",
+      "handmade",
+      "ambient"
+    ],
+    "variants": [
+      {
+        "id": "mw-lgt-15-black-oak",
+        "label": "Black oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-lgt-15-natural-oak",
+        "label": "Natural oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pleated washi paper pendant lantern",
+    "images": [
+      "/marlow/mw-lgt-15.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 29,
+    "new": true
+  }
+]

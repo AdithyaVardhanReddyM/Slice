@@ -1,0 +1,1033 @@
+[
+  {
+    "id": "mw-wrk-01",
+    "slug": "fenwick-desk",
+    "name": "Fenwick Desk",
+    "category": "Workspace",
+    "subcategory": "Desks",
+    "price": 365,
+    "description": "A pale white oak writing desk with a single slim drawer and straight, square-edged legs. The top is finished in a matte hardwax oil so it stays light and quiet rather than glossy, and the drawer front sits flush with no visible pull. It suits a small home office or a bedroom corner where you want the desk to disappear into the wall.",
+    "details": [
+      "120 cm W x 60 cm D x 75 cm H",
+      "Solid white oak frame with oak-veneered engineered top",
+      "One push-to-open drawer, 50 cm W x 35 cm D x 8 cm H interior",
+      "Finished with plant-based hardwax oil; wipe with a damp cloth",
+      "Assembly in about 20 minutes with the included hex key",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal"
+      ],
+      "material": [
+        "white oak",
+        "engineered wood"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "white oak",
+        "natural"
+      ],
+      "useCase": [
+        "small apartment",
+        "working from home",
+        "study"
+      ],
+      "room": [
+        "home office",
+        "bedroom"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "small space",
+      "compact",
+      "solid wood",
+      "minimal"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-01-white-oak",
+        "label": "White oak",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-01-white-oak-white-top",
+        "label": "White oak / white top",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "light oak minimalist writing desk",
+    "images": [
+      "/marlow/mw-wrk-01.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 214
+  },
+  {
+    "id": "mw-wrk-02",
+    "slug": "larkin-writing-desk",
+    "name": "Larkin Writing Desk",
+    "category": "Workspace",
+    "subcategory": "Desks",
+    "price": 650,
+    "description": "A low-slung walnut writing desk with tapered, splayed legs and two drawers with slim brass pulls. The top has a gently bowed front edge and a warm, hand-rubbed finish that deepens as it ages. It brings a 1950s study feel to a home office and pairs easily with a leather or wool chair.",
+    "details": [
+      "130 cm W x 62 cm D x 76 cm H",
+      "Solid American walnut legs and frame, walnut-veneered top",
+      "Two drawers on wooden runners, solid brass pulls",
+      "Cable grommet at rear center",
+      "Lacquer finish; dust with a soft cloth, avoid direct sun",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut",
+        "brass"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "walnut",
+        "brass"
+      ],
+      "useCase": [
+        "working from home",
+        "writing",
+        "study"
+      ],
+      "room": [
+        "home office",
+        "living room"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "walnut",
+      "tapered legs",
+      "brass hardware",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-02-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-02-walnut-wide",
+        "label": "Walnut / 150 cm",
+        "inStock": true,
+        "priceDelta": 90
+      }
+    ],
+    "imageQuery": "walnut mid century writing desk",
+    "images": [
+      "/marlow/mw-wrk-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 362,
+    "bestseller": true
+  },
+  {
+    "id": "mw-wrk-03",
+    "slug": "kessler-sit-stand-desk",
+    "name": "Kessler Sit-Stand Desk",
+    "category": "Workspace",
+    "subcategory": "Desks",
+    "price": 780,
+    "description": "A reclaimed oak top on a blackened steel electric frame that lifts from sitting to standing with a quiet motor. The planks keep their saw marks and nail holes, and the exposed steel feet and crossbar give it a raw, loft-workshop look. It is built for long days at a screen and for people who like their furniture to show how it was made.",
+    "details": [
+      "140 cm W x 70 cm D; height adjusts from 71 cm to 118 cm",
+      "Reclaimed European oak top, 30 mm thick, sealed with matte polyurethane",
+      "Powder-coated steel dual-motor frame, 100 kg lift capacity",
+      "Four memory presets on the control panel",
+      "Top planks vary in grain and color; each desk is unique",
+      "Frame made in Taiwan, top finished in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "reclaimed oak",
+        "blackened steel"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "reclaimed oak",
+        "matte black"
+      ],
+      "useCase": [
+        "working from home",
+        "standing desk",
+        "long hours"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "standing desk",
+      "reclaimed wood",
+      "loft",
+      "ergonomic"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-03-black-frame",
+        "label": "Black frame",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-03-raw-steel-frame",
+        "label": "Raw steel frame",
+        "inStock": false
+      },
+      {
+        "id": "mw-wrk-03-black-frame-160",
+        "label": "Black frame / 160 cm",
+        "inStock": true,
+        "priceDelta": 120
+      }
+    ],
+    "imageQuery": "height adjustable desk",
+    "images": [
+      "/marlow/mw-wrk-03.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 148
+  },
+  {
+    "id": "mw-wrk-04",
+    "slug": "soren-desk",
+    "name": "Soren Desk",
+    "category": "Workspace",
+    "subcategory": "Desks",
+    "price": 520,
+    "description": "A spare oak desk with a thin black steel frame and a single open shelf beneath the top. The oak is brushed and oiled so you can feel the grain, and the proportions sit low and calm, with nothing to distract from the work in front of you. It suits a quiet home office or a corner of a Japandi bedroom.",
+    "details": [
+      "120 cm W x 58 cm D x 73 cm H",
+      "Solid white oak top and shelf, 22 mm thick",
+      "Matte black powder-coated steel frame",
+      "Open shelf 110 cm W x 25 cm D for a notebook and tray",
+      "Oiled finish; re-oil once a year",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "japandi",
+        "scandi-minimal"
+      ],
+      "material": [
+        "oak",
+        "steel"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "oak",
+        "black"
+      ],
+      "useCase": [
+        "working from home",
+        "small apartment",
+        "study"
+      ],
+      "room": [
+        "home office",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "low profile",
+      "oak",
+      "calm",
+      "open shelf"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-04-oak-black",
+        "label": "Oak / black",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-04-smoked-oak-black",
+        "label": "Smoked oak / black",
+        "inStock": true,
+        "priceDelta": 40
+      }
+    ],
+    "imageQuery": "oak desk black steel frame japandi",
+    "images": [
+      "/marlow/mw-wrk-04.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 97
+  },
+  {
+    "id": "mw-wrk-05",
+    "slug": "juno-swivel-desk-chair",
+    "name": "Juno Swivel Desk Chair",
+    "category": "Workspace",
+    "subcategory": "Desk chairs",
+    "price": 395,
+    "description": "A rounded, chunky desk chair in cream bouclé on a polished chrome five-star base. The seat and back are one continuous curve, padded deep enough for an afternoon of calls, and the whole thing swivels and rolls with a soft, slightly groovy ease. It makes a home office feel less like an office and more like a 1970s den.",
+    "details": [
+      "64 cm W x 62 cm D x 78–86 cm H; seat height 42–50 cm",
+      "Polyester bouclé upholstery over high-density foam",
+      "Chrome-plated steel base with gas lift and soft casters",
+      "Weight capacity 120 kg",
+      "Spot clean with a damp cloth; no bleach",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "retro-70s"
+      ],
+      "material": [
+        "bouclé",
+        "chrome",
+        "foam"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "chrome"
+      ],
+      "useCase": [
+        "working from home",
+        "video calls",
+        "vanity seat"
+      ],
+      "room": [
+        "home office",
+        "bedroom"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bouclé",
+      "swivel",
+      "curved",
+      "statement piece"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-05-cream-boucle",
+        "label": "Cream bouclé",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-05-burnt-orange-boucle",
+        "label": "Burnt orange bouclé",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-05-cocoa-boucle",
+        "label": "Cocoa bouclé",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "boucle chair desk",
+    "images": [
+      "/marlow/mw-wrk-05.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 183,
+    "new": true
+  },
+  {
+    "id": "mw-wrk-06",
+    "slug": "hale-task-chair",
+    "name": "Hale Task Chair",
+    "category": "Workspace",
+    "subcategory": "Desk chairs",
+    "price": 280,
+    "compareAtPrice": 340,
+    "description": "A no-nonsense task chair with a blackened steel frame, a breathable charcoal mesh back and a firm molded seat. The exposed bolts and matte finish give it a utilitarian workshop look without the bulk of a typical office chair. It is the one to pick if you spend serious hours at a desk and want support that does not fuss over styling.",
+    "details": [
+      "60 cm W x 60 cm D x 92–102 cm H; seat height 44–54 cm",
+      "Powder-coated steel frame, recycled polyester mesh back",
+      "Adjustable lumbar, seat height and tilt tension",
+      "Weight capacity 135 kg",
+      "Hard-floor casters included",
+      "Made in Taiwan"
+    ],
+    "attributes": {
+      "style": [
+        "industrial"
+      ],
+      "material": [
+        "steel",
+        "mesh",
+        "polypropylene"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "charcoal",
+        "matte black"
+      ],
+      "useCase": [
+        "working from home",
+        "long hours",
+        "ergonomic"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "ergonomic",
+      "mesh",
+      "utilitarian",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-06-charcoal",
+        "label": "Charcoal",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-06-olive",
+        "label": "Olive",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black office chair",
+    "images": [
+      "/marlow/mw-wrk-06.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 276
+  },
+  {
+    "id": "mw-wrk-07",
+    "slug": "vesper-velvet-desk-chair",
+    "name": "Vesper Velvet Desk Chair",
+    "category": "Workspace",
+    "subcategory": "Desk chairs",
+    "price": 450,
+    "description": "A channel-tufted desk chair in emerald velvet on a polished brass swivel base. The back has vertical fluting that catches the light, and the armrests are capped in brass to match. It is a polished, slightly glamorous seat for a home office that doubles as a dressing room.",
+    "details": [
+      "62 cm W x 64 cm D x 84–92 cm H; seat height 43–51 cm",
+      "Cotton-blend velvet over high-resilience foam",
+      "Brass-finished steel five-star base with gas lift",
+      "Weight capacity 115 kg",
+      "Vacuum with upholstery brush; professional clean only",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "velvet",
+        "brass",
+        "steel"
+      ],
+      "colorFamily": [
+        "bold",
+        "cool"
+      ],
+      "colors": [
+        "emerald",
+        "brass"
+      ],
+      "useCase": [
+        "working from home",
+        "vanity seat",
+        "hosting"
+      ],
+      "room": [
+        "home office",
+        "bedroom"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "velvet",
+      "fluted",
+      "brass",
+      "jewel tone"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-07-emerald",
+        "label": "Emerald",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-07-sapphire",
+        "label": "Sapphire",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-07-blush",
+        "label": "Blush",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "green velvet office chair brass base",
+    "images": [
+      "/marlow/mw-wrk-07.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 121
+  },
+  {
+    "id": "mw-wrk-08",
+    "slug": "tilde-desk-organizer",
+    "name": "Tilde Desk Organizer",
+    "category": "Workspace",
+    "subcategory": "Organizers",
+    "price": 48,
+    "description": "A low oak tray with a matte black steel divider that sorts pens, a phone, and a few cards into three open bays. The oak is left raw and oiled, and the steel sits just proud of the wood so the two materials read as separate pieces. It keeps a desk top spare and tidy without looking like office supply.",
+    "details": [
+      "30 cm W x 12 cm D x 5 cm H",
+      "Solid white oak tray, powder-coated steel insert",
+      "Three compartments; the widest holds a phone upright",
+      "Oiled finish; wipe clean",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "japandi"
+      ],
+      "material": [
+        "oak",
+        "steel"
+      ],
+      "colorFamily": [
+        "neutral",
+        "black"
+      ],
+      "colors": [
+        "oak",
+        "black"
+      ],
+      "useCase": [
+        "desk tidy",
+        "entryway catch-all",
+        "gift"
+      ],
+      "room": [
+        "home office",
+        "entryway"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "desk tidy",
+      "oak",
+      "gift",
+      "minimal"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-08-oak-black",
+        "label": "Oak / black",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-08-black-oak-black",
+        "label": "Black oak / black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "oak desk organizer black steel",
+    "images": [
+      "/marlow/mw-wrk-08.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 88
+  },
+  {
+    "id": "mw-wrk-09",
+    "slug": "sabi-woven-desk-trays-set-of-3",
+    "name": "Sabi Woven Desk Trays (Set of 3)",
+    "category": "Workspace",
+    "subcategory": "Organizers",
+    "price": 38,
+    "description": "Three nesting trays hand-woven from natural seagrass with a terracotta cotton trim along the rim. They corral mail, chargers and notebooks with a relaxed, collected texture that softens a desk full of screens. Use them together as a stack or scatter them across a shelf.",
+    "details": [
+      "Large 30 x 22 x 6 cm, medium 24 x 17 x 5 cm, small 18 x 12 x 4 cm",
+      "Hand-woven seagrass with cotton binding",
+      "Each tray varies slightly in weave and shade",
+      "Keep dry; dust with a soft brush",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "boho-global"
+      ],
+      "material": [
+        "seagrass",
+        "cotton"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "natural",
+        "terracotta"
+      ],
+      "useCase": [
+        "desk tidy",
+        "mail sorting",
+        "small apartment"
+      ],
+      "room": [
+        "home office",
+        "entryway",
+        "living room"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "hand-woven",
+      "natural fiber",
+      "set",
+      "textured"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-09-natural-terracotta",
+        "label": "Natural / terracotta",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-09-natural-black",
+        "label": "Natural / black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "seagrass woven desk trays set",
+    "images": [
+      "/marlow/mw-wrk-09.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 156
+  },
+  {
+    "id": "mw-wrk-10",
+    "slug": "ledger-monitor-stand",
+    "name": "Ledger Monitor Stand",
+    "category": "Workspace",
+    "subcategory": "Organizers",
+    "price": 95,
+    "description": "A solid walnut monitor riser with tapered legs and a shallow drawer that slides out on either side for a keyboard or notebook. The edges are softly rounded and the grain runs the full length, so it looks like a small piece of furniture rather than an accessory. It lifts a screen to eye level and clears the desk beneath it.",
+    "details": [
+      "56 cm W x 24 cm D x 11 cm H",
+      "Solid American walnut, oiled finish",
+      "Supports monitors up to 20 kg",
+      "Pull-through drawer 48 cm W x 20 cm D x 4 cm H",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "mid-century"
+      ],
+      "material": [
+        "walnut"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "walnut"
+      ],
+      "useCase": [
+        "ergonomic",
+        "desk tidy",
+        "working from home"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "walnut",
+      "monitor riser",
+      "tapered legs",
+      "ergonomic"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-10-walnut",
+        "label": "Walnut",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-10-oak",
+        "label": "Oak",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "walnut monitor stand riser desk",
+    "images": [
+      "/marlow/mw-wrk-10.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 203,
+    "new": true
+  },
+  {
+    "id": "mw-wrk-11",
+    "slug": "bramble-pine-pegboard",
+    "name": "Bramble Pine Pegboard",
+    "category": "Workspace",
+    "subcategory": "Organizers",
+    "price": 68,
+    "compareAtPrice": 85,
+    "description": "A knotty pine pegboard with turned wooden pegs, two small shelves and a cream cotton pocket for post and pencils. It hangs above a desk or inside a cupboard door and has the homely, slightly scuffed charm of a farmhouse kitchen wall. Rearrange the pegs as your clutter changes.",
+    "details": [
+      "60 cm W x 45 cm H x 2 cm D",
+      "Solid pine with a clear matte wax finish",
+      "Includes 10 pegs, 2 shelves and 1 cotton pocket",
+      "Keyhole hangers on the back; wall fixings included",
+      "Made in Poland"
+    ],
+    "attributes": {
+      "style": [
+        "cottage-rustic"
+      ],
+      "material": [
+        "pine",
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "natural pine",
+        "cream"
+      ],
+      "useCase": [
+        "wall storage",
+        "small apartment",
+        "kids homework"
+      ],
+      "room": [
+        "home office",
+        "kitchen",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pegboard",
+      "wall mounted",
+      "farmhouse",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-11-natural-pine",
+        "label": "Natural pine",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-11-whitewashed-pine",
+        "label": "Whitewashed pine",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "wooden pegboard wall organizer pine",
+    "images": [
+      "/marlow/mw-wrk-11.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 64
+  },
+  {
+    "id": "mw-wrk-12",
+    "slug": "linea-linen-notebooks-set-of-2",
+    "name": "Linea Linen Notebooks (Set of 2)",
+    "category": "Workspace",
+    "subcategory": "Stationery",
+    "price": 28,
+    "description": "Two A5 notebooks bound in washed linen, one sand and one soft blue, with a sewn spine that lies flat. The paper is a creamy, slightly textured 100 gsm that takes fountain pen without bleeding, and the pages are dot-grid so they work for lists or sketches. They look like something found in a beach house study.",
+    "details": [
+      "A5, 148 x 210 mm; 160 pages each",
+      "Washed linen over board, thread-sewn binding",
+      "100 gsm FSC-certified dot-grid paper",
+      "Elastic closure and ribbon marker",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal"
+      ],
+      "material": [
+        "linen",
+        "paper"
+      ],
+      "colorFamily": [
+        "pastel",
+        "neutral"
+      ],
+      "colors": [
+        "sand",
+        "soft blue"
+      ],
+      "useCase": [
+        "journaling",
+        "gift",
+        "meeting notes"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "notebook",
+      "linen",
+      "dot grid",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-12-sand-soft-blue",
+        "label": "Sand / soft blue",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-12-white-sage",
+        "label": "White / sage",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen covered notebooks pastel",
+    "images": [
+      "/marlow/mw-wrk-12.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 312,
+    "bestseller": true
+  },
+  {
+    "id": "mw-wrk-13",
+    "slug": "fete-patterned-notebook-set",
+    "name": "Fête Patterned Notebook Set",
+    "category": "Workspace",
+    "subcategory": "Stationery",
+    "price": 34,
+    "description": "Three A5 notebooks with bold, clashing covers: a magenta and tangerine wave, a cobalt leopard, and a lime-green check, each finished with a contrasting cloth spine. They are playful, loud and built to be stacked on a desk where more is more. The lined paper inside is heavy enough for markers.",
+    "details": [
+      "A5, 148 x 210 mm; 128 pages each",
+      "Printed board covers with cloth tape spine",
+      "120 gsm lined paper",
+      "Set of three; covers do not repeat",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "maximalist-eclectic"
+      ],
+      "material": [
+        "paper",
+        "board"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "magenta",
+        "cobalt",
+        "lime"
+      ],
+      "useCase": [
+        "journaling",
+        "gift",
+        "school"
+      ],
+      "room": [
+        "home office",
+        "kids room"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bold pattern",
+      "notebook",
+      "set",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-13-set-of-3",
+        "label": "Set of 3",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "colorful patterned notebooks stack",
+    "images": [
+      "/marlow/mw-wrk-13.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 71
+  },
+  {
+    "id": "mw-wrk-14",
+    "slug": "aster-fluted-brass-pen",
+    "name": "Aster Fluted Brass Pen",
+    "category": "Workspace",
+    "subcategory": "Stationery",
+    "price": 58,
+    "description": "A weighty rollerball pen machined from solid brass with a fluted barrel and a polished cap. It has a geometric, slightly jewelry-like finish that patinas with handling, and the balance is heavy enough that writing feels deliberate. It comes in a black gift box, which is to say most people buy it for someone else.",
+    "details": [
+      "140 mm long, 11 mm diameter; 42 g",
+      "Solid machined brass, unlacquered",
+      "Takes standard Schmidt-style rollerball refills; one black refill included",
+      "Brass darkens over time; polish with a soft cloth to restore shine",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "art-deco-glam"
+      ],
+      "material": [
+        "brass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "brass",
+        "gold"
+      ],
+      "useCase": [
+        "gift",
+        "signing",
+        "everyday writing"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "brass",
+      "fluted",
+      "gift",
+      "patina"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-14-brass",
+        "label": "Brass",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-14-black-brass",
+        "label": "Black / brass",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "brass fluted rollerball pen",
+    "images": [
+      "/marlow/mw-wrk-14.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 142
+  },
+  {
+    "id": "mw-wrk-15",
+    "slug": "halden-wool-desk-pad",
+    "name": "Halden Wool Desk Pad",
+    "category": "Workspace",
+    "subcategory": "Stationery",
+    "price": 42,
+    "description": "A thick, pale grey wool felt desk pad with a stitched edge that softens the sound of a keyboard and gives a mouse a quiet surface. It lies flat without curling and keeps a desk top looking clean and considered. Pair it with the Tilde organizer for a calm, two-tone setup.",
+    "details": [
+      "70 cm W x 35 cm D x 4 mm thick",
+      "100% merino wool felt, naturally stain-resistant",
+      "Stitched edge; non-slip backing",
+      "Spot clean with cold water; air dry flat",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "scandi-minimal",
+        "japandi"
+      ],
+      "material": [
+        "wool felt"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "light grey",
+        "charcoal"
+      ],
+      "useCase": [
+        "working from home",
+        "desk protection",
+        "small apartment"
+      ],
+      "room": [
+        "home office"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "wool",
+      "desk mat",
+      "quiet",
+      "minimal"
+    ],
+    "variants": [
+      {
+        "id": "mw-wrk-15-light-grey",
+        "label": "Light grey",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-15-charcoal",
+        "label": "Charcoal",
+        "inStock": true
+      },
+      {
+        "id": "mw-wrk-15-light-grey-large",
+        "label": "Light grey / 90 cm",
+        "inStock": true,
+        "priceDelta": 12
+      }
+    ],
+    "imageQuery": "grey wool felt desk pad",
+    "images": [
+      "/marlow/mw-wrk-15.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 58
+  }
+]
