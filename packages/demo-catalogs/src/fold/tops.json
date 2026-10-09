@@ -1,0 +1,3047 @@
+[
+  {
+    "id": "fd-top-01",
+    "slug": "seom-static-oversized-tee",
+    "name": "Static Oversized Tee",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 68,
+    "description": "A 300 gsm cotton tee cut wide through the body with dropped shoulders and a thick ribbed collar that keeps its shape. The front carries a hand-drawn TV-static graphic in screen-printed red and cobalt over washed black, with a small SEOM tab at the hem. Loud, boxy and made to sit over cargos or under an open puffer.",
+    "details": [
+      "100% combed cotton jersey, 300 gsm",
+      "Oversized boxy fit; size down for a regular cut",
+      "Model is 6'0\" and wears L",
+      "Screen-printed front graphic, plastisol inks",
+      "Machine wash cold inside out, do not tumble dry",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear"
+      ],
+      "material": [
+        "heavyweight cotton"
+      ],
+      "colorFamily": [
+        "black",
+        "bold"
+      ],
+      "colors": [
+        "washed black",
+        "red",
+        "cobalt"
+      ],
+      "useCase": [
+        "everyday",
+        "layering under outerwear"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "night out"
+      ],
+      "fit": "oversized",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "heavyweight",
+      "graphic",
+      "oversized",
+      "made in korea"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-01-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-01-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-01-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-01-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-01-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "oversized black graphic tee streetwear",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 386,
+    "bestseller": true
+  },
+  {
+    "id": "fd-top-02",
+    "slug": "nike-sportswear-max90-tee",
+    "name": "Sportswear Max90 Tee",
+    "brand": "Nike",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 45,
+    "description": "Nike's Max90 is a thick, dry-handed cotton tee with a roomy body, dropped shoulders and a slightly longer sleeve. This one comes in University Red with an oversized Swoosh across the chest in white. Sporty and bold, it works on its own with track pants or wide jeans and a fresh pair of sneakers.",
+    "details": [
+      "100% cotton jersey",
+      "Loose fit with dropped shoulders",
+      "Model is 6'1\" and wears L",
+      "Screen-printed Swoosh graphic",
+      "Machine wash cold",
+      "Imported"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "athletic"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "university red",
+        "white"
+      ],
+      "useCase": [
+        "everyday",
+        "sneaker outfits"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "campus"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "logo",
+      "boxy",
+      "bold color",
+      "sporty"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-02-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-02-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-02-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-02-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-02-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike red oversized tee man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 1104
+  },
+  {
+    "id": "fd-top-03",
+    "slug": "seom-halo-baby-tee",
+    "name": "Halo Baby Tee",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 48,
+    "description": "A cropped baby tee in stretch cotton rib that fits close through the body and stops just above the navel. It comes in a pale lilac with a small chrome-foil halo printed at the chest and contrast binding at the neck and cuffs. Pure early-2000s: wear it with low-rise cargos, a slim belt and retro runners.",
+    "details": [
+      "95% cotton, 5% elastane rib, 200 gsm",
+      "Slim, cropped fit; body length 17 in on size S",
+      "Model is 5'7\" and wears S",
+      "Metallic foil print, wash inside out",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "stretch cotton rib"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "lilac",
+        "chrome silver"
+      ],
+      "useCase": [
+        "going out",
+        "layering"
+      ],
+      "occasion": [
+        "night out",
+        "festival",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "baby tee",
+      "cropped",
+      "metallic",
+      "new season"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-03-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-03-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-03-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-03-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-03-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "lilac cropped baby tee woman",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 52,
+    "new": true
+  },
+  {
+    "id": "fd-top-04",
+    "slug": "asche-schatten-long-tee",
+    "name": "Schatten Long Tee",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 95,
+    "description": "A long-line tee in heavy, fluid modal-cotton jersey that drapes rather than stands away from the body. It runs past the hip with a curved hem, raw-edge neckline and sleeves that fall to the elbow, all garment-dyed to a soft washed black. Moody and quiet, it layers under a long coat or a leather jacket with silver at the throat.",
+    "details": [
+      "60% cotton, 40% modal jersey, 240 gsm",
+      "Relaxed, elongated fit; back length 31 in on size M",
+      "Garment-dyed; color settles after the first wash",
+      "Wash cold with darks, line dry",
+      "Cut and sewn in Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "cotton",
+        "modal"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black"
+      ],
+      "useCase": [
+        "layering",
+        "everyday"
+      ],
+      "occasion": [
+        "everyday",
+        "night out"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "drape",
+      "longline",
+      "garment-dyed",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-04-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-04-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-04-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-04-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-04-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black long drape t-shirt",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 74
+  },
+  {
+    "id": "fd-top-05",
+    "slug": "studio-nicholson-heavyweight-boxy-tee",
+    "name": "Heavyweight Boxy Tee",
+    "brand": "Studio Nicholson",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 95,
+    "description": "A clean, logo-free tee in dense Japanese cotton with a short, square body and a sleeve that sits just above the elbow. The neck is a narrow, flat rib and the ecru color is undyed, so the fabric has a soft, slightly natural tone. It looks considered with pleated trousers and loafers, and better after a few washes.",
+    "details": [
+      "100% cotton jersey from a Japanese mill, 280 gsm",
+      "Boxy, cropped fit; take your usual size",
+      "Model is 6'0\" and wears M",
+      "Machine wash 30C, reshape while damp",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "ecru"
+      ],
+      "useCase": [
+        "everyday",
+        "office layering"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "no logo",
+      "japanese cotton",
+      "boxy",
+      "heavyweight"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-05-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-05-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-05-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-05-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-05-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ecru boxy t-shirt man minimal",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 168
+  },
+  {
+    "id": "fd-top-06",
+    "slug": "soller-deia-linen-tee",
+    "name": "Deià Linen Tee",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 78,
+    "description": "A loose tee knitted from linen-cotton jersey, so it breathes like a linen shirt but pulls on like a tee. The body is wide and slightly cropped with a soft boat neck and rolled sleeves, garment-dyed a sun-faded sand. It is made for hot afternoons, tucked loosely into linen trousers or worn over a swimsuit on the way to the water.",
+    "details": [
+      "55% linen, 45% cotton jersey, 160 gsm",
+      "Relaxed, slightly cropped fit",
+      "Model is 5'8\" and wears S",
+      "Garment-dyed for a faded finish",
+      "Machine wash cold, line dry",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "sand"
+      ],
+      "useCase": [
+        "hot weather",
+        "vacation"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "breathable",
+      "vacation",
+      "garment-dyed"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-06-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-06-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-06-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-06-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-06-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "sand linen t-shirt woman beach",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 96
+  },
+  {
+    "id": "fd-top-07",
+    "slug": "patagonia-p-6-logo-responsibili-tee",
+    "name": "P-6 Logo Responsibili-Tee",
+    "brand": "Patagonia",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 45,
+    "description": "Patagonia's classic P-6 tee, made from a blend of recycled cotton and recycled polyester that keeps old clothes and bottles out of landfill. It has a regular, easy fit and the mountain-and-sky P-6 logo printed on the chest, here on a faded sage. A trailhead favorite that goes just as well with shorts in town.",
+    "details": [
+      "50% recycled cotton, 50% recycled polyester, 160 gsm",
+      "Regular fit",
+      "Model is 6'0\" and wears M",
+      "Screen-printed with PVC- and phthalate-free inks",
+      "Fair Trade Certified sewn",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled cotton",
+        "recycled polyester"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "sage",
+        "orange",
+        "navy"
+      ],
+      "useCase": [
+        "outdoors",
+        "everyday"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "recycled",
+      "logo",
+      "fair trade",
+      "outdoor"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-07-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-07-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-07-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-07-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-07-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "patagonia p-6 logo tee green",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 912
+  },
+  {
+    "id": "fd-top-08",
+    "slug": "nike-dri-fit-miler-running-top",
+    "name": "Dri-FIT Miler Running Top",
+    "brand": "Nike",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 35,
+    "description": "A light, quick-drying running tee in sweat-wicking Dri-FIT jersey with mesh panels down the back. It has a standard fit that stays out of the way, a reflective Swoosh for early or late runs and flatlock seams that don't chafe. Bright white with volt accents, it handles everything from intervals to gym days.",
+    "details": [
+      "100% recycled polyester Dri-FIT jersey",
+      "Standard fit",
+      "Mesh back panel for ventilation",
+      "Reflective details",
+      "Machine wash cold, do not iron print"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester",
+        "mesh"
+      ],
+      "colorFamily": [
+        "white",
+        "bold"
+      ],
+      "colors": [
+        "white",
+        "volt"
+      ],
+      "useCase": [
+        "training",
+        "running"
+      ],
+      "occasion": [
+        "running",
+        "gym"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "running",
+      "sweat-wicking",
+      "reflective",
+      "recycled"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-08-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-08-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-08-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-08-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-08-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike white running shirt man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 641
+  },
+  {
+    "id": "fd-top-09",
+    "slug": "pangaia-365-midweight-t-shirt",
+    "name": "365 Midweight T-Shirt",
+    "brand": "Pangaia",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 85,
+    "description": "Pangaia's everyday tee in organic cotton jersey, finished with a peppermint-oil treatment that keeps it fresher between washes. It has a relaxed, straight body and comes in a saturated cobalt blue from plant-based dyes. Soft and easy, it goes from a morning stretch or gym warm-up to a weekend coffee without changing.",
+    "details": [
+      "100% organic cotton jersey, 180 gsm",
+      "Relaxed fit; unisex sizing",
+      "PPRMINT oil treatment for freshness",
+      "Machine wash cold, wash less",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "quiet-minimal"
+      ],
+      "material": [
+        "organic cotton"
+      ],
+      "colorFamily": [
+        "bold",
+        "cool"
+      ],
+      "colors": [
+        "cobalt blue"
+      ],
+      "useCase": [
+        "lounging",
+        "light training"
+      ],
+      "occasion": [
+        "gym",
+        "everyday",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "organic",
+      "plant-dyed",
+      "loungewear",
+      "low impact"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-09-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-09-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-09-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-09-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-09-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "pangaia blue organic cotton tee",
+    "images": [],
+    "rating": 4.3,
+    "reviewCount": 238
+  },
+  {
+    "id": "fd-top-10",
+    "slug": "burnside-canvas-belmont-pocket-tee",
+    "name": "Belmont Pocket Tee",
+    "brand": "Burnside Canvas",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "T-shirts",
+    "price": 55,
+    "description": "A heavy slub-cotton work tee with a reinforced chest pocket, a tubular body and double-needle stitching at every hem. It is garment-dyed a deep tobacco brown that fades unevenly at the seams the more it is worn and washed. Rugged and plain, it is the shirt under a chore coat or double-knees on a workshop Saturday.",
+    "details": [
+      "100% slub cotton, 260 gsm, tubular knit",
+      "Regular fit with a slightly long body",
+      "Model is 6'1\" and wears L",
+      "Bartacked chest pocket",
+      "Wash warm, tumble dry low; expect 3% shrinkage",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "slub cotton"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco brown",
+        "oatmeal",
+        "faded indigo"
+      ],
+      "useCase": [
+        "everyday",
+        "workshop"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "camping"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "heavyweight",
+      "pocket tee",
+      "made in usa",
+      "garment-dyed"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-10-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-10-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-10-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-10-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-10-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown pocket t-shirt workwear man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 147
+  },
+  {
+    "id": "fd-top-11",
+    "slug": "cranmore-bristol-oxford-shirt",
+    "name": "Bristol Oxford Shirt",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 125,
+    "description": "A button-down oxford shirt in a heavy, slightly slubby American oxford cloth that softens with every wash. It has a full, unlined collar roll, a box pleat and locker loop at the back, and a long tail that stays tucked. Crisp and easy in classic blue, it goes with chinos and a shetland on campus or under a navy blazer at the office.",
+    "details": [
+      "100% cotton oxford cloth, 140 gsm",
+      "Regular fit with a full chest",
+      "Unlined button-down collar with a soft roll",
+      "Box pleat, locker loop, mother-of-pearl buttons",
+      "Machine wash warm, hang dry, iron while damp",
+      "Made in Fall River, Massachusetts"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "cotton oxford"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "oxford blue",
+        "white",
+        "university stripe"
+      ],
+      "useCase": [
+        "office",
+        "campus"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "oxford cloth",
+      "button-down",
+      "made in usa",
+      "ivy"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-11-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-11-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-11-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-11-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-11-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "blue oxford button down shirt man",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 534,
+    "bestseller": true
+  },
+  {
+    "id": "fd-top-12",
+    "slug": "cranmore-newport-oversized-oxford-shirt",
+    "name": "Newport Oversized Oxford Shirt",
+    "brand": "Cranmore",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 135,
+    "description": "Cranmore's oxford cut wide for women: a borrowed-from-him shape with dropped shoulders, a curved tail and a button-down collar that can be worn open. The cloth is a crisp university stripe in pink and white that softens into a lived-in feel. It works tucked into a pleated skirt with loafers or half-tucked into straight jeans with a cable knit over the shoulders.",
+    "details": [
+      "100% cotton oxford cloth",
+      "Oversized fit; size down for a closer shape",
+      "Model is 5'9\" and wears S",
+      "Button-down collar, single chest pocket",
+      "Machine wash warm, hang dry",
+      "Made in Fall River, Massachusetts"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "cotton oxford"
+      ],
+      "colorFamily": [
+        "pastel",
+        "white"
+      ],
+      "colors": [
+        "pink stripe",
+        "white"
+      ],
+      "useCase": [
+        "office",
+        "campus"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "weekend"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "oxford cloth",
+      "striped",
+      "oversized",
+      "made in usa"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-12-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-12-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-12-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-12-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-12-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pink striped oxford shirt woman",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 211
+  },
+  {
+    "id": "fd-top-13",
+    "slug": "soller-valldemossa-linen-shirt",
+    "name": "Valldemossa Linen Shirt",
+    "brand": "Sóller",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 145,
+    "description": "A loose camp-collar shirt in washed European linen with a straight hem made to be worn out. The weave is light and open, the color a soft sky blue that looks faded by sun and salt, and the shell buttons are left a little loose for air. It belongs on a terrace with drawstring trousers and espadrilles, and travels crumpled without minding.",
+    "details": [
+      "100% European linen, 150 gsm, stonewashed",
+      "Relaxed fit with a camp collar",
+      "Model is 6'0\" and wears M",
+      "Corozo nut buttons",
+      "Machine wash cold, line dry; wrinkles are part of it",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "sky blue",
+        "white",
+        "sand"
+      ],
+      "useCase": [
+        "vacation",
+        "hot weather"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "wedding guest"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "camp collar",
+      "vacation",
+      "breathable"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-13-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-13-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-13-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-13-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-13-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "light blue linen shirt man beach",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 288
+  },
+  {
+    "id": "fd-top-14",
+    "slug": "hedda-vang-liv-broderie-blouse",
+    "name": "Liv Broderie Blouse",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 185,
+    "description": "A soft white blouse in cotton broderie anglaise, with full puff sleeves gathered into narrow cuffs and a scalloped edge at the round neck. The body is loose and falls to the hip, so it floats over jeans or tucks into a gathered skirt. Romantic and a little undone, it is made for summer evenings, picnics and garden weddings.",
+    "details": [
+      "100% cotton broderie anglaise, lined at the body",
+      "Relaxed fit; puff sleeves with elastic cuffs",
+      "Model is 5'8\" and wears S",
+      "Covered buttons at the back neck",
+      "Hand wash cold or delicate cycle, line dry",
+      "Made in small runs in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "cotton broderie anglaise"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white",
+        "cream"
+      ],
+      "useCase": [
+        "summer evenings",
+        "special occasions"
+      ],
+      "occasion": [
+        "date night",
+        "wedding guest",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "broderie",
+      "puff sleeve",
+      "feminine",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-14-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-14-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-14-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-14-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-14-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white broderie puff sleeve blouse",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 172
+  },
+  {
+    "id": "fd-top-15",
+    "slug": "hedda-vang-tove-gingham-smocked-blouse",
+    "name": "Tove Gingham Smocked Blouse",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 145,
+    "compareAtPrice": 175,
+    "description": "A cropped blouse in light cotton seersucker gingham with a smocked, stretchy bodice, a square neck and short balloon sleeves that can sit on or off the shoulder. The check is a small rose-and-cream gingham that reads soft and sweet rather than picnic-blanket. Wear it with a long skirt and sandals or with wide trousers for something a little more grown-up.",
+    "details": [
+      "100% cotton seersucker",
+      "Fitted, smocked bodice; cropped length",
+      "Model is 5'7\" and wears XS",
+      "Elastic at neckline and sleeves",
+      "Machine wash cold, line dry",
+      "Made in small runs in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "y2k-retro"
+      ],
+      "material": [
+        "cotton seersucker"
+      ],
+      "colorFamily": [
+        "pastel",
+        "warm"
+      ],
+      "colors": [
+        "rose gingham",
+        "cream"
+      ],
+      "useCase": [
+        "summer",
+        "festivals"
+      ],
+      "occasion": [
+        "festival",
+        "date night",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gingham",
+      "smocked",
+      "square neck",
+      "on sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-15-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-15-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-15-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-15-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-15-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pink gingham smocked top woman",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 118
+  },
+  {
+    "id": "fd-top-16",
+    "slug": "studio-nicholson-oversized-poplin-shirt",
+    "name": "Oversized Poplin Shirt",
+    "brand": "Studio Nicholson",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 235,
+    "description": "A big, boxy shirt in crisp Japanese cotton poplin with a deep yoke, dropped shoulders and long sleeves meant to be pushed up. There is no chest pocket and no visible branding, just a hidden placket and a slightly longer back. In pure white it looks clean with wide pleated trousers and works as a light jacket over a tank in summer.",
+    "details": [
+      "100% cotton poplin woven in Japan",
+      "Oversized fit; take your usual size",
+      "Model is 5'10\" and wears S",
+      "Concealed button placket",
+      "Machine wash 30C, iron on medium",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cotton poplin"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "optic white",
+        "ecru",
+        "navy"
+      ],
+      "useCase": [
+        "office",
+        "everyday"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "travel"
+      ],
+      "fit": "oversized",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "no logo",
+      "japanese fabric",
+      "oversized",
+      "poplin"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-16-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-16-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-16-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-16-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-16-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white oversized poplin shirt woman",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 94
+  },
+  {
+    "id": "fd-top-17",
+    "slug": "arket-relaxed-linen-shirt",
+    "name": "Relaxed Linen Shirt",
+    "brand": "Arket",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 88,
+    "description": "A relaxed shirt in mid-weight washed linen with a classic collar, a single chest pocket and a gently rounded hem. The color is a warm oatmeal that sits easily with white, navy and stripes. Breezy and plain, it gets worn open over a swimsuit on holiday and buttoned up with tailored trousers back in the city.",
+    "details": [
+      "100% linen, garment-washed",
+      "Relaxed fit",
+      "Model is 5'9\" and wears S",
+      "Machine wash 40C, line dry",
+      "Made in India"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal",
+        "coastal-resort"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "oatmeal",
+        "white",
+        "light blue"
+      ],
+      "useCase": [
+        "vacation",
+        "everyday"
+      ],
+      "occasion": [
+        "everyday",
+        "beach",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "easy fit",
+      "neutral",
+      "summer"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-17-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-17-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-17-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-17-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-17-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "oatmeal linen shirt woman relaxed",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 431
+  },
+  {
+    "id": "fd-top-18",
+    "slug": "burnside-canvas-hawthorne-flannel-shirt",
+    "name": "Hawthorne Flannel Shirt",
+    "brand": "Burnside Canvas",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 138,
+    "description": "A heavy brushed-cotton flannel shirt with two flap pockets, a single-needle yoke and a long tail that works tucked or worn as a light overshirt. The plaid is a muted rust, olive and black that hides sawdust and woodsmoke. It breaks in like a favorite blanket and suits a cabin weekend, a hike or a cold morning at the workbench.",
+    "details": [
+      "100% cotton flannel, 8 oz, double-brushed",
+      "Regular fit with room to layer a tee",
+      "Model is 6'1\" and wears L",
+      "Flap pockets with brass snaps",
+      "Wash warm, tumble dry low",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "cotton flannel"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "rust plaid",
+        "olive",
+        "black"
+      ],
+      "useCase": [
+        "outdoors",
+        "layering"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "flannel",
+      "plaid",
+      "made in usa",
+      "heavyweight"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-18-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-18-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-18-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-18-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-18-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rust plaid flannel shirt man",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 265
+  },
+  {
+    "id": "fd-top-19",
+    "slug": "snow-peak-takibi-light-ripstop-shirt",
+    "name": "TAKIBI Light Ripstop Shirt",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Shirts",
+    "price": 210,
+    "description": "A camp shirt cut from Snow Peak's TAKIBI fabric, a flame-resistant cotton and aramid ripstop that shrugs off sparks from the fire. It has a boxy, relaxed shape, two zip chest pockets and roll-tab sleeves, in a dusty olive that sits well with other earth tones. Technical without looking it, it goes from the campsite to the city unchanged.",
+    "details": [
+      "TAKIBI ripstop: 93% cotton, 7% aramid",
+      "Relaxed, boxy fit; unisex sizing",
+      "Spark-resistant for campfire use",
+      "Zip chest pockets, roll-tab sleeves",
+      "Machine wash cold, hang dry",
+      "Designed in Niigata, made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "heritage-workwear"
+      ],
+      "material": [
+        "cotton ripstop",
+        "aramid"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "olive",
+        "black",
+        "coyote brown"
+      ],
+      "useCase": [
+        "camping",
+        "outdoors"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "flame resistant",
+      "ripstop",
+      "camp",
+      "made in japan"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-19-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-19-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-19-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-19-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-19-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "snow peak olive ripstop shirt",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 63,
+    "new": true
+  },
+  {
+    "id": "fd-top-20",
+    "slug": "malha-lisboa-alfama-fisherman-cable-sweater",
+    "name": "Alfama Fisherman Cable Sweater",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 265,
+    "description": "A heavy fisherman sweater hand-finished at the family mill, worked in thick undyed Portuguese wool with honeycomb and rope cables down the front. It has a relaxed body, a rolled crew neck and slightly long sleeves to pull over your hands. In natural cream it looks right with a pleated skirt and loafers, or with jeans and a waxed jacket by the sea.",
+    "details": [
+      "100% Portuguese wool, 5-gauge",
+      "Relaxed fit; take your usual size",
+      "Model is 5'8\" and wears S",
+      "Linked seams, hand-finished",
+      "Hand wash cold, dry flat",
+      "Knitted in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "coastal-resort"
+      ],
+      "material": [
+        "wool"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "ecru"
+      ],
+      "useCase": [
+        "cold weather",
+        "layering"
+      ],
+      "occasion": [
+        "weekend",
+        "campus",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "cable knit",
+      "hand-finished",
+      "made in portugal",
+      "fisherman"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-20-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-20-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-20-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-20-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-20-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream cable knit sweater woman",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 207
+  },
+  {
+    "id": "fd-top-21",
+    "slug": "malha-lisboa-graca-crochet-cardigan",
+    "name": "Graça Crochet Cardigan",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 195,
+    "description": "A cropped cardigan crocheted by hand from soft mercerized cotton in an open flower-square pattern. It closes with five small shell buttons and has a gently puffed sleeve, in a warm cream with a faded rose trim. Romantic and light, it layers over a slip dress or a camisole on summer evenings.",
+    "details": [
+      "100% mercerized cotton, hand-crocheted",
+      "Cropped, relaxed fit",
+      "Model is 5'7\" and wears XS",
+      "Shell buttons",
+      "Hand wash cold, dry flat",
+      "Crocheted in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "pastel"
+      ],
+      "colors": [
+        "cream",
+        "faded rose"
+      ],
+      "useCase": [
+        "summer evenings",
+        "layering"
+      ],
+      "occasion": [
+        "festival",
+        "date night",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "crochet",
+      "handmade",
+      "made in portugal",
+      "cardigan"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-21-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-21-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-21-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-21-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-21-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream crochet cardigan woman",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 86
+  },
+  {
+    "id": "fd-top-22",
+    "slug": "cranmore-kennebunk-cable-crew",
+    "name": "Kennebunk Cable Crew",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 225,
+    "description": "A classic cable crewneck in soft Shetland-type lambswool, with a center panel of rope cables flanked by moss stitch. It has a saddle shoulder, a comfortable regular fit and ribbing that holds its shape. In bottle green it pairs with an oxford shirt and corduroy, and it gets better looking as it ages.",
+    "details": [
+      "100% lambswool, 7-gauge",
+      "Regular fit with saddle shoulders",
+      "Model is 6'0\" and wears M",
+      "Hand wash cold or wool cycle, dry flat",
+      "Knitted in Scotland for Cranmore"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "lambswool"
+      ],
+      "colorFamily": [
+        "earth",
+        "cool"
+      ],
+      "colors": [
+        "bottle green",
+        "navy",
+        "oatmeal"
+      ],
+      "useCase": [
+        "office",
+        "layering"
+      ],
+      "occasion": [
+        "campus",
+        "office",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "cable knit",
+      "lambswool",
+      "ivy",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-22-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-22-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-22-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-22-xl",
+        "label": "XL",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-22-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "green cable knit crewneck man",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 188
+  },
+  {
+    "id": "fd-top-23",
+    "slug": "norse-projects-sigfred-lambswool-sweater",
+    "name": "Sigfred Lambswool Sweater",
+    "brand": "Norse Projects",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 210,
+    "description": "Norse Projects' Sigfred is a brushed lambswool crewneck with a soft, slightly hairy hand and a clean, regular fit. It has ribbed trims, a small tonal label at the hem and nothing else. In heather grey it is the knit that works over a tee, a shirt or under a coat for most of the year.",
+    "details": [
+      "100% lambswool, brushed",
+      "Regular fit",
+      "Model is 6'1\" and wears M",
+      "Hand wash cold, dry flat",
+      "Made in Lithuania"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "lambswool"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "light grey melange",
+        "navy",
+        "dark olive"
+      ],
+      "useCase": [
+        "office",
+        "everyday"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lambswool",
+      "no logo",
+      "scandinavian",
+      "brushed"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-23-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-23-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-23-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-23-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-23-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "norse projects grey wool sweater",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 476,
+    "bestseller": true
+  },
+  {
+    "id": "fd-top-24",
+    "slug": "arket-cashmere-crew-neck-jumper",
+    "name": "Cashmere Crew-Neck Jumper",
+    "brand": "Arket",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 178,
+    "compareAtPrice": 220,
+    "description": "A light, fine-gauge crewneck in pure Mongolian cashmere with a slightly relaxed body and fully fashioned shoulders. The color is a soft camel that looks warm against ecru, grey and denim. Quiet and comfortable, it sits under a coat in winter and over a shirt collar at the office.",
+    "details": [
+      "100% cashmere, 12-gauge",
+      "Relaxed fit",
+      "Model is 5'9\" and wears S",
+      "Hand wash cold, dry flat",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cashmere"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "camel",
+        "light grey",
+        "black"
+      ],
+      "useCase": [
+        "office",
+        "layering"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "cashmere",
+      "fine knit",
+      "on sale",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-24-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-24-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-24-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-24-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-24-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "camel cashmere sweater woman",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 352
+  },
+  {
+    "id": "fd-top-25",
+    "slug": "asche-riss-ladder-knit-sweater",
+    "name": "Riss Ladder-Knit Sweater",
+    "brand": "Asche",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 295,
+    "description": "A long, heavy sweater in mohair and wool, knitted with deliberate dropped stitches so it falls in ladders and gaps down the body and sleeves. It is dyed pure black and sits long over the hips with sleeves that run past the wrist. Moody and textured, it is meant to be layered over a slip dress or a long tee with heavy boots and silver.",
+    "details": [
+      "55% mohair, 35% wool, 10% polyamide",
+      "Oversized, longline fit; back length 30 in on size S",
+      "Model is 5'10\" and wears S",
+      "Hand wash cold, dry flat",
+      "Knitted in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "mohair",
+        "wool"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "layering",
+        "going out"
+      ],
+      "occasion": [
+        "night out",
+        "everyday"
+      ],
+      "fit": "oversized",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "mohair",
+      "distressed",
+      "longline",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-25-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-25-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-25-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-25-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-25-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black distressed mohair sweater woman",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 39,
+    "new": true
+  },
+  {
+    "id": "fd-top-26",
+    "slug": "soller-pollenca-knitted-polo",
+    "name": "Pollença Knitted Polo",
+    "brand": "Sóller",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 138,
+    "description": "A short-sleeved polo knitted from a cool, dry linen and cotton yarn in a fine, open stitch. It has a soft open collar with no buttons, ribbed trims and a straight hem for wearing loose, in a creamy white with a thin navy tipping. It is made for long lunches by the sea with linen trousers and suede loafers.",
+    "details": [
+      "60% cotton, 40% linen, 12-gauge knit",
+      "Regular fit",
+      "Model is 6'0\" and wears M",
+      "Hand wash or wool cycle cold, dry flat",
+      "Knitted in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "preppy-ivy"
+      ],
+      "material": [
+        "linen",
+        "cotton"
+      ],
+      "colorFamily": [
+        "white",
+        "cool"
+      ],
+      "colors": [
+        "cream",
+        "navy"
+      ],
+      "useCase": [
+        "vacation",
+        "summer evenings"
+      ],
+      "occasion": [
+        "beach",
+        "date night",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "knitted polo",
+      "linen",
+      "resort",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-26-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-26-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-26-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-26-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-26-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream knitted polo shirt man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 104
+  },
+  {
+    "id": "fd-top-27",
+    "slug": "patagonia-recycled-wool-blend-crewneck-sweater",
+    "name": "Recycled Wool-Blend Crewneck Sweater",
+    "brand": "Patagonia",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 148,
+    "compareAtPrice": 180,
+    "description": "A rugged crewneck knitted from recycled wool and nylon in a mid-gauge stitch with a marled, earthy look. The fit is easy and roomy enough for a base layer underneath, and the color is a warm mixed brown with flecks of rust. Warm on a cold trail morning and easy to wear in town with canvas pants and boots.",
+    "details": [
+      "90% recycled wool, 10% recycled nylon",
+      "Relaxed fit; unisex sizing",
+      "Model is 6'0\" and wears M",
+      "Fair Trade Certified sewn",
+      "Hand wash cold, dry flat"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled wool",
+        "recycled nylon"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "moose brown",
+        "rust",
+        "forge grey"
+      ],
+      "useCase": [
+        "outdoors",
+        "cold weather"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "recycled",
+      "wool",
+      "on sale",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-27-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-27-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-27-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-27-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-27-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "patagonia brown wool sweater",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 197
+  },
+  {
+    "id": "fd-top-28",
+    "slug": "seom-flicker-cropped-cardigan",
+    "name": "Flicker Cropped Cardigan",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Knitwear",
+    "price": 115,
+    "description": "A short, fitted cardigan in a fluffy brushed-acrylic and nylon yarn with a slight sheen. It fastens with five chrome-look buttons and comes in baby blue with a thin contrast white edge. Very early 2000s, it looks right buttoned up as a top with a low-rise skirt or worn open over a baby tee.",
+    "details": [
+      "60% acrylic, 30% nylon, 10% wool, brushed",
+      "Slim, cropped fit; body length 16 in on size S",
+      "Model is 5'6\" and wears S",
+      "Hand wash cold, dry flat",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro"
+      ],
+      "material": [
+        "brushed acrylic blend"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "baby blue",
+        "white"
+      ],
+      "useCase": [
+        "going out",
+        "layering"
+      ],
+      "occasion": [
+        "night out",
+        "campus",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "cropped",
+      "fuzzy",
+      "cardigan",
+      "made in korea"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-28-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-28-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-28-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-28-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-28-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "baby blue cropped fuzzy cardigan",
+    "images": [],
+    "rating": 4.3,
+    "reviewCount": 61
+  },
+  {
+    "id": "fd-top-29",
+    "slug": "nike-sportswear-phoenix-fleece-oversized-hoodie",
+    "name": "Sportswear Phoenix Fleece Oversized Hoodie",
+    "brand": "Nike",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 70,
+    "description": "Nike's Phoenix Fleece is a thick, brushed-back cotton blend that feels soft inside and holds its shape outside. This hoodie is cut extra roomy with dropped shoulders, a deep hood and a stacked hem, in black with a small embroidered Swoosh. Sporty and slouchy, it goes over leggings after the gym or with baggy jeans and sneakers.",
+    "details": [
+      "80% cotton, 20% polyester brushed fleece",
+      "Oversized fit; size down for a closer cut",
+      "Model is 5'9\" and wears S",
+      "Kangaroo pocket, double-layer hood",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "streetwear"
+      ],
+      "material": [
+        "cotton fleece"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black",
+        "sail"
+      ],
+      "useCase": [
+        "post-workout",
+        "lounging"
+      ],
+      "occasion": [
+        "gym",
+        "everyday",
+        "campus"
+      ],
+      "fit": "oversized",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "fleece",
+      "oversized",
+      "logo",
+      "cozy"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-29-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-29-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-29-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-29-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-29-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike black oversized hoodie woman",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 1086,
+    "bestseller": true
+  },
+  {
+    "id": "fd-top-30",
+    "slug": "adidas-adicolor-classics-firebird-track-top",
+    "name": "Adicolor Classics Firebird Track Top",
+    "brand": "Adidas",
+    "department": "women",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 85,
+    "description": "The Firebird is Adidas' archive track top in shiny tricot, with the 3-Stripes running down each sleeve and a stand-up collar. It has a slim, slightly cropped fit and comes in pale blue with white stripes. Sporty and retro, it zips up over a baby tee with low-rise track pants or jeans and Sambas.",
+    "details": [
+      "100% recycled polyester tricot",
+      "Slim fit",
+      "Model is 5'7\" and wears S",
+      "Full zip, ribbed cuffs and hem",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester tricot"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "clear sky blue",
+        "white"
+      ],
+      "useCase": [
+        "sporty layers",
+        "everyday"
+      ],
+      "occasion": [
+        "weekend",
+        "festival",
+        "everyday"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "track top",
+      "3-stripes",
+      "retro",
+      "recycled"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-30-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-30-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-30-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-30-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-30-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "adidas firebird track jacket blue woman",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 488
+  },
+  {
+    "id": "fd-top-31",
+    "slug": "new-balance-athletics-french-terry-crewneck",
+    "name": "Athletics French Terry Crewneck",
+    "brand": "New Balance",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 80,
+    "description": "A loopback French terry crewneck with the NB Athletics varsity arch printed across the chest. It has a relaxed fit, ribbed side panels and a soft, worn-in hand, in heather grey with a navy print. Half gym kit, half campus classic, it goes with running shorts or chinos and grey suede sneakers.",
+    "details": [
+      "100% cotton French terry, 340 gsm",
+      "Relaxed fit; unisex sizing",
+      "Model is 6'0\" and wears M",
+      "Ribbed side gussets",
+      "Machine wash cold, tumble dry low"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "preppy-ivy"
+      ],
+      "material": [
+        "cotton french terry"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "athletic grey",
+        "navy"
+      ],
+      "useCase": [
+        "training",
+        "everyday"
+      ],
+      "occasion": [
+        "campus",
+        "gym",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "varsity",
+      "french terry",
+      "grey marl",
+      "new arrival"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-31-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-31-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-31-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-31-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-31-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "new balance grey crewneck sweatshirt",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 74,
+    "new": true
+  },
+  {
+    "id": "fd-top-32",
+    "slug": "pangaia-365-midweight-hoodie",
+    "name": "365 Midweight Hoodie",
+    "brand": "Pangaia",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 150,
+    "description": "Pangaia's 365 hoodie is a midweight organic cotton fleece with a recycled cotton blend, a deep two-panel hood and a kangaroo pocket, cut relaxed through the body. It comes in a saturated summit green from plant-based dyes, with a small tonal print on the chest. Built for lounging and slow mornings, it is just as good on the walk to yoga or a recovery run.",
+    "details": [
+      "Organic and recycled cotton fleece, 450 gsm",
+      "Relaxed fit; unisex sizing",
+      "PPRMINT oil treatment for freshness",
+      "Machine wash cold, wash less",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "quiet-minimal"
+      ],
+      "material": [
+        "organic cotton",
+        "recycled cotton"
+      ],
+      "colorFamily": [
+        "bold",
+        "cool"
+      ],
+      "colors": [
+        "summit green",
+        "black"
+      ],
+      "useCase": [
+        "lounging",
+        "light training"
+      ],
+      "occasion": [
+        "gym",
+        "everyday",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "organic",
+      "loungewear",
+      "plant-dyed",
+      "recycled"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-32-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-32-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-32-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-32-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-32-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pangaia green hoodie organic cotton",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 362
+  },
+  {
+    "id": "fd-top-33",
+    "slug": "seom-signal-boxy-hoodie",
+    "name": "Signal Boxy Hoodie",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 135,
+    "compareAtPrice": 165,
+    "description": "A heavyweight 500 gsm fleece hoodie with a short, wide body, an oversized double hood and a cracked puff-print graphic across the back. It is pigment-dyed a washed black that fades unevenly at the seams and cuffs, so it looks dark and worn-in from day one. Loud from behind and moody from the front, it sits over cargos or under a long black coat.",
+    "details": [
+      "100% cotton brushed fleece, 500 gsm",
+      "Boxy, cropped fit; size up for more length",
+      "Model is 6'0\" and wears L",
+      "Puff-print back graphic",
+      "Wash cold inside out, line dry",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "dark-gothic"
+      ],
+      "material": [
+        "heavyweight cotton fleece"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black"
+      ],
+      "useCase": [
+        "everyday",
+        "layering"
+      ],
+      "occasion": [
+        "everyday",
+        "night out",
+        "festival"
+      ],
+      "fit": "oversized",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "heavyweight",
+      "graphic",
+      "pigment-dyed",
+      "on sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-33-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-33-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-33-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-33-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-33-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "washed black oversized hoodie streetwear",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 219
+  },
+  {
+    "id": "fd-top-34",
+    "slug": "carhartt-wip-hooded-chase-sweatshirt",
+    "name": "Hooded Chase Sweatshirt",
+    "brand": "Carhartt WIP",
+    "department": "men",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 115,
+    "description": "Carhartt WIP's Chase hoodie is a dense cotton-polyester fleece with a two-panel hood, a kangaroo pocket and a small gold C logo embroidered at the chest. The fit is regular and straight, and the dark brown color goes with canvas, denim and duck. Plain and hard-wearing, it lives under a Detroit jacket or on its own with double-knees.",
+    "details": [
+      "58% cotton, 42% polyester fleece, 320 gsm",
+      "Regular fit",
+      "Model is 6'1\" and wears L",
+      "Embroidered C logo",
+      "Machine wash 30C"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "streetwear"
+      ],
+      "material": [
+        "cotton fleece",
+        "polyester"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco",
+        "gold"
+      ],
+      "useCase": [
+        "everyday",
+        "layering"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "hoodie",
+      "embroidered logo",
+      "workwear",
+      "fleece"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-34-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-34-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-34-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-34-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-34-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt wip brown hoodie man",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 703
+  },
+  {
+    "id": "fd-top-35",
+    "slug": "cranmore-mystic-rugby-shirt",
+    "name": "Mystic Rugby Shirt",
+    "brand": "Cranmore",
+    "department": "unisex",
+    "category": "Tops",
+    "subcategory": "Sweatshirts & hoodies",
+    "price": 145,
+    "description": "A heavyweight rugby shirt knitted from tightly twisted cotton jersey, with bold navy and gold hoops, a white twill collar and rubber buttons at the placket. It has a regular, slightly long fit and reinforced side vents, so it handles a muddy Saturday or a weekend in the country. Wear it with chinos and loafers or with straight jeans and beat-up sneakers.",
+    "details": [
+      "100% cotton jersey, 14 oz",
+      "Regular fit; unisex sizing",
+      "Model is 5'11\" and wears M",
+      "Cotton twill collar, rubber buttons",
+      "Machine wash cold, tumble dry low",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "heavyweight cotton jersey",
+        "cotton twill"
+      ],
+      "colorFamily": [
+        "cool",
+        "bold"
+      ],
+      "colors": [
+        "navy",
+        "gold",
+        "white"
+      ],
+      "useCase": [
+        "weekend",
+        "campus"
+      ],
+      "occasion": [
+        "campus",
+        "weekend",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "spring",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "rugby stripe",
+      "heavyweight",
+      "ivy",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-top-35-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-35-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-35-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-top-35-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-top-35-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy gold striped rugby shirt",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 156
+  }
+]

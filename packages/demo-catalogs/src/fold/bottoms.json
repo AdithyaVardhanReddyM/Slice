@@ -1,0 +1,2319 @@
+[
+  {
+    "id": "fd-bot-01",
+    "slug": "levis-501-original-jeans",
+    "name": "501 Original Jeans",
+    "brand": "Levi's",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 98,
+    "description": "The original button-fly jean, cut straight through the seat and thigh with a leg that sits at the ankle without stacking. This one is a mid-weight non-stretch denim in a medium stonewash with honest whiskering and fading, so it looks broken in from day one and keeps softening with every wash. Rugged and plain in the best way, it goes with a work jacket, a grey sweatshirt or a white tee and boots.",
+    "details": [
+      "100% cotton non-stretch denim, 12.5 oz",
+      "Regular straight fit, sits at the waist; five-button fly",
+      "Leg opening 16 in on W32; inseam 32 in",
+      "Model is 6'1\" and wears W32 L32",
+      "Machine wash cold inside out, hang dry",
+      "Made in Pakistan"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "cotton denim"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "medium stonewash",
+        "faded indigo"
+      ],
+      "useCase": [
+        "daily wear",
+        "breaking in",
+        "pairing with boots"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "button fly",
+      "non-stretch",
+      "straight leg",
+      "classic"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-01-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-01-w30",
+        "label": "W30",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-01-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-01-w34",
+        "label": "W34",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-01-w36",
+        "label": "W36",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-01-w38",
+        "label": "W38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "blue straight leg jeans legs",
+    "images": [
+      "/fold/fd-bot-01.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 1140,
+    "bestseller": true
+  },
+  {
+    "id": "fd-bot-02",
+    "slug": "levis-superlow-bootcut-jeans",
+    "name": "Superlow Bootcut Jeans",
+    "brand": "Levi's",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 90,
+    "description": "A properly low-rise jean that sits on the hips, slim through the thigh and kicking out into a bootcut flare at the hem. The light blue wash has a little stretch, faded highs on the thighs and a frayed-look hem, all very early-2000s without trying too hard. Wear it with a baby tee, a cropped zip-up and slim sneakers or pointed boots.",
+    "details": [
+      "99% cotton, 1% elastane comfort-stretch denim",
+      "Low rise, 7.5 in front rise on W27",
+      "Slim through hip and thigh, bootcut leg; inseam 32 in",
+      "Model is 5'8\" and wears W26",
+      "Machine wash cold, tumble dry low",
+      "Made in Bangladesh"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro"
+      ],
+      "material": [
+        "stretch denim"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "light blue wash",
+        "faded denim"
+      ],
+      "useCase": [
+        "going out",
+        "festival outfits",
+        "layering with crop tops"
+      ],
+      "occasion": [
+        "night out",
+        "festival",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "low rise",
+      "bootcut",
+      "y2k",
+      "stretch"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-02-w26",
+        "label": "W26",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-02-w27",
+        "label": "W27",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-02-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-02-w29",
+        "label": "W29",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-02-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-02-w32",
+        "label": "W32",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "low rise bootcut jeans woman",
+    "images": [
+      "/fold/fd-bot-02.jpg"
+    ],
+    "rating": 4.2,
+    "reviewCount": 386,
+    "new": true
+  },
+  {
+    "id": "fd-bot-03",
+    "slug": "kapital-14oz-denim-monkey-cisco-jeans-black",
+    "name": "14oz Denim Monkey Cisco Jeans (Black)",
+    "brand": "Kapital",
+    "department": "unisex",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 290,
+    "description": "Kapital's Monkey Cisco is a relaxed straight jean with a cinch-back, a curved patch pocket and the label's signature hand-stitched rainbow detailing on the back. This pair is 14 oz Japanese denim dyed with sulfur black and washed down to a smoky, uneven charcoal that fades at every seam. Heavy, moody and full of character, it sits as easily with a black leather jacket as with a patched chore coat.",
+    "details": [
+      "100% cotton Japanese denim, 14 oz, sulfur-dyed black",
+      "Relaxed straight fit with cinch-back belt; button fly",
+      "Hand-stitched back pocket detailing, no two exactly alike",
+      "Expect color to bleed for the first few washes; wash separately",
+      "Made in Kojima, Japan"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "dark-gothic"
+      ],
+      "material": [
+        "japanese denim",
+        "cotton"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black",
+        "smoke charcoal"
+      ],
+      "useCase": [
+        "collecting",
+        "statement denim",
+        "all-black outfits"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "night out"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "made in japan",
+      "sulfur dyed",
+      "cinch back",
+      "hand-stitched"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-03-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-03-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-03-w32",
+        "label": "W32",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-03-w34",
+        "label": "W34",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-03-w36",
+        "label": "W36",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "washed black japanese denim jeans",
+    "images": [
+      "/fold/fd-bot-03.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 64
+  },
+  {
+    "id": "fd-bot-04",
+    "slug": "seom-drop-baggy-jeans",
+    "name": "Drop Baggy Jeans",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 135,
+    "description": "An extra-wide, low-slung jean that drops off the hips and pools over sneakers, cut in rigid 13 oz denim with a deep acid-wash and bleached-out knees. Oversized cargo-style back pockets and a slightly longer rise at the back keep it sitting low without slipping. Loud, baggy and very Seongsu, it wants a boxy graphic tee, a nylon jacket and chunky or slim retro sneakers.",
+    "details": [
+      "100% cotton rigid denim, 13 oz",
+      "Baggy fit with low rise; take your usual size and wear on the hips",
+      "Leg opening 23 in on W30; inseam 33 in",
+      "Model is 5'11\" and wears W30",
+      "Wash cold inside out; some bleach marks vary per pair",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "y2k-retro"
+      ],
+      "material": [
+        "cotton denim"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "acid wash grey",
+        "bleached blue"
+      ],
+      "useCase": [
+        "skating",
+        "streetwear fits",
+        "everyday"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "campus"
+      ],
+      "fit": "oversized",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "baggy",
+      "acid wash",
+      "low rise",
+      "skater"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-04-w26",
+        "label": "W26",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-04-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-04-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-04-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-04-w34",
+        "label": "W34",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-04-w36",
+        "label": "W36",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "baggy acid wash jeans streetwear",
+    "images": [
+      "/fold/fd-bot-04.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 212
+  },
+  {
+    "id": "fd-bot-05",
+    "slug": "asche-spree-straight-jeans",
+    "name": "Spree Straight Jeans",
+    "brand": "Asche",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 195,
+    "description": "A narrow straight jean in Italian stretch-free denim, garment-dyed black and stone-washed until it turns a soft, uneven graphite. Matte black hardware, a single silver ring at the coin pocket and a long inseam meant to break and stack over boots. Moody and severe, it is built to sit under a long coat or a washed leather jacket with heavy boots.",
+    "details": [
+      "100% cotton Italian denim, 13.5 oz, garment-dyed",
+      "Straight leg with a slightly narrow opening; inseam 34 in to stack over boots",
+      "Matte black shank button and rivets, sterling silver pocket ring",
+      "Wash cold inside out with dark colors",
+      "Cut and sewn in Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "cotton denim",
+        "sterling silver"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black",
+        "graphite"
+      ],
+      "useCase": [
+        "all-black outfits",
+        "pairing with boots",
+        "concerts"
+      ],
+      "occasion": [
+        "night out",
+        "everyday",
+        "date night"
+      ],
+      "fit": "slim",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "garment dyed",
+      "washed black",
+      "made in germany",
+      "long inseam"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-05-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-05-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-05-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-05-w34",
+        "label": "W34",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-05-w36",
+        "label": "W36",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-05-w38",
+        "label": "W38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black washed jeans boots man",
+    "images": [
+      "/fold/fd-bot-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 58
+  },
+  {
+    "id": "fd-bot-06",
+    "slug": "arket-wide-leg-jeans-ecru",
+    "name": "Wide Leg Jeans (Ecru)",
+    "brand": "Arket",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 90,
+    "description": "A high-waisted, wide-leg jean in undyed ecru denim with clean seams, no distressing and a slightly cropped length that shows a little ankle. The rigid organic cotton softens over a few wears and keeps its sharp, column-like shape. Quiet and easy, it pairs with a navy knit, a white poplin shirt or loafers and a long wool coat.",
+    "details": [
+      "100% organic cotton rigid denim, 12 oz",
+      "High rise, wide leg; inseam 29 in (cropped)",
+      "Zip fly, five pockets, tonal stitching",
+      "Model is 5'9\" and wears W27",
+      "Wash at 40°C with light colors",
+      "Made in Turkey"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "organic cotton denim"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "ecru",
+        "undyed cream"
+      ],
+      "useCase": [
+        "office outfits",
+        "everyday",
+        "minimal capsule"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "organic cotton",
+      "high rise",
+      "wide leg",
+      "undyed"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-06-w26",
+        "label": "W26",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-06-w27",
+        "label": "W27",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-06-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-06-w29",
+        "label": "W29",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-06-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-06-w32",
+        "label": "W32",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ecru wide leg jeans woman",
+    "images": [
+      "/fold/fd-bot-06.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 174
+  },
+  {
+    "id": "fd-bot-07",
+    "slug": "carhartt-wip-landon-pant",
+    "name": "Landon Pant",
+    "brand": "Carhartt WIP",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Jeans",
+    "price": 125,
+    "description": "A loose, baggy five-pocket jean in 13.5 oz Smith denim with a wide straight leg and a low crotch that drapes over sneakers. Washed in a pale stone blue, it carries the square Carhartt WIP label on the back pocket and has the easy, slouchy shape that skaters lean on. Throw it on with a heavyweight hoodie, a Detroit jacket or a boxy tee.",
+    "details": [
+      "100% cotton 'Smith' denim, 13.5 oz",
+      "Loose fit, wide straight leg; inseam 32 in",
+      "Zip fly, five pockets, back-pocket square label",
+      "Model is 6'0\" and wears W32",
+      "Machine wash cold inside out",
+      "Made in Tunisia"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear"
+      ],
+      "material": [
+        "cotton denim"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "blue stone washed",
+        "pale indigo"
+      ],
+      "useCase": [
+        "skating",
+        "everyday",
+        "streetwear fits"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "campus"
+      ],
+      "fit": "oversized",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "baggy",
+      "skate",
+      "stone washed",
+      "loose fit"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-07-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-07-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-07-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-07-w34",
+        "label": "W34",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-07-w36",
+        "label": "W36",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-07-w38",
+        "label": "W38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt wip baggy jeans",
+    "images": [
+      "/fold/fd-bot-07.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 448
+  },
+  {
+    "id": "fd-bot-08",
+    "slug": "carhartt-wip-double-knee-pant",
+    "name": "Double Knee Pant",
+    "brand": "Carhartt WIP",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 135,
+    "description": "The workwear pant that crossed over: a straight, roomy leg in stiff 12 oz Dearborn canvas with a reinforced double layer at the knees, a hammer loop and a tool pocket on the thigh. It starts out boardy and breaks in to fade along every crease. Rugged and utilitarian, it goes with a Detroit jacket and boots on site, or a hoodie and skate shoes in town.",
+    "details": [
+      "100% organic cotton 'Dearborn' canvas, 12 oz",
+      "Relaxed straight fit; double-layer knee with utility pocket",
+      "Hammer loop, triple-stitched seams, zip fly",
+      "Model is 6'0\" and wears W32 L32",
+      "Wash cold; expect natural fading at seams",
+      "Made in Tunisia"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "streetwear"
+      ],
+      "material": [
+        "cotton canvas"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "hamilton brown rinsed",
+        "black rinsed",
+        "dusty brown"
+      ],
+      "useCase": [
+        "workwear",
+        "skating",
+        "daily wear"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "commute"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "double knee",
+      "canvas",
+      "organic cotton",
+      "breaks in"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-08-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-08-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-08-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-08-w34",
+        "label": "W34",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-08-w36",
+        "label": "W36",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-08-w38",
+        "label": "W38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt wip double knee pants brown",
+    "images": [
+      "/fold/fd-bot-08.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 962,
+    "bestseller": true
+  },
+  {
+    "id": "fd-bot-09",
+    "slug": "burnside-canvas-tillamook-ripstop-double-knee-pant",
+    "name": "Tillamook Ripstop Double-Knee Pant",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 165,
+    "description": "A lighter take on the work pant, cut from a dense cotton-nylon ripstop that sheds brush and dries fast, with a double-layer knee, gusseted crotch and a deep zip cargo pocket on the right thigh. The olive is garment-dyed so it fades softly at the edges, and the ankle has a hidden drawcord to cinch over trail shoes. Tough enough for a day of clearing trail, plain enough for the city, it suits a fleece and a waxed cap.",
+    "details": [
+      "65% cotton, 35% nylon ripstop, 7.5 oz; DWR finish",
+      "Relaxed fit with gusseted crotch and double-layer knee",
+      "Zip thigh cargo pocket, hammer loop, ankle drawcords",
+      "Unisex sizing; women typically size down one",
+      "Machine wash cold, line dry; free repairs for life",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "cotton-nylon ripstop"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "olive",
+        "tobacco brown"
+      ],
+      "useCase": [
+        "trail days",
+        "workshop",
+        "travel"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "everyday"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ripstop",
+      "double knee",
+      "made in usa",
+      "repairable",
+      "garment dyed"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-09-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-09-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-09-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-09-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-09-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "olive ripstop work pants hiking",
+    "images": [
+      "/fold/fd-bot-09.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 133,
+    "new": true
+  },
+  {
+    "id": "fd-bot-10",
+    "slug": "snow-peak-takibi-pants",
+    "name": "TAKIBI Pants",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 260,
+    "description": "Built for sitting close to a campfire, these relaxed trousers are made from Snow Peak's flame-resistant TAKIBI fabric, a tight cotton-aramid weave that shrugs off sparks and embers. They have a wide tapered leg, an elastic-backed waist with a belt and a deep cargo pocket, and they wash down to a soft matte khaki. Quietly technical, they look as right in town with a shell and boots as they do at camp.",
+    "details": [
+      "Flame-resistant TAKIBI fabric: 87% cotton, 13% aramid",
+      "Relaxed tapered fit, elastic back waist with webbing belt",
+      "Two side pockets, two back pockets, one cargo pocket",
+      "Unisex Japanese sizing; check the size chart",
+      "Machine wash cold, hang dry",
+      "Made in China, designed in Niigata"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "cotton",
+        "aramid"
+      ],
+      "colorFamily": [
+        "earth",
+        "neutral"
+      ],
+      "colors": [
+        "khaki",
+        "olive",
+        "black"
+      ],
+      "useCase": [
+        "camping",
+        "campfire cooking",
+        "travel"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "flame resistant",
+      "camp",
+      "technical",
+      "japanese design"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-10-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-10-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-10-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-10-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "khaki camping pants campfire",
+    "images": [
+      "/fold/fd-bot-10.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 97
+  },
+  {
+    "id": "fd-bot-11",
+    "slug": "seom-static-nylon-cargo-pants",
+    "name": "Static Nylon Cargo Pants",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 145,
+    "compareAtPrice": 180,
+    "description": "A low-rise parachute cargo in crinkly nylon taffeta with oversized bellows pockets, toggle drawcords at the hem and a reflective SEOM wordmark on the back of the knee. The wide leg balloons and swishes as you walk, and the drawstring waist sits right on the hips. Loud and a bit early-2000s, it suits a baby tee or a cropped puffer and slim retro sneakers.",
+    "details": [
+      "100% nylon taffeta shell, mesh-lined pockets",
+      "Low rise, drawstring waist with elastic back",
+      "Oversized fit with toggle hems to shape the leg",
+      "Model is 5'7\" and wears S",
+      "Machine wash cold, hang dry",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "y2k-retro"
+      ],
+      "material": [
+        "nylon"
+      ],
+      "colorFamily": [
+        "black",
+        "cool"
+      ],
+      "colors": [
+        "black",
+        "silver grey",
+        "baby blue"
+      ],
+      "useCase": [
+        "festival outfits",
+        "dancing",
+        "streetwear fits"
+      ],
+      "occasion": [
+        "festival",
+        "night out",
+        "campus"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "parachute pants",
+      "cargo",
+      "low rise",
+      "nylon",
+      "reflective"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-11-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-11-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-11-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-11-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-11-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nylon parachute cargo pants woman",
+    "images": [
+      "/fold/fd-bot-11.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 167
+  },
+  {
+    "id": "fd-bot-12",
+    "slug": "studio-nicholson-sorte-pleated-wide-trousers-linen",
+    "name": "Sorte Pleated Wide Trousers (Linen)",
+    "brand": "Studio Nicholson",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 320,
+    "description": "Studio Nicholson's Sorte is a deep double-pleated trouser with a high waist and a full, wide leg that falls straight to the floor. This version is a crisp Italian linen-cotton in a pale sand, with a hook-and-bar fly and clean side-seam pockets. Relaxed, considered and entirely logo-free, it works with a boxy poplin shirt, a fine knit or a simple tee and leather slides.",
+    "details": [
+      "55% linen, 45% cotton, woven in Italy",
+      "High waist, double front pleats, wide straight leg",
+      "Hook-and-bar and zip fly; side-seam and back welt pockets",
+      "Model is 5'10\" and wears XS; generous through the hip",
+      "Dry clean or hand wash cold",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "sand",
+        "ecru",
+        "navy"
+      ],
+      "useCase": [
+        "office outfits",
+        "summer tailoring",
+        "travel"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "date night"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "pleated",
+      "wide leg",
+      "italian fabric",
+      "no logo"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-12-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-12-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-12-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-12-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-12-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "wide pleated linen trousers woman",
+    "images": [
+      "/fold/fd-bot-12.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 89
+  },
+  {
+    "id": "fd-bot-13",
+    "slug": "soller-deia-linen-drawstring-trousers",
+    "name": "Deià Linen Drawstring Trousers",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 140,
+    "description": "Loose, breezy pull-on trousers in washed Mallorcan-weight linen, with a wide drawstring waist and a long, swishy leg that catches the wind. They are softened in the wash and sun-faded to a chalky white that creases beautifully. Made for hot days and salt air, they go with a striped tee, a raffia bag and espadrilles.",
+    "details": [
+      "100% European linen, 190 gsm, stone washed",
+      "Mid rise, elasticated drawstring waist",
+      "Relaxed wide leg; inseam 31 in",
+      "Model is 5'8\" and wears S",
+      "Machine wash 30°C; best line dried",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "chalk white",
+        "sand",
+        "sky blue"
+      ],
+      "useCase": [
+        "vacation",
+        "hot weather",
+        "beach to dinner"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "pull-on",
+      "made in spain",
+      "resort"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-13-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-13-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-13-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-13-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-13-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white linen trousers woman beach",
+    "images": [
+      "/fold/fd-bot-13.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 241
+  },
+  {
+    "id": "fd-bot-14",
+    "slug": "adidas-adicolor-classics-firebird-track-pants",
+    "name": "Adicolor Classics Firebird Track Pants",
+    "brand": "Adidas",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 80,
+    "compareAtPrice": 95,
+    "description": "The Firebird track pant in shiny recycled tricot, with the 3-Stripes running down each leg, a slim tapered cut and zips at the ankle. It is soft and smooth on the inside with a bit of stretch, and the black with white stripes looks straight off a 90s terrace. Sporty and retro, it pairs with the matching track top, Sambas and a plain white tee.",
+    "details": [
+      "100% recycled polyester tricot",
+      "Slim tapered fit, elastic waist with drawcord",
+      "Zip side pockets and ankle zips",
+      "Model is 6'1\" and wears M",
+      "Machine wash cold, do not tumble dry",
+      "Made in Cambodia"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "y2k-retro"
+      ],
+      "material": [
+        "recycled polyester tricot"
+      ],
+      "colorFamily": [
+        "black",
+        "white"
+      ],
+      "colors": [
+        "black",
+        "white stripes",
+        "navy"
+      ],
+      "useCase": [
+        "warm-ups",
+        "lounging",
+        "terrace fits"
+      ],
+      "occasion": [
+        "gym",
+        "everyday",
+        "campus"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "track pants",
+      "3-stripes",
+      "recycled",
+      "retro"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-14-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-14-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-14-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-14-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-14-xxl",
+        "label": "XXL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "adidas firebird track pants black",
+    "images": [
+      "/fold/fd-bot-14.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 731
+  },
+  {
+    "id": "fd-bot-15",
+    "slug": "cranmore-wickford-pleated-chinos",
+    "name": "Wickford Pleated Chinos",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Trousers",
+    "price": 165,
+    "description": "A proper single-pleat chino in a dense, garment-washed cotton twill, high in the rise with a roomy thigh that tapers to a cuffed hem. The stone color has the faint chalkiness of trousers that have been around a campus for years. Crisp but easy, it goes with an oxford shirt, a cable crewneck and penny loafers.",
+    "details": [
+      "100% cotton twill, 9.5 oz, garment washed",
+      "Mid-high rise, single forward pleat, tapered leg",
+      "1.5 in turn-up cuff; side and button-through back pockets",
+      "Model is 6'0\" and wears W32",
+      "Machine wash cold, warm iron",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "quiet-minimal"
+      ],
+      "material": [
+        "cotton twill"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "stone",
+        "navy",
+        "olive"
+      ],
+      "useCase": [
+        "campus",
+        "office outfits",
+        "weekend"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "chinos",
+      "pleated",
+      "cuffed",
+      "ivy"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-15-w28",
+        "label": "W28",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-15-w30",
+        "label": "W30",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-15-w32",
+        "label": "W32",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-15-w34",
+        "label": "W34",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-15-w36",
+        "label": "W36",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-15-w38",
+        "label": "W38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "stone pleated chinos loafers man",
+    "images": [
+      "/fold/fd-bot-15.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 154
+  },
+  {
+    "id": "fd-bot-16",
+    "slug": "patagonia-baggies-shorts-5",
+    "name": "Baggies Shorts 5\"",
+    "brand": "Patagonia",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Shorts",
+    "price": 65,
+    "description": "The do-everything short: quick-drying recycled nylon with a DWR finish, a mesh liner and an elastic drawcord waist, so it goes from river to trail to beach bar without changing. The 5-inch inseam and bright, slightly faded colors give it its sun-bleached seventies look. Wear it with a tee and sandals for camp or a linen shirt by the sea.",
+    "details": [
+      "100% recycled nylon with DWR finish",
+      "5 in inseam, mesh liner, elastic waist with drawcord",
+      "Two side pockets, one snap back pocket",
+      "Model is 6'0\" and wears M",
+      "Machine wash cold, line dry",
+      "Fair Trade Certified sewn, made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "coastal-resort"
+      ],
+      "material": [
+        "recycled nylon"
+      ],
+      "colorFamily": [
+        "bold",
+        "earth"
+      ],
+      "colors": [
+        "tidepool blue",
+        "fatigue green",
+        "sunset orange"
+      ],
+      "useCase": [
+        "swimming",
+        "hiking",
+        "vacation"
+      ],
+      "occasion": [
+        "beach",
+        "hiking",
+        "camping"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "quick dry",
+      "recycled",
+      "swim ready",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-16-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-16-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-16-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-16-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-16-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "patagonia baggies shorts",
+    "images": [
+      "/fold/fd-bot-16.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 1080,
+    "bestseller": true
+  },
+  {
+    "id": "fd-bot-17",
+    "slug": "nike-tempo-running-shorts",
+    "name": "Tempo Running Shorts",
+    "brand": "Nike",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Shorts",
+    "price": 40,
+    "description": "Lightweight Dri-FIT running shorts with a 3-inch inseam, split side hems and a built-in brief, so they move with you on intervals and long runs. The white ones have a contrast trim and a small Swoosh, and they look as good with a crop tee at the track as with an oversized sweatshirt on the way to brunch. Breathable and sporty.",
+    "details": [
+      "100% recycled polyester Dri-FIT",
+      "3 in inseam, built-in brief, split side hems",
+      "Elastic waist with internal drawcord and key pocket",
+      "Model is 5'7\" and wears S",
+      "Machine wash cold",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester"
+      ],
+      "colorFamily": [
+        "white",
+        "bold"
+      ],
+      "colors": [
+        "white",
+        "black",
+        "hyper pink"
+      ],
+      "useCase": [
+        "running",
+        "training",
+        "summer errands"
+      ],
+      "occasion": [
+        "running",
+        "gym",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "running",
+      "dri-fit",
+      "lined",
+      "lightweight"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-17-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-17-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-17-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-17-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-17-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike tempo running shorts woman",
+    "images": [
+      "/fold/fd-bot-17.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 864
+  },
+  {
+    "id": "fd-bot-18",
+    "slug": "new-balance-rc-shorts-5",
+    "name": "RC Shorts 5\"",
+    "brand": "New Balance",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Shorts",
+    "price": 60,
+    "description": "New Balance's race-day short in a soft, featherweight woven with a 5-inch inseam, brief liner and a stretch waistband with a zip back pocket for a gel or key. The grey-and-white colorway with a reflective NB logo has a clean, old-school track look. Built to run, but neat enough for a coffee after.",
+    "details": [
+      "100% recycled polyester woven with stretch",
+      "5 in inseam, brief liner",
+      "Zip back pocket, two liner pockets",
+      "Reflective logo and back trim",
+      "Model is 6'0\" and wears M",
+      "Made in Indonesia"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "athletic grey",
+        "white",
+        "black"
+      ],
+      "useCase": [
+        "running",
+        "racing",
+        "training"
+      ],
+      "occasion": [
+        "running",
+        "gym"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "running",
+      "lined",
+      "reflective",
+      "quick dry"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-18-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-18-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-18-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-18-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-18-xxl",
+        "label": "XXL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "grey running shorts man track",
+    "images": [
+      "/fold/fd-bot-18.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 231,
+    "new": true
+  },
+  {
+    "id": "fd-bot-19",
+    "slug": "soller-cala-linen-shorts",
+    "name": "Cala Linen Shorts",
+    "brand": "Sóller",
+    "department": "men",
+    "category": "Bottoms",
+    "subcategory": "Shorts",
+    "price": 95,
+    "compareAtPrice": 120,
+    "description": "Easy, pull-on linen shorts with a drawstring waist, a 6-inch inseam and a soft garment-washed hand that only gets better in the sun. The faded sky blue and sand colors look like they have spent a few summers by the harbor. Wear them with a camp-collar linen shirt and espadrilles, or a striped tee and a straw hat.",
+    "details": [
+      "100% linen, 200 gsm, garment washed",
+      "6 in inseam, elastic drawstring waist",
+      "Slant side pockets and one patch back pocket",
+      "Model is 6'1\" and wears M",
+      "Machine wash 30°C, line dry",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "cool",
+        "neutral"
+      ],
+      "colors": [
+        "faded sky blue",
+        "sand",
+        "white"
+      ],
+      "useCase": [
+        "vacation",
+        "hot weather",
+        "beach to dinner"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "drawstring",
+      "made in spain",
+      "resort"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-19-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-19-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-19-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-19-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-19-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen drawstring shorts man beach",
+    "images": [
+      "/fold/fd-bot-19.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 118
+  },
+  {
+    "id": "fd-bot-20",
+    "slug": "burnside-canvas-foundry-utility-shorts",
+    "name": "Foundry Utility Shorts",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Bottoms",
+    "subcategory": "Shorts",
+    "price": 110,
+    "description": "A heavy duck-canvas work short with a 9-inch inseam, a tool pocket and hammer loop on the leg and bar-tacked stress points throughout. The tobacco brown starts stiff and breaks in to a soft, worn-in canvas that fades along every seam. Rugged and roomy, it suits a hike, a day in the workshop or a summer evening at camp with a tee and boots.",
+    "details": [
+      "100% cotton duck canvas, 12 oz",
+      "9 in inseam, relaxed fit, zip fly",
+      "Tool pocket, hammer loop, bar-tacked seams",
+      "Unisex sizing; women typically size down one",
+      "Machine wash cold; free repairs for life",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "cotton duck canvas"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco brown",
+        "olive",
+        "natural"
+      ],
+      "useCase": [
+        "workshop",
+        "camping",
+        "summer hikes"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "duck canvas",
+      "made in usa",
+      "breaks in",
+      "repairable"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-20-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-20-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-20-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-20-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-20-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown canvas work shorts",
+    "images": [
+      "/fold/fd-bot-20.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 72
+  },
+  {
+    "id": "fd-bot-21",
+    "slug": "cranmore-kennebunk-pleated-mini-skirt",
+    "name": "Kennebunk Pleated Mini Skirt",
+    "brand": "Cranmore",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Skirts",
+    "price": 140,
+    "description": "A knife-pleated mini skirt in a soft Scottish lambswool tartan of navy, green and a fine cream line, with a side zip and a narrow waistband. The pleats are stitched down at the hip so it lies flat and swings at the hem. Crisp and collegiate, it goes with an oxford shirt, a cable crewneck, knee socks and loafers.",
+    "details": [
+      "100% lambswool, woven in Scotland",
+      "Knife pleats, stitched at the hip; 16 in length on S",
+      "Side zip and button; half-lined in cupro",
+      "Model is 5'8\" and wears S",
+      "Dry clean",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "lambswool",
+        "cupro"
+      ],
+      "colorFamily": [
+        "cool",
+        "earth"
+      ],
+      "colors": [
+        "navy tartan",
+        "green",
+        "cream"
+      ],
+      "useCase": [
+        "campus",
+        "fall outfits",
+        "layering with knits"
+      ],
+      "occasion": [
+        "campus",
+        "office",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pleated",
+      "tartan",
+      "lambswool",
+      "mini"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-21-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-21-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-21-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-21-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-21-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "tartan pleated mini skirt",
+    "images": [
+      "/fold/fd-bot-21.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 128
+  },
+  {
+    "id": "fd-bot-22",
+    "slug": "hedda-vang-solveig-gingham-pleated-midi-skirt",
+    "name": "Solveig Gingham Pleated Midi Skirt",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Skirts",
+    "price": 175,
+    "description": "A full, soft-pleated midi skirt in a crisp cotton poplin gingham of green and cream, with a high smocked back waist and deep side pockets. It swishes when you walk and has a sweet, slightly old-fashioned feel. Wear it with a puff-sleeve blouse and ballet flats, or a navy cardigan and loafers.",
+    "details": [
+      "100% organic cotton poplin",
+      "High waist with smocked back; soft unpressed pleats",
+      "Midi length, 31 in on S; side pockets",
+      "Model is 5'9\" and wears S",
+      "Machine wash 30°C, warm iron",
+      "Made in small runs in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "preppy-ivy"
+      ],
+      "material": [
+        "organic cotton poplin"
+      ],
+      "colorFamily": [
+        "earth",
+        "white"
+      ],
+      "colors": [
+        "green gingham",
+        "cream"
+      ],
+      "useCase": [
+        "picnics",
+        "weddings",
+        "summer outfits"
+      ],
+      "occasion": [
+        "wedding guest",
+        "weekend",
+        "date night"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gingham",
+      "midi",
+      "smocked",
+      "organic cotton",
+      "pockets"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-22-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-22-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-22-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-22-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-22-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "green gingham midi skirt woman",
+    "images": [
+      "/fold/fd-bot-22.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 96,
+    "new": true
+  },
+  {
+    "id": "fd-bot-23",
+    "slug": "asche-mitte-draped-maxi-skirt",
+    "name": "Mitte Draped Maxi Skirt",
+    "brand": "Asche",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Skirts",
+    "price": 185,
+    "description": "A long, column maxi skirt in heavy draped viscose jersey with a bias-cut swirl at the hem and a high, wide waistband that folds over. It falls past the ankle and moves like liquid, catching the light only at the folds. Moody and dramatic, it wants a cropped leather jacket, silver rings and heavy boots.",
+    "details": [
+      "95% viscose, 5% elastane jersey, 280 gsm",
+      "High fold-over waistband, bias-cut hem",
+      "Ankle-grazing to floor length; 40 in on S",
+      "Model is 5'10\" and wears S",
+      "Hand wash cold, dry flat",
+      "Cut and sewn in Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "viscose jersey"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black",
+        "deep graphite"
+      ],
+      "useCase": [
+        "concerts",
+        "evenings",
+        "layering"
+      ],
+      "occasion": [
+        "night out",
+        "date night",
+        "everyday"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "maxi",
+      "draped",
+      "jersey",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-23-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-23-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-23-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-23-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-bot-23-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black jersey maxi skirt boots",
+    "images": [
+      "/fold/fd-bot-23.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 44
+  },
+  {
+    "id": "fd-bot-24",
+    "slug": "seom-glitch-low-rise-cargo-mini-skirt",
+    "name": "Glitch Low-Rise Cargo Mini Skirt",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Skirts",
+    "price": 95,
+    "description": "A low-slung mini skirt in washed nylon twill with two big bellows cargo pockets, a silver-toned D-ring belt and an adjustable bungee hem. It sits on the hips and is short in that early-2000s way. Pair it with a baby tee, a cropped puffer and slim retro sneakers or chunky boots.",
+    "details": [
+      "100% nylon twill, washed",
+      "Low rise, 14 in length on S",
+      "Bellows cargo pockets, D-ring webbing belt included",
+      "Model is 5'7\" and wears S",
+      "Machine wash cold, hang dry",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "nylon twill"
+      ],
+      "colorFamily": [
+        "black",
+        "pastel"
+      ],
+      "colors": [
+        "washed black",
+        "silver grey",
+        "lilac"
+      ],
+      "useCase": [
+        "festival outfits",
+        "going out",
+        "streetwear fits"
+      ],
+      "occasion": [
+        "festival",
+        "night out",
+        "campus"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "cargo",
+      "mini",
+      "low rise",
+      "y2k"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-24-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-24-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-24-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-24-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-24-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "low rise cargo mini skirt",
+    "images": [
+      "/fold/fd-bot-24.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 137
+  },
+  {
+    "id": "fd-bot-25",
+    "slug": "malha-lisboa-alfama-crochet-midi-skirt",
+    "name": "Alfama Crochet Midi Skirt",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Bottoms",
+    "subcategory": "Skirts",
+    "price": 165,
+    "description": "An open-stitch crochet midi skirt hand-finished in soft mercerized cotton, with a scalloped hem and a slip lining you can wear or leave out. The cream yarn has a slight sheen and the pattern is a traditional Portuguese shell stitch. Soft and summery, it pairs with a linen shirt knotted at the waist, a bikini top or a fine knit tank.",
+    "details": [
+      "100% mercerized cotton crochet, hand-finished",
+      "Elasticated waist; removable cotton slip lining",
+      "Midi length, 30 in on S",
+      "Model is 5'8\" and wears S",
+      "Hand wash cold, dry flat",
+      "Knitted and finished outside Lisbon, Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "coastal-resort"
+      ],
+      "material": [
+        "mercerized cotton",
+        "crochet"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "terracotta"
+      ],
+      "useCase": [
+        "vacation",
+        "summer evenings",
+        "festivals"
+      ],
+      "occasion": [
+        "beach",
+        "festival",
+        "date night"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "crochet",
+      "handmade",
+      "made in portugal",
+      "lined"
+    ],
+    "variants": [
+      {
+        "id": "fd-bot-25-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-25-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-25-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-25-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-bot-25-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream crochet midi skirt woman",
+    "images": [
+      "/fold/fd-bot-25.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 81
+  }
+]

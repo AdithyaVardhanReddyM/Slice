@@ -1,9 +1,31 @@
 // Checks every catalog against the schema and the authoring rules
-// (unique ids/slugs, category tree, style and room vocab, style coverage).
-// Usage: pnpm --filter @slice/demo-catalogs validate
+// (unique ids/slugs, category tree, style/room/brand vocab, style coverage).
+// Usage: pnpm --filter @slice/demo-catalogs validate [store]
 
+import { fold } from "../src/fold/index.ts";
 import { marlow } from "../src/marlow/index.ts";
 import type { Catalog, Product } from "../src/types.ts";
+
+interface Rules {
+  /** Categories in which every style must appear. */
+  fullCoverage: string[];
+  /** Fold: which brands are household names, niche, or made up for the demo. */
+  brandGroups?: Record<"known" | "niche" | "fictional", string[]>;
+}
+
+const rules: Record<string, Rules> = {
+  marlow: { fullCoverage: ["Living", "Kitchen & dining", "Lighting", "Decor"] },
+  fold: {
+    fullCoverage: ["Tops", "Bottoms", "Outerwear", "Footwear", "Accessories"],
+    brandGroups: {
+      known: ["Nike", "Adidas", "New Balance", "Levi's", "Carhartt WIP", "Patagonia", "Dr. Martens", "Birkenstock"],
+      niche: ["Norse Projects", "Veja", "Arket", "Snow Peak", "Salomon", "Studio Nicholson", "Pangaia", "Kapital"],
+      fictional: ["Malha Lisboa", "SEOM", "Burnside Canvas", "Hedda Vang", "Asche", "Cranmore", "Sóller", "Ferrant"],
+    },
+  },
+};
+
+const FITS = new Set(["relaxed", "regular", "slim", "oversized"]);
 
 const COLOR_FAMILIES = new Set([
   "neutral",
@@ -20,6 +42,10 @@ const PRICE_TIERS = new Set(["budget", "mid", "premium"]);
 function validate(name: string, catalog: Catalog): string[] {
   const errors: string[] = [];
   const { store, products } = catalog;
+  const rule = rules[name];
+  const brands = new Set((store.brands ?? []).map((b) => b.name));
+  const departments = new Set(store.departments ?? []);
+  const brandCount = new Map<string, number>();
   const styles = new Set(store.styles.map((s) => s.id));
   const rooms = new Set(store.rooms ?? []);
   const subcats = new Map(store.nav.map((g) => [g.category, new Set(g.subcategories)]));
@@ -60,6 +86,17 @@ function validate(name: string, catalog: Catalog): string[] {
     }
     if (p.rating !== undefined && (p.rating < 0 || p.rating > 5)) err(p, "bad rating");
 
+    if (brands.size > 0) {
+      if (!p.brand || !brands.has(p.brand)) err(p, `unknown brand ${p.brand}`);
+      else brandCount.set(p.brand, (brandCount.get(p.brand) ?? 0) + 1);
+    } else if (p.brand) err(p, "house-brand store must not set brand");
+    if (departments.size > 0) {
+      if (!p.department || !departments.has(p.department)) err(p, `bad department ${p.department}`);
+      if (!p.attributes?.occasion?.length) err(p, "needs occasion");
+      if (!p.attributes?.season?.length) err(p, "needs season");
+      if (p.attributes?.fit !== undefined && !FITS.has(p.attributes.fit)) err(p, `bad fit ${p.attributes.fit}`);
+    }
+
     const a = p.attributes;
     if (!a) {
       err(p, "missing attributes");
@@ -81,6 +118,12 @@ function validate(name: string, catalog: Catalog): string[] {
   }
 
   for (const s of styles) if (!styleCount.has(s)) errors.push(`style ${s} never used`);
+  for (const c of rule?.fullCoverage ?? []) {
+    const have = styleByCategory.get(c) ?? new Set();
+    const missing = [...styles].filter((s) => !have.has(s));
+    if (missing.length) errors.push(`${c} is missing styles: ${missing.join(", ")}`);
+  }
+  for (const b of brands) if (!brandCount.has(b)) errors.push(`brand ${b} has no products`);
 
   console.log(`\n${name}: ${products.length} products`);
   for (const g of store.nav) {
@@ -89,10 +132,25 @@ function validate(name: string, catalog: Catalog): string[] {
     console.log(`  ${g.category.padEnd(18)} ${String(n).padStart(3)} products, ${covered}/${styles.size} styles`);
   }
   console.log("  styles:", [...styleCount.entries()].map(([k, v]) => `${k}=${v}`).join(" "));
+  if (brandCount.size > 0) {
+    console.log("  brands:", [...brandCount.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}=${v}`).join(" "));
+  }
+  if (rule?.brandGroups && products.length > 0) {
+    // Recommendations must not be able to lean on brand, so the made-up labels
+    // need real weight in the catalog.
+    const share = (g: string[]) => products.filter((p) => g.includes(p.brand ?? "")).length / products.length;
+    const groups = Object.entries(rule.brandGroups).map(([k, g]) => `${k}=${Math.round(share(g) * 100)}%`);
+    console.log("  brand groups:", groups.join(" "));
+    if (share(rule.brandGroups.fictional) < 0.3) errors.push("fictional labels are under 30% of the catalog");
+  }
   return errors;
 }
 
-const errors = validate("marlow", marlow);
+const catalogs: Record<string, Catalog> = { marlow, fold };
+const only = process.argv[2];
+const errors = Object.entries(catalogs)
+  .filter(([name]) => !only || name === only)
+  .flatMap(([name, catalog]) => validate(name, catalog).map((e) => `${name} ${e}`));
 if (errors.length) {
   console.error(`\n${errors.length} problems:`);
   for (const e of errors) console.error("  -", e);

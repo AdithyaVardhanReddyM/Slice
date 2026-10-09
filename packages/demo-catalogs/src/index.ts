@@ -5,6 +5,7 @@ export type {
   Product,
   ProductAttributes,
   Store,
+  StoreBrand,
   StoreNavGroup,
   Variant,
 } from "./types.ts";
@@ -43,6 +44,10 @@ export function createCatalogApi(catalog: Catalog) {
     return products.filter((p) => p.attributes.style.includes(style));
   }
 
+  function byBrand(brand: string): Product[] {
+    return products.filter((p) => p.brand === brand);
+  }
+
   function search(query: string): Product[] {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (terms.length === 0) return [];
@@ -50,6 +55,7 @@ export function createCatalogApi(catalog: Catalog) {
       .map((p) => {
         const haystack = [
           p.name,
+          p.brand ?? "",
           p.subcategory,
           p.category,
           p.description,
@@ -80,6 +86,7 @@ export function createCatalogApi(catalog: Catalog) {
         (p) =>
           p.id !== product.id &&
           p.subcategory !== product.subcategory &&
+          sameDepartment(p, product) &&
           p.attributes.style.some((s) => styles.has(s)),
       )
       .sort(
@@ -92,7 +99,12 @@ export function createCatalogApi(catalog: Catalog) {
 
   function moreLike(product: Product, take = 4): Product[] {
     return products
-      .filter((p) => p.id !== product.id && p.subcategory === product.subcategory)
+      .filter(
+        (p) =>
+          p.id !== product.id &&
+          p.subcategory === product.subcategory &&
+          sameDepartment(p, product),
+      )
       .sort((a, b) => overlap(b, product) - overlap(a, product))
       .slice(0, take);
   }
@@ -104,6 +116,8 @@ export function createCatalogApi(catalog: Catalog) {
     categoryFromSlug,
     inCategory,
     withStyle,
+    byBrand,
+    brand: (slug: string) => store.brands?.find((b) => b.slug === slug),
     search,
     goesWith,
     moreLike,
@@ -111,6 +125,12 @@ export function createCatalogApi(catalog: Catalog) {
     newArrivals: () => products.filter((p) => p.new),
     onSale: () => products.filter((p) => p.compareAtPrice !== undefined),
   };
+}
+
+/** Fashion: don't suggest menswear next to a women's dress. Unisex goes with both. */
+function sameDepartment(a: Product, b: Product): boolean {
+  if (!a.department || !b.department) return true;
+  return a.department === b.department || a.department === "unisex" || b.department === "unisex";
 }
 
 function overlap(a: Product, b: Product): number {

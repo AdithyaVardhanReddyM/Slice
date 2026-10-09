@@ -1,0 +1,833 @@
+[
+  {
+    "id": "fd-grm-01",
+    "slug": "asche-rauch-eau-de-parfum",
+    "name": "Rauch Eau de Parfum",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Fragrance",
+    "price": 165,
+    "description": "Smoke from a censer, old black leather and a cold stone floor: Rauch opens on birch tar and frankincense, then settles into a dry leather and patchouli base that lingers into the next day. It is dark and close to the skin rather than loud, the scent equivalent of a long black coat. Bottled in heavy black glass.",
+    "details": [
+      "Top: birch tar, black pepper",
+      "Heart: frankincense, myrrh",
+      "Base: leather accord, patchouli, labdanum",
+      "Eau de parfum, 18% concentration",
+      "Heavy black glass bottle with magnetic cap",
+      "Blended in Grasse, France"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "eau de parfum",
+        "black glass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "evenings",
+        "cold weather"
+      ],
+      "occasion": [
+        "night out",
+        "date night"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "smoky",
+      "leather",
+      "incense",
+      "unisex"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-01-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      },
+      {
+        "id": "fd-grm-01-100-ml",
+        "label": "100 ml",
+        "inStock": true,
+        "priceDelta": 80
+      }
+    ],
+    "imageQuery": "dark perfume bottle smoke",
+    "images": [
+      "/fold/fd-grm-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 138
+  },
+  {
+    "id": "fd-grm-02",
+    "slug": "soller-figa-eau-de-toilette",
+    "name": "Figa Eau de Toilette",
+    "brand": "Sóller",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Fragrance",
+    "price": 115,
+    "description": "Green fig leaves crushed between your fingers, milky ripe fig and a breeze off the sea: Figa is the north coast of Mallorca in August. Sea salt and bergamot keep it bright, while a soft cedar and coconut base stays close to sun-warmed skin. Light enough to spray on after a swim, it fades gently by evening.",
+    "details": [
+      "Top: bergamot, sea salt",
+      "Heart: fig leaf, fig milk, jasmine",
+      "Base: cedar, coconut, white musk",
+      "Eau de toilette, 10% concentration",
+      "Ribbed glass bottle with olive-wood cap",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "eau de toilette",
+        "glass",
+        "olive wood"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "clear glass",
+        "olive wood"
+      ],
+      "useCase": [
+        "summer days",
+        "vacation"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "everyday"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "fig",
+      "salty",
+      "fresh",
+      "made in spain"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-02-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      },
+      {
+        "id": "fd-grm-02-100-ml",
+        "label": "100 ml",
+        "inStock": true,
+        "priceDelta": 55
+      }
+    ],
+    "imageQuery": "perfume bottle green leaves",
+    "images": [
+      "/fold/fd-grm-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 211,
+    "bestseller": true
+  },
+  {
+    "id": "fd-grm-03",
+    "slug": "ferrant-sauna-eau-de-parfum",
+    "name": "Sauna Eau de Parfum",
+    "brand": "Ferrant",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Fragrance",
+    "price": 150,
+    "description": "A cedar-lined sauna on a lake in the Laurentians: hot wood, birch leaves thrown on the stones, a little pine resin and woodsmoke drifting in from outside. It is dry, woody and clean, with a warmth that sits somewhere between a flannel shirt and a campfire the morning after. Wears well with wool, fleece and waxed cotton.",
+    "details": [
+      "Top: birch leaf, juniper",
+      "Heart: hot cedar, pine resin",
+      "Base: guaiac wood, vetiver, smoke",
+      "Eau de parfum, 15% concentration",
+      "Amber glass bottle with turned ash cap",
+      "Made in Montreal"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "heritage-workwear"
+      ],
+      "material": [
+        "eau de parfum",
+        "amber glass",
+        "ash wood"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "amber"
+      ],
+      "useCase": [
+        "daily wear",
+        "cold weather"
+      ],
+      "occasion": [
+        "camping",
+        "everyday",
+        "weekend"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "woody",
+      "cedar",
+      "campfire",
+      "made in canada"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-03-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      },
+      {
+        "id": "fd-grm-03-100-ml",
+        "label": "100 ml",
+        "inStock": false,
+        "priceDelta": 70
+      }
+    ],
+    "imageQuery": "amber glass perfume bottle wood",
+    "images": [
+      "/fold/fd-grm-03.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 384,
+    "bestseller": true
+  },
+  {
+    "id": "fd-grm-04",
+    "slug": "ferrant-pierre-mouillee-eau-de-parfum",
+    "name": "Pierre Mouillée Eau de Parfum",
+    "brand": "Ferrant",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Fragrance",
+    "price": 160,
+    "description": "Wet stone after rain, a bar of plain white soap and cool iris: Pierre Mouillée is clean without smelling of laundry. Mineral and softly powdery at once, it dries down to a pale musk that sits close and never announces itself. It goes with a white shirt, grey wool and a day with nothing extra in it.",
+    "details": [
+      "Top: aldehydes, mineral accord",
+      "Heart: orris butter, violet leaf",
+      "Base: white musk, ambrette, cashmere wood",
+      "Eau de parfum, 15% concentration",
+      "Frosted glass bottle, unprinted, label on the base",
+      "Made in Montreal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "eau de parfum",
+        "frosted glass"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "frosted white",
+        "stone grey"
+      ],
+      "useCase": [
+        "daily wear",
+        "work"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "date night"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "clean",
+      "iris",
+      "skin scent",
+      "made in canada"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-04-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      },
+      {
+        "id": "fd-grm-04-100-ml",
+        "label": "100 ml",
+        "inStock": true,
+        "priceDelta": 75
+      }
+    ],
+    "imageQuery": "clear perfume bottle white background",
+    "images": [
+      "/fold/fd-grm-04.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 72,
+    "new": true
+  },
+  {
+    "id": "fd-grm-05",
+    "slug": "hedda-vang-rosehage-eau-de-parfum",
+    "name": "Rosehage Eau de Parfum",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Fragrance & grooming",
+    "subcategory": "Fragrance",
+    "price": 135,
+    "compareAtPrice": 165,
+    "description": "Rosehage means rose garden, and this is one in June: dewy Damask rose, orange blossom and neroli over a soft, faintly powdery musk. It is pretty and a little old-fashioned in the best way, like a hand-tied bouquet left on a cotton tablecloth. Wear it with broderie, gingham and washed silk.",
+    "details": [
+      "Top: neroli, pink pepper",
+      "Heart: Damask rose, orange blossom",
+      "Base: soft musk, sandalwood",
+      "Eau de parfum, 16% concentration",
+      "Blush glass bottle tied with a cotton ribbon",
+      "Made in France"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "eau de parfum",
+        "glass"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "blush pink"
+      ],
+      "useCase": [
+        "daily wear",
+        "special occasions"
+      ],
+      "occasion": [
+        "wedding guest",
+        "date night",
+        "everyday"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "rose",
+      "floral",
+      "neroli",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-05-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      },
+      {
+        "id": "fd-grm-05-100-ml",
+        "label": "100 ml",
+        "inStock": true,
+        "priceDelta": 65
+      }
+    ],
+    "imageQuery": "pink rose perfume bottle flowers",
+    "images": [
+      "/fold/fd-grm-05.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 156
+  },
+  {
+    "id": "fd-grm-06",
+    "slug": "birkenstock-rich-face-cream",
+    "name": "Rich Face Cream",
+    "brand": "Birkenstock",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Skincare",
+    "price": 55,
+    "description": "A rich face cream built on cork oil from the same cork oak bark Birkenstock uses in its footbeds, with shea butter and squalane for dry or tired skin. It sinks in slowly and leaves skin soft rather than shiny, which makes it a good last step at night or before heading out into winter wind. Plain white tube, short ingredient list, no fuss.",
+    "details": [
+      "Key ingredients: cork oil, shea butter, squalane, hyaluronic acid",
+      "For dry and normal skin",
+      "50 ml",
+      "Vegan; no added synthetic fragrance",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cork oil",
+        "shea butter"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white"
+      ],
+      "useCase": [
+        "dry skin",
+        "night routine"
+      ],
+      "occasion": [
+        "everyday",
+        "travel"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "vegan",
+      "cork oil",
+      "dry skin",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-06-50-ml",
+        "label": "50 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white face cream tube minimal",
+    "images": [
+      "/fold/fd-grm-06.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 246
+  },
+  {
+    "id": "fd-grm-07",
+    "slug": "birkenstock-soothing-foot-balm",
+    "name": "Soothing Foot Balm",
+    "brand": "Birkenstock",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Skincare",
+    "price": 28,
+    "description": "A thick, cooling balm for feet that spend summer in sandals or long days on the trail: cork oil and shea soften rough heels while menthol and rosemary leave a clean, tingly finish. Massage it in after a day on hot pavement or a long hike, pull on socks overnight and the difference shows by morning.",
+    "details": [
+      "Key ingredients: cork oil, shea butter, 10% urea, menthol",
+      "100 ml tube",
+      "Vegan",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "cork oil",
+        "shea butter"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white",
+        "cork"
+      ],
+      "useCase": [
+        "foot care",
+        "after hiking",
+        "sandal season"
+      ],
+      "occasion": [
+        "beach",
+        "hiking",
+        "travel"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "vegan",
+      "foot care",
+      "cooling",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-07-100-ml",
+        "label": "100 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "foot balm tube sandals",
+    "images": [
+      "/fold/fd-grm-07.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 182
+  },
+  {
+    "id": "fd-grm-08",
+    "slug": "snow-peak-hinoki-camp-soap",
+    "name": "Hinoki Camp Soap",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Skincare",
+    "price": 22,
+    "description": "A firm cold-process soap bar scented with hinoki cypress, the pale wood of Japanese bathhouses, and a little yuzu peel. It lathers in cold water, is plant-based and biodegradable, and travels in a vented aluminum tin that clips to a pack. Smells like a forest bath at the end of a long trail day.",
+    "details": [
+      "Olive, coconut and rice bran oils; hinoki and yuzu essential oils",
+      "120 g bar with aluminum travel tin",
+      "Biodegradable; use at least 200 ft from lakes and streams",
+      "Made in Niigata, Japan"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "plant oils",
+        "aluminum tin"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "natural",
+        "brushed aluminum"
+      ],
+      "useCase": [
+        "camping",
+        "travel",
+        "everyday washing"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "camp",
+      "biodegradable",
+      "hinoki",
+      "made in japan"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-08-120-g",
+        "label": "120 g",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "handmade soap bar wood",
+    "images": [
+      "/fold/fd-grm-08.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 64,
+    "new": true
+  },
+  {
+    "id": "fd-grm-09",
+    "slug": "soller-formentor-dry-body-oil",
+    "name": "Formentor Dry Body Oil",
+    "brand": "Sóller",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Skincare",
+    "price": 48,
+    "compareAtPrice": 58,
+    "description": "A light dry oil of sweet almond, apricot kernel and sea buckthorn that leaves skin with a soft golden sheen after sun and salt water. It smells faintly of orange blossom and warm sand, absorbs in a minute and won't mark a linen shirt. Spray it on legs and shoulders at the end of a beach day.",
+    "details": [
+      "Sweet almond, apricot kernel and sea buckthorn oils, vitamin E",
+      "100 ml glass spray bottle",
+      "Not a sunscreen; use after sun",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "romantic-boho"
+      ],
+      "material": [
+        "plant oils",
+        "glass"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "golden amber"
+      ],
+      "useCase": [
+        "after sun",
+        "vacation"
+      ],
+      "occasion": [
+        "beach",
+        "travel"
+      ],
+      "season": [
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "after sun",
+      "body oil",
+      "orange blossom",
+      "made in spain"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-09-100-ml",
+        "label": "100 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "body oil dropper bottle skin",
+    "images": [
+      "/fold/fd-grm-09.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 97
+  },
+  {
+    "id": "fd-grm-10",
+    "slug": "ferrant-fixatif-matte-clay",
+    "name": "Fixatif Matte Clay",
+    "brand": "Ferrant",
+    "department": "unisex",
+    "category": "Fragrance & grooming",
+    "subcategory": "Hair",
+    "price": 35,
+    "description": "A firm, dry-finish hair clay with kaolin and beeswax for messy texture, crops and anything that should look effortless but stay put. It warms between your palms, gives strong hold with zero shine and washes out in one shampoo. Lightly scented with cedar and black tea that fades within the hour.",
+    "details": [
+      "Strong hold, matte finish",
+      "Kaolin and bentonite clays, beeswax, castor oil",
+      "75 ml amber glass jar with aluminum lid",
+      "Made in Montreal"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear"
+      ],
+      "material": [
+        "clay",
+        "beeswax"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "amber"
+      ],
+      "useCase": [
+        "textured styles",
+        "short hair"
+      ],
+      "occasion": [
+        "everyday",
+        "night out"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "matte",
+      "strong hold",
+      "texture",
+      "made in canada"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-10-75-ml",
+        "label": "75 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "hair clay jar amber glass",
+    "images": [
+      "/fold/fd-grm-10.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 203
+  },
+  {
+    "id": "fd-grm-11",
+    "slug": "hedda-vang-rose-water-hair-mist",
+    "name": "Rose Water Hair Mist",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Fragrance & grooming",
+    "subcategory": "Hair",
+    "price": 38,
+    "description": "A fine hair mist of rose water and camellia oil that softens frizz, adds a little shine and leaves hair smelling of Rosehage, the house rose and neroli scent. Spritz it through loose waves, braids or a ribboned half-up style whenever it needs freshening. Light enough not to weigh fine hair down.",
+    "details": [
+      "Rose water, camellia oil, glycerin",
+      "100 ml glass spray bottle",
+      "Alcohol-free",
+      "Made in France"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "rose water",
+        "camellia oil"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "blush pink"
+      ],
+      "useCase": [
+        "frizz control",
+        "refreshing hair"
+      ],
+      "occasion": [
+        "everyday",
+        "festival",
+        "wedding guest"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "rose",
+      "alcohol free",
+      "frizz",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-11-100-ml",
+        "label": "100 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rose water spray bottle hair",
+    "images": [
+      "/fold/fd-grm-11.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 38
+  },
+  {
+    "id": "fd-grm-12",
+    "slug": "cranmore-bay-rum-hair-tonic",
+    "name": "Bay Rum Hair Tonic",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Fragrance & grooming",
+    "subcategory": "Hair",
+    "price": 28,
+    "description": "The barbershop tonic that used to sit on every bathroom shelf: a light, non-greasy tonic scented with bay leaf, clove and lime. Comb it through damp hair for a neat side part with soft hold and a healthy shine, or splash a little on as aftershave. Crisp, clean and a bit old school, like a navy blazer.",
+    "details": [
+      "Light hold, natural shine",
+      "Bay leaf oil, clove, lime, witch hazel",
+      "200 ml glass bottle with cork stopper",
+      "Made in Rhode Island"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "bay leaf oil",
+        "witch hazel"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "amber"
+      ],
+      "useCase": [
+        "side part",
+        "daily grooming"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "wedding guest"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "bay rum",
+      "barbershop",
+      "made in usa",
+      "classic"
+    ],
+    "variants": [
+      {
+        "id": "fd-grm-12-200-ml",
+        "label": "200 ml",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "barber hair tonic bottle",
+    "images": [
+      "/fold/fd-grm-12.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 52
+  }
+]

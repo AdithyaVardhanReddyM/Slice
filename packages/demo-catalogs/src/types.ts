@@ -80,6 +80,16 @@ export interface StoreNavGroup {
   subcategories: string[];
 }
 
+/** Multi-brand stores: the labels the store carries, shown on brand pages. */
+export interface StoreBrand {
+  name: string;
+  slug: string;
+  /** City / country the label is based in: "Lisbon, Portugal". */
+  origin: string;
+  /** Merchant copy for the brand page, 2–3 sentences. */
+  description: string;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -88,7 +98,12 @@ export interface Store {
   currency: "USD";
   /** The store's style axis; every product's `attributes.style` draws from it. */
   styles: { id: string; label: string; description: string }[];
+  /** Home stores. */
   rooms?: string[];
+  /** Multi-brand stores; every product's `brand` is one of these names. */
+  brands?: StoreBrand[];
+  /** Fashion stores: which `department` values the store sells. */
+  departments?: Product["department"][];
   nav: StoreNavGroup[];
 }
 

@@ -112,8 +112,10 @@ Realistic reference: END. / SSENSE / a regional multi-brand retailer. Carries re
   Patagonia, Dr. Martens, Birkenstock.
 - **~8 real but niche brands**, may or may not be in Qloo: Norse Projects, Veja, Arket,
   Snow Peak, Salomon, Studio Nicholson, Pangaia, Kapital.
-- **~8 fictional new labels**, definitely not in Qloo, each with a clear identity
-  (e.g. a Lisbon knitwear label, a Seoul streetwear label, a Portland workwear label).
+- **~8 fictional new labels**, definitely not in Qloo, each with a clear identity:
+  Malha Lisboa (Lisbon knitwear), SEOM (Seoul streetwear), Burnside Canvas (Portland
+  workwear), Hedda Vang (Oslo romantic womenswear), Asche (Berlin all-black), Cranmore
+  (New England ivy), Sóller (Mallorca resort linen), Ferrant (Montreal fragrance).
 
 The agent must give equally good recommendations across all three groups. If results
 cluster on the well-known brands, the pipeline is leaning on brand and that is a bug.
@@ -172,4 +174,8 @@ Coverage rule: every style appears in Tops, Bottoms, Outerwear, Footwear and Acc
 4. **Taste personas** `packages/demo-catalogs/personas.json`: the eight profiles above
    (questionnaire answers + the styles/products they should land on). These become the
    regression set for tuning the widget's recommendation quality.
-5. **Fold** (store 2): same package and app, under `/fold`.
+5. **Fold** (store 2) ✅: same package and app, under `/fold`. 180 products in
+   `src/fold/`, brands and departments in `store.json`; the validator also checks brand
+   vocabulary, departments, occasion/season, and that fictional labels are at least 30%
+   of the catalog (they're 54%). Pages: home, department (`/fold/shop?dept=women`),
+   category, product, labels A–Z and per-label pages, the ten style edits, search, bag.

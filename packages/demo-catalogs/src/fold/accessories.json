@@ -1,0 +1,1529 @@
+[
+  {
+    "id": "fd-acc-01",
+    "slug": "carhartt-wip-acrylic-watch-hat",
+    "name": "Acrylic Watch Hat",
+    "brand": "Carhartt WIP",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Hats",
+    "price": 28,
+    "description": "The rib-knit beanie Carhartt WIP has made for years: a fine acrylic knit with a deep fold-up cuff and the square woven label stitched on the front. It sits short and snug above the ears or pulls down on cold mornings, and goes as easily with a Detroit jacket as with an oversized nylon puffer. Holds its shape season after season and shrugs off the washing machine.",
+    "details": [
+      "100% acrylic rib knit",
+      "Deep fold-up cuff with woven square label",
+      "One size; stretches to fit most heads",
+      "Machine wash cold, dry flat"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "heritage-workwear"
+      ],
+      "material": [
+        "acrylic"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "black",
+        "hamilton brown",
+        "dark navy"
+      ],
+      "useCase": [
+        "cold days",
+        "commute"
+      ],
+      "occasion": [
+        "everyday",
+        "commute",
+        "weekend"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "rib knit",
+      "cuffed beanie",
+      "gift",
+      "classic"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-01-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-01-hamilton-brown",
+        "label": "Hamilton Brown",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-01-dark-navy",
+        "label": "Dark Navy",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt wip beanie black",
+    "images": [
+      "/fold/fd-acc-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 1140,
+    "bestseller": true
+  },
+  {
+    "id": "fd-acc-02",
+    "slug": "nike-club-unstructured-futura-wash-cap",
+    "name": "Club Unstructured Futura Wash Cap",
+    "brand": "Nike",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Hats",
+    "price": 28,
+    "description": "A low-profile six-panel cap in washed cotton twill with an unstructured crown that folds flat into a back pocket. The curved brim and small embroidered Swoosh keep it sporty without shouting, and the enzyme wash gives the color a soft, already-worn fade. Wear it on a run to the courts, to the gym or with a hoodie on a slow Sunday.",
+    "details": [
+      "100% cotton twill, enzyme washed",
+      "Unstructured six-panel crown, pre-curved brim",
+      "Adjustable strap with metal tri-glide",
+      "One size",
+      "Hand wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "streetwear"
+      ],
+      "material": [
+        "cotton twill"
+      ],
+      "colorFamily": [
+        "white",
+        "black"
+      ],
+      "colors": [
+        "white",
+        "black",
+        "university red"
+      ],
+      "useCase": [
+        "sun cover",
+        "training",
+        "bad hair days"
+      ],
+      "occasion": [
+        "everyday",
+        "gym",
+        "running"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "washed cotton",
+      "adjustable",
+      "low profile",
+      "dad cap"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-02-white",
+        "label": "White",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-02-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-02-university-red",
+        "label": "University Red",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "white nike cap washed cotton",
+    "images": [
+      "/fold/fd-acc-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 640
+  },
+  {
+    "id": "fd-acc-03",
+    "slug": "patagonia-p-6-logo-trucker-hat",
+    "name": "P-6 Logo Trucker Hat",
+    "brand": "Patagonia",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Hats",
+    "price": 38,
+    "description": "A mid-crown trucker with a structured organic-cotton canvas front, a breathable mesh back and the P-6 mountain logo on a stitched patch. The snapback fits most heads and the mesh keeps air moving on hot trail days, then it lives on the dashboard all summer. Earthy and slightly faded-looking from the start, it belongs with a fleece and a pair of trail runners.",
+    "details": [
+      "Front panels: organic cotton canvas; back: recycled polyester mesh",
+      "Mid crown, pre-curved brim, snapback closure",
+      "Embroidered P-6 logo patch",
+      "One size",
+      "Fair Trade Certified sewn"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "organic cotton canvas",
+        "recycled polyester mesh"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "sage khaki",
+        "ink black",
+        "forge grey"
+      ],
+      "useCase": [
+        "trail days",
+        "road trips",
+        "sun cover"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "weekend"
+      ],
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "trucker",
+      "recycled",
+      "snapback",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-03-sage-khaki",
+        "label": "Sage Khaki",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-03-ink-black",
+        "label": "Ink Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-03-forge-grey",
+        "label": "Forge Grey",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "patagonia trucker hat mesh",
+    "images": [
+      "/fold/fd-acc-03.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 820
+  },
+  {
+    "id": "fd-acc-04",
+    "slug": "seom-fuzz-bucket-hat",
+    "name": "Fuzz Bucket Hat",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Hats",
+    "price": 55,
+    "description": "A deep-crowned bucket hat in shaggy faux fur, the kind you remember from early-2000s music videos, with a short floppy brim and a small rubber SEOM tab on the side. It is warm, a little absurd and looks best with a cropped puffer and wide nylon cargos. Lilac and baby blue for the brave, black for everyone else.",
+    "details": [
+      "Shell: 100% polyester faux fur; lining: cotton",
+      "Deep crown, 2 in (5 cm) soft brim",
+      "Head circumference 23 in (58 cm)",
+      "Hand wash cold, brush when dry",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "faux fur",
+        "cotton"
+      ],
+      "colorFamily": [
+        "pastel",
+        "black"
+      ],
+      "colors": [
+        "lilac",
+        "baby blue",
+        "black"
+      ],
+      "useCase": [
+        "cold days",
+        "statement outfits"
+      ],
+      "occasion": [
+        "night out",
+        "festival",
+        "weekend"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "faux fur",
+      "statement",
+      "y2k",
+      "bucket hat"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-04-lilac",
+        "label": "Lilac",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-04-baby-blue",
+        "label": "Baby Blue",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-04-black",
+        "label": "Black",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "fuzzy faux fur bucket hat",
+    "images": [
+      "/fold/fd-acc-04.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 86,
+    "new": true
+  },
+  {
+    "id": "fd-acc-05",
+    "slug": "soller-deia-raffia-sun-hat",
+    "name": "Deià Raffia Sun Hat",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Accessories",
+    "subcategory": "Hats",
+    "price": 75,
+    "description": "A wide-brimmed sun hat hand-braided from natural raffia near Deià, with a soft, slightly wavy brim and a cream cotton band tied at the back. It packs flat in a suitcase and springs back, gives real shade over a long lunch by the sea, and looks right with a linen shirt dress or a striped swimsuit. The braid is a little irregular because it is made by hand.",
+    "details": [
+      "100% natural raffia, hand-braided",
+      "Brim 4.3 in (11 cm)",
+      "Inner cotton tie to adjust the fit",
+      "Packable; reshape with a little steam",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "romantic-boho"
+      ],
+      "material": [
+        "raffia",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "natural",
+        "cream"
+      ],
+      "useCase": [
+        "sun cover",
+        "vacation"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "wedding guest"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "raffia",
+      "handmade",
+      "made in spain",
+      "packable"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-05-s-m",
+        "label": "S/M",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-05-m-l",
+        "label": "M/L",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "wide brim raffia sun hat woman",
+    "images": [
+      "/fold/fd-acc-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 140
+  },
+  {
+    "id": "fd-acc-06",
+    "slug": "seom-glint-sunglasses",
+    "name": "Glint Sunglasses",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Eyewear",
+    "price": 120,
+    "description": "Narrow wraparound sunglasses with a single curved shield lens and slim chrome temples, drawn after the sports shades of 2001. The smoke lens has a faint blue mirror, so they read shiny and a bit sci-fi under club lights or hard afternoon sun. Wear them with a baby tee and low-slung cargos.",
+    "details": [
+      "Polycarbonate shield lens, 100% UV400 protection",
+      "Stainless steel temples with rubber tips",
+      "Width 140 mm; suits narrow to medium faces",
+      "Microfiber pouch included",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "polycarbonate",
+        "stainless steel"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "chrome",
+        "smoke blue mirror",
+        "black"
+      ],
+      "useCase": [
+        "sunny days",
+        "statement outfits"
+      ],
+      "occasion": [
+        "festival",
+        "night out",
+        "everyday"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "shield",
+      "wraparound",
+      "uv400",
+      "y2k"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-06-chrome-smoke-mirror",
+        "label": "Chrome / Smoke Mirror",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-06-black-smoke",
+        "label": "Black / Smoke",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "futuristic shield sunglasses fashion",
+    "images": [
+      "/fold/fd-acc-06.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 58,
+    "new": true
+  },
+  {
+    "id": "fd-acc-07",
+    "slug": "asche-kreis-round-sunglasses",
+    "name": "Kreis Round Sunglasses",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Eyewear",
+    "price": 185,
+    "description": "Small, perfectly round sunglasses in thick black acetate with near-black lenses and heavy silver rivets at the hinges. They sit close to the face and give nothing away, which is the point: with a long black coat or a draped jersey top they finish an all-black look, the hardware the only shine. Handmade in Germany and built to last decades.",
+    "details": [
+      "Hand-polished 6 mm acetate",
+      "Category 3 lenses, 100% UV protection",
+      "Lens 46 mm, bridge 22 mm, temples 145 mm",
+      "Silver-finish rivets, five-barrel hinges",
+      "Black leather hard case included",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "acetate",
+        "metal hardware"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black",
+        "graphite lens",
+        "deep grey"
+      ],
+      "useCase": [
+        "sunny days",
+        "city"
+      ],
+      "occasion": [
+        "night out",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "acetate",
+      "round frame",
+      "handmade",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-07-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-07-deep-grey-translucent",
+        "label": "Deep Grey Translucent",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "round black acetate sunglasses",
+    "images": [
+      "/fold/fd-acc-07.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 64
+  },
+  {
+    "id": "fd-acc-08",
+    "slug": "arket-acetate-d-frame-sunglasses",
+    "name": "Acetate D-Frame Sunglasses",
+    "brand": "Arket",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Eyewear",
+    "price": 95,
+    "compareAtPrice": 125,
+    "description": "A soft D-shaped frame in recycled acetate, a little thick at the brow and rounded at the corners, with polarized bottle-green lenses. There is no visible logo, just a clean frame that suits most faces and works with a navy overcoat as well as a plain white tee. Light enough to forget you are wearing them.",
+    "details": [
+      "Recycled acetate frame",
+      "Polarized category 3 lenses, 100% UV400 protection",
+      "Lens 50 mm, bridge 20 mm, temples 145 mm",
+      "Recycled cotton pouch included"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "recycled acetate"
+      ],
+      "colorFamily": [
+        "black",
+        "neutral"
+      ],
+      "colors": [
+        "black",
+        "honey tortoise",
+        "clear grey"
+      ],
+      "useCase": [
+        "sunny days",
+        "driving",
+        "city"
+      ],
+      "occasion": [
+        "everyday",
+        "travel",
+        "commute"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "polarized",
+      "no logo",
+      "recycled",
+      "classic shape"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-08-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-08-honey-tortoise",
+        "label": "Honey Tortoise",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-08-clear-grey",
+        "label": "Clear Grey",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "tortoiseshell d frame sunglasses",
+    "images": [
+      "/fold/fd-acc-08.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 210
+  },
+  {
+    "id": "fd-acc-09",
+    "slug": "asche-kette-curb-chain",
+    "name": "Kette Curb Chain",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Jewelry",
+    "price": 195,
+    "description": "A heavy curb chain in solid sterling silver, oxidized so the link edges catch the light while the recesses stay dark. It lies flat at the collarbone, closes with a chunky lobster clasp and only looks better as it scuffs. Worn alone over a black tee or layered with a finer chain, it adds weight and a little menace to an all-black outfit.",
+    "details": [
+      "925 sterling silver, oxidized finish",
+      "7 mm curb links; approx. 48 g at 20 in",
+      "Oversized lobster clasp",
+      "Polish with a dry cloth; avoid silver dip to keep the oxidization",
+      "Made in Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic",
+        "streetwear"
+      ],
+      "material": [
+        "sterling silver"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "oxidized silver"
+      ],
+      "useCase": [
+        "layering",
+        "gifting"
+      ],
+      "occasion": [
+        "night out",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "sterling silver",
+      "chain",
+      "layering",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-09-18-in",
+        "label": "18 in",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-09-20-in",
+        "label": "20 in",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-09-22-in",
+        "label": "22 in",
+        "inStock": true,
+        "priceDelta": 15
+      }
+    ],
+    "imageQuery": "silver curb chain necklace man",
+    "images": [
+      "/fold/fd-acc-09.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 132
+  },
+  {
+    "id": "fd-acc-10",
+    "slug": "asche-nagel-band-ring",
+    "name": "Nagel Band Ring",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Jewelry",
+    "price": 140,
+    "description": "A wide, flat band in sterling silver with a hand-hammered outer face and a deep blackened groove around the middle, like a nail driven through metal. It is heavy for its size and sits squarely on the finger, so one is enough. Pairs with the Kette chain or a stack of plain bands for a moody, hardware-heavy look.",
+    "details": [
+      "925 sterling silver, oxidized groove",
+      "Width 8 mm, thickness 2.5 mm",
+      "Hand-hammered and finished in Berlin",
+      "US ring sizes 6–11",
+      "Comes in a black recycled-card box"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "sterling silver"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "oxidized silver"
+      ],
+      "useCase": [
+        "stacking",
+        "gifting"
+      ],
+      "occasion": [
+        "night out",
+        "everyday",
+        "date night"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "sterling silver",
+      "hammered",
+      "handmade",
+      "ring"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-10-us-6",
+        "label": "US 6",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-10-us-7",
+        "label": "US 7",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-10-us-8",
+        "label": "US 8",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-10-us-9",
+        "label": "US 9",
+        "inStock": false
+      },
+      {
+        "id": "fd-acc-10-us-10",
+        "label": "US 10",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-10-us-11",
+        "label": "US 11",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "hammered silver band ring",
+    "images": [
+      "/fold/fd-acc-10.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 47
+  },
+  {
+    "id": "fd-acc-11",
+    "slug": "hedda-vang-sigrid-pearl-drop-earrings",
+    "name": "Sigrid Pearl Drop Earrings",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Accessories",
+    "subcategory": "Jewelry",
+    "price": 85,
+    "description": "Single freshwater pearls, each a little irregular, hanging from small gold-plated hoops so they swing when you turn your head. They glow softly against a puff-sleeved blouse and are delicate enough for every day, dressy enough for a summer wedding. No two pairs match exactly.",
+    "details": [
+      "Freshwater pearls, approx. 8–9 mm",
+      "18k gold plating over sterling silver hoops, 12 mm",
+      "Hinged hoop closure; drop length 1.1 in (28 mm)",
+      "Keep away from perfume; wipe with a soft cloth",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "preppy-ivy"
+      ],
+      "material": [
+        "freshwater pearl",
+        "gold-plated sterling silver"
+      ],
+      "colorFamily": [
+        "white",
+        "warm"
+      ],
+      "colors": [
+        "cream pearl",
+        "gold"
+      ],
+      "useCase": [
+        "gifting",
+        "special occasions"
+      ],
+      "occasion": [
+        "wedding guest",
+        "date night",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pearl",
+      "gold plated",
+      "gift",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-11-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pearl drop earrings woman closeup",
+    "images": [
+      "/fold/fd-acc-11.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 193,
+    "bestseller": true
+  },
+  {
+    "id": "fd-acc-12",
+    "slug": "soller-cala-tuent-shell-necklace",
+    "name": "Cala Tuent Shell Necklace",
+    "brand": "Sóller",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Jewelry",
+    "price": 45,
+    "description": "Small cowrie shells and hand-cut coconut beads strung on a waxed cotton cord, finished with a sliding knot so it sits at the collarbone or a little lower. It is light, happy in salt water and looks right on sun-browned skin with an open linen shirt. The kind of thing you forget to take off all summer.",
+    "details": [
+      "Cowrie shells, coconut shell beads, waxed cotton cord",
+      "Adjustable 16–22 in with sliding knot",
+      "Fine to swim in; rinse in fresh water",
+      "Strung by hand in Mallorca"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "romantic-boho"
+      ],
+      "material": [
+        "shell",
+        "coconut",
+        "waxed cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "natural",
+        "sand",
+        "white"
+      ],
+      "useCase": [
+        "vacation",
+        "layering"
+      ],
+      "occasion": [
+        "beach",
+        "festival",
+        "travel"
+      ],
+      "season": [
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "shell",
+      "handmade",
+      "adjustable",
+      "made in spain"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-12-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cowrie shell cord necklace",
+    "images": [
+      "/fold/fd-acc-12.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 39,
+    "new": true
+  },
+  {
+    "id": "fd-acc-13",
+    "slug": "burnside-canvas-hawthorne-bridle-belt",
+    "name": "Hawthorne Bridle Belt",
+    "brand": "Burnside Canvas",
+    "department": "men",
+    "category": "Accessories",
+    "subcategory": "Belts",
+    "price": 95,
+    "description": "A 1.5-inch belt cut from a single strip of 10-ounce bridle leather, with a solid brass roller buckle and hand-burnished edges. It starts stiff and a little bright, then darkens and shapes to your waist over months with raw denim and double-knee work pants. Chicago screws hold the buckle, so it can be swapped or the strap replaced instead of thrown out.",
+    "details": [
+      "10 oz vegetable-tanned bridle leather, 1.5 in (38 mm) wide",
+      "Solid brass roller buckle",
+      "Chicago screws for easy repair",
+      "Order your trouser waist size",
+      "Cut and finished in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "bridle leather",
+        "solid brass"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "dark brown",
+        "brass"
+      ],
+      "useCase": [
+        "daily wear",
+        "work"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "office"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "bridle leather",
+      "solid brass",
+      "repairable",
+      "made in usa"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-13-30",
+        "label": "30",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-13-32",
+        "label": "32",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-13-34",
+        "label": "34",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-13-36",
+        "label": "36",
+        "inStock": false
+      },
+      {
+        "id": "fd-acc-13-38",
+        "label": "38",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown leather belt brass buckle",
+    "images": [
+      "/fold/fd-acc-13.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 176
+  },
+  {
+    "id": "fd-acc-14",
+    "slug": "cranmore-kennebunk-braided-leather-belt",
+    "name": "Kennebunk Braided Leather Belt",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Accessories",
+    "subcategory": "Belts",
+    "price": 85,
+    "compareAtPrice": 105,
+    "description": "A braided belt woven by hand from strips of tan calf leather, with a polished brass buckle and a leather-wrapped keeper. The braid has give, so the prong fastens anywhere along it and it lies flat and neat under a tucked-in oxford with chinos. Summer-weight and easy, it is the belt for boat shoes and a navy blazer on a warm evening.",
+    "details": [
+      "Full-grain calf leather, hand-braided, 1.25 in (32 mm) wide",
+      "Polished solid brass buckle",
+      "Prong fastens anywhere along the braid",
+      "S fits 28–32, M 32–36, L 36–40",
+      "Made in the USA"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "coastal-resort"
+      ],
+      "material": [
+        "calf leather",
+        "solid brass"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "tan",
+        "brass"
+      ],
+      "useCase": [
+        "summer dressing",
+        "smart casual"
+      ],
+      "occasion": [
+        "weekend",
+        "office",
+        "wedding guest"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "braided",
+      "full-grain leather",
+      "solid brass",
+      "made in usa"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-14-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-14-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-14-l",
+        "label": "L",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "tan braided leather belt",
+    "images": [
+      "/fold/fd-acc-14.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 98
+  },
+  {
+    "id": "fd-acc-15",
+    "slug": "patagonia-friction-belt",
+    "name": "Friction Belt",
+    "brand": "Patagonia",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Belts",
+    "price": 40,
+    "description": "A simple 1-inch webbing belt in recycled nylon with a low-profile aluminum friction buckle that cinches at any point and stays put under a harness or a pack hip belt. It is light, dries fast and has no prong to dig in on a long day of scrambling. Clip a carabiner through it and wear it with trail pants or shorts.",
+    "details": [
+      "Recycled nylon webbing, 1 in (25 mm) wide",
+      "Anodized aluminum friction buckle",
+      "One size; trim to fit and seal the end",
+      "Fair Trade Certified sewn"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled nylon webbing",
+        "aluminum"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "black",
+        "sage khaki",
+        "basin green"
+      ],
+      "useCase": [
+        "hiking",
+        "climbing",
+        "travel"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "webbing",
+      "recycled",
+      "lightweight",
+      "quick dry"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-15-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-15-sage-khaki",
+        "label": "Sage Khaki",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-15-basin-green",
+        "label": "Basin Green",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nylon webbing belt aluminum buckle",
+    "images": [
+      "/fold/fd-acc-15.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 410
+  },
+  {
+    "id": "fd-acc-16",
+    "slug": "new-balance-performance-cotton-cushioned-crew-socks-3-pack",
+    "name": "Performance Cotton Cushioned Crew Socks (3 Pack)",
+    "brand": "New Balance",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Socks & scarves",
+    "price": 20,
+    "description": "Cotton-rich crew socks with a cushioned terry footbed, an arch compression band and a ribbed cuff that stays up through a long run or a full day on your feet. White with a grey heel and toe, they go with every pair of runners and court shoes, and the small NB at the ankle is all the branding there is. Three pairs to a pack.",
+    "details": [
+      "Cotton, polyester and spandex blend",
+      "Cushioned terry sole, heel and toe",
+      "Arch support band, breathable mesh top",
+      "M fits US men's 6–9 / women's 7–10; L fits US men's 9–12.5",
+      "Machine wash warm"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "cotton blend"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white",
+        "grey"
+      ],
+      "useCase": [
+        "running",
+        "training",
+        "daily wear"
+      ],
+      "occasion": [
+        "running",
+        "gym",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "multipack",
+      "cushioned",
+      "crew socks",
+      "breathable"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-16-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-16-l",
+        "label": "L",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white crew socks sneakers",
+    "images": [
+      "/fold/fd-acc-16.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 980
+  },
+  {
+    "id": "fd-acc-17",
+    "slug": "cranmore-stowe-argyle-socks",
+    "name": "Stowe Argyle Socks",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Accessories",
+    "subcategory": "Socks & scarves",
+    "price": 22,
+    "compareAtPrice": 28,
+    "description": "Classic argyle socks knitted in a soft lambswool and nylon blend, navy with green and cream diamonds and a fine red overcheck. They sit mid-calf, warm without bulk, and give a flash of pattern between cuffed chinos and penny loafers. Hand-linked toes keep them comfortable all day.",
+    "details": [
+      "70% lambswool, 30% nylon",
+      "Mid-calf height, hand-linked toe",
+      "One size fits US 7–12",
+      "Wool cycle or hand wash cool",
+      "Knitted in North Carolina"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "lambswool",
+        "nylon"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "navy",
+        "bottle green",
+        "cream",
+        "red"
+      ],
+      "useCase": [
+        "smart casual",
+        "cold days"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "weekend"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "argyle",
+      "lambswool",
+      "made in usa",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-17-navy",
+        "label": "Navy",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-17-camel",
+        "label": "Camel",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy argyle socks loafers",
+    "images": [
+      "/fold/fd-acc-17.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 74
+  },
+  {
+    "id": "fd-acc-18",
+    "slug": "malha-lisboa-alfama-cable-scarf",
+    "name": "Alfama Cable Scarf",
+    "brand": "Malha Lisboa",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Socks & scarves",
+    "price": 120,
+    "description": "A long scarf in undyed ecru merino, knitted with a column of fisherman cables and finished by hand at the family mill outside Lisbon. It is dense and springy, wraps twice with length to spare and has the soft, slightly lanolin handle of good wool. Wear it with a navy peacoat or a grey overcoat for the quiet end of winter dressing.",
+    "details": [
+      "100% extra-fine merino wool, 7 gauge",
+      "Approx. 79 x 11 in (200 x 28 cm)",
+      "Hand-linked edges, no fringe",
+      "Hand wash cold, dry flat",
+      "Knitted and finished in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal",
+        "preppy-ivy"
+      ],
+      "material": [
+        "merino wool"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "ecru",
+        "charcoal"
+      ],
+      "useCase": [
+        "cold days",
+        "layering"
+      ],
+      "occasion": [
+        "everyday",
+        "commute",
+        "office"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "merino",
+      "cable knit",
+      "made in portugal",
+      "hand finished"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-18-ecru",
+        "label": "Ecru",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-18-charcoal",
+        "label": "Charcoal",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "cream cable knit scarf",
+    "images": [
+      "/fold/fd-acc-18.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 61
+  },
+  {
+    "id": "fd-acc-19",
+    "slug": "kapital-fastcolor-selvedge-bandana",
+    "name": "Fastcolor Selvedge Bandana",
+    "brand": "Kapital",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Socks & scarves",
+    "price": 68,
+    "description": "A square bandana in light cotton selvedge, printed with a paisley-and-skull pattern and dyed in indigo in Kojima, so each one fades a little differently. Tie it at the neck, knot it on a bag strap or fold it into a back pocket; after a few washes it softens into something that looks like it came out of a 1950s railyard. A red selvedge line runs along one edge.",
+    "details": [
+      "100% cotton selvedge, indigo dyed",
+      "Approx. 21 x 21 in (54 x 54 cm)",
+      "Indigo will bleed in early washes; wash separately",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "streetwear"
+      ],
+      "material": [
+        "selvedge cotton"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "indigo",
+        "white"
+      ],
+      "useCase": [
+        "neckerchief",
+        "bag accent",
+        "layering"
+      ],
+      "occasion": [
+        "everyday",
+        "festival",
+        "weekend"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "indigo",
+      "selvedge",
+      "made in japan",
+      "paisley"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-19-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "indigo paisley bandana",
+    "images": [
+      "/fold/fd-acc-19.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 88
+  },
+  {
+    "id": "fd-acc-20",
+    "slug": "arket-brushed-lambswool-scarf",
+    "name": "Brushed Lambswool Scarf",
+    "brand": "Arket",
+    "department": "unisex",
+    "category": "Accessories",
+    "subcategory": "Socks & scarves",
+    "price": 58,
+    "description": "A generous scarf in pure lambswool, woven in a plain twill and lightly brushed so the surface is soft and slightly hazy. It comes in grey melange, camel and black with a short twisted fringe at both ends and no logo anywhere. Wrap it over a wool overcoat or a plain crewneck and it simply looks considered.",
+    "details": [
+      "100% lambswool, brushed twill",
+      "Approx. 75 x 14 in (190 x 35 cm), twisted fringe",
+      "Dry clean or hand wash cold",
+      "Made in Scotland"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "lambswool"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "grey melange",
+        "camel",
+        "black"
+      ],
+      "useCase": [
+        "cold days",
+        "commute"
+      ],
+      "occasion": [
+        "commute",
+        "office",
+        "everyday"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lambswool",
+      "no logo",
+      "gift",
+      "brushed"
+    ],
+    "variants": [
+      {
+        "id": "fd-acc-20-grey-melange",
+        "label": "Grey Melange",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-20-camel",
+        "label": "Camel",
+        "inStock": true
+      },
+      {
+        "id": "fd-acc-20-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "grey wool scarf man coat",
+    "images": [
+      "/fold/fd-acc-20.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 152
+  }
+]

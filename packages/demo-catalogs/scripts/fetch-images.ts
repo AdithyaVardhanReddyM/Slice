@@ -2,15 +2,19 @@
 // with the path written back into the product's `images`.
 //
 //   pnpm fetch-images marlow                      search every product without an image
+//   pnpm fetch-images fold                        (any folder under src/)
 //   pnpm fetch-images marlow --force              re-search every product
 //   pnpm fetch-images marlow --pick mw-liv-09=1234567,mw-kit-01=7654321
 //                                                 pin specific Pexels photos (ids from the photo URL)
+//   pnpm fetch-images fold --only fd-bag-02,fd-ftw-19
+//                                                 re-search just these (edit their imageQuery first)
 //
-// Search mode never reuses a photo already assigned to another product.
+// Search mode never reuses a photo already assigned to another product, and a
+// re-search never returns the photo it is replacing.
 // Needs PEXELS_API_KEY (packages/demo-catalogs/.env). Pexels photos are free to
 // use without attribution; we still record photographers in <store>/credits.json.
 
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import type { Product } from "../src/types.ts";
@@ -18,6 +22,8 @@ import type { Product } from "../src/types.ts";
 const [, , storeId = "marlow", ...flags] = process.argv;
 const force = flags.includes("--force");
 const pickArg = flags[flags.indexOf("--pick") + 1];
+const onlyArg = flags[flags.indexOf("--only") + 1];
+const only = new Set(flags.includes("--only") && onlyArg ? onlyArg.split(",").map((s) => s.trim()) : []);
 const picks = new Map<string, number>(
   flags.includes("--pick") && pickArg
     ? pickArg.split(",").map((pair) => {
@@ -38,7 +44,10 @@ const storeDir = path.join(root, "src", storeId);
 const publicDir = path.resolve(root, "..", "..", "apps", "stores", "public", storeId);
 const creditsPath = path.join(storeDir, "credits.json");
 
-const files = ["living", "bedroom", "kitchen", "lighting", "decor", "workspace", "outdoor"];
+// Every product file in the store folder (store.json and credits.json aren't products).
+const files = (await readdir(storeDir))
+  .filter((f) => f.endsWith(".json") && f !== "store.json" && f !== "credits.json")
+  .map((f) => f.replace(/\.json$/, ""));
 
 interface PexelsPhoto {
   id: number;
@@ -93,16 +102,21 @@ async function main() {
 
     for (const p of products) {
       const pinned = picks.get(p.id);
-      if (picks.size > 0 ? pinned === undefined : p.images.length > 0 && !force) continue;
+      if (picks.size > 0) {
+        if (pinned === undefined) continue;
+      } else if (only.size > 0) {
+        if (!only.has(p.id)) continue;
+      } else if (p.images.length > 0 && !force) continue;
 
       process.stdout.write(`${p.id} ${pinned ? `pin ${pinned}` : `"${p.imageQuery}"`} … `);
+      // A pinned photo may be the one already assigned; a search must not
+      // hand back the photo we're replacing.
       const previous = credits[p.id]?.pexelsId;
-      if (previous !== undefined) used.delete(previous);
+      if (pinned && previous !== undefined) used.delete(previous);
 
       const found = pinned ? await photo(pinned) : await search(p.imageQuery, used);
       if (!found) {
         console.log("no result");
-        if (previous !== undefined) used.add(previous);
         continue;
       }
       const res = await fetch(found.src.large2x);

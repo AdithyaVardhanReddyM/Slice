@@ -1,0 +1,2238 @@
+[
+  {
+    "id": "fd-out-01",
+    "slug": "carhartt-wip-detroit-jacket",
+    "name": "Detroit Jacket",
+    "brand": "Carhartt WIP",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 235,
+    "description": "Carhartt WIP's Detroit Jacket is a short, boxy work jacket in rinsed organic cotton Dearborn canvas that starts stiff and fades along the seams and pocket edges as it wears in. A corduroy collar and a quilted lining keep it on rotation from September until the first hard frost. Rugged with double-knees and boots, and just as good thrown over a hoodie with baggy denim.",
+    "details": [
+      "100% organic cotton Dearborn canvas, 12 oz",
+      "Quilted polyester lining; corduroy collar",
+      "Boxy, cropped fit; true to size",
+      "Metal snap front, zip chest pocket, two hand pockets",
+      "Machine wash cold, line dry"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "streetwear"
+      ],
+      "material": [
+        "organic cotton canvas",
+        "corduroy",
+        "polyester lining"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "hamilton brown",
+        "black rinsed"
+      ],
+      "useCase": [
+        "layering",
+        "cold mornings",
+        "workwear"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "canvas",
+      "workwear",
+      "corduroy collar",
+      "organic cotton"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-01-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-01-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-01-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-01-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-01-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt detroit jacket brown canvas",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 864,
+    "bestseller": true
+  },
+  {
+    "id": "fd-out-02",
+    "slug": "seom-halo-cropped-puffer",
+    "name": "Halo Cropped Puffer",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 195,
+    "description": "A short, high-gloss puffer that stops right at the waist and is cut wide through the body, so it sits boxy over a baby tee or a cropped hoodie. The shell is a liquid-shine recycled nylon with a stand collar that zips up past the chin and a small reflective tab at the back. Loud in metallic silver, sharp in black, and very early-2000s with low-rise cargos and slim sneakers.",
+    "details": [
+      "Shell: 100% recycled nylon ripstop, gloss finish",
+      "Fill: 120 g recycled polyester insulation",
+      "Cropped, boxy fit; hits at the natural waist",
+      "Two-way front zip, snap hand pockets",
+      "Machine wash cold on gentle, tumble dry low",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "y2k-retro"
+      ],
+      "material": [
+        "recycled nylon",
+        "recycled polyester insulation"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "metallic silver",
+        "black"
+      ],
+      "useCase": [
+        "cold nights",
+        "layering over hoodies"
+      ],
+      "occasion": [
+        "night out",
+        "campus",
+        "weekend"
+      ],
+      "fit": "oversized",
+      "season": [
+        "winter",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "cropped",
+      "puffer",
+      "metallic",
+      "recycled nylon",
+      "made in korea"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-02-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-02-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-02-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-02-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-02-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "silver cropped puffer jacket woman",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 64,
+    "new": true
+  },
+  {
+    "id": "fd-out-03",
+    "slug": "adidas-firebird-track-top",
+    "name": "Firebird Track Top",
+    "brand": "Adidas",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 95,
+    "description": "The Firebird is Adidas' archive track top, in smooth recycled tricot with the three stripes running down the sleeves and a contrast stand collar. It is cut slim through the body with ribbed cuffs and hem, so it zips up neatly over a tee and looks right with matching track pants, a pleated mini or baggy jeans. Sporty, a little retro and easy to throw on.",
+    "details": [
+      "100% recycled polyester tricot",
+      "Slim fit; size up for a looser look",
+      "Full zip with stand collar, zip hand pockets",
+      "Ribbed cuffs and hem",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "y2k-retro"
+      ],
+      "material": [
+        "recycled polyester tricot"
+      ],
+      "colorFamily": [
+        "black",
+        "white"
+      ],
+      "colors": [
+        "black",
+        "white"
+      ],
+      "useCase": [
+        "warm-ups",
+        "everyday layering"
+      ],
+      "occasion": [
+        "everyday",
+        "gym",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "track top",
+      "three stripes",
+      "archive",
+      "recycled"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-03-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-03-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-03-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-03-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-03-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "adidas firebird track jacket woman",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 942,
+    "bestseller": true
+  },
+  {
+    "id": "fd-out-04",
+    "slug": "burnside-canvas-hawthorne-waxed-chore-coat",
+    "name": "Hawthorne Waxed Chore Coat",
+    "brand": "Burnside Canvas",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 295,
+    "description": "The Hawthorne is a hip-length chore coat in 10 oz waxed cotton canvas, deep tobacco brown, with four patch pockets, a blanket-lined body and triple-stitched seams. The wax sheds drizzle and picks up creases and scuffs that make each coat look like its owner's, and the workshop will re-wax and repair it for life. Boxy and utilitarian, it goes over a flannel on a trail weekend or a hoodie in town.",
+    "details": [
+      "10 oz waxed cotton canvas, woven in the USA",
+      "Wool-blend blanket lining in body; cotton-lined sleeves",
+      "Relaxed, boxy fit; sized to layer over a sweater",
+      "Brass snaps, four patch pockets, interior map pocket",
+      "Re-wax yearly; spot clean only",
+      "Cut and sewn in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "waxed cotton canvas",
+        "wool-blend blanket lining",
+        "brass"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco brown",
+        "field olive"
+      ],
+      "useCase": [
+        "light rain",
+        "layering",
+        "outdoor work"
+      ],
+      "occasion": [
+        "everyday",
+        "camping",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "waxed canvas",
+      "chore coat",
+      "made in usa",
+      "repairable",
+      "blanket lined"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-04-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-04-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-04-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-04-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-04-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "waxed canvas chore coat brown man",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 212
+  },
+  {
+    "id": "fd-out-05",
+    "slug": "cranmore-kennebunk-barn-jacket",
+    "name": "Kennebunk Barn Jacket",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 345,
+    "compareAtPrice": 395,
+    "description": "The Kennebunk is a New England barn jacket in khaki waxed cotton with a chocolate corduroy collar and a brushed tartan flannel lining. It falls just past the hip with bellows pockets and a straight, easy shape that layers over an oxford shirt and a shetland crewneck. Crisp on day one, it softens into the kind of jacket that gets handed down.",
+    "details": [
+      "8 oz waxed cotton; 100% cotton corduroy collar",
+      "Lined in brushed cotton tartan flannel",
+      "Regular fit; room for a sweater underneath",
+      "Brass two-way zip with storm flap, snap-down bellows pockets",
+      "Re-wax when needed; do not machine wash",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "heritage-workwear"
+      ],
+      "material": [
+        "waxed cotton",
+        "corduroy",
+        "cotton flannel"
+      ],
+      "colorFamily": [
+        "earth",
+        "neutral"
+      ],
+      "colors": [
+        "khaki tan",
+        "chocolate",
+        "green tartan"
+      ],
+      "useCase": [
+        "country weekends",
+        "layering",
+        "light rain"
+      ],
+      "occasion": [
+        "weekend",
+        "campus",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "barn jacket",
+      "corduroy collar",
+      "tartan lining",
+      "waxed cotton"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-05-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-05-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-05-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-05-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-05-xxl",
+        "label": "XXL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "khaki barn jacket corduroy collar",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 156
+  },
+  {
+    "id": "fd-out-06",
+    "slug": "cranmore-hanover-varsity-jacket",
+    "name": "Hanover Varsity Jacket",
+    "brand": "Cranmore",
+    "department": "unisex",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 420,
+    "description": "A proper varsity jacket in heavy navy melton wool with cream leather sleeves, striped knit trims and a chenille letter patch on the chest. It is cut regular through the body with snap closures and a quilted satin lining, so it reads collegiate with chinos and loafers or louder over a hoodie and wide jeans. The leather softens and creases with years of wear.",
+    "details": [
+      "Body: 80% wool, 20% nylon melton, 24 oz",
+      "Sleeves: cowhide leather",
+      "Quilted satin lining; striped rib collar, cuffs and hem",
+      "Regular fit; true to size",
+      "Specialist leather clean only",
+      "Made in the USA"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "streetwear"
+      ],
+      "material": [
+        "wool melton",
+        "cowhide leather",
+        "chenille"
+      ],
+      "colorFamily": [
+        "cool",
+        "neutral"
+      ],
+      "colors": [
+        "navy",
+        "cream"
+      ],
+      "useCase": [
+        "campus",
+        "cold days"
+      ],
+      "occasion": [
+        "campus",
+        "weekend",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "varsity",
+      "melton wool",
+      "leather sleeves",
+      "chenille",
+      "made in usa"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-06-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-06-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-06-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-06-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-06-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy wool leather varsity jacket",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 88
+  },
+  {
+    "id": "fd-out-07",
+    "slug": "soller-dei-linen-chore-jacket",
+    "name": "Deià Linen Chore Jacket",
+    "brand": "Sóller",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 185,
+    "description": "An unlined chore jacket in washed European linen, garment-dyed a pale sand so it already looks a summer old. It hangs loose and boxy with three patch pockets and corozo buttons, light enough to throw over a tee on a breezy evening by the water or to pack flat for a trip. Creases are part of the look.",
+    "details": [
+      "100% European linen, 210 gsm, garment-washed",
+      "Unlined; boxy, relaxed fit",
+      "Corozo buttons, three patch pockets",
+      "Machine wash cool, line dry",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen",
+        "corozo"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "sand",
+        "sun-faded sky blue"
+      ],
+      "useCase": [
+        "warm evenings",
+        "travel",
+        "layering over tees"
+      ],
+      "occasion": [
+        "travel",
+        "beach",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "unlined",
+      "garment-dyed",
+      "made in spain",
+      "resort"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-07-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-07-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-07-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-07-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-07-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen chore jacket man summer",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 47
+  },
+  {
+    "id": "fd-out-08",
+    "slug": "hedda-vang-froya-quilted-floral-jacket",
+    "name": "Frøya Quilted Floral Jacket",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 275,
+    "description": "The Frøya is a lightweight quilted jacket in printed cotton voile, scattered with small faded roses on a cream ground and finished with a scalloped edge and a ribbon tie at the neck. It is channel-quilted over a thin cotton wadding, so it feels more like a padded blouse than a coat, and sits loose at the hip. Soft and romantic over a prairie dress, or with jeans and a broderie top.",
+    "details": [
+      "Shell and lining: 100% cotton voile",
+      "Thin cotton wadding, channel-quilted",
+      "Relaxed fit; hip length",
+      "Ribbon tie at neck, covered-button front, scalloped hem",
+      "Gentle machine wash cold, dry flat",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "cotton voile",
+        "cotton wadding"
+      ],
+      "colorFamily": [
+        "pastel",
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "faded rose",
+        "sage"
+      ],
+      "useCase": [
+        "cool spring days",
+        "layering over dresses"
+      ],
+      "occasion": [
+        "weekend",
+        "date night",
+        "everyday"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "floral",
+      "quilted",
+      "cotton voile",
+      "scalloped",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-08-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-08-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-08-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-08-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-08-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "quilted floral cotton jacket woman",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 73
+  },
+  {
+    "id": "fd-out-09",
+    "slug": "asche-rauch-washed-leather-biker",
+    "name": "Rauch Washed Leather Biker",
+    "brand": "Asche",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 540,
+    "description": "Asche's Rauch biker is cut from lambskin that is washed and tumbled until it goes soft and faintly crackled, in a black that turns almost charcoal at the creases. The asymmetric zip, belted hem and antiqued silver hardware are heavy on purpose, and the shoulders are cut a little sharp. Moody over long drape jersey with heavy boots.",
+    "details": [
+      "100% lambskin leather, washed and tumbled",
+      "Lining: 100% cupro",
+      "Regular fit with a slightly cropped body",
+      "Antiqued silver zips and buckles",
+      "Specialist leather clean only",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "lambskin leather",
+        "cupro"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black",
+        "antiqued silver"
+      ],
+      "useCase": [
+        "nights out",
+        "layering",
+        "transitional weather"
+      ],
+      "occasion": [
+        "night out",
+        "date night",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "leather",
+      "biker",
+      "silver hardware",
+      "washed",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-09-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-09-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-09-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-09-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-09-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black washed leather biker jacket woman",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 29,
+    "new": true
+  },
+  {
+    "id": "fd-out-10",
+    "slug": "levis-90s-trucker-jacket",
+    "name": "'90s Trucker Jacket",
+    "brand": "Levi's",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 110,
+    "description": "Levi's '90s Trucker takes the Type III shape and blows it out, with dropped shoulders, a roomy body and a slightly shorter length in a light vintage wash with fading at the elbows and seams. It is rigid cotton denim with pleated front panels, flap chest pockets and the red tab. Wear it over a baby tee with low-rise jeans, or with a slip skirt and slim sneakers.",
+    "details": [
+      "100% cotton denim, non-stretch",
+      "Oversized, dropped-shoulder fit",
+      "Button front, flap chest pockets, welt hand pockets",
+      "Machine wash cold, inside out"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "heritage-workwear"
+      ],
+      "material": [
+        "cotton denim"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "light vintage indigo",
+        "faded indigo"
+      ],
+      "useCase": [
+        "layering",
+        "spring evenings"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "festival"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "denim",
+      "trucker",
+      "vintage wash",
+      "oversized"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-10-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-10-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-10-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-10-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-10-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "levis oversized denim trucker jacket woman",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 681
+  },
+  {
+    "id": "fd-out-11",
+    "slug": "kapital-sashiko-boro-coverall-jacket",
+    "name": "Sashiko Boro Coverall Jacket",
+    "brand": "Kapital",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Jackets",
+    "price": 545,
+    "description": "Kapital builds this coverall jacket from hand-dyed indigo cotton, patched with scraps of older boro cloth and stitched over by hand in white sashiko thread. No two are alike: the patches, fades and running stitches change from jacket to jacket, and the indigo keeps shifting as it is worn and washed. A boxy work-coat shape with four patch pockets, it carries a whole outfit with plain trousers and a white tee.",
+    "details": [
+      "100% cotton, hand-dyed indigo with patchwork panels",
+      "Hand sashiko stitching; each piece is unique",
+      "Boxy, relaxed fit",
+      "Wooden buttons, four patch pockets",
+      "Hand wash cold separately; indigo will transfer",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "indigo cotton",
+        "sashiko thread",
+        "wood"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "indigo",
+        "faded indigo",
+        "ecru stitching"
+      ],
+      "useCase": [
+        "statement layer",
+        "everyday wear"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "indigo",
+      "sashiko",
+      "boro",
+      "made in japan",
+      "one of a kind"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-11-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-11-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-11-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-11-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-11-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "indigo boro patchwork jacket sashiko",
+    "images": [],
+    "rating": 4.9,
+    "reviewCount": 22
+  },
+  {
+    "id": "fd-out-12",
+    "slug": "asche-schatten-long-wool-coat",
+    "name": "Schatten Long Wool Coat",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 620,
+    "description": "A long single-breasted coat in heavy black boiled wool that falls to mid-calf, with a high notch lapel, concealed buttons and a deep back vent so it moves when you walk. There is no logo and almost no detail; the length and the weight do the work. It layers over a hoodie as easily as over a suit, for anyone who wears black all winter.",
+    "details": [
+      "90% virgin wool, 10% cashmere boiled wool, 680 gsm",
+      "Lining: 100% cupro",
+      "Relaxed fit; mid-calf length (125 cm on size M)",
+      "Concealed button placket, side-seam pockets",
+      "Dry clean only",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic",
+        "quiet-minimal"
+      ],
+      "material": [
+        "boiled wool",
+        "cashmere",
+        "cupro"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "cold commutes",
+        "layering over tailoring"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "night out"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "long coat",
+      "boiled wool",
+      "cashmere blend",
+      "no logo",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-12-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-12-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-12-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-12-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-12-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "long black wool coat minimal",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 58
+  },
+  {
+    "id": "fd-out-13",
+    "slug": "asche-kohle-long-leather-coat",
+    "name": "Kohle Long Leather Coat",
+    "brand": "Asche",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 650,
+    "description": "The Kohle is a long leather coat in washed black cowhide that reaches below the knee, with a wide collar, a self-tie belt and heavy silver buckles at the cuffs. The hide is tumbled to a soft, uneven matte so it looks lived-in from the first wear. Dramatic and moody over black denim and combat boots.",
+    "details": [
+      "100% cowhide leather, washed and tumbled",
+      "Lining: viscose twill",
+      "Regular fit; below-knee length",
+      "Antiqued silver cuff buckles, horn buttons",
+      "Specialist leather clean only",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "cowhide leather",
+        "viscose"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black"
+      ],
+      "useCase": [
+        "statement layer",
+        "cold nights"
+      ],
+      "occasion": [
+        "night out",
+        "date night",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "leather",
+      "long coat",
+      "belted",
+      "silver hardware"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-13-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-13-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-13-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-13-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-13-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "long black leather coat man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 17
+  },
+  {
+    "id": "fd-out-14",
+    "slug": "studio-nicholson-hayle-oversized-wool-coat",
+    "name": "Hayle Oversized Wool Coat",
+    "brand": "Studio Nicholson",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 640,
+    "description": "An oversized single-breasted overcoat in Italian wool-cashmere melton, cut long and dropped at the shoulder so it drapes rather than holds a shape. It comes in a warm undyed ecru with dark horn buttons and is half-lined for a lighter feel. Calm and considered over wide pleated trousers and a fine-gauge knit.",
+    "details": [
+      "80% wool, 20% cashmere melton, woven in Italy",
+      "Half-lined in cupro",
+      "Oversized fit with dropped shoulder; size down for a closer fit",
+      "Horn buttons, deep welt pockets",
+      "Dry clean only",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "wool",
+        "cashmere",
+        "cupro",
+        "horn"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "ecru",
+        "dark navy"
+      ],
+      "useCase": [
+        "office",
+        "city winters"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "travel"
+      ],
+      "fit": "oversized",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "overcoat",
+      "wool cashmere",
+      "italian cloth",
+      "oversized"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-14-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-14-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-14-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-14-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-14-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "oversized ecru wool coat woman",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 41
+  },
+  {
+    "id": "fd-out-15",
+    "slug": "arket-wool-blend-overcoat",
+    "name": "Wool-Blend Overcoat",
+    "brand": "Arket",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 290,
+    "compareAtPrice": 345,
+    "description": "A clean single-breasted overcoat in a recycled wool blend that falls just above the knee, with a notch lapel and a straight cut that sits neatly over a suit jacket or a heavy knit. It comes in charcoal melange or deep navy with tonal buttons and no visible branding. Simple, warm and easy to wear every day of the winter.",
+    "details": [
+      "60% recycled wool, 30% wool, 10% polyamide",
+      "Fully lined in recycled polyester",
+      "Regular fit; knee length",
+      "Three-button front, flap pockets, inside pocket",
+      "Dry clean only"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "recycled wool",
+        "wool",
+        "polyamide"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "charcoal melange",
+        "navy"
+      ],
+      "useCase": [
+        "commuting",
+        "layering over suits"
+      ],
+      "occasion": [
+        "office",
+        "commute",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "overcoat",
+      "recycled wool",
+      "tailored",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-15-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-15-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-15-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-15-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-15-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "charcoal wool overcoat man",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 233
+  },
+  {
+    "id": "fd-out-16",
+    "slug": "norse-projects-tycho-wool-car-coat",
+    "name": "Tycho Wool Car Coat",
+    "brand": "Norse Projects",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 495,
+    "description": "A short, hip-length car coat in Italian wool twill with a fly front, a small turn-down collar and a lightly padded lining for raw Nordic wind. The color is a muted espresso brown with tonal buttons, and the cut is straight and slightly roomy so a lambswool crewneck fits underneath. Functional, understated and better the closer you look.",
+    "details": [
+      "100% wool twill, woven in Italy",
+      "Lightly padded recycled polyester lining",
+      "Regular fit; hip length",
+      "Concealed fly front, slanted hand pockets",
+      "Dry clean only"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "wool twill",
+        "recycled polyester padding"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "espresso",
+        "dark navy"
+      ],
+      "useCase": [
+        "city commuting",
+        "cold wind"
+      ],
+      "occasion": [
+        "commute",
+        "office",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "car coat",
+      "italian wool",
+      "scandinavian",
+      "padded"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-16-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-16-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-16-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-16-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-16-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown wool car coat man",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 64
+  },
+  {
+    "id": "fd-out-17",
+    "slug": "malha-lisboa-alfama-crochet-trim-cardigan-coat",
+    "name": "Alfama Crochet-Trim Cardigan Coat",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 310,
+    "description": "A long knitted coat in chunky undyed cotton, edged all the way round in a wide hand-crocheted scallop trim and tied loosely at the waist. It has the weight of a blanket but breathes like a summer knit, so it covers bare shoulders on a cool evening by the sea. Soft and a little undone over a slip dress or linen trousers.",
+    "details": [
+      "100% organic cotton, 7-gauge knit",
+      "Hand-crocheted scallop trim",
+      "Relaxed fit; knee length",
+      "Open front with self-tie belt, two patch pockets",
+      "Hand wash cold, dry flat",
+      "Knitted and finished in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "coastal-resort"
+      ],
+      "material": [
+        "organic cotton",
+        "crochet"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "ecru",
+        "sand"
+      ],
+      "useCase": [
+        "cool evenings",
+        "layering over dresses",
+        "travel"
+      ],
+      "occasion": [
+        "weekend",
+        "beach",
+        "date night"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "crochet",
+      "hand-finished",
+      "organic cotton",
+      "made in portugal",
+      "cardigan coat"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-17-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-17-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-17-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-17-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-17-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "long crochet cardigan coat cream",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 18,
+    "new": true
+  },
+  {
+    "id": "fd-out-18",
+    "slug": "hedda-vang-signe-ruffle-collar-trench",
+    "name": "Signe Ruffle-Collar Trench",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Coats",
+    "price": 385,
+    "description": "A light cotton trench in pale stone with a soft ruffled collar, gently puffed sleeve heads and a rose gingham lining that shows when the belt hangs loose. It is cut close at the shoulder and flares to the knee, so it moves more like a dress than a raincoat. Romantic over a floral midi, crisp over an oxford shirt and jeans.",
+    "details": [
+      "100% cotton gabardine with water-repellent finish",
+      "Lined in cotton gingham",
+      "Regular fit; knee length",
+      "Double-breasted, tortoiseshell buttons, removable belt",
+      "Machine wash cold, line dry",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "preppy-ivy"
+      ],
+      "material": [
+        "cotton gabardine",
+        "cotton gingham"
+      ],
+      "colorFamily": [
+        "neutral",
+        "pastel"
+      ],
+      "colors": [
+        "pale stone",
+        "rose gingham"
+      ],
+      "useCase": [
+        "spring showers",
+        "layering over dresses"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "wedding guest"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "trench",
+      "ruffle",
+      "gingham",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-18-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-18-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-18-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-18-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-18-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "ruffle collar beige trench coat woman",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 52
+  },
+  {
+    "id": "fd-out-19",
+    "slug": "patagonia-classic-retro-x-fleece-jacket",
+    "name": "Classic Retro-X Fleece Jacket",
+    "brand": "Patagonia",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 195,
+    "description": "Patagonia's Retro-X is a deep-pile fleece in recycled polyester, backed with a windproof barrier membrane so it blocks a cold breeze far better than plain fleece. The pile is a natural off-white with contrast nylon trim on the chest pocket, and the cut is easy and regular. It works at a trailhead in October and over a flannel in town all winter.",
+    "details": [
+      "100% recycled polyester pile fleece",
+      "Windproof barrier membrane; recycled polyester mesh lining",
+      "Regular fit",
+      "Zip chest pocket, zippered handwarmer pockets",
+      "Machine wash cold, line dry",
+      "Fair Trade Certified sewn"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled polyester fleece",
+        "nylon trim"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "natural",
+        "dark natural"
+      ],
+      "useCase": [
+        "trailheads",
+        "cold mornings",
+        "layering"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "fleece",
+      "recycled",
+      "windproof",
+      "fair trade"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-19-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-19-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-19-l",
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-19-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-19-xxl",
+        "label": "XXL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "patagonia retro x fleece jacket",
+    "images": [],
+    "rating": 4.8,
+    "reviewCount": 1146,
+    "bestseller": true
+  },
+  {
+    "id": "fd-out-20",
+    "slug": "patagonia-torrentshell-3l-rain-jacket",
+    "name": "Torrentshell 3L Rain Jacket",
+    "brand": "Patagonia",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 180,
+    "description": "The Torrentshell is a three-layer waterproof, breathable rain shell in recycled nylon that packs into its own pocket and comes out on the first wet morning of every season. It has pit zips for venting, an adjustable hood that rolls away into the collar, and a regular fit with room for a fleece underneath. In a burnt orange that is easy to spot on the trail.",
+    "details": [
+      "3-layer H2No Performance Standard shell, 100% recycled nylon ripstop",
+      "PFC-free water-repellent finish",
+      "Regular fit; layers over a midweight fleece",
+      "Pit zips, adjustable roll-away hood, stows in hand pocket",
+      "Machine wash warm, tumble dry low",
+      "Fair Trade Certified sewn"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled nylon ripstop"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "burnt orange",
+        "black"
+      ],
+      "useCase": [
+        "rain",
+        "packable layer",
+        "travel"
+      ],
+      "occasion": [
+        "hiking",
+        "travel",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "waterproof",
+      "packable",
+      "recycled",
+      "rain shell"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-20-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-20-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-20-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-20-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-20-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "orange rain jacket woman hiking",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 724
+  },
+  {
+    "id": "fd-out-21",
+    "slug": "salomon-bonatti-waterproof-jacket",
+    "name": "Bonatti Waterproof Jacket",
+    "brand": "Salomon",
+    "department": "unisex",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 160,
+    "description": "Salomon's Bonatti is a featherweight waterproof running shell that stuffs into its own chest pocket. Fully taped seams and a 2.5-layer membrane keep rain out on a mountain run, while a close, athletic cut and elastic cuffs stop it flapping at pace. In deep black with a reflective logo, it looks just as right on the street with trail runners.",
+    "details": [
+      "2.5-layer waterproof shell, 100% polyamide",
+      "Fully taped seams; 10K/10K rating",
+      "Slim, athletic fit; size up to layer",
+      "Hood with rear volume adjuster; stows into chest pocket",
+      "Weight approx. 185 g (size M)",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "athletic"
+      ],
+      "material": [
+        "polyamide",
+        "waterproof membrane"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "deep black"
+      ],
+      "useCase": [
+        "trail running",
+        "rain",
+        "packable layer"
+      ],
+      "occasion": [
+        "running",
+        "hiking",
+        "travel"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "waterproof",
+      "running",
+      "packable",
+      "lightweight"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-21-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-21-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-21-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-21-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-21-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "salomon black waterproof running jacket",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 312
+  },
+  {
+    "id": "fd-out-22",
+    "slug": "snow-peak-light-mountain-cloth-parka",
+    "name": "Light Mountain Cloth Parka",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 395,
+    "description": "A long, roomy shell in Snow Peak's light mountain cloth, a dry, matte polyester weave that blocks wind and light rain while feeling closer to cotton than nylon. The shape is simple and boxy with a large hood, a snap-covered zip and deep pockets, in quiet olive or charcoal. Equally at home at a campsite or over tailoring on a damp city day.",
+    "details": [
+      "100% polyester light mountain cloth, water-repellent",
+      "Unlined; packs small",
+      "Relaxed, longline fit",
+      "Two-way zip under snap placket, adjustable hood",
+      "Machine wash cold, line dry",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "quiet-minimal"
+      ],
+      "material": [
+        "polyester"
+      ],
+      "colorFamily": [
+        "earth",
+        "neutral"
+      ],
+      "colors": [
+        "olive",
+        "charcoal"
+      ],
+      "useCase": [
+        "wind",
+        "light rain",
+        "camping"
+      ],
+      "occasion": [
+        "camping",
+        "commute",
+        "travel"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "shell",
+      "unlined",
+      "water-repellent",
+      "longline",
+      "made in japan"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-22-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-22-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-22-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-22-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-22-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "olive longline parka shell",
+    "images": [],
+    "rating": 4.7,
+    "reviewCount": 46
+  },
+  {
+    "id": "fd-out-23",
+    "slug": "seom-signal-packable-anorak",
+    "name": "Signal Packable Anorak",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 145,
+    "compareAtPrice": 175,
+    "description": "SEOM's Signal is a half-zip anorak in crinkly, lightweight recycled nylon, cut oversized with a big kangaroo pocket and a toggled hood. A hand-drawn graphic of a broken radio mast runs down one sleeve in reflective ink, and the whole thing packs into its own pocket. Throw it over a heavyweight tee with nylon cargos and trail runners.",
+    "details": [
+      "100% recycled nylon taffeta, water-repellent",
+      "Oversized fit; size down for a regular look",
+      "Half zip, kangaroo pocket, toggle hood and hem",
+      "Reflective sleeve print",
+      "Packs into front pocket",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled nylon"
+      ],
+      "colorFamily": [
+        "black",
+        "bold"
+      ],
+      "colors": [
+        "washed black",
+        "safety orange"
+      ],
+      "useCase": [
+        "festivals",
+        "light rain",
+        "packable layer"
+      ],
+      "occasion": [
+        "everyday",
+        "festival",
+        "hiking"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "anorak",
+      "packable",
+      "reflective",
+      "graphic",
+      "recycled nylon"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-23-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-23-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-23-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-out-23-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-23-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "oversized nylon anorak black orange",
+    "images": [],
+    "rating": 4.4,
+    "reviewCount": 39
+  },
+  {
+    "id": "fd-out-24",
+    "slug": "nike-windrunner-jacket",
+    "name": "Windrunner Jacket",
+    "brand": "Nike",
+    "department": "men",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 110,
+    "description": "Nike's Windrunner is the 1978 running jacket that never left: a woven nylon-feel shell with the signature chevron yoke across the chest, a hood that stows in the collar and elastic cuffs. It is light and wind-resistant with a mesh lining that breathes on a run or a long walk, and the regular fit layers over a hoodie. Sporty and a little retro with track pants or cargos.",
+    "details": [
+      "100% recycled polyester woven shell; mesh lining",
+      "Regular fit",
+      "Full zip; hood stows in the collar",
+      "Zip hand pockets, elastic cuffs and hem",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "streetwear"
+      ],
+      "material": [
+        "recycled polyester",
+        "mesh"
+      ],
+      "colorFamily": [
+        "black",
+        "bold"
+      ],
+      "colors": [
+        "black",
+        "white",
+        "university red"
+      ],
+      "useCase": [
+        "wind",
+        "running",
+        "layering"
+      ],
+      "occasion": [
+        "running",
+        "everyday",
+        "gym"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "windbreaker",
+      "chevron",
+      "lightweight",
+      "running"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-24-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-24-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-24-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-24-xl",
+        "label": "XL",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-24-xxl",
+        "label": "XXL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "nike windrunner jacket man",
+    "images": [],
+    "rating": 4.6,
+    "reviewCount": 893
+  },
+  {
+    "id": "fd-out-25",
+    "slug": "new-balance-impact-run-water-defy-jacket",
+    "name": "Impact Run Water Defy Jacket",
+    "brand": "New Balance",
+    "department": "women",
+    "category": "Outerwear",
+    "subcategory": "Shells & fleece",
+    "price": 130,
+    "description": "A light, water-resistant running jacket with a slim, athletic cut, a dropped back hem for coverage and reflective details for dark mornings. The fabric is a soft, quiet woven that sheds drizzle and blocks wind without rustling, and the jacket packs into its own back pocket. Sporty in a pale sea-salt grey with lime accents.",
+    "details": [
+      "100% recycled polyester woven, water-repellent finish",
+      "Slim, athletic fit",
+      "Laser-cut ventilation at back yoke",
+      "Zip back pocket doubles as a stuff sack",
+      "Reflective logo and trims",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester"
+      ],
+      "colorFamily": [
+        "neutral",
+        "bold"
+      ],
+      "colors": [
+        "sea salt grey",
+        "lime"
+      ],
+      "useCase": [
+        "early runs",
+        "drizzle",
+        "commuting"
+      ],
+      "occasion": [
+        "running",
+        "commute",
+        "gym"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "running",
+      "water-resistant",
+      "reflective",
+      "packable"
+    ],
+    "variants": [
+      {
+        "id": "fd-out-25-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-25-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-25-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-25-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-out-25-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "woman grey running jacket",
+    "images": [],
+    "rating": 4.5,
+    "reviewCount": 141
+  }
+]

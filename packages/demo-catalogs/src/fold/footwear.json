@@ -1,0 +1,2990 @@
+[
+  {
+    "id": "fd-ftw-01",
+    "slug": "nike-air-force-1-07",
+    "name": "Air Force 1 '07",
+    "brand": "Nike",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 115,
+    "description": "The 1982 basketball shoe that never left the street: a full-grain leather upper in triple white, a chunky cupsole with Air cushioning in the heel and a perforated toe box. It reads loud and clean at once, the shoe that goes under baggy cargos, wide denim and oversized hoodies. Keep it box-fresh or let it crease; both are part of the point.",
+    "details": [
+      "Full-grain leather upper with stitched overlays",
+      "Rubber cupsole with encapsulated Air unit in the heel",
+      "Pivot-circle outsole tread",
+      "Runs about a half size large; consider sizing down",
+      "Wipe clean with a damp cloth"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear"
+      ],
+      "material": [
+        "leather",
+        "rubber"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "triple white"
+      ],
+      "useCase": [
+        "daily wear",
+        "pairing with baggy denim",
+        "city walking"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "campus"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "court classic",
+      "icon",
+      "white sneakers",
+      "basketball heritage"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-01-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-01-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-01-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-01-eu-41",
+        "label": "EU 41",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-01-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-01-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-01-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike air force 1 white sneakers",
+    "images": [
+      "/fold/fd-ftw-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 1180,
+    "bestseller": true
+  },
+  {
+    "id": "fd-ftw-02",
+    "slug": "nike-pegasus-41",
+    "name": "Pegasus 41",
+    "brand": "Nike",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 140,
+    "description": "Nike's everyday road trainer, with a breathable engineered mesh upper, ReactX foam and Air Zoom units front and back for a springy, protective ride. It handles easy miles, tempo days and the walk to the gym without fuss. White with volt and black accents, it looks the part on a track and does not look out of place after.",
+    "details": [
+      "Engineered mesh upper with padded collar and tongue",
+      "ReactX midsole with forefoot and heel Air Zoom units",
+      "10 mm heel-to-toe drop; about 280 g (men's EU 42)",
+      "Waffle-inspired rubber outsole",
+      "True to size for most runners"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "engineered mesh",
+        "foam",
+        "rubber"
+      ],
+      "colorFamily": [
+        "white",
+        "bold"
+      ],
+      "colors": [
+        "white",
+        "volt",
+        "black"
+      ],
+      "useCase": [
+        "road running",
+        "gym sessions",
+        "daily training"
+      ],
+      "occasion": [
+        "running",
+        "gym",
+        "everyday"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "running shoe",
+      "neutral cushioning",
+      "daily trainer",
+      "breathable"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-02-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-02-eu-44",
+        "label": "EU 44",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "nike pegasus running shoe white",
+    "images": [
+      "/fold/fd-ftw-02.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 640
+  },
+  {
+    "id": "fd-ftw-03",
+    "slug": "nike-cortez-leather",
+    "name": "Cortez Leather",
+    "brand": "Nike",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 78,
+    "compareAtPrice": 100,
+    "description": "The slim 1972 runner that became a West Coast street staple, in smooth white leather with a varsity red Swoosh and a blue-striped herringbone sole. It has a low, narrow profile and a slight wedge that sits nicely under flared track pants and low-rise denim. Sporty, a little retro, and easy to wear every day.",
+    "details": [
+      "Leather upper with synthetic overlays",
+      "Foam wedge midsole with herringbone rubber outsole",
+      "Slim, narrow last; go half a size up if you have wide feet",
+      "Lace-up front with padded collar"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro"
+      ],
+      "material": [
+        "leather",
+        "foam",
+        "rubber"
+      ],
+      "colorFamily": [
+        "white",
+        "bold"
+      ],
+      "colors": [
+        "white",
+        "varsity red",
+        "royal blue"
+      ],
+      "useCase": [
+        "daily wear",
+        "pairing with track pants",
+        "light walking"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "campus"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "retro runner",
+      "slim sneaker",
+      "70s archive",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-03-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-03-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-03-eu-38",
+        "label": "EU 38",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-03-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-03-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-03-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike cortez white red sneakers",
+    "images": [
+      "/fold/fd-ftw-03.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 520
+  },
+  {
+    "id": "fd-ftw-04",
+    "slug": "adidas-samba-og",
+    "name": "Samba OG",
+    "brand": "Adidas",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 100,
+    "description": "Born as a football trainer for icy pitches, the Samba is all low profile: soft white leather, a suede T-toe overlay, black three stripes and a gum rubber sole. It is the terrace shoe that crossed into everything, from baggy jeans and track tops to cropped trousers. Slim through the toe, so it looks sharp rather than chunky.",
+    "details": [
+      "Leather upper with suede T-toe overlay",
+      "Gum rubber cupsole",
+      "Synthetic lining",
+      "Narrow fit; wide feet should size up half a size",
+      "Made in Vietnam"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "y2k-retro"
+      ],
+      "material": [
+        "leather",
+        "suede",
+        "gum rubber"
+      ],
+      "colorFamily": [
+        "white",
+        "black"
+      ],
+      "colors": [
+        "cloud white",
+        "core black",
+        "gum"
+      ],
+      "useCase": [
+        "daily wear",
+        "city walking",
+        "pairing with baggy denim"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "night out"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "terrace",
+      "gum sole",
+      "low profile",
+      "icon"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-04-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-04-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-04-eu-39",
+        "label": "EU 39",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-04-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-04-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-04-eu-42",
+        "label": "EU 42",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-04-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "adidas samba white black gum",
+    "images": [
+      "/fold/fd-ftw-04.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 1150,
+    "bestseller": true
+  },
+  {
+    "id": "fd-ftw-05",
+    "slug": "adidas-gazelle-indoor",
+    "name": "Gazelle Indoor",
+    "brand": "Adidas",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 120,
+    "description": "The indoor training Gazelle in soft blue fusion suede with white stripes and a translucent blue gum sole. It has a slim, low-slung shape and that slightly flattened toe that sits nicely under low-rise jeans, mini skirts and track pants. Playful color, early-2000s attitude, comfortable all day.",
+    "details": [
+      "Suede upper with leather three stripes",
+      "Translucent gum rubber outsole",
+      "Leather lining",
+      "Slim fit; true to size for narrow to average feet"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro"
+      ],
+      "material": [
+        "suede",
+        "leather",
+        "gum rubber"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "blue fusion",
+        "cloud white",
+        "translucent blue gum"
+      ],
+      "useCase": [
+        "daily wear",
+        "pairing with skirts",
+        "weekends out"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "night out"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "suede",
+      "colorful",
+      "terrace",
+      "gum sole"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-05-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-05-eu-37",
+        "label": "EU 37",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-05-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-05-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-05-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-05-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "adidas gazelle blue suede sneakers",
+    "images": [
+      "/fold/fd-ftw-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 430
+  },
+  {
+    "id": "fd-ftw-06",
+    "slug": "new-balance-990v6-made-in-usa",
+    "name": "990v6 Made in USA",
+    "brand": "New Balance",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 200,
+    "description": "The grey-suede running shoe, built in New Balance's New England factories with a pigskin suede and mesh upper and a FuelCell and ENCAP midsole that feels cushioned without being soft. In tonal grey it disappears into a neutral outfit: wide trousers, a navy crewneck, a plain overcoat. Built for long days on your feet, whether that is a run or a commute.",
+    "details": [
+      "Pigskin suede and mesh upper",
+      "FuelCell foam with ENCAP heel support",
+      "Blown rubber outsole",
+      "Made in USA with domestic and imported materials",
+      "Regular width; true to size"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal",
+        "athletic"
+      ],
+      "material": [
+        "pigskin suede",
+        "mesh",
+        "foam"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "grey",
+        "castlerock",
+        "silver"
+      ],
+      "useCase": [
+        "commuting",
+        "long walks",
+        "light running"
+      ],
+      "occasion": [
+        "everyday",
+        "commute",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "made in usa",
+      "grey suede",
+      "dad shoe",
+      "cushioned"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-06-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-06-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-06-eu-40",
+        "label": "EU 40",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-06-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-06-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-06-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-06-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "new balance 990 grey suede sneakers",
+    "images": [
+      "/fold/fd-ftw-06.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 760
+  },
+  {
+    "id": "fd-ftw-07",
+    "slug": "new-balance-550",
+    "name": "550",
+    "brand": "New Balance",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 120,
+    "description": "A 1989 basketball shoe brought back from the archive, in white leather with a forest green N and heel tab. It has a low, padded collar and a flat cupsole that make it feel more campus than court. Wear it with chinos and a cable knit, or with a boxy tee and wide cargos.",
+    "details": [
+      "Leather upper with perforated toe box",
+      "Rubber cupsole with pivot point",
+      "Padded collar and tongue",
+      "Runs true to size; roomy toe box"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "streetwear"
+      ],
+      "material": [
+        "leather",
+        "rubber"
+      ],
+      "colorFamily": [
+        "white",
+        "earth"
+      ],
+      "colors": [
+        "white",
+        "forest green"
+      ],
+      "useCase": [
+        "daily wear",
+        "campus",
+        "pairing with chinos"
+      ],
+      "occasion": [
+        "campus",
+        "everyday",
+        "weekend"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "court classic",
+      "archive",
+      "basketball heritage",
+      "green and white"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-07-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-07-eu-43",
+        "label": "EU 43",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "new balance 550 white green sneakers",
+    "images": [
+      "/fold/fd-ftw-07.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 690
+  },
+  {
+    "id": "fd-ftw-08",
+    "slug": "salomon-xt-6",
+    "name": "XT-6",
+    "brand": "Salomon",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 200,
+    "description": "A trail racing shoe from the French Alps, with an anti-debris mesh upper, Quicklace cords and a deep-lugged Contagrip outsole that grips wet rock and gravel. In black and olive night with a phantom-grey midsole, it works on the trail and looks just as right with ripstop pants and a shell in town. Light, technical and stable over rough ground.",
+    "details": [
+      "Anti-debris mesh upper with welded overlays",
+      "Quicklace pull-cord lacing with lace pocket",
+      "EnergyCell midsole, 11 mm drop",
+      "Contagrip rubber outsole with 4 mm lugs",
+      "Narrow fit; consider half a size up"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "athletic"
+      ],
+      "material": [
+        "mesh",
+        "TPU",
+        "rubber"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "black",
+        "olive night",
+        "phantom grey"
+      ],
+      "useCase": [
+        "trail running",
+        "hiking",
+        "city wear"
+      ],
+      "occasion": [
+        "hiking",
+        "running",
+        "everyday"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "trail runner",
+      "quicklace",
+      "technical",
+      "grippy"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-08-eu-37",
+        "label": "EU 37",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-08-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-08-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-08-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-08-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-08-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-08-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "salomon xt-6 black trail sneakers",
+    "images": [
+      "/fold/fd-ftw-08.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 540
+  },
+  {
+    "id": "fd-ftw-09",
+    "slug": "veja-v-10-leather",
+    "name": "V-10 Leather",
+    "brand": "Veja",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 175,
+    "description": "A clean leather court shoe with a quiet V on the side, made with chrome-free leather, organic cotton laces and a sole of Amazonian wild rubber and rice waste. Off-white with a pale sable heel, it is the low-key white sneaker for tailored trousers, straight jeans and linen. It softens and creases into your foot over a few weeks.",
+    "details": [
+      "Chrome-free leather upper",
+      "Wild rubber and rice waste outsole",
+      "Recycled polyester and organic cotton lining",
+      "Made in Brazil",
+      "True to size; slightly snug at first"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "chrome-free leather",
+        "wild rubber",
+        "organic cotton"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "extra white",
+        "sable"
+      ],
+      "useCase": [
+        "daily wear",
+        "pairing with tailoring",
+        "travel"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "chrome-free leather",
+      "made in brazil",
+      "white sneakers",
+      "low key"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-09-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-09-eu-42",
+        "label": "EU 42",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "veja v-10 white leather sneakers",
+    "images": [
+      "/fold/fd-ftw-09.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 380
+  },
+  {
+    "id": "fd-ftw-10",
+    "slug": "arket-leather-court-sneaker",
+    "name": "Leather Court Sneaker",
+    "brand": "Arket",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 105,
+    "compareAtPrice": 140,
+    "description": "A plain low-top in soft off-white calf leather with a stitched cupsole and no visible branding at all. The shape is slim and flat, close to a tennis shoe, so it sits neatly under wide wool trousers or cropped denim. Calm, considered and easy to keep looking good.",
+    "details": [
+      "Calf leather upper and leather lining",
+      "Stitched rubber cupsole",
+      "Waxed cotton laces",
+      "Made in Portugal",
+      "True to size"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "calf leather",
+        "rubber"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "daily wear",
+        "office",
+        "pairing with tailoring"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "commute"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "no logo",
+      "made in portugal",
+      "minimal",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-10-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-10-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "plain white leather sneakers minimal",
+    "images": [
+      "/fold/fd-ftw-10.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 140
+  },
+  {
+    "id": "fd-ftw-11",
+    "slug": "seom-static-suede-trainer",
+    "name": "Static Suede Trainer",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 135,
+    "description": "SEOM's slim retro trainer in washed black suede with a cracked-silver side stripe and a thin gum sole, drawn by the founders after the indoor football shoes they wore in Seongsu in the 2000s. It is low, narrow and close to the ground, the opposite of a chunky sneaker. Made to go under oversized tees, nylon cargos and wide denim.",
+    "details": [
+      "Split suede upper with metallic leather stripe",
+      "Thin gum rubber cupsole",
+      "Printed founder graphic on the sockliner",
+      "Narrow last; size up half a size for wide feet",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "y2k-retro"
+      ],
+      "material": [
+        "suede",
+        "metallic leather",
+        "gum rubber"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black",
+        "cracked silver",
+        "gum"
+      ],
+      "useCase": [
+        "daily wear",
+        "pairing with cargos",
+        "nights out"
+      ],
+      "occasion": [
+        "everyday",
+        "night out",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "slim sneaker",
+      "made in korea",
+      "suede",
+      "gum sole"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-11-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-11-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-11-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-11-eu-40",
+        "label": "EU 40",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-11-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-11-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-11-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black suede slim sneakers silver stripe",
+    "images": [
+      "/fold/fd-ftw-11.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 210
+  },
+  {
+    "id": "fd-ftw-12",
+    "slug": "seom-signal-metallic-runner",
+    "name": "Signal Metallic Runner",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sneakers",
+    "price": 150,
+    "description": "A slim, low-slung runner in chrome-silver nylon and mesh with reflective piping and a sculpted white foam sole, modeled on the millennium-era running shoes SEOM's founders grew up wanting. It has real cushioning for a light jog but mostly lives under track pants, baby tees and low-rise denim. Shiny, sporty and a little bit futuristic.",
+    "details": [
+      "Metallic nylon and mesh upper with 3M reflective piping",
+      "EVA foam midsole with rubber outsole pods",
+      "Removable OrthoLite insole",
+      "Slim fit; true to size",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "athletic"
+      ],
+      "material": [
+        "metallic nylon",
+        "mesh",
+        "EVA foam"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "chrome silver",
+        "white",
+        "ice blue"
+      ],
+      "useCase": [
+        "daily wear",
+        "light jogging",
+        "nights out"
+      ],
+      "occasion": [
+        "everyday",
+        "night out",
+        "running"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "metallic",
+      "retro runner",
+      "reflective",
+      "new season"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-12-eu-36",
+        "label": "EU 36",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-12-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-12-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-12-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-12-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-12-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-12-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "silver metallic sneakers",
+    "images": [
+      "/fold/fd-ftw-12.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 38,
+    "new": true
+  },
+  {
+    "id": "fd-ftw-13",
+    "slug": "dr-martens-1460-smooth-leather-boot",
+    "name": "1460 Smooth Leather Boot",
+    "brand": "Dr. Martens",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 170,
+    "description": "The original eight-eye boot from 1960, in stiff black Smooth leather with yellow welt stitching, a heel loop and the bouncing AirWair sole. It takes a few weeks of wear to soften and then moulds to your foot for years. Heavy, dependable and dark, it suits long black coats, ripped denim and everything in between.",
+    "details": [
+      "Smooth leather upper",
+      "Goodyear-welted with heat-sealed seams",
+      "Air-cushioned PVC sole, oil and fat resistant",
+      "8 eyelets with heel loop",
+      "Comes in whole sizes; if between sizes, go down"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic",
+        "heritage-workwear"
+      ],
+      "material": [
+        "smooth leather",
+        "PVC sole"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black",
+        "yellow stitch"
+      ],
+      "useCase": [
+        "daily wear",
+        "gigs",
+        "rainy days"
+      ],
+      "occasion": [
+        "everyday",
+        "night out",
+        "festival"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "combat boot",
+      "goodyear welt",
+      "icon",
+      "breaks in"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-13-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-13-eu-38",
+        "label": "EU 38",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-13-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-13-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-13-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-13-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-13-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "dr martens 1460 black leather boots",
+    "images": [
+      "/fold/fd-ftw-13.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 1090,
+    "bestseller": true
+  },
+  {
+    "id": "fd-ftw-14",
+    "slug": "dr-martens-jadon-platform-boot",
+    "name": "Jadon Platform Boot",
+    "brand": "Dr. Martens",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 210,
+    "description": "The 1460 silhouette on a chunky platform: black Polished Smooth leather, a side zip, eight eyelets and a deeply cleated sole that adds about 5 cm of height. It is the boot for long black slip dresses, leather trousers and layered mesh, heavy and moody without being hard to walk in. The inside zip makes it easy to get on and off.",
+    "details": [
+      "Polished Smooth leather upper",
+      "Goodyear-welted platform sole, 5 cm",
+      "Inside zip and 8 eyelets",
+      "Air-cushioned PVC sole with deep tread",
+      "Whole sizes; if between sizes, go down"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic",
+        "y2k-retro"
+      ],
+      "material": [
+        "polished smooth leather",
+        "PVC sole"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "nights out",
+        "gigs",
+        "daily wear"
+      ],
+      "occasion": [
+        "night out",
+        "festival",
+        "everyday"
+      ],
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "platform",
+      "side zip",
+      "chunky sole",
+      "goodyear welt"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-14-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-14-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-14-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-14-eu-39",
+        "label": "EU 39",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-14-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-14-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black leather platform combat boots woman",
+    "images": [
+      "/fold/fd-ftw-14.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 720
+  },
+  {
+    "id": "fd-ftw-15",
+    "slug": "burnside-canvas-alder-moc-toe-boot",
+    "name": "Alder Moc-Toe Boot",
+    "brand": "Burnside Canvas",
+    "department": "men",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 320,
+    "description": "A six-inch moc-toe work boot in oil-tanned brown leather on a white wedge crepe sole, hand-stitched at the toe and Goodyear welted so it can be resoled. The leather is stiff for the first couple of weeks, then darkens and creases into something that is entirely yours. Made for selvedge denim, duck canvas and chore coats, and for actual work.",
+    "details": [
+      "Oil-tanned full-grain leather, 2.4 mm",
+      "Hand-sewn moc toe, Goodyear welt construction",
+      "White wedge crepe outsole, fully resoleable",
+      "Leather lining and cork footbed",
+      "Made in Portland, Oregon; free first resole through our workshop"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "oil-tanned leather",
+        "crepe rubber",
+        "cork"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "chestnut brown",
+        "white crepe"
+      ],
+      "useCase": [
+        "workshop days",
+        "everyday wear",
+        "pairing with selvedge denim"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "commute"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "moc toe",
+      "goodyear welt",
+      "resoleable",
+      "made in usa",
+      "breaks in"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-15-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-45",
+        "label": "EU 45",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-15-eu-46",
+        "label": "EU 46",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "brown leather moc toe work boots",
+    "images": [
+      "/fold/fd-ftw-15.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 260
+  },
+  {
+    "id": "fd-ftw-16",
+    "slug": "burnside-canvas-willamette-hiking-boot",
+    "name": "Willamette Hiking Boot",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 295,
+    "description": "A mid-height hiker in waxed brown suede and Burnside's own 12 oz waxed canvas, with a waterproof membrane, speed hooks and a lugged Vibram sole. It is lighter than it looks and handles muddy Cascades trails, then goes straight to the pub with ripstop pants and a fleece. Stitch-down construction means it can be rebuilt rather than thrown out.",
+    "details": [
+      "Waxed suede and 12 oz waxed cotton canvas upper",
+      "Waterproof breathable membrane",
+      "Vibram Megagrip lugged outsole",
+      "Stitch-down construction, resoleable",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "heritage-workwear"
+      ],
+      "material": [
+        "waxed suede",
+        "waxed canvas",
+        "Vibram rubber"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco",
+        "field olive",
+        "rust laces"
+      ],
+      "useCase": [
+        "day hikes",
+        "rainy days",
+        "camping"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "weekend"
+      ],
+      "fit": "regular",
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "waterproof",
+      "vibram",
+      "waxed canvas",
+      "resoleable",
+      "new season"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-16-eu-38",
+        "label": "EU 38",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-16-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-16-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-16-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-16-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-16-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-16-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown suede hiking boots trail",
+    "images": [
+      "/fold/fd-ftw-16.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 64,
+    "new": true
+  },
+  {
+    "id": "fd-ftw-17",
+    "slug": "asche-kessel-lace-up-boot",
+    "name": "Kessel Lace-Up Boot",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 340,
+    "description": "A heavy ten-eye boot in washed black calf leather that looks already worn in, with brushed silver hooks at the top and a stacked commando sole. It is cut long and slim up the shin so it sits under long draped trousers or over black jeans. Dark, weighty and quiet about it.",
+    "details": [
+      "Washed calf leather with leather lining",
+      "Blake-stitched to a lug commando rubber sole, 4.5 cm",
+      "Brushed silver eyelets and speed hooks",
+      "10 eyelets; shaft height 19 cm",
+      "Made in Portugal for Asche, Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "washed calf leather",
+        "rubber",
+        "silver-tone hardware"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black",
+        "brushed silver"
+      ],
+      "useCase": [
+        "daily wear",
+        "nights out",
+        "cold weather"
+      ],
+      "occasion": [
+        "night out",
+        "everyday",
+        "date night"
+      ],
+      "fit": "slim",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "chunky sole",
+      "washed leather",
+      "silver hardware",
+      "made in portugal"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-17-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-17-eu-44",
+        "label": "EU 44",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black chunky leather lace up boots",
+    "images": [
+      "/fold/fd-ftw-17.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 120
+  },
+  {
+    "id": "fd-ftw-18",
+    "slug": "asche-spree-chelsea-boot",
+    "name": "Spree Chelsea Boot",
+    "brand": "Asche",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 310,
+    "description": "A pointed Chelsea boot in soft black glove leather with a slim silver harness ring at the ankle and a 6 cm block heel. The elastic gores are black on black, so the whole boot reads as one long dark line under a maxi skirt or cropped leather trousers. Moody, sharp and comfortable enough to stay out in.",
+    "details": [
+      "Glove leather upper with leather lining",
+      "6 cm stacked block heel, rubber top lift",
+      "Black elastic side gores and pull tab",
+      "Sterling-look silver harness ring",
+      "Made in Portugal for Asche, Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "glove leather",
+        "silver-tone hardware"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "nights out",
+        "dinners",
+        "office"
+      ],
+      "occasion": [
+        "night out",
+        "date night",
+        "office"
+      ],
+      "season": [
+        "fall",
+        "winter",
+        "spring"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "pointed toe",
+      "block heel",
+      "harness",
+      "new season"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-18-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-18-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-18-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-18-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-18-eu-40",
+        "label": "EU 40",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-18-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black pointed chelsea boots woman",
+    "images": [
+      "/fold/fd-ftw-18.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 22,
+    "new": true
+  },
+  {
+    "id": "fd-ftw-19",
+    "slug": "salomon-x-ultra-4-mid-gore-tex",
+    "name": "X Ultra 4 Mid Gore-Tex",
+    "brand": "Salomon",
+    "department": "men",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 185,
+    "description": "A light mid-height hiking boot with a Gore-Tex membrane, an Advanced Chassis for ankle stability on uneven ground, and a grippy All Terrain Contagrip sole. It feels more like a trail runner than a boot from day one, no break-in. Olive, black and a flash of orange, it suits wet weekend hikes and gorpcore city wear alike.",
+    "details": [
+      "Synthetic and textile upper with Gore-Tex membrane",
+      "EnergyCell midsole with Advanced Chassis",
+      "All Terrain Contagrip outsole, 4 mm lugs",
+      "Gusseted tongue keeps out debris",
+      "True to size with room for hiking socks"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "textile",
+        "Gore-Tex",
+        "rubber"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "olive night",
+        "black",
+        "orange"
+      ],
+      "useCase": [
+        "day hikes",
+        "rainy days",
+        "travel"
+      ],
+      "occasion": [
+        "hiking",
+        "camping",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "waterproof",
+      "gore-tex",
+      "hiking boot",
+      "no break-in"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-19-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-45",
+        "label": "EU 45",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-19-eu-46",
+        "label": "EU 46",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "hiking boots mud trail closeup",
+    "images": [
+      "/fold/fd-ftw-19.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 450
+  },
+  {
+    "id": "fd-ftw-20",
+    "slug": "cranmore-kittery-duck-boot",
+    "name": "Kittery Duck Boot",
+    "brand": "Cranmore",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Boots",
+    "price": 195,
+    "description": "The New England slush boot: a hand-poured rubber chain-tread bottom bonded to a tan full-grain leather upper, with brass eyelets and a cream wool-blend lining. It keeps your feet dry from the first snow to the April mud, with chinos, a rugby shirt or a quilted jacket. Built to be passed down with a fresh pair of laces.",
+    "details": [
+      "Full-grain leather upper, rubber shell bottom",
+      "Chain-tread rubber outsole",
+      "Removable wool-blend felt liner",
+      "Brass eyelets and rawhide laces",
+      "Made in Rhode Island"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "heritage-workwear"
+      ],
+      "material": [
+        "full-grain leather",
+        "rubber",
+        "wool felt"
+      ],
+      "colorFamily": [
+        "earth",
+        "neutral"
+      ],
+      "colors": [
+        "tan",
+        "brown rubber",
+        "cream"
+      ],
+      "useCase": [
+        "snow and slush",
+        "rainy days",
+        "campus"
+      ],
+      "occasion": [
+        "campus",
+        "commute",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "duck boot",
+      "waterproof",
+      "made in usa",
+      "new england"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-20-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-20-eu-44",
+        "label": "EU 44",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "tan leather duck boots rubber",
+    "images": [
+      "/fold/fd-ftw-20.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 180
+  },
+  {
+    "id": "fd-ftw-21",
+    "slug": "birkenstock-arizona-soft-footbed-suede",
+    "name": "Arizona Soft Footbed Suede",
+    "brand": "Birkenstock",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sandals",
+    "price": 150,
+    "description": "The two-strap slide on a cork-latex footbed with an extra layer of foam, so it is comfortable from the first wear and shapes itself to your foot over a summer. Taupe suede straps with adjustable brass-tone buckles. Throw it on with linen shorts by the water, or with socks and wide trousers in town.",
+    "details": [
+      "Suede upper with adjustable pin buckles",
+      "Contoured cork-latex footbed with soft foam layer, suede lined",
+      "EVA outsole",
+      "Regular width; narrow width available on request",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "quiet-minimal"
+      ],
+      "material": [
+        "suede",
+        "cork",
+        "latex",
+        "EVA"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "taupe"
+      ],
+      "useCase": [
+        "beach days",
+        "holiday",
+        "everyday summer"
+      ],
+      "occasion": [
+        "beach",
+        "everyday",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "made in germany",
+      "cork footbed",
+      "slides",
+      "summer"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-21-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-21-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "birkenstock arizona taupe suede sandals",
+    "images": [
+      "/fold/fd-ftw-21.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 980
+  },
+  {
+    "id": "fd-ftw-22",
+    "slug": "birkenstock-boston-suede-clog",
+    "name": "Boston Suede Clog",
+    "brand": "Birkenstock",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sandals",
+    "price": 160,
+    "description": "The closed-toe clog on Birkenstock's cork footbed, in oiled mink-grey suede with a single adjustable strap. It slips on in a second, holds its shape for years, and has become a quiet favorite with wool socks, wide trousers and a plain knit. Comfortable enough to wear all day, at home or out.",
+    "details": [
+      "Suede upper with adjustable buckle",
+      "Cork-latex footbed with suede lining",
+      "EVA outsole",
+      "Regular width; true to Birkenstock sizing",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "suede",
+        "cork",
+        "latex",
+        "EVA"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "mink grey",
+        "taupe"
+      ],
+      "useCase": [
+        "errands",
+        "working from home",
+        "everyday wear"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "clog",
+      "made in germany",
+      "slip-on",
+      "cork footbed"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-22-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-22-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-22-eu-39",
+        "label": "EU 39",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-22-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-22-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-22-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-22-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "suede clogs feet",
+    "images": [
+      "/fold/fd-ftw-22.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 860
+  },
+  {
+    "id": "fd-ftw-23",
+    "slug": "soller-deia-espadrille",
+    "name": "Deià Espadrille",
+    "brand": "Sóller",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Sandals",
+    "price": 68,
+    "description": "A classic flat espadrille in sand-washed linen with a hand-stitched jute sole and a thin rubber tread underneath, made by a family workshop in La Rioja. It molds to your foot, goes sockless with linen trousers or a swim short, and gets better looking as the jute frays a little. Breezy, sun-faded and made for long hot days.",
+    "details": [
+      "100% linen upper with cotton lining",
+      "Hand-stitched natural jute sole with vulcanized rubber tread",
+      "Fits snug at first and gives with wear; size down if between sizes",
+      "Spot clean only; keep out of standing water",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "linen",
+        "jute",
+        "rubber"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "sand",
+        "ecru stripe"
+      ],
+      "useCase": [
+        "beach days",
+        "holiday",
+        "summer evenings"
+      ],
+      "occasion": [
+        "beach",
+        "weekend",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "espadrille",
+      "jute sole",
+      "made in spain",
+      "linen"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-23-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-23-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-23-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-23-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-23-eu-41",
+        "label": "EU 41",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-23-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-23-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen espadrilles jute sole beach",
+    "images": [
+      "/fold/fd-ftw-23.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 170
+  },
+  {
+    "id": "fd-ftw-24",
+    "slug": "soller-fornalutx-leather-sandal",
+    "name": "Fornalutx Leather Sandal",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Sandals",
+    "price": 95,
+    "compareAtPrice": 125,
+    "description": "A flat sandal in soft cognac vegetable-tanned leather with woven crossing straps over the toes, a slim ankle strap and a jute-wrapped sole. It looks hand-made because it is, by a small workshop in Inca, Mallorca. Pairs with a white linen dress, a flowy skirt or cropped wide trousers at the beach bar.",
+    "details": [
+      "Vegetable-tanned leather upper and footbed",
+      "Jute-wrapped midsole with rubber outsole",
+      "Adjustable ankle buckle",
+      "True to size",
+      "Made in Mallorca, Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "romantic-boho"
+      ],
+      "material": [
+        "vegetable-tanned leather",
+        "jute",
+        "rubber"
+      ],
+      "colorFamily": [
+        "earth",
+        "warm"
+      ],
+      "colors": [
+        "cognac"
+      ],
+      "useCase": [
+        "holiday",
+        "beach days",
+        "summer evenings"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "date night"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "handmade",
+      "woven leather",
+      "made in spain",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-24-eu-36",
+        "label": "EU 36",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-24-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-24-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-24-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-24-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-24-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "woven leather flat sandals cognac",
+    "images": [
+      "/fold/fd-ftw-24.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 96
+  },
+  {
+    "id": "fd-ftw-25",
+    "slug": "malha-lisboa-alfama-crochet-sandal",
+    "name": "Alfama Crochet Sandal",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Sandals",
+    "price": 95,
+    "description": "A flat slide with an open crochet upper hand-worked in cream organic cotton at the Malha Lisboa mill, set on a cork footbed and a stitched leather sole made with a shoemaker in Felgueiras. It has a soft, slightly undone look, like the shawl on your grandmother's chair. Lovely with a broderie dress, a tiered skirt or wide linen trousers.",
+    "details": [
+      "Hand-crocheted 100% organic cotton upper",
+      "Cork footbed with leather lining",
+      "Leather and rubber sole",
+      "Each pair takes about four hours to crochet; slight variations are normal",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "organic cotton crochet",
+        "cork",
+        "leather"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "cream",
+        "natural"
+      ],
+      "useCase": [
+        "summer weekends",
+        "holiday",
+        "festivals"
+      ],
+      "occasion": [
+        "weekend",
+        "festival",
+        "beach"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "crochet",
+      "handmade",
+      "made in portugal",
+      "organic cotton",
+      "new season"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-25-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-25-eu-37",
+        "label": "EU 37",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-25-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-25-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-25-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-25-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "crochet sandals feet",
+    "images": [
+      "/fold/fd-ftw-25.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 31,
+    "new": true
+  },
+  {
+    "id": "fd-ftw-26",
+    "slug": "dr-martens-adrian-tassel-loafer",
+    "name": "Adrian Tassel Loafer",
+    "brand": "Dr. Martens",
+    "department": "unisex",
+    "category": "Footwear",
+    "subcategory": "Dress shoes",
+    "price": 170,
+    "description": "A tassel loafer with a kiltie fringe in black Smooth leather, set on Dr. Martens' air-cushioned sole with yellow welt stitching. It is the ivy loafer made tougher: right with grey flannels and white socks, just as right with a long black coat and slim black jeans. Expect a short break-in, then years of wear.",
+    "details": [
+      "Smooth leather upper with kiltie fringe and tassels",
+      "Goodyear-welted, heat-sealed construction",
+      "Air-cushioned PVC sole",
+      "Whole sizes; if between sizes, go down",
+      "Wipe clean and polish regularly"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "dark-gothic"
+      ],
+      "material": [
+        "smooth leather",
+        "PVC sole"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "office",
+        "campus",
+        "evenings out"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "night out"
+      ],
+      "fit": "regular",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "loafer",
+      "tassel",
+      "goodyear welt",
+      "slip-on"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-26-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-26-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-26-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-26-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-26-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-26-eu-42",
+        "label": "EU 42",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-26-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black leather tassel loafers",
+    "images": [
+      "/fold/fd-ftw-26.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 540
+  },
+  {
+    "id": "fd-ftw-27",
+    "slug": "cranmore-wickford-penny-loafer",
+    "name": "Wickford Penny Loafer",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Footwear",
+    "subcategory": "Dress shoes",
+    "price": 265,
+    "description": "A hand-sewn penny loafer in burnished burgundy calf leather, with a beefroll saddle, a leather sole and a rubber heel. The shape is slim and low, built on a last Cranmore has used since the 1970s. Wear it with grey flannels, chinos and an oxford shirt, or with jeans and a cable knit.",
+    "details": [
+      "Burnished calf leather upper, leather lining",
+      "Hand-sewn moccasin construction, Blake stitched",
+      "Leather sole with rubber heel",
+      "Slim last; true to size",
+      "Made in Rhode Island"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "burnished calf leather",
+        "leather sole"
+      ],
+      "colorFamily": [
+        "warm",
+        "earth"
+      ],
+      "colors": [
+        "burgundy",
+        "oxblood"
+      ],
+      "useCase": [
+        "office",
+        "weddings",
+        "weekend dinners"
+      ],
+      "occasion": [
+        "office",
+        "wedding guest",
+        "date night"
+      ],
+      "fit": "slim",
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "penny loafer",
+      "hand-sewn",
+      "made in usa",
+      "leather sole"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-27-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-27-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-27-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-27-eu-43",
+        "label": "EU 43",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-27-eu-44",
+        "label": "EU 44",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-27-eu-45",
+        "label": "EU 45",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-27-eu-46",
+        "label": "EU 46",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "burgundy leather penny loafers man",
+    "images": [
+      "/fold/fd-ftw-27.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 230
+  },
+  {
+    "id": "fd-ftw-28",
+    "slug": "cranmore-watch-hill-boat-shoe",
+    "name": "Watch Hill Boat Shoe",
+    "brand": "Cranmore",
+    "department": "men",
+    "category": "Footwear",
+    "subcategory": "Dress shoes",
+    "price": 140,
+    "compareAtPrice": 175,
+    "description": "A two-eye boat shoe in oiled tan leather with rawhide 360-degree lacing and a white siped rubber sole that grips a wet deck. Worn sockless, it softens quickly and darkens with salt and sun. Made for summer sailing weekends, chino shorts and a faded oxford shirt.",
+    "details": [
+      "Oiled full-grain leather upper, unlined",
+      "Rawhide laces with 360-degree lacing",
+      "Non-marking siped rubber sole",
+      "Hand-sewn moccasin toe",
+      "Made in Rhode Island"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "coastal-resort"
+      ],
+      "material": [
+        "oiled leather",
+        "rawhide",
+        "rubber"
+      ],
+      "colorFamily": [
+        "earth",
+        "white"
+      ],
+      "colors": [
+        "tan",
+        "white sole"
+      ],
+      "useCase": [
+        "sailing",
+        "summer weekends",
+        "holiday"
+      ],
+      "occasion": [
+        "weekend",
+        "beach",
+        "travel"
+      ],
+      "fit": "regular",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "boat shoe",
+      "hand-sewn",
+      "made in usa",
+      "sale"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-28-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-28-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-28-eu-42",
+        "label": "EU 42",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-28-eu-43",
+        "label": "EU 43",
+        "inStock": false
+      },
+      {
+        "id": "fd-ftw-28-eu-44",
+        "label": "EU 44",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-28-eu-45",
+        "label": "EU 45",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-28-eu-46",
+        "label": "EU 46",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "tan leather boat shoes",
+    "images": [
+      "/fold/fd-ftw-28.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 150
+  },
+  {
+    "id": "fd-ftw-29",
+    "slug": "hedda-vang-frogner-mary-jane",
+    "name": "Frogner Mary Jane",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Dress shoes",
+    "price": 195,
+    "description": "A round-toe Mary Jane in soft rose-pink patent leather with a thin buckled strap, a small 3 cm heel and a scalloped edge along the throat. It is sweet without being childish, with a gingham dress and white socks, a puff-sleeve blouse and a full skirt, or plain jeans. Made in small runs in Portugal.",
+    "details": [
+      "Patent calf leather upper, leather lining",
+      "3 cm stacked heel, leather sole with rubber insert",
+      "Adjustable buckle strap",
+      "Padded leather footbed",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "patent leather",
+        "leather sole"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "rose pink",
+        "dusty rose"
+      ],
+      "useCase": [
+        "dinners",
+        "weddings",
+        "weekend outings"
+      ],
+      "occasion": [
+        "date night",
+        "wedding guest",
+        "weekend"
+      ],
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "mary jane",
+      "made in portugal",
+      "scalloped",
+      "patent"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-29-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-29-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-29-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-29-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-29-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-29-eu-41",
+        "label": "EU 41",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "pink mary jane shoes woman",
+    "images": [
+      "/fold/fd-ftw-29.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 88
+  },
+  {
+    "id": "fd-ftw-30",
+    "slug": "hedda-vang-bygdoy-ballet-flat",
+    "name": "Bygdøy Ballet Flat",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Footwear",
+    "subcategory": "Dress shoes",
+    "price": 160,
+    "description": "A soft ballet flat in cream nappa leather with a gathered drawstring bow at the toe and a flexible leather sole that folds in half. It is light and quiet on the foot, as easy with a broderie dress or a tiered midi skirt as with cropped trousers. Romantic, simple and good for walking all day.",
+    "details": [
+      "Nappa leather upper and lining",
+      "Flexible stitched leather sole with rubber grip pads",
+      "Elasticated drawstring throat",
+      "Runs slim; size up half a size for wider feet",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "quiet-minimal"
+      ],
+      "material": [
+        "nappa leather",
+        "leather sole"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "cream",
+        "ivory"
+      ],
+      "useCase": [
+        "everyday wear",
+        "office",
+        "summer evenings"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "date night"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "ballet flat",
+      "made in portugal",
+      "soft leather",
+      "bow detail"
+    ],
+    "variants": [
+      {
+        "id": "fd-ftw-30-eu-36",
+        "label": "EU 36",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-30-eu-37",
+        "label": "EU 37",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-30-eu-38",
+        "label": "EU 38",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-30-eu-39",
+        "label": "EU 39",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-30-eu-40",
+        "label": "EU 40",
+        "inStock": true
+      },
+      {
+        "id": "fd-ftw-30-eu-41",
+        "label": "EU 41",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream leather ballet flats",
+    "images": [
+      "/fold/fd-ftw-30.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 74
+  }
+]

@@ -1,0 +1,893 @@
+[
+  {
+    "id": "fd-bag-01",
+    "slug": "soller-valldemossa-raffia-tote",
+    "name": "Valldemossa Raffia Tote",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Bags",
+    "subcategory": "Totes",
+    "price": 145,
+    "description": "A wide, open tote hand-woven from natural raffia on Mallorca, with flat tan leather handles and a cotton-lined zip pocket inside. It holds a towel, a book and a bottle of water without fuss, and gets better as the straw softens and sun-fades. Breezy with linen and espadrilles, from the beach to dinner on the port.",
+    "details": [
+      "Hand-woven natural raffia",
+      "Vegetable-tanned leather handles, 25 cm drop",
+      "Cotton lining with zip inner pocket",
+      "W 45 cm x H 32 cm x D 16 cm",
+      "Spot clean; keep dry",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "raffia",
+        "leather",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "natural",
+        "tan"
+      ],
+      "useCase": [
+        "beach days",
+        "holiday",
+        "market runs"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "weekend"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "raffia",
+      "hand-woven",
+      "made in spain",
+      "beach"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-01-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "raffia tote bag leather handles",
+    "images": [
+      "/fold/fd-bag-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 92
+  },
+  {
+    "id": "fd-bag-02",
+    "slug": "cranmore-nantucket-boat-tote",
+    "name": "Nantucket Boat Tote",
+    "brand": "Cranmore",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Totes",
+    "price": 85,
+    "description": "A heavy cotton canvas boat tote with colored webbing handles and a reinforced base that stands up on its own. It is cut deep and roomy for a weekend's worth of sweaters, sailing kit or groceries, and the canvas softens and fades with every season. Crisp, collegiate and very New England.",
+    "details": [
+      "24 oz cotton canvas",
+      "Reinforced double-layer base",
+      "Cotton webbing handles, 23 cm drop",
+      "W 40 cm x H 33 cm x D 18 cm",
+      "Machine wash cold, air dry",
+      "Made in the USA"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy",
+        "coastal-resort"
+      ],
+      "material": [
+        "cotton canvas",
+        "cotton webbing"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "natural canvas",
+        "navy",
+        "forest green"
+      ],
+      "useCase": [
+        "weekends away",
+        "groceries",
+        "beach"
+      ],
+      "occasion": [
+        "weekend",
+        "beach",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "canvas",
+      "boat tote",
+      "made in usa",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-02-navy-trim",
+        "label": "Navy trim",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-02-green-trim",
+        "label": "Green trim",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy canvas tote bag beach",
+    "images": [
+      "/fold/fd-bag-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 214
+  },
+  {
+    "id": "fd-bag-03",
+    "slug": "arket-canvas-tote-bag",
+    "name": "Canvas Tote Bag",
+    "brand": "Arket",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Totes",
+    "price": 45,
+    "description": "A plain, generous tote in heavyweight organic cotton canvas with long shoulder handles and a single slip pocket inside. No logo, no hardware and a neat squared base that keeps a laptop and lunch upright. The kind of bag you stop noticing because it simply works.",
+    "details": [
+      "100% organic cotton canvas, 450 gsm",
+      "Handles 60 cm; fits over the shoulder",
+      "Inside slip pocket",
+      "W 38 cm x H 42 cm x D 12 cm",
+      "Machine wash cold"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "organic cotton canvas"
+      ],
+      "colorFamily": [
+        "white",
+        "black"
+      ],
+      "colors": [
+        "off-white",
+        "black"
+      ],
+      "useCase": [
+        "daily carry",
+        "laptop",
+        "groceries"
+      ],
+      "occasion": [
+        "everyday",
+        "commute",
+        "office"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "organic cotton",
+      "no logo",
+      "everyday",
+      "laptop"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-03-off-white",
+        "label": "Off-white",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-03-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "plain canvas tote bag shoulder",
+    "images": [
+      "/fold/fd-bag-03.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 412
+  },
+  {
+    "id": "fd-bag-04",
+    "slug": "asche-mitte-washed-leather-tote",
+    "name": "Mitte Washed Leather Tote",
+    "brand": "Asche",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Totes",
+    "price": 395,
+    "description": "A large, slouchy tote in black washed cowhide that collapses softly when empty and holds a 15-inch laptop when it isn't. The handles are long enough for the shoulder and joined with heavy antiqued silver rings, and it is unlined, so the raw underside of the leather shows inside. It creases and darkens with wear and belongs with an all-black wardrobe.",
+    "details": [
+      "Washed cowhide leather, 1.8 mm",
+      "Unlined; magnetic snap closure",
+      "Antiqued silver-tone rings",
+      "W 46 cm x H 38 cm x D 14 cm; handle drop 28 cm",
+      "Condition occasionally",
+      "Made in Germany"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "cowhide leather",
+        "silver-tone metal"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "washed black"
+      ],
+      "useCase": [
+        "daily carry",
+        "laptop",
+        "work"
+      ],
+      "occasion": [
+        "everyday",
+        "office",
+        "commute"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "leather",
+      "silver hardware",
+      "laptop",
+      "made in germany"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-04-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black slouchy leather tote bag",
+    "images": [
+      "/fold/fd-bag-04.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 34
+  },
+  {
+    "id": "fd-bag-05",
+    "slug": "patagonia-black-hole-pack-25l",
+    "name": "Black Hole Pack 25L",
+    "brand": "Patagonia",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Backpacks",
+    "price": 140,
+    "description": "Patagonia's everyday pack in tough recycled ripstop with a TPU-film laminate that shrugs off rain and scuffs. A padded laptop sleeve, a big main compartment, stretch side pockets and a soft back panel make it as good on a commute as on a day hike. Shown in black or basin green with the familiar logo patch.",
+    "details": [
+      "100% recycled polyester ripstop with TPU-film laminate",
+      "25 L; padded 15-inch laptop sleeve",
+      "Padded shoulder straps and sternum strap",
+      "H 47 cm x W 29 cm x D 18 cm; 680 g",
+      "Wipe clean",
+      "Fair Trade Certified sewn"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "recycled polyester ripstop",
+        "TPU laminate"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "black",
+        "basin green"
+      ],
+      "useCase": [
+        "commuting",
+        "day hikes",
+        "laptop"
+      ],
+      "occasion": [
+        "commute",
+        "hiking",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "recycled",
+      "water-resistant",
+      "laptop",
+      "day pack"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-05-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-05-basin-green",
+        "label": "Basin Green",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "black backpack street man",
+    "images": [
+      "/fold/fd-bag-05.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 1084,
+    "bestseller": true
+  },
+  {
+    "id": "fd-bag-06",
+    "slug": "carhartt-wip-kickflip-backpack",
+    "name": "Kickflip Backpack",
+    "brand": "Carhartt WIP",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Backpacks",
+    "price": 95,
+    "compareAtPrice": 110,
+    "description": "A simple top-loading backpack in recycled polyester canvas with a drawstring main compartment under a buckled flap, a front zip pocket and the square label on the front. It is light, takes a laptop, and has webbing loops on the front for strapping on a board or a jacket. Easy, everyday and straight out of the skate shop.",
+    "details": [
+      "100% recycled polyester canvas",
+      "Drawstring main compartment with buckled flap",
+      "Padded sleeve fits a 15-inch laptop",
+      "H 46 cm x W 30 cm x D 13 cm; approx. 25 L",
+      "Wipe clean"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "heritage-workwear"
+      ],
+      "material": [
+        "recycled polyester canvas"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "black",
+        "hamilton brown"
+      ],
+      "useCase": [
+        "campus",
+        "skating",
+        "daily carry"
+      ],
+      "occasion": [
+        "campus",
+        "everyday",
+        "commute"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "backpack",
+      "recycled",
+      "skate",
+      "laptop"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-06-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-06-hamilton-brown",
+        "label": "Hamilton Brown",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "carhartt black canvas backpack",
+    "images": [
+      "/fold/fd-bag-06.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 538
+  },
+  {
+    "id": "fd-bag-07",
+    "slug": "burnside-canvas-belmont-waxed-canvas-rucksack",
+    "name": "Belmont Waxed Canvas Rucksack",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Backpacks",
+    "price": 285,
+    "description": "The Belmont is a roll-top rucksack in 18 oz waxed cotton canvas with oiled leather straps, solid brass buckles and a padded laptop sleeve inside. The wax keeps rain out and takes on creases and scuffs that show where it has been, and every seam is double-stitched so the Portland workshop can repair it rather than replace it. Rugged on a trail weekend, handsome on a commute.",
+    "details": [
+      "18 oz waxed cotton canvas",
+      "Oiled bridle leather straps, solid brass buckles",
+      "Roll-top closure; padded 15-inch laptop sleeve",
+      "H 50 cm x W 30 cm x D 15 cm unrolled; approx. 22 L",
+      "Re-wax yearly; repairs for life",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "gorpcore-outdoor"
+      ],
+      "material": [
+        "waxed cotton canvas",
+        "bridle leather",
+        "brass"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco brown",
+        "field olive"
+      ],
+      "useCase": [
+        "commuting",
+        "weekend trips",
+        "laptop"
+      ],
+      "occasion": [
+        "commute",
+        "travel",
+        "hiking"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "waxed canvas",
+      "roll-top",
+      "made in usa",
+      "repairable",
+      "leather"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-07-tobacco",
+        "label": "Tobacco",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-07-field-olive",
+        "label": "Field Olive",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "waxed canvas roll top backpack",
+    "images": [
+      "/fold/fd-bag-07.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 128
+  },
+  {
+    "id": "fd-bag-08",
+    "slug": "salomon-trailblazer-20",
+    "name": "Trailblazer 20",
+    "brand": "Salomon",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Backpacks",
+    "price": 70,
+    "description": "A light 20-litre daypack with one big compartment, a zipped lid pocket and side compression straps that cinch it down when half empty. The ventilated back and slim shoulder straps keep it stable on a fast hike or the walk to the gym, and the ripstop stands up to daily use. Simple, sporty and very easy to pack.",
+    "details": [
+      "Recycled polyamide ripstop",
+      "20 L; hydration sleeve",
+      "Ventilated mesh back panel, sternum strap, removable hip belt",
+      "H 47 cm x W 26 cm x D 16 cm; 420 g",
+      "Hand wash"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "athletic"
+      ],
+      "material": [
+        "recycled polyamide ripstop",
+        "mesh"
+      ],
+      "colorFamily": [
+        "black",
+        "earth"
+      ],
+      "colors": [
+        "black",
+        "olive night"
+      ],
+      "useCase": [
+        "day hikes",
+        "gym",
+        "travel"
+      ],
+      "occasion": [
+        "hiking",
+        "gym",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "day pack",
+      "lightweight",
+      "hiking",
+      "hydration"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-08-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-08-olive-night",
+        "label": "Olive Night",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "salomon hiking daypack black",
+    "images": [
+      "/fold/fd-bag-08.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 384
+  },
+  {
+    "id": "fd-bag-09",
+    "slug": "seom-tilt-nylon-crossbody",
+    "name": "Tilt Nylon Crossbody",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Crossbody",
+    "price": 68,
+    "description": "A small, curved crossbody in high-shine recycled nylon with chrome zips, an adjustable webbing strap and SEOM's hand-drawn star embossed on the front. It holds a phone, cards, keys and lip balm and sits snug under the arm or across the chest. Glossy, compact and very early-2000s.",
+    "details": [
+      "100% recycled nylon, high-gloss coating",
+      "Chrome-finish zips and buckle",
+      "Adjustable strap, max drop 60 cm",
+      "W 24 cm x H 14 cm x D 6 cm",
+      "Wipe clean",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "recycled nylon",
+        "metal"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "metallic silver",
+        "black",
+        "baby blue"
+      ],
+      "useCase": [
+        "nights out",
+        "hands-free",
+        "festivals"
+      ],
+      "occasion": [
+        "night out",
+        "festival",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "crossbody",
+      "metallic",
+      "recycled nylon",
+      "made in korea"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-09-silver",
+        "label": "Silver",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-09-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-09-baby-blue",
+        "label": "Baby Blue",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "silver nylon shoulder bag",
+    "images": [
+      "/fold/fd-bag-09.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 26,
+    "new": true
+  },
+  {
+    "id": "fd-bag-10",
+    "slug": "nike-heritage-crossbody-bag",
+    "name": "Heritage Crossbody Bag",
+    "brand": "Nike",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Crossbody",
+    "price": 35,
+    "description": "Nike's Heritage crossbody is a small, flat zip bag in durable polyester with an adjustable strap and the Futura logo on the front. There is room for a phone, wallet and earbuds plus a rear slip pocket for a card, so it goes to the gym, the court or a crowded train. Sporty and simple.",
+    "details": [
+      "100% polyester",
+      "1 L; zip main compartment, rear slip pocket",
+      "Adjustable strap",
+      "W 20 cm x H 15 cm x D 5 cm",
+      "Wipe clean"
+    ],
+    "attributes": {
+      "style": [
+        "athletic",
+        "streetwear"
+      ],
+      "material": [
+        "polyester"
+      ],
+      "colorFamily": [
+        "black",
+        "white"
+      ],
+      "colors": [
+        "black",
+        "white"
+      ],
+      "useCase": [
+        "hands-free",
+        "gym",
+        "daily carry"
+      ],
+      "occasion": [
+        "gym",
+        "everyday",
+        "festival"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "crossbody",
+      "sporty",
+      "lightweight",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-10-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-10-white",
+        "label": "White",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nike small black crossbody bag",
+    "images": [
+      "/fold/fd-bag-10.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 762
+  },
+  {
+    "id": "fd-bag-11",
+    "slug": "malha-lisboa-gra-a-crochet-crossbody",
+    "name": "Graça Crochet Crossbody",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Bags",
+    "subcategory": "Crossbody",
+    "price": 115,
+    "description": "A soft crossbody crocheted by hand in thick organic cotton, in an open shell stitch that shows the cream canvas lining underneath. The long single strap sits across the body or at the hip, and it closes with a carved wooden toggle. Romantic and relaxed with a sundress or a linen set.",
+    "details": [
+      "100% organic cotton, hand-crocheted",
+      "Cotton canvas lining",
+      "Wooden toggle closure",
+      "W 28 cm x H 24 cm; strap drop 55 cm",
+      "Hand wash cold, dry flat",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "coastal-resort"
+      ],
+      "material": [
+        "organic cotton",
+        "crochet",
+        "wood"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "ecru",
+        "terracotta"
+      ],
+      "useCase": [
+        "summer days",
+        "holiday",
+        "hands-free"
+      ],
+      "occasion": [
+        "beach",
+        "festival",
+        "weekend"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "crochet",
+      "handmade",
+      "made in portugal",
+      "summer"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-11-ecru",
+        "label": "Ecru",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-11-terracotta",
+        "label": "Terracotta",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "crochet cotton crossbody bag",
+    "images": [
+      "/fold/fd-bag-11.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 44
+  },
+  {
+    "id": "fd-bag-12",
+    "slug": "snow-peak-takibi-canvas-shoulder-bag",
+    "name": "TAKIBI Canvas Shoulder Bag",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Bags",
+    "subcategory": "Crossbody",
+    "price": 150,
+    "description": "Snow Peak cuts this shoulder bag from TAKIBI canvas, a flame-resistant cotton-aramid weave made to sit close to a campfire without catching sparks. It is a plain flapped satchel with a wide adjustable strap, a magnetic closure and three inside pockets, in a muted olive that ages well. Quietly useful at a campsite or on a city weekday.",
+    "details": [
+      "TAKIBI canvas: 60% cotton, 40% aramid, flame-resistant",
+      "Magnetic flap closure, three interior pockets",
+      "Adjustable strap, drop 50-65 cm",
+      "W 30 cm x H 23 cm x D 9 cm",
+      "Spot clean",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "quiet-minimal"
+      ],
+      "material": [
+        "cotton-aramid canvas"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "olive",
+        "black"
+      ],
+      "useCase": [
+        "camping",
+        "daily carry",
+        "travel"
+      ],
+      "occasion": [
+        "camping",
+        "everyday",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "takibi",
+      "flame-resistant",
+      "camp",
+      "made in japan"
+    ],
+    "variants": [
+      {
+        "id": "fd-bag-12-olive",
+        "label": "Olive",
+        "inStock": true
+      },
+      {
+        "id": "fd-bag-12-black",
+        "label": "Black",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "olive canvas shoulder bag",
+    "images": [
+      "/fold/fd-bag-12.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 38
+  }
+]

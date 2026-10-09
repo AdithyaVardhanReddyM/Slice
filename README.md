@@ -9,7 +9,7 @@ apps/
   web/        Next.js 16 — marketing site, merchant dashboard (Clerk), and /embed/* (the concierge UI the widget iframes)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
   agent/      Python ADK concierge agent (Gemini 3.8 Flash on Vertex AI); deployed to Agent Runtime
-  stores/     Demo storefronts the widget is tested on (Marlow at /marlow); each embeds slice.js like a real merchant
+  stores/     Demo storefronts the widget is tested on (Marlow at /marlow, Fold at /fold); each embeds slice.js like a real merchant
 packages/
   backend/    Convex — schema, queries/mutations/actions, auth config
   qloo/       Typed client for the Qloo API
@@ -90,7 +90,7 @@ pnpm dev
 | ----------------------------------- | --------------------------------------------- |
 | Web (site + dashboard)              | http://localhost:3000                         |
 | Widget playground (demo storefront) | http://localhost:5173                         |
-| Demo stores (Marlow)                | http://localhost:3002/marlow                  |
+| Demo stores (Marlow, Fold)          | http://localhost:3002/marlow, `/fold`         |
 | Agent (ADK dev UI + API)            | http://localhost:8000                         |
 | Convex dashboard                    | `cd packages/backend && npx convex dashboard` |
 
@@ -116,15 +116,15 @@ Server-side secrets (Google credentials, Qloo) live only in the agent and Convex
 
 ## Scripts
 
-| Command                                                  | Does                                                                  |
-| -------------------------------------------------------- | --------------------------------------------------------------------- |
-| `pnpm dev`                                               | Convex dev + Next.js + widget playground + agent                      |
-| `pnpm build`                                             | Production builds (web, widget)                                       |
-| `pnpm typecheck` / `pnpm lint`                           | Across all packages                                                   |
-| `pnpm format`                                            | Prettier                                                              |
-| `pnpm --filter @slice/demo-catalogs validate`            | Schema + style-coverage check on the demo catalogs                    |
-| `pnpm --filter @slice/demo-catalogs fetch-images marlow` | Fetch a Pexels photo per product (needs `PEXELS_API_KEY`)             |
-| `cd packages/backend && npx convex run qloo:warm`        | Pre-cache the Qloo requests in `convex/qlooWarmList.ts` before a demo |
+| Command                                                   | Does                                                                        |
+| --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm dev`                                                | Convex dev + Next.js + widget playground + agent                            |
+| `pnpm build`                                              | Production builds (web, widget)                                             |
+| `pnpm typecheck` / `pnpm lint`                            | Across all packages                                                         |
+| `pnpm format`                                             | Prettier                                                                    |
+| `pnpm --filter @slice/demo-catalogs validate`             | Schema + style-coverage check on the demo catalogs                          |
+| `pnpm --filter @slice/demo-catalogs fetch-images <store>` | Fetch a Pexels photo per product (`marlow`, `fold`; needs `PEXELS_API_KEY`) |
+| `cd packages/backend && npx convex run qloo:warm`         | Pre-cache the Qloo requests in `convex/qlooWarmList.ts` before a demo       |
 
 ## Embedding the widget
 

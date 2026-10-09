@@ -1,0 +1,253 @@
+{
+  "id": "fold",
+  "name": "Fold",
+  "tagline": "Known names next to new ones.",
+  "description": "Fold is a multi-brand store for clothing, footwear and the things you carry. We stock twenty-four labels, from the ones you already wear to small studios in Lisbon, Seoul and Portland, and put them on the same rail so you shop by what something is, not whose name is on it. Free shipping over $150, free returns within 30 days.",
+  "currency": "USD",
+  "departments": ["women", "men", "unisex"],
+  "styles": [
+    {
+      "id": "streetwear",
+      "label": "Streetwear",
+      "description": "Oversized cuts, heavyweight cotton, graphics, nylon and sneakers. Loud on purpose."
+    },
+    {
+      "id": "gorpcore-outdoor",
+      "label": "Gorpcore",
+      "description": "Trail gear worn in town: shells, fleece, ripstop, trail runners, earth tones and a hit of orange."
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet minimal",
+      "description": "No logos, good fabric, neutral color, relaxed tailoring. Things that look better the closer you get."
+    },
+    {
+      "id": "heritage-workwear",
+      "label": "Heritage workwear",
+      "description": "Duck canvas, selvedge denim, chore coats and leather boots that break in rather than wear out."
+    },
+    {
+      "id": "athletic",
+      "label": "Athletic",
+      "description": "Built to move: running shoes, track pieces, technical jersey and kit that crosses over to the street."
+    },
+    {
+      "id": "preppy-ivy",
+      "label": "Preppy / ivy",
+      "description": "Oxford cloth, cable knits, pleated skirts, rugby stripes and loafers. Campus classics, not costume."
+    },
+    {
+      "id": "romantic-boho",
+      "label": "Romantic / boho",
+      "description": "Puff sleeves, crochet, florals, broderie and soft drape. Feminine, a little undone."
+    },
+    {
+      "id": "y2k-retro",
+      "label": "Y2K / retro",
+      "description": "Low-rise, baby tees, metallics, slim sneakers and track tops. Early-2000s with a straight face."
+    },
+    {
+      "id": "dark-gothic",
+      "label": "Dark / gothic",
+      "description": "All black, long lines, leather, drape, silver hardware and heavy boots."
+    },
+    {
+      "id": "coastal-resort",
+      "label": "Coastal / resort",
+      "description": "Linen, raffia, stripes and espadrilles. Light colors and loose fits for heat and salt air."
+    }
+  ],
+  "brands": [
+    {
+      "name": "Adidas",
+      "slug": "adidas",
+      "origin": "Herzogenaurach, Germany",
+      "description": "Three stripes since 1949. We carry the terrace and track side of the archive: Sambas, Gazelles, track tops and the occasional running shoe."
+    },
+    {
+      "name": "Arket",
+      "slug": "arket",
+      "origin": "Stockholm, Sweden",
+      "description": "A modern-day market for essentials. Plain, well-made basics in good fabrics, plus a few things for the home."
+    },
+    {
+      "name": "Asche",
+      "slug": "asche",
+      "origin": "Berlin, Germany",
+      "description": "A small Berlin studio that only works in black and deep grey. Long coats, draped jersey, washed leather and heavy silver, cut in Kreuzberg."
+    },
+    {
+      "name": "Birkenstock",
+      "slug": "birkenstock",
+      "origin": "Linz am Rhein, Germany",
+      "description": "Cork-latex footbeds that shape themselves to your foot. Arizonas, Boston clogs and a short line of natural skin care."
+    },
+    {
+      "name": "Burnside Canvas",
+      "slug": "burnside-canvas",
+      "origin": "Portland, Oregon",
+      "description": "Waxed canvas, duck cloth and oiled leather from a workshop on Portland's east side. Chore coats, double-knee pants, field bags and boots that are meant to be repaired, not replaced."
+    },
+    {
+      "name": "Carhartt WIP",
+      "slug": "carhartt-wip",
+      "origin": "Weil am Rhein, Germany",
+      "description": "The European work-in-progress line of the Detroit workwear company. Detroit jackets, double-knee pants and the beanie everyone has."
+    },
+    {
+      "name": "Cranmore",
+      "slug": "cranmore",
+      "origin": "Providence, Rhode Island",
+      "description": "Oxford shirts, rugby jerseys, cable knits and penny loafers from a family-run label in New England. Ivy classics in proper fabrics, made to be handed down."
+    },
+    {
+      "name": "Dr. Martens",
+      "slug": "dr-martens",
+      "origin": "Wollaston, England",
+      "description": "Air-cushioned soles and yellow welt stitching since 1960. The 1460 boot, the 1461 shoe, the Adrian loafer and platforms."
+    },
+    {
+      "name": "Ferrant",
+      "slug": "ferrant",
+      "origin": "Montreal, Canada",
+      "description": "A fragrance and grooming house in Mile End. Small-batch scents, soaps and candles built around one idea each: a cedar sauna, wet stone, fig leaves, a cigarette in the snow."
+    },
+    {
+      "name": "Hedda Vang",
+      "slug": "hedda-vang",
+      "origin": "Oslo, Norway",
+      "description": "Romantic womenswear in cotton poplin, broderie anglaise and washed silk. Puff sleeves, smocking and gingham, made in small runs in Portugal."
+    },
+    {
+      "name": "Kapital",
+      "slug": "kapital",
+      "origin": "Kojima, Japan",
+      "description": "Hand-dyed indigo, sashiko and boro patchwork from Japan's denim town. Every piece looks like it has already lived a life."
+    },
+    {
+      "name": "Levi's",
+      "slug": "levis",
+      "origin": "San Francisco, California",
+      "description": "Inventors of the blue jean. The 501, the Trucker jacket and the tees that go with them."
+    },
+    {
+      "name": "Malha Lisboa",
+      "slug": "malha-lisboa",
+      "origin": "Lisbon, Portugal",
+      "description": "Knitwear from a family mill outside Lisbon. Fisherman cables, cotton crochet and soft merino cardigans, knitted and finished by hand."
+    },
+    {
+      "name": "New Balance",
+      "slug": "new-balance",
+      "origin": "Boston, Massachusetts",
+      "description": "Grey suede, made-in-USA runners and court classics. The 990, 550 and 2002R, plus running kit."
+    },
+    {
+      "name": "Nike",
+      "slug": "nike",
+      "origin": "Beaverton, Oregon",
+      "description": "Running, court and trail. We stock Nike's lifestyle classics, ACG outdoor pieces and the training basics."
+    },
+    {
+      "name": "Norse Projects",
+      "slug": "norse-projects",
+      "origin": "Copenhagen, Denmark",
+      "description": "Scandinavian functional clothing. Lambswool knits, overshirts and weatherproof jackets in muted colors."
+    },
+    {
+      "name": "Pangaia",
+      "slug": "pangaia",
+      "origin": "London, England",
+      "description": "Materials science company making clothes. Organic and recycled cotton loungewear in plant-based dyes, from washed neutrals to saturated color."
+    },
+    {
+      "name": "Patagonia",
+      "slug": "patagonia",
+      "origin": "Ventura, California",
+      "description": "Outdoor clothing built to be repaired. Synchilla fleece, Baggies shorts, Torrentshell rain jackets and Better Sweaters."
+    },
+    {
+      "name": "Salomon",
+      "slug": "salomon",
+      "origin": "Annecy, France",
+      "description": "Mountain sports gear from the French Alps. Trail runners like the XT-6, technical shells and running packs."
+    },
+    {
+      "name": "SEOM",
+      "slug": "seom",
+      "origin": "Seoul, South Korea",
+      "description": "Streetwear from Seongsu-dong. Oversized heavyweight tees, nylon cargos, cropped puffers and slim retro sneakers, with graphics drawn by the founders."
+    },
+    {
+      "name": "Snow Peak",
+      "slug": "snow-peak",
+      "origin": "Sanjo, Niigata, Japan",
+      "description": "Japanese camping gear and the clothes to wear with it. Titanium mugs, flame-resistant TAKIBI cotton and quiet technical layers."
+    },
+    {
+      "name": "Sóller",
+      "slug": "soller",
+      "origin": "Mallorca, Spain",
+      "description": "Resort clothing from the north coast of Mallorca. Linen shirts and trousers, raffia bags and jute-soled espadrilles in sun-faded color."
+    },
+    {
+      "name": "Studio Nicholson",
+      "slug": "studio-nicholson",
+      "origin": "London, England",
+      "description": "Considered, relaxed tailoring. Wide pleated trousers, boxy shirts and fabrics sourced from Japanese and Italian mills."
+    },
+    {
+      "name": "Veja",
+      "slug": "veja",
+      "origin": "Paris, France",
+      "description": "Sneakers made with organic cotton, wild rubber from the Amazon and chrome-free leather. The V-10, Campo and Esplar."
+    }
+  ],
+  "nav": [
+    {
+      "label": "Tops",
+      "category": "Tops",
+      "subcategories": ["T-shirts", "Shirts", "Knitwear", "Sweatshirts & hoodies"]
+    },
+    {
+      "label": "Bottoms",
+      "category": "Bottoms",
+      "subcategories": ["Jeans", "Trousers", "Shorts", "Skirts"]
+    },
+    {
+      "label": "Outerwear",
+      "category": "Outerwear",
+      "subcategories": ["Jackets", "Coats", "Shells & fleece"]
+    },
+    {
+      "label": "Dresses",
+      "category": "Dresses & one-pieces",
+      "subcategories": ["Dresses", "Jumpsuits"]
+    },
+    {
+      "label": "Footwear",
+      "category": "Footwear",
+      "subcategories": ["Sneakers", "Boots", "Sandals", "Dress shoes"]
+    },
+    {
+      "label": "Bags",
+      "category": "Bags",
+      "subcategories": ["Totes", "Backpacks", "Crossbody"]
+    },
+    {
+      "label": "Accessories",
+      "category": "Accessories",
+      "subcategories": ["Hats", "Eyewear", "Jewelry", "Belts", "Socks & scarves"]
+    },
+    {
+      "label": "Grooming",
+      "category": "Fragrance & grooming",
+      "subcategories": ["Fragrance", "Skincare", "Hair"]
+    },
+    {
+      "label": "Lifestyle",
+      "category": "Lifestyle",
+      "subcategories": ["Bottles & flasks", "Notebooks", "Small home goods"]
+    }
+  ]
+}

@@ -9,6 +9,12 @@ const stores = [
     kind: "Home & living · house brand only",
     note: "Tests taste → product description matching with no brand signal at all.",
   },
+  {
+    href: "/fold",
+    name: "Fold",
+    kind: "Fashion & lifestyle · 24 labels, real and made-up",
+    note: "Tests that recommendations follow taste, not brand fame: a third of the labels don't exist anywhere else.",
+  },
 ];
 
 export default function Index() {

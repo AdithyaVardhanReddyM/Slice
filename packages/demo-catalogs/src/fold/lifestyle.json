@@ -1,0 +1,622 @@
+[
+  {
+    "id": "fd-lif-01",
+    "slug": "snow-peak-titanium-flask-m",
+    "name": "Titanium Flask M",
+    "brand": "Snow Peak",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Bottles & flasks",
+    "price": 118,
+    "description": "A hip flask pressed from pure titanium in Niigata, curved to sit flat against the body in a jacket pocket, with a screw cap on a captive hinge so it can't drop in the snow. It weighs almost nothing, never taints what is inside, and the matte grey finish takes on a quiet patina with use. For a nip of whisky by the fire at the end of the day.",
+    "details": [
+      "Pure titanium, matte finish",
+      "Capacity 300 ml (10 oz)",
+      "Weight 125 g",
+      "Captive screw cap; hand wash only",
+      "Made in Japan"
+    ],
+    "attributes": {
+      "style": [
+        "gorpcore-outdoor",
+        "quiet-minimal"
+      ],
+      "material": [
+        "titanium"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "titanium grey"
+      ],
+      "useCase": [
+        "camping",
+        "gifting"
+      ],
+      "occasion": [
+        "camping",
+        "hiking",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "titanium",
+      "ultralight",
+      "made in japan",
+      "gift"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-01-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "titanium hip flask",
+    "images": [
+      "/fold/fd-lif-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 92
+  },
+  {
+    "id": "fd-lif-02",
+    "slug": "nike-recharge-straw-bottle-24-oz",
+    "name": "Recharge Straw Bottle (24 oz)",
+    "brand": "Nike",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Bottles & flasks",
+    "price": 35,
+    "description": "A double-wall stainless steel bottle with a flip-up straw lid, so you can drink mid-set without unscrewing anything. It keeps water cold for most of a day, fits a car cup holder and has a carry loop to hook on a finger on the way into the gym. Matte powder coat and a single Swoosh.",
+    "details": [
+      "Double-wall vacuum-insulated stainless steel",
+      "Capacity 24 oz (710 ml)",
+      "Leak-resistant straw lid with carry handle",
+      "Lid dishwasher-safe; hand wash the body"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "stainless steel"
+      ],
+      "colorFamily": [
+        "black",
+        "white"
+      ],
+      "colors": [
+        "black",
+        "white",
+        "volt"
+      ],
+      "useCase": [
+        "training",
+        "hydration",
+        "commute"
+      ],
+      "occasion": [
+        "gym",
+        "running",
+        "commute"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "insulated",
+      "straw lid",
+      "gym",
+      "leak resistant"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-02-black",
+        "label": "Black",
+        "inStock": true
+      },
+      {
+        "id": "fd-lif-02-white",
+        "label": "White",
+        "inStock": true
+      },
+      {
+        "id": "fd-lif-02-volt",
+        "label": "Volt",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "nike stainless steel water bottle",
+    "images": [
+      "/fold/fd-lif-02.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 520,
+    "bestseller": true
+  },
+  {
+    "id": "fd-lif-03",
+    "slug": "seom-chrome-bottle",
+    "name": "Chrome Bottle",
+    "brand": "SEOM",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Bottles & flasks",
+    "price": 48,
+    "description": "A slim 500 ml stainless steel bottle in mirror chrome, printed with the founders' hand-drawn star graphic in baby blue. It is loud and shiny, keeps drinks cold for 12 hours and looks like a prop from a 2002 sports drink ad. Comes with a short ball-chain strap to clip onto a bag.",
+    "details": [
+      "Double-wall stainless steel, mirror-chrome finish",
+      "Capacity 500 ml (17 oz)",
+      "Cold 12 hours, hot 6 hours",
+      "Hand wash only; the chrome scratches in a dishwasher",
+      "Designed in Seoul"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "stainless steel"
+      ],
+      "colorFamily": [
+        "cool",
+        "pastel"
+      ],
+      "colors": [
+        "chrome",
+        "baby blue"
+      ],
+      "useCase": [
+        "hydration",
+        "statement accessory"
+      ],
+      "occasion": [
+        "everyday",
+        "campus",
+        "festival"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "chrome",
+      "graphic",
+      "insulated",
+      "y2k"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-03-chrome-baby-blue",
+        "label": "Chrome / Baby Blue",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "stainless steel water bottle",
+    "images": [
+      "/fold/fd-lif-03.jpg"
+    ],
+    "rating": 4.3,
+    "reviewCount": 44,
+    "new": true
+  },
+  {
+    "id": "fd-lif-04",
+    "slug": "burnside-canvas-belmont-notebook-cover",
+    "name": "Belmont Notebook Cover",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Notebooks",
+    "price": 85,
+    "description": "A notebook cover cut from a single piece of oil-tanned leather, saddle-stitched along the spine, with a waxed canvas pen sleeve and a slot for receipts. It holds a pocket notebook with room for a spare, and over years in a back pocket it darkens, creases and moulds to the curve of your hip. Ships with one dot-grid refill.",
+    "details": [
+      "Oil-tanned cowhide, 5 oz; waxed cotton duck pen sleeve",
+      "Fits 3.5 x 5.5 in pocket notebooks",
+      "Includes one 48-page dot-grid refill",
+      "Hand-stitched in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "oil-tanned leather",
+        "waxed canvas"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "tobacco brown",
+        "black"
+      ],
+      "useCase": [
+        "field notes",
+        "everyday carry",
+        "gifting"
+      ],
+      "occasion": [
+        "everyday",
+        "commute",
+        "travel"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "leather",
+      "made in usa",
+      "everyday carry",
+      "ages well"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-04-tobacco",
+        "label": "Tobacco",
+        "inStock": true
+      },
+      {
+        "id": "fd-lif-04-black",
+        "label": "Black",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "leather notebook pen desk",
+    "images": [
+      "/fold/fd-lif-04.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 131
+  },
+  {
+    "id": "fd-lif-05",
+    "slug": "arket-linen-notebook-a5",
+    "name": "Linen Notebook A5",
+    "brand": "Arket",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Notebooks",
+    "price": 18,
+    "description": "An A5 notebook bound in natural linen over board, with 192 pages of off-white 100 gsm paper that takes a fountain pen without bleeding through. It lies flat when open, has a single grey ribbon marker and nothing printed on the cover. A calm, plain thing for lists, sketches or meeting notes.",
+    "details": [
+      "Linen-covered hardcover, sewn binding",
+      "A5, 192 pages, 100 gsm FSC-certified paper",
+      "Lies flat when open",
+      "Dot grid or plain pages"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen",
+        "paper"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "natural linen"
+      ],
+      "useCase": [
+        "note taking",
+        "sketching",
+        "journaling"
+      ],
+      "occasion": [
+        "office",
+        "campus",
+        "everyday"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "linen",
+      "lay flat",
+      "fsc paper",
+      "no logo"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-05-dot-grid",
+        "label": "Dot Grid",
+        "inStock": true
+      },
+      {
+        "id": "fd-lif-05-plain",
+        "label": "Plain",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "linen covered notebook desk",
+    "images": [
+      "/fold/fd-lif-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 233
+  },
+  {
+    "id": "fd-lif-06",
+    "slug": "cranmore-exeter-ruled-journal",
+    "name": "Exeter Ruled Journal",
+    "brand": "Cranmore",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Notebooks",
+    "price": 35,
+    "compareAtPrice": 45,
+    "description": "A hardbound ruled journal in navy book cloth with gilt page edges and a red-and-green grosgrain ribbon marker, at home on a dorm desk or next to a leather blotter. Inside are 240 pages of cream paper and a pocket at the back for clippings. A good graduation or first-job gift.",
+    "details": [
+      "Navy book cloth over board, gilt page edges",
+      "6 x 8.5 in, 240 ruled pages of 120 gsm cream paper",
+      "Rear pocket and grosgrain tie closure",
+      "Bound in New Hampshire"
+    ],
+    "attributes": {
+      "style": [
+        "preppy-ivy"
+      ],
+      "material": [
+        "book cloth",
+        "paper"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "navy",
+        "cream",
+        "gold"
+      ],
+      "useCase": [
+        "journaling",
+        "note taking",
+        "gifting"
+      ],
+      "occasion": [
+        "campus",
+        "office"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "gift",
+      "gilt edges",
+      "made in usa",
+      "ruled"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-06-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy cloth bound journal",
+    "images": [
+      "/fold/fd-lif-06.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 58
+  },
+  {
+    "id": "fd-lif-07",
+    "slug": "ferrant-chapelle-candle",
+    "name": "Chapelle Candle",
+    "brand": "Ferrant",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Small home goods",
+    "price": 48,
+    "description": "A slow-burning candle in a heavy matte black glass vessel that smells of a cold stone chapel: frankincense, beeswax, a little myrrh and the ghost of a blown-out match. It burns clean on a coconut and soy blend, and the room it fills feels quieter and darker in a good way. Light it on a winter evening with the overhead lights off.",
+    "details": [
+      "Coconut and soy wax blend, cotton wick",
+      "220 g; approx. 50 hours burn time",
+      "Matte black glass vessel, reusable",
+      "Poured by hand in Montreal"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "coconut soy wax",
+        "black glass"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "matte black"
+      ],
+      "useCase": [
+        "evenings at home",
+        "gifting"
+      ],
+      "occasion": [
+        "date night",
+        "everyday"
+      ],
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "incense",
+      "candle",
+      "hand poured",
+      "made in canada"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-07-220-g",
+        "label": "220 g",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black glass candle dark room",
+    "images": [
+      "/fold/fd-lif-07.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 176
+  },
+  {
+    "id": "fd-lif-08",
+    "slug": "soller-fornalutx-striped-linen-tea-towels-set-of-2",
+    "name": "Fornalutx Striped Linen Tea Towels (Set of 2)",
+    "brand": "Sóller",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Small home goods",
+    "price": 38,
+    "description": "Two tea towels woven from heavy washed linen in a sun-faded blue and white stripe, the kind found in every finca kitchen on Mallorca. They are absorbent, dry glasses without lint and get softer with every wash. Hung on a hook, they make a kitchen look like summer.",
+    "details": [
+      "100% washed linen, 240 gsm",
+      "20 x 28 in (50 x 70 cm) each",
+      "Hanging loop at one corner",
+      "Machine wash warm, tumble dry low",
+      "Woven in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "faded sky blue",
+        "white"
+      ],
+      "useCase": [
+        "kitchen",
+        "hosting",
+        "gifting"
+      ],
+      "occasion": [
+        "everyday"
+      ],
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "linen",
+      "striped",
+      "set of 2",
+      "made in spain"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-08-sky-stripe",
+        "label": "Sky Stripe",
+        "inStock": true
+      },
+      {
+        "id": "fd-lif-08-sand-stripe",
+        "label": "Sand Stripe",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "blue striped linen tea towel",
+    "images": [
+      "/fold/fd-lif-08.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 67
+  },
+  {
+    "id": "fd-lif-09",
+    "slug": "carhartt-wip-script-logo-mug",
+    "name": "Script Logo Mug",
+    "brand": "Carhartt WIP",
+    "department": "unisex",
+    "category": "Lifestyle",
+    "subcategory": "Small home goods",
+    "price": 28,
+    "description": "A heavy stoneware mug with a thick rolled lip and the Carhartt WIP script logo printed on the side in Hamilton brown. It holds a generous 400 ml of coffee, stays warm in the hand on a cold workshop morning and has survived more than one fall off a workbench. Dishwasher and microwave safe.",
+    "details": [
+      "Glazed stoneware",
+      "Capacity 400 ml (13.5 oz)",
+      "Dishwasher and microwave safe",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "streetwear",
+        "heritage-workwear"
+      ],
+      "material": [
+        "stoneware"
+      ],
+      "colorFamily": [
+        "neutral",
+        "earth"
+      ],
+      "colors": [
+        "ecru",
+        "hamilton brown"
+      ],
+      "useCase": [
+        "coffee",
+        "desk",
+        "gifting"
+      ],
+      "occasion": [
+        "everyday",
+        "office"
+      ],
+      "season": [
+        "all-season"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "stoneware",
+      "logo",
+      "gift",
+      "dishwasher safe"
+    ],
+    "variants": [
+      {
+        "id": "fd-lif-09-one-size",
+        "label": "One size",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "stoneware coffee mug logo",
+    "images": [
+      "/fold/fd-lif-09.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 143
+  }
+]

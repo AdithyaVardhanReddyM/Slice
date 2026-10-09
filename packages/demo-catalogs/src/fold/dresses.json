@@ -1,0 +1,1097 @@
+[
+  {
+    "id": "fd-dre-01",
+    "slug": "hedda-vang-astrid-puff-sleeve-poplin-dress",
+    "name": "Astrid Puff-Sleeve Poplin Dress",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 245,
+    "description": "A full midi dress in crisp organic cotton poplin with big gathered puff sleeves, a square neck and a smocked bodice that gives where you need it. The skirt is tiered and wide, and the cream color has a faint broderie trim at the hem. Romantic and a little bit undone, it suits a garden wedding, a picnic or a summer evening with sandals.",
+    "details": [
+      "100% organic cotton poplin with broderie anglaise trim",
+      "Square neck, elasticated puff sleeves, smocked bodice",
+      "Tiered midi skirt, 47 in from shoulder on S; side pockets",
+      "Model is 5'9\" and wears S",
+      "Machine wash 30°C, warm iron",
+      "Made in small runs in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho"
+      ],
+      "material": [
+        "organic cotton poplin",
+        "broderie anglaise"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "cream",
+        "white"
+      ],
+      "useCase": [
+        "weddings",
+        "picnics",
+        "summer evenings"
+      ],
+      "occasion": [
+        "wedding guest",
+        "date night",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "puff sleeve",
+      "smocked",
+      "broderie",
+      "midi",
+      "organic cotton"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-01-xs",
+        "label": "XS",
+        "inStock": false
+      },
+      {
+        "id": "fd-dre-01-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-01-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-01-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-01-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream puff sleeve midi dress",
+    "images": [
+      "/fold/fd-dre-01.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 214,
+    "bestseller": true
+  },
+  {
+    "id": "fd-dre-02",
+    "slug": "hedda-vang-sigrid-gingham-smocked-mini-dress",
+    "name": "Sigrid Gingham Smocked Mini Dress",
+    "brand": "Hedda Vang",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 195,
+    "compareAtPrice": 230,
+    "description": "A short, fully smocked dress in red-and-cream cotton gingham with tie shoulder straps and a soft ruffle at the hem. It stretches to fit, moves easily and has a sweet, schoolgirl-meets-countryside feel. Wear it with ballet flats and a cardigan over the shoulders, or loafers and white socks.",
+    "details": [
+      "100% cotton seersucker gingham",
+      "Fully smocked bodice; adjustable tie straps",
+      "Mini length, 33 in on S; ruffle hem",
+      "Model is 5'8\" and wears S",
+      "Machine wash 30°C, line dry",
+      "Made in small runs in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "preppy-ivy"
+      ],
+      "material": [
+        "cotton seersucker"
+      ],
+      "colorFamily": [
+        "warm",
+        "white"
+      ],
+      "colors": [
+        "red gingham",
+        "cream"
+      ],
+      "useCase": [
+        "picnics",
+        "summer outfits",
+        "dates"
+      ],
+      "occasion": [
+        "date night",
+        "weekend",
+        "wedding guest"
+      ],
+      "fit": "slim",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gingham",
+      "smocked",
+      "mini",
+      "seersucker"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-02-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-02-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-02-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-02-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-02-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "red gingham smocked mini dress",
+    "images": [
+      "/fold/fd-dre-02.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 88
+  },
+  {
+    "id": "fd-dre-03",
+    "slug": "arket-cupro-slip-dress",
+    "name": "Cupro Slip Dress",
+    "brand": "Arket",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 110,
+    "description": "A bias-cut slip dress in fluid cupro with thin adjustable straps, a low V neck and a midi hem that skims the body. The deep navy has a soft matte sheen and no trims, so it reads quietly from across a room. Wear it alone in summer, or layered over a fine white tee with a long wool coat in autumn.",
+    "details": [
+      "100% cupro, bias cut",
+      "Adjustable straps, V neckline",
+      "Midi length, 46 in on S",
+      "Model is 5'10\" and wears S",
+      "Hand wash cold or dry clean",
+      "Made in China"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cupro"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "navy",
+        "black",
+        "oat"
+      ],
+      "useCase": [
+        "dinners",
+        "layering",
+        "minimal capsule"
+      ],
+      "occasion": [
+        "date night",
+        "wedding guest",
+        "night out"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "slip dress",
+      "bias cut",
+      "midi",
+      "layering"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-03-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-03-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-03-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-03-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-03-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "navy satin slip dress woman",
+    "images": [
+      "/fold/fd-dre-03.jpg"
+    ],
+    "rating": 4.4,
+    "reviewCount": 302
+  },
+  {
+    "id": "fd-dre-04",
+    "slug": "studio-nicholson-kiko-poplin-shirt-dress",
+    "name": "Kiko Poplin Shirt Dress",
+    "brand": "Studio Nicholson",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 350,
+    "description": "A long, generous shirt dress in a dense Japanese cotton poplin, with a dropped shoulder, a hidden placket and a single curved hem that sits mid-calf. It hangs straight from the shoulder and can be worn loose or belted with its own self-tie. Clean, cool and quietly architectural, it pairs with leather slides or flat black loafers.",
+    "details": [
+      "100% cotton poplin, woven in Japan",
+      "Concealed button placket, dropped shoulder, self-tie belt",
+      "Midi-calf length, 49 in from shoulder on S",
+      "Model is 5'10\" and wears XS; very relaxed, consider sizing down",
+      "Machine wash 30°C, iron while damp",
+      "Made in Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "quiet-minimal"
+      ],
+      "material": [
+        "cotton poplin"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "optic white",
+        "pale grey",
+        "navy"
+      ],
+      "useCase": [
+        "office outfits",
+        "travel",
+        "summer tailoring"
+      ],
+      "occasion": [
+        "office",
+        "everyday",
+        "travel"
+      ],
+      "fit": "oversized",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "shirt dress",
+      "japanese fabric",
+      "no logo",
+      "belted"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-04-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-04-s",
+        "label": "S",
+        "inStock": false
+      },
+      {
+        "id": "fd-dre-04-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-04-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-04-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "white poplin shirt dress woman",
+    "images": [
+      "/fold/fd-dre-04.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 53,
+    "new": true
+  },
+  {
+    "id": "fd-dre-05",
+    "slug": "asche-nachtfalter-draped-jersey-dress",
+    "name": "Nachtfalter Draped Jersey Dress",
+    "brand": "Asche",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 260,
+    "description": "A long, column dress in heavy black viscose jersey with a high cowl neck, long fitted sleeves and an asymmetric draped wrap at the hip. It falls to the ankle and moves slowly, and the matte fabric takes silver jewelry beautifully. Severe and romantic at once, it is made for dark evenings with heavy boots and a long coat.",
+    "details": [
+      "95% viscose, 5% elastane jersey, 300 gsm",
+      "Cowl neck, long sleeves, draped asymmetric wrap",
+      "Maxi length, 56 in from shoulder on S",
+      "Model is 5'10\" and wears S",
+      "Hand wash cold, dry flat",
+      "Cut and sewn in Berlin"
+    ],
+    "attributes": {
+      "style": [
+        "dark-gothic"
+      ],
+      "material": [
+        "viscose jersey"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "concerts",
+        "evenings",
+        "statement dressing"
+      ],
+      "occasion": [
+        "night out",
+        "date night",
+        "wedding guest"
+      ],
+      "fit": "slim",
+      "season": [
+        "fall",
+        "winter"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "maxi",
+      "draped",
+      "cowl neck",
+      "made in germany",
+      "long sleeve"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-05-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-05-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-05-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-05-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-05-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "black draped jersey maxi dress",
+    "images": [
+      "/fold/fd-dre-05.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 39
+  },
+  {
+    "id": "fd-dre-06",
+    "slug": "soller-formentor-linen-maxi-dress",
+    "name": "Formentor Linen Maxi Dress",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 185,
+    "compareAtPrice": 220,
+    "description": "A loose, sleeveless maxi dress in washed linen with a deep scoop back, a drawstring waist and side slits that let it move in the breeze. The sun-faded blue-and-white stripe looks like old Mediterranean awnings. Made for heat, it goes from beach to a late dinner with espadrilles and a raffia tote.",
+    "details": [
+      "100% European linen, 170 gsm, stone washed",
+      "Scoop back, adjustable drawstring waist",
+      "Maxi length with side slits; 52 in from shoulder on S",
+      "Model is 5'8\" and wears S",
+      "Machine wash 30°C, line dry",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "cool",
+        "white"
+      ],
+      "colors": [
+        "sky blue stripe",
+        "white",
+        "sand"
+      ],
+      "useCase": [
+        "vacation",
+        "beach to dinner",
+        "hot weather"
+      ],
+      "occasion": [
+        "beach",
+        "travel",
+        "date night"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "maxi",
+      "striped",
+      "made in spain",
+      "resort"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-06-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-06-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-06-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-dre-06-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-06-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "striped linen maxi dress beach",
+    "images": [
+      "/fold/fd-dre-06.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 147
+  },
+  {
+    "id": "fd-dre-07",
+    "slug": "malha-lisboa-graca-crochet-midi-dress",
+    "name": "Graça Crochet Midi Dress",
+    "brand": "Malha Lisboa",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 240,
+    "description": "A slim, sleeveless midi dress in open cotton crochet, worked in a traditional Portuguese pineapple stitch with a scalloped neckline and hem. It is hand-finished at the family mill and comes with a slip you can wear or swap for a swimsuit. Soft, textured and summery, it suits a seaside wedding, a festival or a slow evening on a terrace.",
+    "details": [
+      "100% mercerized cotton crochet, hand-finished",
+      "Removable cotton slip",
+      "Midi length, 45 in from shoulder on S",
+      "Model is 5'9\" and wears S",
+      "Hand wash cold, dry flat",
+      "Knitted and finished outside Lisbon, Portugal"
+    ],
+    "attributes": {
+      "style": [
+        "romantic-boho",
+        "coastal-resort"
+      ],
+      "material": [
+        "mercerized cotton",
+        "crochet"
+      ],
+      "colorFamily": [
+        "neutral",
+        "white"
+      ],
+      "colors": [
+        "ecru",
+        "sand"
+      ],
+      "useCase": [
+        "vacation",
+        "festivals",
+        "weddings"
+      ],
+      "occasion": [
+        "beach",
+        "festival",
+        "wedding guest"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "crochet",
+      "handmade",
+      "made in portugal",
+      "midi"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-07-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-07-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-07-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-07-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-07-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "cream crochet midi dress",
+    "images": [
+      "/fold/fd-dre-07.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 67
+  },
+  {
+    "id": "fd-dre-08",
+    "slug": "nike-nikecourt-dri-fit-victory-tennis-dress",
+    "name": "NikeCourt Dri-FIT Victory Tennis Dress",
+    "brand": "Nike",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 90,
+    "description": "A sleeveless tennis dress in stretchy Dri-FIT jersey with a racerback, a built-in bra shelf and a flippy pleated skirt over integrated shorts with ball pockets. The clean white with a small black Swoosh looks right on court and just as sharp with a cardigan afterwards. Sporty, breathable and easy to move in.",
+    "details": [
+      "88% recycled polyester, 12% spandex Dri-FIT jersey",
+      "Racerback, built-in shelf bra",
+      "Integrated shorts with ball pockets; pleated skirt",
+      "Model is 5'8\" and wears S",
+      "Machine wash cold",
+      "Made in Thailand"
+    ],
+    "attributes": {
+      "style": [
+        "athletic"
+      ],
+      "material": [
+        "recycled polyester",
+        "spandex"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white",
+        "black"
+      ],
+      "useCase": [
+        "tennis",
+        "padel",
+        "training"
+      ],
+      "occasion": [
+        "gym",
+        "weekend"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "tennis",
+      "dri-fit",
+      "built-in shorts",
+      "pleated"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-08-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-08-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-08-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-08-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-08-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "white tennis dress woman court",
+    "images": [
+      "/fold/fd-dre-08.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 289
+  },
+  {
+    "id": "fd-dre-09",
+    "slug": "seom-chrome-ruched-mesh-mini-dress",
+    "name": "Chrome Ruched Mesh Mini Dress",
+    "brand": "SEOM",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Dresses",
+    "price": 95,
+    "description": "A body-skimming mini in stretch power mesh, ruched along both sides with adjustable drawcords so you can pull the hem as short as you want. It is printed with a hazy chrome graphic drawn by the founders and lined at the body. Shiny, slim and very early-2000s, it wants platform sneakers or boots and a cropped jacket.",
+    "details": [
+      "90% nylon, 10% elastane power mesh; jersey lining",
+      "Side ruching with adjustable drawcords",
+      "Mini length, 30–34 in from shoulder on S",
+      "Model is 5'7\" and wears S",
+      "Hand wash cold",
+      "Made in South Korea"
+    ],
+    "attributes": {
+      "style": [
+        "y2k-retro",
+        "streetwear"
+      ],
+      "material": [
+        "nylon mesh",
+        "elastane"
+      ],
+      "colorFamily": [
+        "cool",
+        "black"
+      ],
+      "colors": [
+        "chrome silver",
+        "black"
+      ],
+      "useCase": [
+        "going out",
+        "parties",
+        "festival outfits"
+      ],
+      "occasion": [
+        "night out",
+        "festival"
+      ],
+      "fit": "slim",
+      "season": [
+        "spring",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "mesh",
+      "ruched",
+      "mini",
+      "graphic",
+      "party"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-09-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-09-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-09-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-09-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-09-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "silver mesh ruched mini dress",
+    "images": [
+      "/fold/fd-dre-09.jpg"
+    ],
+    "rating": 4.2,
+    "reviewCount": 76,
+    "new": true
+  },
+  {
+    "id": "fd-dre-10",
+    "slug": "carhartt-wip-w-bib-overall-straight",
+    "name": "W' Bib Overall Straight",
+    "brand": "Carhartt WIP",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Jumpsuits",
+    "price": 150,
+    "description": "A straight-leg bib overall in rinsed 12 oz Dearborn canvas, with adjustable buckle straps, a chest pocket and side button openings. It starts stiff and softens into a slouchy, faded fit over months of wear. Utilitarian and a little cool, it goes over a striped long-sleeve tee or a hoodie with chunky boots or skate shoes.",
+    "details": [
+      "100% organic cotton 'Dearborn' canvas, 12 oz",
+      "Adjustable buckle straps; button side openings",
+      "Bib pocket, hammer loop, rear patch pockets",
+      "Model is 5'8\" and wears S",
+      "Machine wash cold; expect fading at seams",
+      "Made in Tunisia"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear",
+        "streetwear"
+      ],
+      "material": [
+        "cotton canvas"
+      ],
+      "colorFamily": [
+        "earth",
+        "black"
+      ],
+      "colors": [
+        "hamilton brown",
+        "black rinsed"
+      ],
+      "useCase": [
+        "workshop",
+        "everyday",
+        "gardening"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "festival"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "overalls",
+      "canvas",
+      "organic cotton",
+      "breaks in"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-10-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-10-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-10-m",
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "id": "fd-dre-10-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-10-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "brown canvas bib overalls woman",
+    "images": [
+      "/fold/fd-dre-10.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 211
+  },
+  {
+    "id": "fd-dre-11",
+    "slug": "soller-valldemossa-linen-jumpsuit",
+    "name": "Valldemossa Linen Jumpsuit",
+    "brand": "Sóller",
+    "department": "women",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Jumpsuits",
+    "price": 195,
+    "description": "A sleeveless wide-leg jumpsuit in washed linen with a V neck, a self-tie waist and deep pockets. It drapes loosely and stays cool in real heat, and the sand color is softened to look sun-bleached. Calm and easy, it pairs with flat leather sandals, a straw hat and gold hoops.",
+    "details": [
+      "100% European linen, 190 gsm, stone washed",
+      "V neck, self-tie waist, button back",
+      "Wide leg, inseam 29 in on S; side pockets",
+      "Model is 5'9\" and wears S",
+      "Machine wash 30°C, line dry",
+      "Made in Spain"
+    ],
+    "attributes": {
+      "style": [
+        "coastal-resort",
+        "quiet-minimal"
+      ],
+      "material": [
+        "linen"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "sand",
+        "white",
+        "olive"
+      ],
+      "useCase": [
+        "vacation",
+        "travel",
+        "hot weather"
+      ],
+      "occasion": [
+        "travel",
+        "beach",
+        "weekend"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "linen",
+      "jumpsuit",
+      "pockets",
+      "made in spain"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-11-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-11-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-11-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-11-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-11-xl",
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "sand linen jumpsuit woman",
+    "images": [
+      "/fold/fd-dre-11.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 63
+  },
+  {
+    "id": "fd-dre-12",
+    "slug": "burnside-canvas-mill-coverall",
+    "name": "Mill Coverall",
+    "brand": "Burnside Canvas",
+    "department": "unisex",
+    "category": "Dresses & one-pieces",
+    "subcategory": "Jumpsuits",
+    "price": 245,
+    "description": "A one-piece work coverall in 10 oz duck canvas with a two-way front zip, action-pleat back and a stack of pockets for pencils, rules and phone. Garment-dyed a deep indigo-washed navy, it fades over time to the soft blue of old work clothes. Rugged and practical, it is made for the workshop or the garden and looks good with boots and a beanie.",
+    "details": [
+      "100% cotton duck canvas, 10 oz, garment dyed",
+      "Two-way brass zip, action-pleat back, elastic back waist",
+      "Chest, hip, rule and pencil pockets",
+      "Unisex sizing; women typically size down one",
+      "Machine wash cold; free repairs for life",
+      "Made in Portland, Oregon"
+    ],
+    "attributes": {
+      "style": [
+        "heritage-workwear"
+      ],
+      "material": [
+        "cotton duck canvas"
+      ],
+      "colorFamily": [
+        "cool",
+        "earth"
+      ],
+      "colors": [
+        "washed navy",
+        "tobacco brown"
+      ],
+      "useCase": [
+        "workshop",
+        "gardening",
+        "making"
+      ],
+      "occasion": [
+        "everyday",
+        "weekend",
+        "camping"
+      ],
+      "fit": "relaxed",
+      "season": [
+        "spring",
+        "fall"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "coverall",
+      "boilersuit",
+      "duck canvas",
+      "made in usa",
+      "repairable"
+    ],
+    "variants": [
+      {
+        "id": "fd-dre-12-xs",
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-12-s",
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-12-m",
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-12-l",
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "id": "fd-dre-12-xl",
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "navy canvas boilersuit workwear",
+    "images": [
+      "/fold/fd-dre-12.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 41
+  }
+]
