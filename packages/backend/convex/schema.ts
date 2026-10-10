@@ -167,6 +167,29 @@ export default defineSchema({
     .index("by_store_id", ["storeKey", "id"])
     .index("by_store_slug", ["storeKey", "slug"]),
 
+  // Each product described in Qloo's own tag vocabulary (catalogTaste.ts), so
+  // a shopper's Qloo tags can be matched to products by id rather than by
+  // substring. Kept apart from `products` so a catalog re-import keeps it.
+  productTaste: defineTable({
+    storeKey: v.string(),
+    productId: v.string(),
+    tags: v.array(
+      v.object({
+        id: v.string(),
+        name: v.string(),
+        type: v.string(),
+        weight: v.number(),
+        /** "llm" (read from the product copy) or "brand" (inherited from the brand's Qloo entity). */
+        source: v.string(),
+      }),
+    ),
+    /** Hash of the product text the tags were derived from; a changed product is re-tagged. */
+    fingerprint: v.string(),
+    updatedAt: v.number(),
+  })
+    .index("by_store", ["storeKey"])
+    .index("by_store_product", ["storeKey", "productId"]),
+
   // A shopper's taste profile: what they told us, what Qloo made of it, and
   // the agent's translation into the store's own vocabulary.
   tasteProfiles: defineTable({

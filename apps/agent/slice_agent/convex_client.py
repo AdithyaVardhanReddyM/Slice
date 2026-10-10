@@ -42,6 +42,20 @@ async def query(path: str, args: dict[str, Any] | None = None) -> Any:
     return body.get("value")
 
 
+async def action(path: str, args: dict[str, Any] | None = None, timeout: float = 120.0) -> Any:
+    """Run a public Convex action, e.g. action("catalogTaste:vocabulary")."""
+    res = await client().post(
+        f"{_env('CONVEX_URL')}/api/action",
+        json={"path": path, "args": args or {}, "format": "json"},
+        timeout=timeout,
+    )
+    res.raise_for_status()
+    body = res.json()
+    if body.get("status") != "success":
+        raise RuntimeError(f"Convex action {path} failed: {body.get('errorMessage')}")
+    return body.get("value")
+
+
 async def site(path: str, body: dict[str, Any]) -> tuple[Any, httpx.Headers]:
     """POST to a route on the Convex site URL with the agent secret."""
     res = await client().post(

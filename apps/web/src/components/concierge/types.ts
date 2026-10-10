@@ -114,6 +114,8 @@ export interface Pick {
   };
   reason: string;
   fit?: number | null;
+  /** Where the product landed among everything that passed the filters. */
+  rank?: { position: number; pool: number } | null;
   breakdown?: {
     taste: number;
     style: number;
@@ -124,6 +126,8 @@ export interface Pick {
   } | null;
   matched: {
     styles?: string[];
+    /** Qloo tags the product shares with the shopper's profile. */
+    tags?: string[];
     terms?: string[];
     palette?: string[];
     materials?: string[];
@@ -162,11 +166,20 @@ export type AgentEvent =
   | { type: "done"; messageId: string; text: string; trace: Span[]; totalMs: number }
   | { type: "error"; message: string };
 
+/** One thing the shopper did on the merchant's site this visit (recorded by slice.js). */
+export interface Signal {
+  type: "view" | "click" | "cart";
+  id: string;
+  at: number;
+  /** Dwell time on a product page, for "view". */
+  ms?: number;
+}
+
 /** What the widget (parent page) and the embed exchange over postMessage. */
 export type ToParent =
   | { type: "slice:ready" }
   | { type: "slice:state"; profileId: string | null; messages: Message[] }
-  | { type: "slice:navigate"; url: string }
+  | { type: "slice:navigate"; url: string; productId?: string }
   | { type: "slice:close" };
 
 export type FromParent = {
@@ -176,5 +189,6 @@ export type FromParent = {
   profileId: string | null;
   page: PageContext;
   messages?: Message[];
+  signals?: Signal[];
   mobile?: boolean;
 };

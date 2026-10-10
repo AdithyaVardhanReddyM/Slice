@@ -16,6 +16,10 @@ type PageContext = {
   query?: string;
 };
 
+/** One thing the shopper did this visit; the concierge weighs these as taste evidence. */
+type Signal = { type: "view" | "click" | "cart"; id: string; at: number; ms?: number };
+const MAX_SIGNALS = 40;
+
 const styles = `
   :host { all: initial; }
   * { box-sizing: border-box; }
@@ -124,6 +128,7 @@ function boot() {
     profile: `slice:${key}:profile`,
     session: `slice:${key}:session`,
     transcript: `slice:${key}:transcript`,
+    signals: `slice:${key}:signals`,
     open: `slice:${key}:open`,
     teased: `slice:${key}:teased`,
   };
@@ -148,6 +153,49 @@ function boot() {
     sessionId = uid();
     set(storage.session, sessionId, sessionStorage);
   }
+
+  // --- browsing signals: product views (with dwell), picks opened, add to cart ---
+  const readSignals = (): Signal[] => {
+    try {
+      const list = JSON.parse(get(storage.signals, sessionStorage) ?? "[]");
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  };
+  const writeSignals = (list: Signal[]) =>
+    set(storage.signals, JSON.stringify(list.slice(-MAX_SIGNALS)), sessionStorage);
+  const track = (type: Signal["type"], id: unknown, ms?: number) => {
+    if (typeof id !== "string" || !id) return;
+    const list = readSignals();
+    list.push({ type, id, at: Date.now(), ...(ms !== undefined ? { ms } : {}) });
+    writeSignals(list);
+  };
+  const page = readPage();
+  const viewedId = page.product?.id ?? page.product?.sku;
+  if (viewedId) {
+    const arrived = Date.now();
+    track("view", viewedId, 0);
+    // Dwell: update this page's view entry when the shopper leaves or tabs away.
+    const settle = () => {
+      const list = readSignals();
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].type === "view" && list[i].id === viewedId && list[i].at >= arrived) {
+          list[i].ms = Date.now() - arrived;
+          break;
+        }
+      }
+      writeSignals(list);
+    };
+    window.addEventListener("pagehide", settle);
+    document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && settle());
+  }
+  // Merchants (and the demo stores) report cart adds: dispatchEvent(new CustomEvent("slice:track", {detail: {type: "cart", id}}))
+  window.addEventListener("slice:track", (ev: Event) => {
+    const d = (ev as CustomEvent).detail ?? {};
+    if (d.type === "cart" || d.type === "view" || d.type === "click") track(d.type, d.id);
+  });
+  (window as unknown as { slice: { track: typeof track } }).slice = { track };
 
   const host = document.createElement("div");
   host.id = "slice-root";
@@ -183,8 +231,9 @@ function boot() {
         key,
         sessionId,
         profileId: get(storage.profile),
-        page: readPage(),
+        page,
         messages,
+        signals: readSignals(),
         mobile: window.matchMedia("(max-width: 640px)").matches,
       },
       embedOrigin,
@@ -196,10 +245,11 @@ function boot() {
     teaser.hidden = true;
   };
 
+  const load = () => {
+    if (!panel.src) panel.src = `${APP_URL}/embed/concierge?key=${encodeURIComponent(key)}`;
+  };
   const setOpen = (open: boolean) => {
-    if (open && !panel.src) {
-      panel.src = `${APP_URL}/embed/concierge?key=${encodeURIComponent(key)}`;
-    }
+    if (open) load();
     panel.hidden = !open;
     launcher.setAttribute("aria-expanded", String(open));
     set(storage.open, open ? "1" : null, sessionStorage);
@@ -228,6 +278,7 @@ function boot() {
         set(storage.transcript, JSON.stringify((msg.messages as unknown[]) ?? []).slice(0, 400_000), sessionStorage);
         break;
       case "slice:navigate":
+        track("click", msg.productId);
         if (typeof msg.url === "string") location.href = msg.url;
         break;
       case "slice:close":
@@ -242,6 +293,13 @@ function boot() {
   // Stay open across page loads within the session; otherwise nudge once.
   if (get(storage.open, sessionStorage) === "1") {
     setOpen(true);
+  } else if (get(storage.profile) || get(storage.transcript, sessionStorage)) {
+    // A returning shopper: load the concierge in the background so its opener
+    // (picks for this page) is ready the moment they tap the launcher.
+    const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void })
+      .requestIdleCallback;
+    if (idle) idle(load, { timeout: 2500 });
+    else setTimeout(load, 1200);
   } else if (!get(storage.teased) && !get(storage.profile)) {
     setTimeout(() => {
       if (!panel.hidden) return;

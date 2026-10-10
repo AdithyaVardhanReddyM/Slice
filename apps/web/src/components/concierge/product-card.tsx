@@ -18,10 +18,23 @@ const styleLabel = (id: string, labels?: Record<string, string>) =>
 type CardProps = {
   pick: Pick;
   styleLabels?: Record<string, string>;
-  onOpen: (url: string) => void;
+  onOpen: (url: string, productId?: string) => void;
   /** Fit scores only mean something once a taste profile exists. */
   showFit?: boolean;
 };
+
+/**
+ * The pill text. An absolute score always lands in the eighties, so when the
+ * ranker tells us where the product sat in the whole pool we say that instead:
+ * "Top 3% for you" means something, "82% match" doesn't.
+ */
+function fitLabel(pick: Pick): string | null {
+  const r = pick.rank;
+  if (r && r.pool >= 20) return `Top ${Math.max(1, Math.round((r.position / r.pool) * 100))}% for you`;
+  if (r && r.pool > 1) return `#${r.position} of ${r.pool} for you`;
+  if (pick.fit !== undefined && pick.fit !== null) return `${Math.round(pick.fit * 100)}% match`;
+  return null;
+}
 
 /** Picks laid out as a horizontal, snapping rail with a scroll track and step buttons. */
 export function PicksRail({
@@ -134,13 +147,13 @@ export function ProductCard({
   const [why, setWhy] = useState(false);
   const p = pick.product;
   const m = pick.matched ?? {};
-  const open = () => p.url && onOpen(p.url);
-  const fit =
-    showFit && pick.fit !== undefined && pick.fit !== null
-      ? Math.round(pick.fit * 100)
-      : null;
+  const open = () => p.url && onOpen(p.url, p.id);
+  const fit = showFit ? fitLabel(pick) : null;
 
   const evidence = [
+    ...(m.tags ?? [])
+      .slice(0, 2)
+      .map((t) => ({ tone: "qloo" as const, text: t })),
     ...(m.styles ?? []).map((s) => ({
       tone: "sun" as const,
       text: styleLabel(s, styleLabels),
@@ -148,9 +161,10 @@ export function ProductCard({
     ...(m.brand
       ? [{ tone: "qloo" as const, text: `${m.brand} affinity` }]
       : []),
-    ...(m.terms ?? [])
-      .slice(0, 2)
-      .map((t) => ({ tone: "qloo" as const, text: t })),
+    ...(m.tags?.length ? [] : (m.terms ?? []).slice(0, 2)).map((t) => ({
+      tone: "qloo" as const,
+      text: t,
+    })),
     ...(m.materials ?? [])
       .slice(0, 1)
       .map((t) => ({ tone: "neutral" as const, text: t })),
@@ -202,7 +216,7 @@ export function ProductCard({
             ) : (
               <Fingerprint className="size-3.5" />
             )}
-            {fit}% match
+            {fit}
           </button>
         )}
 
@@ -212,7 +226,7 @@ export function ProductCard({
               {(
                 [
                   ["Style", pick.breakdown.style],
-                  ["Qloo taste terms", pick.breakdown.terms],
+                  ["Qloo tags", pick.breakdown.terms],
                   ["Palette & material", pick.breakdown.details],
                   ["Brand affinity", pick.breakdown.brand],
                   ["Your ask", pick.breakdown.intent],

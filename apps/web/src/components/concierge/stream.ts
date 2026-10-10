@@ -1,4 +1,4 @@
-import type { AgentEvent, PageContext } from "./types";
+import type { AgentEvent, Message, PageContext, Signal } from "./types";
 
 export interface ChatInput {
   sessionId: string;
@@ -7,6 +7,23 @@ export interface ChatInput {
   page: PageContext | null;
   message?: string;
   kind: "user" | "open";
+  /** Earlier turns, so the agent can rebuild its memory after a restart. */
+  history?: Message[];
+  /** What the shopper did on the site this visit. */
+  signals?: Signal[];
+}
+
+/** The transcript as the agent needs it: who said what, and which products were shown. */
+function compactHistory(messages: Message[]) {
+  return messages
+    .filter((m) => !m.streaming && !m.error && (m.text || m.picks?.length))
+    .slice(-12)
+    .map((m) => ({
+      role: m.role,
+      text: m.text,
+      opener: Boolean(m.openerFor),
+      picks: (m.picks ?? []).map((p) => ({ id: p.product.id, name: p.product.name })),
+    }));
 }
 
 /** POST a turn to /api/concierge and yield the agent's events as they stream in. */
@@ -24,6 +41,8 @@ export async function* chatStream(
       page: input.page,
       message: input.message ?? "",
       kind: input.kind,
+      history: compactHistory(input.history ?? []),
+      signals: (input.signals ?? []).slice(-40),
     }),
     signal,
   });

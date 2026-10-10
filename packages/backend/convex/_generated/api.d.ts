@@ -10,6 +10,7 @@
 
 import type * as catalog from "../catalog.js";
 import type * as catalogImport from "../catalogImport.js";
+import type * as catalogTaste from "../catalogTaste.js";
 import type * as conversations from "../conversations.js";
 import type * as http from "../http.js";
 import type * as qloo from "../qloo.js";
@@ -30,6 +31,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   catalog: typeof catalog;
   catalogImport: typeof catalogImport;
+  catalogTaste: typeof catalogTaste;
   conversations: typeof conversations;
   http: typeof http;
   qloo: typeof qloo;

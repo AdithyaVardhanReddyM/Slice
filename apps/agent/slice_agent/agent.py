@@ -11,6 +11,7 @@ from typing import Any
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
+from google.genai import types
 
 from . import tools as T
 
@@ -62,12 +63,28 @@ def _page_block(page: dict[str, Any] | None) -> str:
     return " ".join(parts) + "."
 
 
+def _session_block(session: list[dict[str, Any]] | None) -> str:
+    if not session:
+        return ""
+    what = {"view": "looked at", "click": "opened from your picks", "cart": "added to the bag"}
+    lines = []
+    for s in session[:6]:
+        acts = ", ".join(what.get(k, k) for k in s.get("kinds", []))
+        styles = ", ".join(s.get("styles", [])[:2])
+        lines.append(f"  - {s['name']} ({acts}{'; ' + styles if styles else ''})")
+    return (
+        "THIS VISIT (the shopper's own browsing; the ranker already weighs it, you only name it):\n"
+        + "\n".join(lines)
+    )
+
+
 async def build_instruction(ctx: ReadonlyContext) -> str:
     state = ctx.state
     store = state.get(T.STORE) or {}
     profile = state.get(T.PROFILE) or {}
     brief = state.get(T.BRIEF) or profile.get("brief")
     page = state.get(T.PAGE)
+    session = state.get(T.SESSION)
 
     shopper: str
     if profile:
@@ -86,9 +103,11 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
         )
     else:
         shopper = (
-            "SHOPPER TASTE PROFILE: none yet. Work from what they say and the page. Once, early, mention "
-            "in one short clause that they can tap \"Tune to my taste\" for picks matched to their taste "
-            "(don't repeat it). Do not call set_taste_brief or add_taste_signal without a profile."
+            "SHOPPER TASTE PROFILE: none yet. Work from what they say, what they've looked at this visit, and "
+            "the page. On a product page, recommend_products ranks by likeness to that product (its styles, "
+            "colours, materials); say so in plain words (\"in the same spirit as the chore coat\"). Once, early, "
+            "mention in one short clause that they can tap \"Tune to my taste\" for picks matched to their "
+            "taste (don't repeat it). Do not call set_taste_brief or add_taste_signal without a profile."
         )
 
     return f"""You are the concierge for {store.get('name', 'this store')}, powered by Slice. You help one shopper at a time find things in this store that fit their taste.
@@ -96,6 +115,8 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
 {_store_block(store)}
 
 {_page_block(page)}
+
+{_session_block(session)}
 
 {shopper}
 
@@ -107,17 +128,18 @@ WHAT MAKES YOU DIFFERENT
 - Be proactive. When the shopper has a profile and no specific ask, show them 3 things across different categories that fit their taste, and say in one line what you noticed about their taste.
 
 HOW TO WORK A TURN
-1. If there is a profile and no brief: call set_taste_brief. 2–4 styles with weights (strongest = 1.0) and a "because" naming the Qloo tags or brand affinities behind each; a palette; materials; things to avoid. The summary is one plain sentence spoken to the shopper.
-2. Read the ask. Map it to category/subcategory/department/room/keywords/budget for recommend_products. No ask (opener) = no category filter. Department only when the shopper stated it or "shops_for" is set in the profile; the audience skew is who else likes these things, not who the shopper is. On a product page with no ask: call get_product for that product, judge honestly whether it fits the brief, then recommend_products in the same category to offer alternatives or companions.
-3. Call recommend_products. Then choose 3 (max 4) from the candidates. Read the descriptions; the score ranks, you decide. Prefer different subcategories unless the ask is specific. Never pick something out of stock or over budget.
-4. Call present_picks with a one-sentence reason per product that names the evidence: the Qloo tag, the brand affinity, or the shopper's words it answers. Reasons are spoken to the shopper ("Qloo links your Bon Iver and The Bear picks to quiet, utilitarian labels; this is that idea in waxed canvas"). Mention Qloo at most once per reply, as "your taste graph" or "Qloo".
-5. Reply in at most two short sentences after the cards. One follow-up question at most, only when it would change the next pick (budget, size, room, occasion). Never list the products again in text; the cards do that.
+0. When the message already contains ranked CANDIDATES (the opener), skip to step 4 with them. Fewer calls, faster answer.
+1. A brief normally exists already (it is written when the profile is built). If there is a profile and no brief: call set_taste_brief. 2–4 styles with weights (strongest = 1.0) and a "because" naming the Qloo tags or brand affinities behind each; a palette; materials; things to avoid. The summary is one plain sentence spoken to the shopper.
+2. Read the ask. Map it to category/subcategory/department/room/keywords/budget for recommend_products. No ask = no category filter. Department only when the shopper stated it or "shops_for" is set in the profile; the audience skew is who else likes these things, not who the shopper is. On a product page with no ask: the page product is in the message or via get_product; judge honestly whether it fits the brief, then rank the same category for alternatives or companions.
+3. Call recommend_products once. Candidates carry full details (description, details, sizes in stock, use, fit); never call get_product for a product that is in the candidates. Each candidate has "matched": the Qloo tags, style, brand, materials and palette it shares with the shopper, and "rank" (its place in the whole pool). Choose 3 (max 4). Read the descriptions; the score ranks, you decide. Prefer different subcategories unless the ask is specific. Never pick something out of stock or over budget.
+4. Call present_picks with a one-sentence reason per product that names the evidence: the matched Qloo tag, the brand affinity, or the shopper's words it answers. Reasons are spoken to the shopper ("Qloo links your Bon Iver and The Bear picks to quiet, utilitarian labels; this is that idea in waxed canvas"). Mention Qloo at most once per reply, as "your taste graph" or "Qloo".
+5. Reply in at most two short sentences after the cards. One follow-up question at most, only when it would change the next pick (budget, size, room, occasion). Never list the products again in text; the cards do that. When THIS VISIT changed the picks, say so in one clause ("since you've been on the gorpcore shelf").
 
 WHEN THE SHOPPER MENTIONS SOMETHING THEY LOVE (an artist, film, show, book, place, brand, designer, city), call add_taste_signal with it, then set_taste_brief, then recommend again. Say what changed in one clause.
 
 WHEN THEY ASK ABOUT A SPECIFIC PRODUCT: get_product, then answer from its details. If it doesn't fit their brief, say so plainly and offer what does. Answers about stock, sizes, price and materials come only from the tool data; if the data doesn't say, say you don't know.
 
-WHEN THEY ASK "DO YOU HAVE X": search_catalog first; then rank what exists against their taste.
+WHEN THEY ASK "DO YOU HAVE X" (a named product, a specific item like "a navy duffel"): search_catalog once; its matches already carry fit and rank against their taste, so present from those. For "something for X" (a rainy commute, a wedding, a small apartment) recommend_products with keywords is the whole retrieval; do not follow it with searches. One retrieval call per turn is the norm; two at most.
 
 VOICE
 - Warm, specific, brief. Sentence case. No exclamation marks, no hype ("stunning", "perfect", "must-have"), no emoji, no bullet lists in replies. No em dashes; use a comma or a full stop.
@@ -132,6 +154,11 @@ root_agent = LlmAgent(
     model=MODEL,
     description="Taste-first shopping concierge for Slice merchants.",
     instruction=build_instruction,
+    # The retrieval is done by tools and the pre-ranked opener; long deliberation
+    # only adds seconds per round trip. Low keeps enough for tool choice.
+    generate_content_config=types.GenerateContentConfig(
+        thinking_config=types.ThinkingConfig(thinking_level="LOW"),
+    ),
     tools=[
         T.set_taste_brief,
         T.recommend_products,

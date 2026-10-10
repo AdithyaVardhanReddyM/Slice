@@ -66,6 +66,10 @@ export function ConciergeApp() {
   const [buildError, setBuildError] = useState<string | null>(null);
   const openerStarted = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // The transcript at the moment a turn starts, sent along so the agent can
+  // rebuild its memory if its server restarted.
+  const messagesRef = useRef<Message[]>([]);
+  messagesRef.current = messages;
 
   const key = ctx?.key ?? keyParam;
   const store = useQuery(api.catalog.store, key ? { key } : "skip") as StoreInfo | null | undefined;
@@ -124,6 +128,7 @@ export function ConciergeApp() {
       const ac = new AbortController();
       abortRef.current = ac;
       setBusy(true);
+      const history = messagesRef.current;
       const id = uid();
       setMessages((ms) => [
         ...ms,
@@ -148,6 +153,8 @@ export function ConciergeApp() {
             page,
             message: input.text,
             kind: input.kind,
+            history,
+            signals: ctx.signals,
           },
           ac.signal,
         )) {
@@ -229,8 +236,19 @@ export function ConciergeApp() {
       setProfileId(pid);
       setMessages([]);
       openerStarted.current = null;
+      // Write the taste brief now (one model call, shown as the last step of
+      // the trace) so the first turn goes straight to picks.
+      try {
+        await fetch("/api/concierge/brief", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile_id: pid, store_key: ctx.key }),
+        });
+      } catch {
+        /* the agent writes it on the first turn instead */
+      }
       // Let the trace show for a beat, then talk.
-      setTimeout(() => setScreen("chat"), 1800);
+      setTimeout(() => setScreen("chat"), 1200);
     } catch (err) {
       setBuildError(String(err));
     }
@@ -239,8 +257,8 @@ export function ConciergeApp() {
   // The build screen shows the profile's trace once the doc arrives.
   const buildSpans: Span[] | null = screen === "building" ? (profile?.trace ?? null) : null;
 
-  function navigate(url: string) {
-    if (framed) send({ type: "slice:navigate", url });
+  function navigate(url: string, productId?: string) {
+    if (framed) send({ type: "slice:navigate", url, productId });
     else window.open(url, "_blank", "noopener");
   }
 

@@ -29,12 +29,25 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, req) => {
     if (!authorized(req)) return json({ error: "unauthorized" }, 401);
-    const { profileId, brief } = await req.json();
+    const { profileId, brief, span } = await req.json();
     await ctx.runMutation(internal.taste.saveBrief, {
       id: profileId as Id<"tasteProfiles">,
       brief,
+      span,
     });
     return json({ ok: true });
+  }),
+});
+
+/** Products described in Qloo's tag vocabulary, from the agent's tagging job. */
+http.route({
+  path: "/agent/product-tags",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    if (!authorized(req)) return json({ error: "unauthorized" }, 401);
+    const { storeKey, items } = await req.json();
+    const saved = await ctx.runMutation(internal.catalogTaste.saveTags, { storeKey, items });
+    return json({ ok: true, saved });
   }),
 });
 

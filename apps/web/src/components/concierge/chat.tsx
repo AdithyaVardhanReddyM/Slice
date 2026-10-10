@@ -30,7 +30,7 @@ export function Chat({
   onOpenTaste: () => void;
   onTune: () => void;
   onClose: () => void;
-  onNavigate: (url: string) => void;
+  onNavigate: (url: string, productId?: string) => void;
   inIframe: boolean;
 }) {
   const [draft, setDraft] = useState("");
@@ -345,7 +345,7 @@ function ConciergeMessage({
 }: {
   m: Message;
   styleLabels: Record<string, string>;
-  onNavigate: (url: string) => void;
+  onNavigate: (url: string, productId?: string) => void;
   hasProfile: boolean;
 }) {
   const [showTrace, setShowTrace] = useState(false);

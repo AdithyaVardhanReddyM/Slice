@@ -35,6 +35,8 @@ export function AddToCart({ product }: { product: Product }) {
       return;
     }
     add(product, variant);
+    // Tells slice.js (if installed) that this product is taste evidence.
+    window.dispatchEvent(new CustomEvent("slice:track", { detail: { type: "cart", id: product.id } }));
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };

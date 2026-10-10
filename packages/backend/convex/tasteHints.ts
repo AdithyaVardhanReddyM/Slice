@@ -18,8 +18,9 @@ export interface StyleHint {
   from: string[];
 }
 
-const TAG_WEIGHTS: Record<string, number> = {
+export const TAG_WEIGHTS: Record<string, number> = {
   "urn:tag:personal_style:qloo": 1,
+  "urn:tag:aesthetic_property:qloo": 0.9,
   "urn:tag:lifestyle:qloo": 0.8,
   "urn:tag:style:qloo": 0.7,
   "urn:tag:emotional_tone:qloo": 0.5,

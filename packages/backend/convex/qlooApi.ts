@@ -65,10 +65,27 @@ export type EntityKind = keyof typeof ENTITY;
 /** Brand-domain tags: how Qloo describes the aesthetics of what people buy. */
 export const AESTHETIC_TAG_TYPES = [
   "urn:tag:personal_style:qloo",
+  "urn:tag:aesthetic_property:qloo",
   "urn:tag:lifestyle:qloo",
   "urn:tag:emotional_tone:qloo",
   "urn:tag:core_values:qloo",
   "urn:tag:customer_identity:qloo",
+];
+
+/**
+ * The same brand-domain types, grouped the way a profile should ask for them.
+ * One insights call for all six types returns mostly emotional-tone and
+ * lifestyle words (that is what links to a film or an artist) and crowds out
+ * the aesthetic and personal-style tags that products carry. Asking per group
+ * gives each kind its own slots, so the shopper's tags and the products' tags
+ * share a vocabulary.
+ */
+export const AESTHETIC_TAG_GROUPS: { types: string[]; take: number; label: string }[] = [
+  { types: ["urn:tag:personal_style:qloo"], take: 15, label: "Personal-style tags for these signals" },
+  { types: ["urn:tag:aesthetic_property:qloo"], take: 15, label: "Aesthetic tags for these signals" },
+  { types: ["urn:tag:lifestyle:qloo"], take: 12, label: "Lifestyle tags for these signals" },
+  { types: ["urn:tag:emotional_tone:qloo"], take: 12, label: "Emotional-tone tags for these signals" },
+  { types: ["urn:tag:core_values:qloo", "urn:tag:customer_identity:qloo"], take: 8, label: "Values and identity tags for these signals" },
 ];
 
 /** Cultural tags: the mood of the media and music they chose. */
@@ -347,6 +364,55 @@ export async function tagInsights(
     type: str(t.subtype) ?? "urn:tag",
     affinity: round3(Number((t.query as Json | undefined)?.affinity ?? 0) * rankWeight(rank, tags.length)),
   }));
+}
+
+/**
+ * One tagInsights call per group, deduplicated by id. Sequential with a pause
+ * between misses and one retry: the hackathon key rate-limits bursts, and a
+ * group that fails is otherwise a silent hole in the profile (no aesthetic
+ * tags means no tag overlap with products). A group that fails twice is
+ * recorded in the trace so the gap is visible.
+ */
+export async function tagInsightsByGroup(
+  ctx: ActionCtx,
+  trace: Span[],
+  entityIds: string[],
+  groups: { types: string[]; take: number; label: string }[],
+): Promise<TasteTag[]> {
+  const seen = new Set<string>();
+  const out: TasteTag[] = [];
+  for (const g of groups) {
+    let tags: TasteTag[] = [];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const before = trace.length;
+      try {
+        tags = await tagInsights(ctx, trace, entityIds, g.types, g.label, g.take);
+        break;
+      } catch (err) {
+        if (attempt === 0) {
+          await sleep(600);
+          continue;
+        }
+        trace.push({
+          kind: "qloo",
+          name: g.label,
+          path: "/v2/insights",
+          params: { "filter.tag.types": g.types.join(",") },
+          ms: 0,
+          result: `failed twice: ${String(err).slice(0, 80)}`,
+        });
+      }
+      if (trace.length === before) break;
+    }
+    const last = trace[trace.length - 1];
+    if (last?.cache === "miss") await sleep(150);
+    for (const t of tags) {
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      out.push(t);
+    }
+  }
+  return out.sort((a, b) => b.affinity - a.affinity);
 }
 
 /** Industries that sell the kind of thing a store of this vertical sells. */

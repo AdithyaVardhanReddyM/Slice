@@ -12,6 +12,7 @@ const STAGES = [
   "Finding brand affinities",
   "Checking who else shares these signals",
   "Matching it to the store's own styles",
+  "Writing your taste brief for this store",
 ];
 
 /** Shown while taste.build runs. Stages tick on a timer; the real trace replaces them when it lands. */

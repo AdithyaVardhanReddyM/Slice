@@ -9,7 +9,7 @@ import {
   type ActionCtx,
 } from "./_generated/server";
 import {
-  AESTHETIC_TAG_TYPES,
+  AESTHETIC_TAG_GROUPS,
   CULTURAL_TAG_TYPES,
   brandInsights,
   demographicInsights,
@@ -19,11 +19,12 @@ import {
   searchEntity,
   storeBrandAffinities,
   tagInsights,
+  tagInsightsByGroup,
   type EntityKind,
   type EntityRef,
   type Span,
 } from "./qlooApi";
-import { briefValidator, entityRefValidator } from "./schema";
+import { briefValidator, entityRefValidator, spanValidator } from "./schema";
 import { styleHints, termBag } from "./tasteHints";
 
 // Taste capture. The questionnaire's options come from Qloo's view of the
@@ -215,7 +216,9 @@ async function computeProfile(
   const ids = entities.map((e) => e.id);
 
   const [aesthetic, cultural, openBrands, demographics, carried] = await Promise.all([
-    tagInsights(ctx, trace, ids, AESTHETIC_TAG_TYPES, "Aesthetic tags Qloo associates with these signals", 30),
+    // Per type, so personal-style and aesthetic tags (what products carry) are
+    // not crowded out by the emotional-tone words a film or artist attracts.
+    tagInsightsByGroup(ctx, trace, ids, AESTHETIC_TAG_GROUPS),
     tagInsights(ctx, trace, ids, CULTURAL_TAG_TYPES, "Cultural tags for these signals", 20),
     brandInsights(ctx, trace, ids, city, storeBrands, store?.vertical ?? "retail", 20),
     demographicInsights(ctx, trace, ids).catch(() => null),
@@ -278,10 +281,14 @@ export const getInternal = internalQuery({
 
 /** The agent's translation of the profile into the store's language. */
 export const saveBrief = internalMutation({
-  args: { id: v.id("tasteProfiles"), brief: briefValidator },
+  args: { id: v.id("tasteProfiles"), brief: briefValidator, span: v.optional(spanValidator) },
   returns: v.null(),
-  handler: async (ctx, { id, brief }) => {
-    await ctx.db.patch(id, { brief, updatedAt: Date.now() });
+  handler: async (ctx, { id, brief, span }) => {
+    const profile = await ctx.db.get(id);
+    if (!profile) return null;
+    // The brief step shows in the profile's trace alongside the Qloo calls.
+    const trace = span ? [...profile.trace.filter((s) => s.kind !== "llm"), span] : profile.trace;
+    await ctx.db.patch(id, { brief, trace, updatedAt: Date.now() });
     return null;
   },
 });

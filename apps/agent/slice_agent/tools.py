@@ -25,8 +25,89 @@ PAGE = "page"
 LAST_CANDIDATES = "last_candidates"
 PICKS = "picks"
 SHOWN_IDS = "shown_ids"
+SESSION = "session"  # [{productId, weight, name, styles, kinds}] from this visit's browsing
 
 _store_cache: dict[str, tuple[float, dict[str, Any]]] = {}
+
+# What one browsing event says about taste. Summed per product, capped at 1,
+# newest first with a little decay so an hour-old glance doesn't outweigh now.
+SIGNAL_WEIGHT = {"view": 0.25, "dwell": 0.25, "click": 0.5, "cart": 1.0}
+DWELL_MS = 15_000
+
+
+async def load_session(store_key: str, signals: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Turn slice.js's raw events ({type, id, at, ms}) into weighted products with names."""
+    if not signals:
+        return []
+    weights: dict[str, float] = {}
+    kinds: dict[str, set[str]] = {}
+    ordered = sorted(signals, key=lambda s: -float(s.get("at") or 0))
+    seen_products: list[str] = []
+    for s in ordered:
+        pid = str(s.get("id") or "").strip()
+        kind = str(s.get("type") or "")
+        if not pid or kind not in SIGNAL_WEIGHT:
+            continue
+        if pid not in seen_products:
+            seen_products.append(pid)
+        decay = 0.85 ** seen_products.index(pid)
+        w = SIGNAL_WEIGHT[kind]
+        if kind == "view" and float(s.get("ms") or 0) >= DWELL_MS:
+            w += SIGNAL_WEIGHT["dwell"]
+        weights[pid] = min(1.0, weights.get(pid, 0.0) + w * decay)
+        kinds.setdefault(pid, set()).add(kind)
+    if not weights:
+        return []
+    try:
+        products = await convex.query("catalog:get", {"storeKey": store_key, "ids": list(weights)[:12]})
+    except Exception:
+        products = []
+    by_id = {p["id"]: p for p in products}
+    out = []
+    for pid, w in sorted(weights.items(), key=lambda kv: -kv[1])[:12]:
+        p = by_id.get(pid)
+        if not p:
+            continue
+        out.append(
+            {
+                "productId": pid,
+                "weight": round(w, 3),
+                "name": p["name"],
+                "styles": p.get("attributes", {}).get("style", []),
+                "kinds": sorted(kinds.get(pid, ())),
+            }
+        )
+    return out
+
+
+def clean_brief(
+    store: dict[str, Any],
+    *,
+    summary: str,
+    styles: list[dict],
+    palette: list[str],
+    materials: list[str],
+    avoid: list[str],
+) -> dict[str, Any] | None:
+    """Validate a brief against the store's style vocabulary. None when no style id is usable."""
+    valid = {s["id"] for s in store.get("styles", [])}
+    cleaned = []
+    for s in styles:
+        sid = str(s.get("id", "")).strip()
+        if sid not in valid:
+            continue
+        w = max(0.0, min(1.0, float(s.get("weight", 0.5))))
+        cleaned.append({"id": sid, "weight": w, "because": str(s.get("because", ""))[:300]})
+    if not cleaned:
+        return None
+    cleaned.sort(key=lambda s: -s["weight"])
+    return {
+        "summary": summary.strip()[:400],
+        "styles": cleaned[:4],
+        "palette": [str(p).strip() for p in palette if str(p).strip()][:6],
+        "materials": [str(m).strip() for m in materials if str(m).strip()][:6],
+        "avoid": [str(a).strip() for a in avoid if str(a).strip()][:4],
+    }
 
 
 async def load_store(key: str) -> dict[str, Any] | None:
@@ -53,9 +134,12 @@ def _short(text: str, n: int = 150) -> str:
     return text if len(text) <= n else text[: n - 1].rstrip() + "…"
 
 
-def _compact_product(p: dict[str, Any]) -> dict[str, Any]:
+def _compact_product(p: dict[str, Any], full: bool = False) -> dict[str, Any]:
+    """A product as the model reads it. Candidates carry everything get_product
+    would add, so the model never has to look a candidate up again."""
     a = p.get("attributes", {})
-    out = {
+    variants = p.get("variants", [])
+    out: dict[str, Any] = {
         "id": p["id"],
         "name": p["name"],
         "brand": p.get("brand"),
@@ -63,19 +147,29 @@ def _compact_product(p: dict[str, Any]) -> dict[str, Any]:
         "category": p["category"],
         "subcategory": p["subcategory"],
         "department": p.get("department"),
-        "in_stock": any(v.get("inStock") for v in p.get("variants", [])),
+        "in_stock": any(v.get("inStock") for v in variants),
         "styles": a.get("style", []),
         "materials": a.get("material", []),
         "colors": a.get("colors", []),
-        "description": _short(p.get("description", ""), 220),
+        "description": _short(p.get("description", ""), 420 if full else 220),
     }
     if p.get("compareAtPrice"):
         out["was"] = p["compareAtPrice"]
+    if full:
+        out["details"] = [_short(d, 120) for d in p.get("details", [])[:4]]
+        for key, attr in (("use_case", "useCase"), ("occasion", "occasion"), ("room", "room")):
+            if a.get(attr):
+                out[key] = a[attr]
+        if a.get("fit"):
+            out["fit"] = a["fit"]
+        out["available"] = [v["label"] for v in variants if v.get("inStock")][:12]
     return out
 
 
 def _taste_from_state(state: Any) -> dict[str, Any]:
-    """The taste the ranker uses: the agent's brief if it exists, else the Qloo hints."""
+    """The taste vector the ranker uses: the brief (or the deterministic hints) for
+    styles, the profile's Qloo tags by id, store-brand affinities, and the
+    session layer from this visit's browsing."""
     profile = state.get(PROFILE) or {}
     brief = state.get(BRIEF) or profile.get("brief")
     hints = profile.get("hints") or {"styles": [], "terms": []}
@@ -89,12 +183,40 @@ def _taste_from_state(state: Any) -> dict[str, Any]:
         for b in profile.get("brands", [])
         if b.get("inStore")
     ]
-    taste: dict[str, Any] = {"styles": styles, "terms": terms, "brands": brands}
+    tags = [
+        {"id": t["id"], "type": t.get("type", ""), "affinity": float(t.get("affinity", 0))}
+        for t in profile.get("tags", [])
+        if t.get("id")
+    ][:100]
+    taste: dict[str, Any] = {"styles": styles, "terms": terms, "brands": brands, "tags": tags}
     if brief:
         taste["palette"] = brief.get("palette", [])
         taste["materials"] = brief.get("materials", [])
         taste["avoid"] = brief.get("avoid", [])
+    session = state.get(SESSION) or []
+    if session:
+        taste["session"] = [{"productId": s["productId"], "weight": float(s["weight"])} for s in session]
     return taste
+
+
+def _fallback_reason(c: dict[str, Any] | None, store: dict[str, Any]) -> str:
+    """A plain reason from the ranker's evidence, for when the model gives none."""
+    if not c:
+        return ""
+    m = c.get("matched") or {}
+    labels = {s["id"]: s["label"] for s in store.get("styles", [])}
+    parts: list[str] = []
+    if m.get("tags"):
+        parts.append("Qloo links your taste to " + " and ".join(str(t).lower() for t in m["tags"][:2]))
+    elif m.get("styles"):
+        parts.append("sits in your " + labels.get(m["styles"][0], m["styles"][0]).lower() + " lean")
+    if m.get("brand"):
+        parts.append(f"{m['brand']} is one of your brand affinities")
+    detail = (m.get("materials") or []) + (m.get("palette") or [])
+    if detail:
+        parts.append("in " + " and ".join(str(d).lower() for d in detail[:2]))
+    text = "; ".join(parts).strip()
+    return (text[0].upper() + text[1:] + ".") if text else ""
 
 
 # --- tools -----------------------------------------------------------------
@@ -124,23 +246,11 @@ async def set_taste_brief(
     """
     state = tool_context.state
     store = state.get(STORE) or {}
-    valid = {s["id"] for s in store.get("styles", [])}
-    cleaned = []
-    for s in styles:
-        sid = str(s.get("id", "")).strip()
-        if sid not in valid:
-            continue
-        w = max(0.0, min(1.0, float(s.get("weight", 0.5))))
-        cleaned.append({"id": sid, "weight": w, "because": str(s.get("because", ""))[:300]})
-    if not cleaned:
-        return {"ok": False, "error": f"No valid style ids. Use ids from: {sorted(valid)}"}
-    brief = {
-        "summary": summary.strip()[:400],
-        "styles": cleaned,
-        "palette": [p.strip() for p in palette if p.strip()][:6],
-        "materials": [m.strip() for m in materials if m.strip()][:6],
-        "avoid": [a.strip() for a in avoid if a.strip()][:4],
-    }
+    brief = clean_brief(store, summary=summary, styles=styles, palette=palette, materials=materials, avoid=avoid)
+    if not brief:
+        valid = sorted(s["id"] for s in store.get("styles", []))
+        return {"ok": False, "error": f"No valid style ids. Use ids from: {valid}"}
+    cleaned = brief["styles"]
     state[BRIEF] = brief
     with timer() as t:
         profile_id = state.get(PROFILE_ID)
@@ -189,8 +299,6 @@ async def recommend_products(
         exclude_ids: Product ids already shown, so follow-ups bring new options.
         take: How many candidates to return (default 10, max 20).
     """
-    state = tool_context.state
-    taste = _taste_from_state(state)
     intent: dict[str, Any] = {}
     if category:
         intent["category"] = category
@@ -206,10 +314,29 @@ async def recommend_products(
         intent["priceMax"] = float(price_max)
     if price_min is not None:
         intent["priceMin"] = float(price_min)
+    if exclude_ids:
+        intent["excludeIds"] = list(exclude_ids)
+    return await rank(tool_context.state, intent, take=take)
+
+
+async def rank(state: Any, intent: dict[str, Any], *, take: int = 10) -> dict[str, Any]:
+    """The ranking step behind recommend_products, also run by the server before an
+    opener so the model's first call can be present_picks. `state` is any mapping
+    with the session keys (a ToolContext state or the plain dict the server builds)."""
+    taste = _taste_from_state(state)
+    intent = dict(intent)
     shown = list(state.get(SHOWN_IDS) or [])
-    excl = list(dict.fromkeys((exclude_ids or []) + shown))
+    # What's already in the bag is evidence, not a recommendation.
+    carted = [s["productId"] for s in (state.get(SESSION) or []) if "cart" in (s.get("kinds") or [])]
+    excl = list(dict.fromkeys(list(intent.get("excludeIds") or []) + shown + carted))
     if excl:
         intent["excludeIds"] = excl
+    # The product on the page is never its own alternative, and it seeds the
+    # ranking when the shopper has no profile.
+    page_product = (state.get(PAGE) or {}).get("product") or {}
+    anchor = page_product.get("id") or page_product.get("sku")
+    if anchor:
+        intent["anchorId"] = str(anchor)
 
     with timer() as t:
         result = await convex.query(
@@ -223,36 +350,62 @@ async def recommend_products(
         )
     cands = result.get("candidates", [])
     state[LAST_CANDIDATES] = {c["product"]["id"]: c for c in cands}
-    ask = ", ".join(f"{k}={v}" for k, v in intent.items() if k != "excludeIds") or "whole store"
+    hidden = ("excludeIds", "anchorId")
+    ask = ", ".join(f"{k}={v}" for k, v in intent.items() if k not in hidden) or "whole store"
+    seeded = result.get("seededFrom")
+    unranked = bool(result.get("unranked"))
+    session = result.get("session")
+    if seeded:
+        by = f"likeness to {seeded}" + (" and this visit" if session else "")
+    elif unranked:
+        by = "the ask only (no taste yet)"
+    elif not (state.get(PROFILE)) and session:
+        by = "what you've looked at"
+    else:
+        by = "taste" + (" and this visit" if session else "")
+    params = {
+        "styles": ", ".join(f"{s['id']}:{s['weight']:.2f}" for s in taste["styles"][:4]),
+        "qloo tags": f"{len(taste.get('tags') or [])} from the profile, {int(result.get('taggedProducts') or 0)} products tagged",
+        "brands": ", ".join(b["name"] for b in taste["brands"][:6]) or "none in store",
+        **{k: str(v) for k, v in intent.items() if k not in hidden},
+    }
+    if session:
+        params["session"] = ", ".join(session.get("products", [])[:4])
     record(
         "catalog",
-        f"Rank {int(result.get('pool') or 0)} of {int(result.get('catalogSize') or 0)} products by taste",
+        f"Rank {int(result.get('pool') or 0)} of {int(result.get('catalogSize') or 0)} products by {by}",
         f"{ask}; top: " + ", ".join(c["product"]["name"] for c in cands[:3]),
         ms=t.ms,
         started=t.started,
-        params={
-            "styles": ", ".join(f"{s['id']}:{s['weight']:.2f}" for s in taste["styles"][:4]),
-            "terms": ", ".join(t_["term"] for t_ in taste["terms"][:8]),
-            "brands": ", ".join(b["name"] for b in taste["brands"][:6]) or "none in store",
-            **{k: str(v) for k, v in intent.items() if k != "excludeIds"},
-        },
+        params=params,
     )
-    return {
+    out: dict[str, Any] = {
         "catalog_size": result.get("catalogSize"),
         "pool_after_filters": result.get("pool"),
         "taste_used": {
             "styles": taste["styles"][:4],
             "brands_in_store": [b["name"] for b in taste["brands"][:6]],
+            **({"session": session} if session else {}),
         },
-        "candidates": [
-            {
-                **_compact_product(c["product"]),
-                "fit": c["score"],
-                "matched": {k: v for k, v in c["matched"].items() if v},
-            }
-            for c in cands
-        ],
     }
+    if seeded:
+        out["ranked_by"] = f"likeness to {seeded} (the product on the page), since there is no taste profile"
+    elif unranked:
+        out["ranked_by"] = (
+            "nothing: no taste profile, nothing browsed and no product on the page, so these are only "
+            "filtered by the ask. Read the descriptions and choose by fit to what the shopper said; the fit "
+            "scores mean nothing here."
+        )
+    out["candidates"] = [
+        {
+            **_compact_product(c["product"], full=True),
+            "fit": c["score"],
+            "rank": f"{c['rank']['position']} of {c['rank']['pool']}" if c.get("rank") else None,
+            "matched": {k: v for k, v in c["matched"].items() if v},
+        }
+        for c in cands
+    ]
+    return out
 
 
 async def search_catalog(
@@ -279,18 +432,32 @@ async def search_catalog(
         args["department"] = department.lower()
     if price_max is not None:
         args["priceMax"] = float(price_max)
+    # Matches come back scored by taste too, so a searched product can be shown
+    # with the same fit and evidence as a recommended one.
+    args["taste"] = _taste_from_state(state)
     with timer() as t:
         result = await convex.query("catalog:search", args)
     products = result.get("products", [])
+    cands = {c["product"]["id"]: c for c in result.get("candidates", [])}
+    state[LAST_CANDIDATES] = {**(state.get(LAST_CANDIDATES) or {}), **cands}
     record(
         "catalog",
         f'Search catalog for "{query}"',
         f"{int(result.get('matches') or 0)} matches of {int(result.get('total') or 0)}",
         ms=t.ms,
         started=t.started,
-        params={k: str(v) for k, v in args.items() if k != "storeKey"},
+        params={k: str(v) for k, v in args.items() if k not in ("storeKey", "taste")},
     )
-    return {"matches": result.get("matches"), "products": [_compact_product(p) for p in products]}
+    out_products = []
+    for p in products:
+        item = _compact_product(p, full=True)
+        c = cands.get(p["id"])
+        if c:
+            item["fit"] = c["score"]
+            item["rank"] = f"{c['rank']['position']} of {c['rank']['pool']}" if c.get("rank") else None
+            item["matched"] = {k: v for k, v in (c.get("matched") or {}).items() if v}
+        out_products.append(item)
+    return {"matches": result.get("matches"), "products": out_products}
 
 
 async def get_product(product_id: str, tool_context: ToolContext) -> dict:
@@ -376,9 +543,11 @@ async def present_picks(picks: list[dict], tool_context: ToolContext) -> dict:
     Args:
         picks: 1 to 4 entries of {"product_id": <id>, "reason": <one sentence, spoken to the
             shopper, naming the concrete taste evidence: the Qloo tag, brand affinity or
-            thing they said that this product answers>}.
+            thing they said that this product answers>}. If you leave a reason out, the
+            card shows the ranker's own evidence instead.
     """
     state = tool_context.state
+    store = state.get(STORE) or {}
     ids = [str(p.get("product_id", "")).strip() for p in picks if p.get("product_id")][:4]
     if not ids:
         return {"ok": False, "error": "No product ids given."}
@@ -396,6 +565,7 @@ async def present_picks(picks: list[dict], tool_context: ToolContext) -> dict:
             missing.append(pid)
             continue
         c = cands.get(p["id"])
+        reason = str(pick.get("reason", "") or "").strip()[:400] or _fallback_reason(c, store)
         out.append(
             {
                 "product": {
@@ -414,8 +584,9 @@ async def present_picks(picks: list[dict], tool_context: ToolContext) -> dict:
                     "colors": p.get("attributes", {}).get("colors", []),
                     "description": p.get("description", ""),
                 },
-                "reason": str(pick.get("reason", "")).strip()[:400],
+                "reason": reason,
                 "fit": c["score"] if c else None,
+                "rank": c.get("rank") if c else None,
                 "breakdown": c.get("breakdown") if c else None,
                 "matched": {k: v for k, v in (c.get("matched") or {}).items() if v} if c else {},
             }
