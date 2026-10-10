@@ -19,11 +19,21 @@ packages/
 How the pieces talk:
 
 ```
-merchant site ── slice.js ──iframe──▶ web /embed/concierge ──▶ Convex (anonymous)
+merchant site ── slice.js ──iframe──▶ web /embed/concierge ──▶ Convex (anonymous): questionnaire, taste profile
+                                            │
+                                            └──▶ web /api/concierge ──▶ agent POST /chat (ADK, Gemini on Vertex AI)
+                                                                            ├──▶ Convex queries: catalog:recommend, catalog:search, taste:get
+                                                                            └──▶ Convex /qloo (cache) and /agent/* (brief, signals, transcripts)
 merchant      ──────────────────────▶ web /dashboard      ──▶ Convex (Clerk JWT)
-backend ──▶ agent (ADK on Agent Runtime) ──▶ Gemini (Vertex AI)
-                                          └──▶ Convex POST /qloo (cache) ──▶ Qloo API
 ```
+
+How a recommendation is made (see `docs/test-taste-profiles.md` for shoppers to try):
+
+1. **Taste capture** (`packages/backend/convex/taste.ts`): the questionnaire's options come from Qloo's view of the shopper's city (top artists, films and shows, books, places), plus an adaptive travel question from the answers so far and a free-text field. Every answer is a Qloo entity.
+2. **Profile** (same file): Qloo's cross-domain read of those entities: aesthetic tags (`personal_style`, `lifestyle`, `emotional_tone`, …), cultural tags, brand affinities (open-ended, and restricted to the brands the store carries), and the audience skew. A deterministic pass matches Qloo's terms to the store's style vocabulary as hints.
+3. **Brief** (`apps/agent/slice_agent/tools.py`, `set_taste_brief`): the agent translates the profile into the store's own styles, palette, materials and things to avoid, citing the Qloo evidence.
+4. **Ranking** (`packages/backend/convex/catalog.ts`, `recommend`): products are scored by style weights, Qloo terms found in their copy, palette and materials, brand affinity and the shopper's ask. Never by rating, sales or newness.
+5. **Picks** (`present_picks`): the agent chooses from the ranked candidates and writes a one-line reason per product. The widget shows every step under "How I chose these".
 
 ## Prerequisites
 
@@ -91,7 +101,8 @@ pnpm dev
 | Web (site + dashboard)              | http://localhost:3000                         |
 | Widget playground (demo storefront) | http://localhost:5173                         |
 | Demo stores (Marlow, Fold)          | http://localhost:3002/marlow, `/fold`         |
-| Agent (ADK dev UI + API)            | http://localhost:8000                         |
+| Agent server (`POST /chat`)         | http://localhost:8000                         |
+| Agent ADK dev UI (optional)         | `pnpm --filter @slice/agent dev:adk` → :8001  |
 | Convex dashboard                    | `cd packages/backend && npx convex dashboard` |
 
 ## Environment variables
@@ -110,7 +121,9 @@ pnpm dev
 | `apps/agent/.env`             | `GOOGLE_GENAI_USE_ENTERPRISE`                                    | `true`: Gemini through Vertex AI, not AI Studio                    |
 |                               | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`                  | Location must be `global` for `gemini-3.8-flash`                   |
 |                               | `GOOGLE_APPLICATION_CREDENTIALS`                                 | Local dev only; Agent Runtime uses its own service identity        |
-|                               | `CONVEX_SITE_URL`, `QLOO_PROXY_SECRET`                           | The agent reaches Qloo only through Convex's cached `/qloo` route  |
+|                               | `CONVEX_SITE_URL`, `CONVEX_URL`, `QLOO_PROXY_SECRET`             | The agent reads via Convex's public query API and writes via `/agent/*`; Qloo only through the cached `/qloo` route |
+|                               | `AGENT_ALLOW_ORIGINS`                                            | CORS for direct calls; the widget goes through `apps/web` `/api/concierge` |
+| `apps/web/.env.local`         | `AGENT_URL`, `NEXT_PUBLIC_STORES_URL`                            | Agent server address; where product images and demo stores are served |
 
 Server-side secrets (Google credentials, Qloo) live only in the agent and Convex, never in the Next.js or widget env. Don't commit Qloo responses to this repo: caching them privately on the server is allowed, publishing them is not. They're cached in Convex's `qlooCache` table (`packages/backend/convex/qloo.ts`); all Qloo calls go through it.
 
@@ -125,6 +138,12 @@ Server-side secrets (Google credentials, Qloo) live only in the agent and Convex
 | `pnpm --filter @slice/demo-catalogs validate`             | Schema + style-coverage check on the demo catalogs                          |
 | `pnpm --filter @slice/demo-catalogs fetch-images <store>` | Fetch a Pexels photo per product (`marlow`, `fold`; needs `PEXELS_API_KEY`) |
 | `cd packages/backend && npx convex run qloo:warm`         | Pre-cache the Qloo requests in `convex/qlooWarmList.ts` before a demo       |
+| `cd packages/backend && npx convex run seedDemo:seed`     | Load the Marlow and Fold catalogs into Convex (`{"storesUrl": ...}` to override localhost:3002) |
+| `pnpm --filter @slice/demo-catalogs export-slice <store>` | Export a demo catalog in the Slice CSV format (`template` writes the empty template)          |
+
+## Catalog import
+
+Shopify and WooCommerce stores will sync automatically (see `docs/`); custom stores upload a CSV in the Slice format. The template is served at `/slice-catalog-template.csv` (source: `packages/demo-catalogs/src/slice-csv.ts`), and `catalogImport:importCsv` in Convex turns one into a store plus products. The demo catalogs exported in that format live in `packages/demo-catalogs/exports/`.
 
 ## Embedding the widget
 

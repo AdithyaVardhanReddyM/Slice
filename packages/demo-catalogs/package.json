@@ -7,12 +7,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./marlow": "./src/marlow/index.ts",
-    "./fold": "./src/fold/index.ts"
+    "./fold": "./src/fold/index.ts",
+    "./slice-csv": "./src/slice-csv.ts"
   },
   "scripts": {
     "validate": "node scripts/validate.ts",
     "fetch-images": "node --env-file-if-exists=.env scripts/fetch-images.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "export-shopify": "node scripts/export-shopify-csv.ts",
+    "export-slice": "node scripts/export-slice-csv.ts"
   },
   "devDependencies": {
     "@types/node": "^20",

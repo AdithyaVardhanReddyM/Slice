@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@slice/qloo": "workspace:*",
-    "convex": "^1.46.0"
+    "convex": "^1.46.0",
+    "@slice/demo-catalogs": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

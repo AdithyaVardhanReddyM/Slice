@@ -7,6 +7,7 @@ import { AddToCart } from "@/components/fold/add-to-cart";
 import { ProductCard } from "@/components/fold/product-card";
 import { ProductImage } from "@/components/fold/product-image";
 import { ProductRail, RailItem } from "@/components/fold/product-rail";
+import { ProductJsonLd } from "@/components/product-json-ld";
 
 export function generateStaticParams() {
   return fold.products.map((p) => ({ slug: p.slug }));
@@ -32,6 +33,16 @@ export default async function ProductPage({ params }: PageProps<"/fold/p/[slug]"
 
   return (
     <main>
+      <ProductJsonLd
+        product={product}
+        storeName={fold.store.name}
+        url={href.product(product.slug)}
+        breadcrumbs={[
+          { name: "Home", url: href.home },
+          { name: navLabel(product.category), url: href.category(product.category) },
+          { name: product.subcategory, url: href.subcategory(product.category, product.subcategory) },
+        ]}
+      />
       <nav className="fd-container flex flex-wrap items-center gap-1 pt-6 text-sm text-fd-mute" aria-label="Breadcrumb">
         <Link href={href.home} className="hover:text-fd-ink hover:underline">Home</Link>
         <ChevronRight className="size-3.5" />

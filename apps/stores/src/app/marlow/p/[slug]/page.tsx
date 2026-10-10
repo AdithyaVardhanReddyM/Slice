@@ -5,6 +5,7 @@ import { AddToCart } from "@/components/marlow/add-to-cart";
 import { ProductCard, catalogNumber } from "@/components/marlow/product-card";
 import { ProductImage } from "@/components/marlow/product-image";
 import { GridFill } from "@/components/marlow/grid-fill";
+import { ProductJsonLd } from "@/components/product-json-ld";
 
 export function generateStaticParams() {
   return marlow.products.map((p) => ({ slug: p.slug }));
@@ -30,6 +31,16 @@ export default async function ProductPage({ params }: PageProps<"/marlow/p/[slug
 
   return (
     <main>
+      <ProductJsonLd
+        product={product}
+        storeName={marlow.store.name}
+        url={`/marlow/p/${product.slug}`}
+        breadcrumbs={[
+          { name: "Marlow", url: "/marlow" },
+          { name: product.category, url: categoryHref(product.category) },
+          { name: product.subcategory, url: subcategoryHref(product.category, product.subcategory) },
+        ]}
+      />
       <nav className="mono flex gap-2 border-b border-ink px-4 py-3 text-mute sm:px-6" aria-label="Breadcrumb">
         <Link href="/marlow" className="hover:text-ink">Marlow</Link>
         <span>/</span>

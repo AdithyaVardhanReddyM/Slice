@@ -1,0 +1,204 @@
+/* The concierge embed. Scoped under .slice-embed so nothing leaks into the console. */
+
+.slice-embed {
+  --ink: #17150f;
+  --ink-2: #4f4a41;
+  --mute: #8b8478;
+  --line: #ebe6dc;
+  --line-2: #f3efe7;
+  --paper: #ffffff;
+  --cream: #faf7f0;
+  --cream-2: #f3eee3;
+  --sun: #ffe642;
+  --sun-soft: #fff6b8;
+  --tang: #ff7900;
+  --tang-ink: #b24f00;
+  --qloo: #e8590c;
+  --qloo-soft: #fdebdd;
+  --catalog: #1f8a70;
+  --catalog-soft: #def3ec;
+  --llm: #3554c9;
+  --llm-soft: #e3e8fb;
+  --slice: #b8860b;
+  --slice-soft: #fbf0cf;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgb(23 21 15 / 0.04), 0 8px 24px rgb(23 21 15 / 0.06);
+
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  font-optical-sizing: auto;
+  color: var(--ink);
+  background: var(--paper);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.slice-embed * {
+  box-sizing: border-box;
+}
+
+.slice-embed button {
+  font: inherit;
+}
+
+.slice-embed ::selection {
+  background: var(--sun);
+  color: var(--ink);
+}
+
+.slice-embed .scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+/* Header gradient: a sliver of the brand's "freshly squeezed" palette, kept quiet. */
+.slice-embed .sun-rule {
+  height: 3px;
+  background: linear-gradient(90deg, var(--sun) 0%, var(--tang) 60%, var(--tang) 100%);
+}
+
+/* Option cards in the questionnaire */
+.slice-embed .option {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.slice-embed .option:hover {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+.slice-embed .option[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--sun-soft);
+}
+.slice-embed .option[aria-pressed="true"]::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Entrance for lists. No fill-mode on purpose: resting styles stay visible,
+   the animation only adds the entrance (a pending animation must not hide content). */
+.slice-embed .rise {
+  animation: slice-rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes slice-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Thinking dots */
+.slice-embed .dots span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 3px;
+  border-radius: 999px;
+  background: var(--mute);
+  animation: slice-dot 1.2s infinite ease-in-out;
+}
+.slice-embed .dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.slice-embed .dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes slice-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* Affinity bars */
+.slice-embed .bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line-2);
+  overflow: hidden;
+}
+.slice-embed .bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+  transform-origin: left;
+  animation: slice-grow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes slice-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.slice-embed .shimmer {
+  background: linear-gradient(90deg, var(--line-2) 25%, var(--cream) 50%, var(--line-2) 75%);
+  background-size: 200% 100%;
+  animation: slice-shimmer 1.4s infinite linear;
+}
+@keyframes slice-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.slice-embed input,
+.slice-embed textarea {
+  font: inherit;
+  color: inherit;
+}
+.slice-embed textarea {
+  resize: none;
+}
+.slice-embed input::placeholder,
+.slice-embed textarea::placeholder {
+  color: var(--mute);
+}
+.slice-embed input:focus-visible,
+.slice-embed textarea:focus-visible,
+.slice-embed button:focus-visible {
+  outline: 2px solid var(--tang);
+  outline-offset: 2px;
+}
