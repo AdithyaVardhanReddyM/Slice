@@ -118,7 +118,7 @@ export function ConciergeApp() {
   const page: PageContext | null = ctx?.page ?? null;
 
   const runTurn = useCallback(
-    async (input: { kind: "open" | "user"; text?: string }) => {
+    async (input: { kind: "open" | "user"; text?: string; openerFor?: string }) => {
       if (!ctx) return;
       abortRef.current?.abort();
       const ac = new AbortController();
@@ -128,7 +128,14 @@ export function ConciergeApp() {
       setMessages((ms) => [
         ...ms,
         ...(input.kind === "user" ? [{ id: `${id}-u`, role: "shopper" as const, text: input.text ?? "" }] : []),
-        { id, role: "concierge", text: "", streaming: true, status: "Thinking" },
+        {
+          id,
+          role: "concierge",
+          text: "",
+          streaming: true,
+          status: "Thinking",
+          ...(input.openerFor ? { openerFor: input.openerFor } : {}),
+        },
       ]);
       const patch = (fn: (m: Message) => Message) =>
         setMessages((ms) => ms.map((m) => (m.id === id ? fn(m) : m)));
@@ -187,15 +194,22 @@ export function ConciergeApp() {
   useEffect(() => {
     if (screen !== "chat" || !ctx || busy) return;
     if (profileId && profile === undefined) return; // wait for the profile to load
-    const productKey = page?.product?.name ? `product:${page.product.name}` : "home";
-    const marker = `${ctx.sessionId}:${productKey}`;
+    const product = page?.product;
+    const productId = product?.id || product?.sku || product?.url || product?.name;
+    const pageKey = productId ? `product:${productId}` : "home";
+    const marker = `${ctx.sessionId}:${pageKey}`;
     if (openerStarted.current === marker) return;
-    const fresh = messages.length === 0;
-    const newProduct = page?.product?.name && !messages.some((m) => m.text.includes(page.product!.name!));
     openerStarted.current = marker;
-    if (fresh || newProduct) {
-      queueMicrotask(() => void runTurn({ kind: "open" }));
-    }
+    // Already greeted this page in this session (survives reloads via the transcript).
+    // Older transcripts have no tag, so also accept a reply that names the product.
+    const greeted = messages.some(
+      (m) =>
+        (m.openerFor === pageKey && !m.error) ||
+        (!!product?.name && m.role === "concierge" && m.text.includes(product.name)),
+    );
+    const fresh = messages.length === 0;
+    if (greeted || (!fresh && !productId)) return;
+    queueMicrotask(() => void runTurn({ kind: "open", openerFor: pageKey }));
   }, [screen, ctx, busy, profileId, profile, page, messages, runTurn]);
 
   async function finishQuestionnaire(r: QuestionnaireResult) {

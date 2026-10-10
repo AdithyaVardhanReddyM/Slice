@@ -25,11 +25,14 @@ const styles = `
     background: #141414; color: #fff; display: flex; align-items: center; gap: 10px;
     font: 500 14px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     box-shadow: 0 10px 30px rgb(0 0 0 / 0.22);
-    transition: transform .2s ease, box-shadow .2s ease;
+    transition: transform .2s ease, box-shadow .2s ease, opacity .15s ease, visibility 0s;
   }
   .launcher:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgb(0 0 0 / 0.26); }
-  .launcher[aria-expanded="true"] .label { display: none; }
-  .launcher[aria-expanded="true"] { padding: 0; width: 52px; justify-content: center; }
+  /* The open panel takes the launcher's spot; the panel's own header closes it. */
+  .launcher[aria-expanded="true"] {
+    opacity: 0; transform: scale(.85); visibility: hidden; pointer-events: none;
+    transition: transform .15s ease, opacity .15s ease, visibility 0s .15s;
+  }
   .teaser {
     position: fixed; right: 20px; bottom: 84px; z-index: 2147483646;
     max-width: 280px; padding: 12px 14px; border-radius: 14px; background: #fff; color: #141414;
@@ -42,16 +45,18 @@ const styles = `
   .teaser strong { display: block; font-weight: 600; margin-bottom: 2px; }
   .teaser .x { position: absolute; top: 6px; right: 8px; border: 0; background: none; cursor: pointer; color: #888; font-size: 14px; }
   .panel {
-    position: fixed; right: 20px; bottom: 84px; z-index: 2147483647;
-    width: min(400px, calc(100vw - 40px)); height: min(680px, calc(100vh - 110px));
-    border: 0; border-radius: 18px; background: #fff;
+    position: fixed; right: 16px; bottom: 16px; z-index: 2147483647;
+    width: min(440px, calc(100vw - 32px));
+    height: min(900px, calc(100vh - 32px));
+    height: min(900px, calc(100dvh - 32px));
+    border: 0; border-radius: 22px; background: #fff;
     box-shadow: 0 24px 64px rgb(0 0 0 / 0.24), 0 0 0 1px rgb(0 0 0 / 0.06);
-    opacity: 1; transform: none; transition: opacity .18s ease, transform .18s ease;
+    transform-origin: bottom right;
+    opacity: 1; transform: none; transition: opacity .2s ease, transform .25s cubic-bezier(.22, 1, .36, 1);
   }
-  .panel[hidden] { display: block; opacity: 0; transform: translateY(8px) scale(.98); pointer-events: none; }
+  .panel[hidden] { display: block; opacity: 0; transform: translateY(12px) scale(.96); pointer-events: none; }
   @media (max-width: 640px) {
     .panel { right: 0; bottom: 0; width: 100vw; height: 100dvh; border-radius: 0; }
-    .launcher[aria-expanded="true"] { display: none; }
   }
 `;
 
@@ -227,6 +232,7 @@ function boot() {
         break;
       case "slice:close":
         setOpen(false);
+        launcher.focus({ preventScroll: true });
         break;
     }
   });

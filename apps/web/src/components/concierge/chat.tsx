@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowUp, ChevronDown, Fingerprint, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUp, ChevronDown, Eye, Minus, UserStar } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { ProductCard } from "./product-card";
+import { PicksRail } from "./product-card";
 import { Trace } from "./trace";
 import type { Message, PageContext, StoreInfo, TasteProfile } from "./types";
-import { Button, SliceMark } from "./ui";
+import { SliceMark } from "./ui";
 
 export function Chat({
   store,
@@ -34,9 +34,13 @@ export function Chat({
   inIframe: boolean;
 }) {
   const [draft, setDraft] = useState("");
+  const [scrolled, setScrolled] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-  const styleLabels = Object.fromEntries((store?.styles ?? []).map((s) => [s.id, s.label]));
-  const topStyle = profile?.brief?.styles?.[0]?.id ?? profile?.hints.styles[0]?.id;
+  const styleLabels = Object.fromEntries(
+    (store?.styles ?? []).map((s) => [s.id, s.label]),
+  );
+  const topStyle =
+    profile?.brief?.styles?.[0]?.id ?? profile?.hints.styles[0]?.id;
 
   // Follow the conversation.
   useEffect(() => {
@@ -55,74 +59,112 @@ export function Chat({
   const suggestions = suggest(store, page, profile, messages);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="sun-rule" />
-      <header className="flex items-center gap-2 border-b border-[var(--line)] px-3 py-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2 pl-1">
-          <SliceMark size={18} />
-          <div className="min-w-0">
-            <p className="truncate text-[14px] font-semibold leading-tight">{store?.name ?? "Concierge"}</p>
-            <p className="truncate text-[11.5px] leading-tight text-[var(--mute)]">Concierge · picks by taste, not trend</p>
+    <div className="flex h-full flex-col bg-[var(--paper)]">
+      <div className="relative min-h-0 flex-1">
+        <header
+          className={cn(
+            "sky-header flex items-center justify-between",
+            scrolled && "is-scrolled",
+          )}
+        >
+          <TasteButton
+            hasProfile={!!profile}
+            storeKey={store?.key ?? "store"}
+            onOpenTaste={onOpenTaste}
+            onTune={onTune}
+          />
+          <div className="flex min-w-0 items-center gap-2 px-2">
+            <SliceMark size={22} />
+            <p className="truncate text-[17px] font-semibold tracking-[-0.01em]">
+              {store?.name ?? "Concierge"}
+            </p>
           </div>
-        </div>
-        {profile ? (
-          <button
-            type="button"
-            onClick={onOpenTaste}
-            className="inline-flex h-8 max-w-[150px] items-center gap-1.5 rounded-full bg-[var(--sun-soft)] px-2.5 text-[12px] font-medium hover:bg-[var(--sun)]"
-            title="Your taste profile"
-          >
-            <Fingerprint className="size-3.5 shrink-0" />
-            <span className="truncate">{topStyle ? styleLabels[topStyle] ?? topStyle : "Your taste"}</span>
-          </button>
-        ) : (
-          <Button variant="secondary" size="sm" onClick={onTune}>
-            <SlidersHorizontal className="size-3.5" /> Tune to my taste
-          </Button>
-        )}
-        {inIframe && (
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
-            <X className="size-4" />
-          </Button>
-        )}
-      </header>
+          {inIframe ? (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              title="Close"
+              className="orb"
+            >
+              <Minus className="size-[18px]" />
+            </button>
+          ) : (
+            <span className="size-10" aria-hidden />
+          )}
+        </header>
 
-      <div ref={listRef} className="scroll flex-1 overflow-y-auto px-3 py-3">
-        {messages.length === 0 && (
-          <div className="px-1 pt-8 text-center text-[13px] text-[var(--mute)]">
-            <div className="dots mx-auto">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-        )}
-        <ol className="space-y-4">
-          {messages.map((m) => (
-            <li key={m.id}>
-              {m.role === "shopper" ? (
-                <div className="flex justify-end">
-                  <p className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--ink)] px-3.5 py-2 text-[13.5px] leading-snug text-white">
-                    {m.text}
-                  </p>
-                </div>
+        <div
+          ref={listRef}
+          onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 8)}
+          className="scroll isolate h-full overflow-y-auto overscroll-none px-3 pb-3"
+        >
+          <div className="sky-hero -mx-3 mb-1 px-4 pb-5">
+            <h1 className="text-[24px] font-semibold leading-[1.15] tracking-[-0.02em]">
+              Hi there!
+              <br />
+              What can I find for you?
+            </h1>
+            <p className="mt-2 text-[13.5px] leading-snug text-[var(--ink-2)]">
+              {profile ? (
+                <>
+                  Picks tuned to your taste
+                  {topStyle ? (
+                    <>
+                      , leaning{" "}
+                      <span className="font-medium text-[var(--tang-ink)]">
+                        {styleLabels[topStyle] ?? topStyle}
+                      </span>
+                    </>
+                  ) : null}
+                  .
+                </>
               ) : (
-                <ConciergeMessage m={m} styleLabels={styleLabels} onNavigate={onNavigate} hasProfile={!!profile} />
+                "Choose a prompt or ask in your own words."
               )}
-            </li>
-          ))}
-        </ol>
+            </p>
+          </div>
+          {messages.length === 0 && (
+            <div className="px-1 pt-4 text-center text-[13px] text-[var(--mute)]">
+              <div className="dots mx-auto">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          )}
+          <ol className="space-y-4">
+            {messages.map((m) => (
+              <li key={m.id}>
+                {m.role === "shopper" ? (
+                  <div className="flex justify-end">
+                    <p className="max-w-[85%] rounded-2xl rounded-br-md bg-[var(--ink)] px-3.5 py-2 text-[13.5px] leading-snug text-white">
+                      {m.text}
+                    </p>
+                  </div>
+                ) : (
+                  <ConciergeMessage
+                    m={m}
+                    styleLabels={styleLabels}
+                    onNavigate={onNavigate}
+                    hasProfile={!!profile}
+                  />
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
 
-      <div className="border-t border-[var(--line)] p-2.5">
-        {suggestions.length > 0 && !busy && (
-          <div className="scroll mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
+      <div className="composer px-3 pb-3 pt-1">
+        {suggestions.length > 0 && !busy && !draft && (
+          <div className="chip-row scroll -mx-3 mb-2.5 flex gap-1.5 overflow-x-auto px-3">
             {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => onSend(s)}
-                className="shrink-0 rounded-full border border-[var(--line)] bg-white px-3 py-1 text-[12.5px] hover:border-[var(--ink)]"
+                className="suggest"
               >
                 {s}
               </button>
@@ -130,7 +172,7 @@ export function Chat({
           </div>
         )}
         <form
-          className="flex items-end gap-2 rounded-2xl border border-[var(--line)] bg-white p-1.5 pl-3.5 focus-within:border-[var(--ink)]"
+          className="composer-box"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -146,20 +188,151 @@ export function Chat({
               }
             }}
             rows={1}
-            placeholder={profile ? "Ask for anything, or tell me something you love…" : "What are you looking for?"}
-            className="max-h-28 min-h-[36px] flex-1 bg-transparent py-2 text-[13.5px] leading-snug outline-none"
+            aria-label="Message"
+            placeholder={
+              profile
+                ? "Ask anything, or tell me something you love…"
+                : "What are you looking for?"
+            }
+            className="block max-h-32 min-h-[24px] w-full bg-transparent px-1 text-[14px] leading-[1.45] outline-none"
             style={{ fieldSizing: "content" } as React.CSSProperties}
           />
-          <button
-            type="submit"
-            disabled={!draft.trim() || busy}
-            aria-label="Send"
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ink)] text-white transition-opacity disabled:opacity-30"
-          >
-            <ArrowUp className="size-4" />
-          </button>
+          <div className="mt-2 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              {page?.product?.name ? (
+                <span
+                  className="context-chip"
+                  title="The concierge can see the product you're viewing"
+                >
+                  <Eye className="size-3.5 shrink-0" />
+                  <span className="truncate">{page.product.name}</span>
+                </span>
+              ) : profile ? (
+                <button
+                  type="button"
+                  onClick={onOpenTaste}
+                  className="context-chip hover:bg-[var(--cream-2)]"
+                  title="Your taste profile"
+                >
+                  <UserStar className="size-3.5 shrink-0" />
+                  <span className="truncate">
+                    Tuned to{" "}
+                    {topStyle
+                      ? (styleLabels[topStyle] ?? topStyle)
+                      : "your taste"}
+                  </span>
+                </button>
+              ) : null}
+            </div>
+            <button
+              type="submit"
+              disabled={!draft.trim() || busy}
+              aria-label="Send"
+              className="send-btn"
+            >
+              <ArrowUp className="size-[17px]" strokeWidth={2.4} />
+            </button>
+          </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+/**
+ * The shopper's taste profile lives behind this button. A hover tooltip names it,
+ * and the first time a profile exists a small guide points at it once.
+ */
+function TasteButton({
+  hasProfile,
+  storeKey,
+  onOpenTaste,
+  onTune,
+}: {
+  hasProfile: boolean;
+  storeKey: string;
+  onOpenTaste: () => void;
+  onTune: () => void;
+}) {
+  const coachKey = `slice:${storeKey}:coach-taste`;
+  const [coach, setCoach] = useState(false);
+
+  useEffect(() => {
+    if (!hasProfile) return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem(coachKey) === "1";
+    } catch {
+      /* storage blocked: show it this session */
+    }
+    if (seen) return;
+    const t = setTimeout(() => setCoach(true), 900);
+    return () => clearTimeout(t);
+  }, [hasProfile, coachKey]);
+
+  function dismiss() {
+    setCoach(false);
+    try {
+      localStorage.setItem(coachKey, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const label = hasProfile ? "Your taste profile" : "Tune to my taste";
+  return (
+    <div className="taste-btn relative">
+      <button
+        type="button"
+        onClick={() => {
+          dismiss();
+          if (hasProfile) onOpenTaste();
+          else onTune();
+        }}
+        aria-label={label}
+        aria-describedby="taste-tip"
+        className="orb"
+      >
+        <UserStar className="size-[18px]" />
+      </button>
+
+      {coach ? (
+        <div role="dialog" aria-label="Your taste profile" className="coach">
+          <p className="text-[13px] font-semibold">Your taste profile</p>
+          <p className="mt-1 text-[12.5px] leading-snug text-[var(--ink-2)]">
+            Every pick is ranked by it. Tap here to see what shapes your
+            recommendations, or add more things you love.
+          </p>
+          <div className="mt-2.5 flex justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={dismiss}
+              className="h-7 rounded-full px-2.5 text-[12px] font-medium text-[var(--ink-2)] hover:bg-[var(--cream)]"
+            >
+              Got it
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                dismiss();
+                onOpenTaste();
+              }}
+              className="h-7 rounded-full bg-[var(--ink)] px-3 text-[12px] font-medium text-white hover:bg-black"
+            >
+              Show me
+            </button>
+          </div>
+        </div>
+      ) : (
+        <span id="taste-tip" role="tooltip" className="tip">
+          <span className="block font-semibold">{label}</span>
+          <span className="block text-white/75">
+            {hasProfile
+              ? "Picks are ranked by this. Tap to view or add what you love."
+              : "Answer four quick picks so recommendations fit you."}
+          </span>
+        </span>
+      )}
     </div>
   );
 }
@@ -177,6 +350,18 @@ function ConciergeMessage({
 }) {
   const [showTrace, setShowTrace] = useState(false);
   const hasText = m.text.trim().length > 0;
+  // On a product page the greeting reads first and the picks follow it. Elsewhere
+  // (e.g. right after tuning) the picks lead.
+  const textFirst = m.openerFor?.startsWith("product:") ?? false;
+  const picks =
+    m.picks && m.picks.length > 0 ? (
+      <PicksRail
+        picks={m.picks}
+        styleLabels={styleLabels}
+        onOpen={onNavigate}
+        showFit={hasProfile}
+      />
+    ) : null;
   return (
     <div className="space-y-2.5">
       {m.streaming && !hasText && (
@@ -189,29 +374,24 @@ function ConciergeMessage({
           {m.status ?? "Thinking"}
         </p>
       )}
-      {m.picks && m.picks.length > 0 && (
-        <div className="space-y-2">
-          {m.picks.map((p) => (
-            <ProductCard
-              key={p.product.id}
-              pick={p}
-              styleLabels={styleLabels}
-              onOpen={onNavigate}
-              showFit={hasProfile}
-            />
-          ))}
-        </div>
-      )}
+      {!textFirst && picks}
       {hasText && (
         <p className="whitespace-pre-wrap px-1 text-[14px] leading-relaxed">
           {m.text}
-          {m.streaming && <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-[var(--tang)] align-middle" />}
+          {m.streaming && (
+            <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-pulse bg-[var(--tang)] align-middle" />
+          )}
         </p>
       )}
       {m.streaming && hasText && m.status && (
         <p className="px-1 text-[12px] text-[var(--mute)]">{m.status}…</p>
       )}
-      {m.error && <p className="rounded-xl bg-[var(--qloo-soft)] px-3 py-2 text-[12.5px] text-[var(--qloo)]">{m.error}</p>}
+      {textFirst && picks}
+      {m.error && (
+        <p className="rounded-xl bg-[var(--qloo-soft)] px-3 py-2 text-[12.5px] text-[var(--qloo)]">
+          {m.error}
+        </p>
+      )}
       {!m.streaming && m.trace && m.trace.length > 0 && (
         <div className="px-1">
           <button
@@ -221,8 +401,17 @@ function ConciergeMessage({
             className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--mute)] hover:text-[var(--ink)]"
           >
             How I chose {m.picks?.length ? "these" : "this"}
-            {m.totalMs ? <span className="font-normal">· {(m.totalMs / 1000).toFixed(1)}s</span> : null}
-            <ChevronDown className={cn("size-3.5 transition-transform", showTrace && "rotate-180")} />
+            {m.totalMs ? (
+              <span className="font-normal">
+                · {(m.totalMs / 1000).toFixed(1)}s
+              </span>
+            ) : null}
+            <ChevronDown
+              className={cn(
+                "size-3.5 transition-transform",
+                showTrace && "rotate-180",
+              )}
+            />
           </button>
           {showTrace && (
             <div className="mt-2 rounded-xl border border-[var(--line)] bg-[var(--cream)] p-3">
@@ -235,14 +424,20 @@ function ConciergeMessage({
   );
 }
 
-function suggest(store: StoreInfo | null, page: PageContext | null, profile: TasteProfile | null, messages: Message[]): string[] {
+function suggest(
+  store: StoreInfo | null,
+  page: PageContext | null,
+  profile: TasteProfile | null,
+  messages: Message[],
+): string[] {
   if (messages.some((m) => m.streaming)) return [];
   const out: string[] = [];
   if (page?.product?.name) {
     out.push("Does this fit me?", "What goes with this?");
   }
   if (messages.length <= 1) {
-    if (profile) out.push("Something for the weekend", "A gift for a friend like me");
+    if (profile)
+      out.push("Something for the weekend", "A gift for a friend like me");
     else out.push("Help me pick a gift", "What's good under $100?");
   } else {
     out.push("Show me more like these", "Something under $100");

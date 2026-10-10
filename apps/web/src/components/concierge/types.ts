@@ -143,6 +143,9 @@ export interface Message {
   status?: string;
   streaming?: boolean;
   error?: string;
+  /** Set on a proactive opener: the page it greeted ("home" or "product:<id>").
+   *  Persisted with the transcript so a reload doesn't greet the same page twice. */
+  openerFor?: string;
 }
 
 export type AgentEvent =
