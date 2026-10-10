@@ -32,6 +32,9 @@ export interface EntityRef {
   type: string;
   image?: string;
   subtitle?: string;
+  /** Places and destinations: where it is, for the questionnaire's map. */
+  lat?: number;
+  lon?: number;
   source: string;
 }
 
@@ -88,6 +91,7 @@ export interface StoreInfo {
   key: string;
   name: string;
   tagline: string;
+  logo?: string;
   vertical: string;
   siteUrl: string;
   styles: { id: string; label: string; description: string }[];

@@ -51,8 +51,8 @@ const styles = `
   .panel {
     position: fixed; right: 16px; bottom: 16px; z-index: 2147483647;
     width: min(440px, calc(100vw - 32px));
-    height: min(680px, calc(100vh - 32px));
-    height: min(680px, calc(100dvh - 32px));
+    height: min(740px, calc(100vh - 32px));
+    height: min(740px, calc(100dvh - 32px));
     border: 0; border-radius: 22px; background: #fff;
     box-shadow: 0 24px 64px rgb(0 0 0 / 0.24), 0 0 0 1px rgb(0 0 0 / 0.06);
     transform-origin: bottom right;

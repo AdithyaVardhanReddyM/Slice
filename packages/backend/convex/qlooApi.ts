@@ -23,6 +23,9 @@ export interface EntityRef {
   type: string;
   image?: string;
   subtitle?: string;
+  /** Places and destinations: where it is, for the questionnaire's map. */
+  lat?: number;
+  lon?: number;
   source: string;
 }
 
@@ -165,12 +168,17 @@ function entityFromInsights(e: Json, source: string): EntityRef {
   const country = str((props.geocode as Json | undefined)?.country);
   const sub =
     subtitle && subtitle.toLowerCase() === name.toLowerCase() ? country : subtitle;
+  const loc = (e.location ?? props.geocode) as Json | undefined;
+  const lat = Number(loc?.lat ?? loc?.latitude);
+  const lon = Number(loc?.lon ?? loc?.lng ?? loc?.longitude);
+  const geo = Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : {};
   return {
     id: String(e.entity_id),
     name,
     type: str(e.subtype) ?? "urn:entity",
     image: str(image),
     subtitle: sub && sub.length > 90 ? sub.slice(0, 87) + "…" : sub,
+    ...geo,
     source,
   };
 }
@@ -198,6 +206,32 @@ export async function searchEntity(
   );
   const first = body.results?.[0];
   return first ? entityFromSearch(first, source) : null;
+}
+
+/** Where a typed city is, so the questionnaire's map can travel there. */
+export async function locateCity(
+  ctx: ActionCtx,
+  trace: Span[],
+  query: string,
+): Promise<{ name: string; lat: number; lon: number } | null> {
+  const body = await traced<{ results?: Json[] }>(
+    ctx,
+    trace,
+    `Locate "${query}"`,
+    "/search",
+    { query, types: "urn:entity:locality" },
+    (b) => {
+      const first = b.results?.[0];
+      return first ? String(first.name) : "no match";
+    },
+  );
+  const first = body.results?.[0];
+  if (!first) return null;
+  const loc = (first.location ?? (first.properties as Json | undefined)?.geocode) as Json | undefined;
+  const lat = Number(loc?.lat ?? loc?.latitude);
+  const lon = Number(loc?.lon ?? loc?.lng ?? loc?.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { name: String(first.name), lat, lon };
 }
 
 /** What a city is into: top entities of a kind for shoppers there. */

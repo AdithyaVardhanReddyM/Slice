@@ -56,6 +56,8 @@ export const storeFields = {
   name: v.string(),
   tagline: v.string(),
   description: v.string(),
+  /** Absolute URL of a square mark, shown next to the store name in the concierge. */
+  logo: v.optional(v.string()),
   currency: v.string(),
   /** "home" | "fashion" | ... free-form, for the agent's framing. */
   vertical: v.string(),
@@ -107,6 +109,8 @@ export const entityRefValidator = v.object({
   type: v.string(),
   image: v.optional(v.string()),
   subtitle: v.optional(v.string()),
+  lat: v.optional(v.number()),
+  lon: v.optional(v.number()),
   /** "questionnaire" | "free_text" | "chat" */
   source: v.string(),
 });

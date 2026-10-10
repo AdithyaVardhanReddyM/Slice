@@ -45,6 +45,7 @@ const storeInput = v.object({
   name: v.string(),
   tagline: v.string(),
   description: v.string(),
+  logo: v.optional(v.string()),
   currency: v.string(),
   vertical: v.string(),
   siteUrl: v.string(),

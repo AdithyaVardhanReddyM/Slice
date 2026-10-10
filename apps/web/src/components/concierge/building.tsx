@@ -3,63 +3,86 @@
 import { Check, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Span } from "./types";
-import { Trace } from "./trace";
+import { SliceMark } from "./ui";
 
 const STAGES = [
-  "Sending your signals to Qloo",
-  "Reading the aesthetic and cultural tags they share",
+  "Sending your answers to Qloo",
+  "Reading the tastes they share",
   "Finding brand affinities",
-  "Checking who else shares these signals",
-  "Matching it to the store's own styles",
-  "Writing your taste brief for this store",
+  "Matching them to the store's styles",
+  "Writing your taste brief",
 ];
 
-/** Shown while taste.build runs. Stages tick on a timer; the real trace replaces them when it lands. */
-export function Building({ spans, error }: { spans: Span[] | null; error: string | null }) {
+/**
+ * Shown while the profile builds. The first stages tick on a timer and hold on
+ * the last build step until the brief starts; the full trace is available later
+ * under "Your taste", so nothing is shown here but progress.
+ */
+export function Building({
+  briefing,
+  storeName,
+  error,
+}: {
+  /** True once the profile exists and the taste brief is being written. */
+  briefing: boolean;
+  storeName: string;
+  error: string | null;
+}) {
   const [stage, setStage] = useState(0);
   useEffect(() => {
-    if (spans) return;
-    const id = setInterval(() => setStage((s) => Math.min(STAGES.length - 1, s + 1)), 900);
+    if (briefing) return;
+    const id = setInterval(() => setStage((s) => Math.min(STAGES.length - 2, s + 1)), 1100);
     return () => clearInterval(id);
-  }, [spans]);
+  }, [briefing]);
+  const current = briefing ? STAGES.length - 1 : stage;
 
   return (
-    <div className="flex h-full flex-col px-6 pt-10">
-      <p className="text-[12px] font-medium uppercase tracking-wide text-[var(--mute)]">Building your profile</p>
-      <h2 className="mt-1.5 text-[22px] font-semibold leading-tight tracking-[-0.02em]">
-        {spans ? "Done. Here's what happened." : "Reading your taste…"}
-      </h2>
-      {error ? (
-        <p className="mt-4 rounded-xl bg-[var(--qloo-soft)] p-3 text-[13px] text-[var(--qloo)]">{error}</p>
-      ) : spans ? (
-        <div className="mt-5">
-          <Trace spans={spans} />
+    <div className="relative flex h-full flex-col items-center justify-center overflow-hidden px-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full opacity-70 blur-3xl"
+        style={{ background: "radial-gradient(closest-side, var(--sun), transparent 70%)" }}
+      />
+      <div className="relative w-full max-w-[320px]">
+        <div className="rise flex justify-center">
+          <span className="grid size-14 place-items-center rounded-full bg-white shadow-[0_1px_2px_rgb(23_21_15/0.06),0_10px_28px_rgb(23_21_15/0.1)]">
+            {error ? <SliceMark size={26} /> : <Loader2 className="size-6 animate-spin text-[var(--tang)]" />}
+          </span>
         </div>
-      ) : (
-        <ol className="mt-6 space-y-3">
-          {STAGES.map((label, i) => (
-            <li
-              key={label}
-              className={cn(
-                "flex items-center gap-3 text-[13.5px] transition-opacity",
-                i > stage ? "opacity-30" : "opacity-100",
-              )}
-            >
-              <span className="grid size-5 place-items-center">
-                {i < stage ? (
-                  <Check className="size-4 text-[var(--catalog)]" />
-                ) : i === stage ? (
-                  <Loader2 className="size-4 animate-spin text-[var(--qloo)]" />
-                ) : (
-                  <i className="size-1.5 rounded-full bg-[var(--line)]" />
+        <h2 className="rise mt-5 text-center text-[22px] font-semibold leading-tight tracking-[-0.02em]">
+          {error ? "That didn't work." : "Reading your taste…"}
+        </h2>
+        <p className="rise mt-1.5 text-center text-[13px] leading-relaxed text-[var(--ink-2)]">
+          {error
+            ? error
+            : `Qloo is turning your answers into a profile for ${storeName}. About ten seconds.`}
+        </p>
+
+        {!error && (
+          <ol className="rise mt-6 space-y-2.5 rounded-2xl bg-white/70 p-4 shadow-[inset_0_0_0_1px_rgb(23_21_15/0.05)]">
+            {STAGES.map((label, i) => (
+              <li
+                key={label}
+                className={cn(
+                  "flex items-center gap-3 text-[13.5px] transition-opacity duration-300",
+                  i > current ? "opacity-35" : "opacity-100",
                 )}
-              </span>
-              {label}
-            </li>
-          ))}
-        </ol>
-      )}
+              >
+                <span className="grid size-5 shrink-0 place-items-center">
+                  {i < current ? (
+                    <Check className="size-4 text-[var(--catalog)]" strokeWidth={2.5} />
+                  ) : i === current ? (
+                    <Loader2 className="size-4 animate-spin text-[var(--tang)]" />
+                  ) : (
+                    <i className="size-1.5 rounded-full bg-[var(--line)]" />
+                  )}
+                </span>
+                {label}
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </div>
   );
 }

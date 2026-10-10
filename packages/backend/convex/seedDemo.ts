@@ -32,6 +32,7 @@ export const seed = internalAction({
           name: store.name,
           tagline: store.tagline,
           description: store.description,
+          logo: store.logo ? abs(store.logo) : undefined,
           currency: store.currency,
           vertical,
           siteUrl: `${storesUrl}/${key}`,

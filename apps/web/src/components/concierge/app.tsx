@@ -11,7 +11,7 @@ import { Chat } from "./chat";
 import { Questionnaire, type QuestionnaireResult } from "./questionnaire";
 import { chatStream } from "./stream";
 import { TastePanel } from "./taste-panel";
-import type { FromParent, Message, PageContext, Span, StoreInfo, TasteProfile } from "./types";
+import type { FromParent, Message, PageContext, StoreInfo, TasteProfile } from "./types";
 import { Welcome } from "./welcome";
 
 type Screen = "welcome" | "questionnaire" | "building" | "chat";
@@ -64,6 +64,7 @@ export function ConciergeApp() {
   const [tasteOpen, setTasteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
+  const [briefing, setBriefing] = useState(false);
   const openerStarted = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   // The transcript at the moment a turn starts, sent along so the agent can
@@ -223,6 +224,7 @@ export function ConciergeApp() {
     if (!ctx) return;
     setScreen("building");
     setBuildError(null);
+    setBriefing(false);
     try {
       const { profileId: pid } = await build({
         storeKey: ctx.key,
@@ -236,8 +238,9 @@ export function ConciergeApp() {
       setProfileId(pid);
       setMessages([]);
       openerStarted.current = null;
-      // Write the taste brief now (one model call, shown as the last step of
-      // the trace) so the first turn goes straight to picks.
+      // Write the taste brief now (one model call) so the first turn goes
+      // straight to picks. The loader shows it as its last stage.
+      setBriefing(true);
       try {
         await fetch("/api/concierge/brief", {
           method: "POST",
@@ -247,15 +250,11 @@ export function ConciergeApp() {
       } catch {
         /* the agent writes it on the first turn instead */
       }
-      // Let the trace show for a beat, then talk.
-      setTimeout(() => setScreen("chat"), 1200);
+      setScreen("chat");
     } catch (err) {
       setBuildError(String(err));
     }
   }
-
-  // The build screen shows the profile's trace once the doc arrives.
-  const buildSpans: Span[] | null = screen === "building" ? (profile?.trace ?? null) : null;
 
   function navigate(url: string, productId?: string) {
     if (framed) send({ type: "slice:navigate", url, productId });
@@ -296,7 +295,9 @@ export function ConciergeApp() {
           onTrace={() => {}}
         />
       )}
-      {screen === "building" && <Building spans={buildSpans} error={buildError} />}
+      {screen === "building" && (
+        <Building briefing={briefing} storeName={store?.name ?? "this store"} error={buildError} />
+      )}
       {screen === "chat" && (
         <Chat
           store={store ?? null}

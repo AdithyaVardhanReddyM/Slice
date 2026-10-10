@@ -279,7 +279,7 @@ function TasteButton({
     }
   }
 
-  const label = hasProfile ? "Your taste profile" : "Tune to my taste";
+  const label = hasProfile ? "Your taste profile" : "Curate it for me";
   return (
     <div className="taste-btn relative">
       <button

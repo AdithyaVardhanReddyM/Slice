@@ -23,6 +23,7 @@ import {
   type EntityKind,
   type EntityRef,
   type Span,
+  locateCity,
 } from "./qlooApi";
 import { briefValidator, entityRefValidator, spanValidator } from "./schema";
 import { styleHints, termBag } from "./tasteHints";
@@ -128,23 +129,52 @@ export const questionnaire = action({
 
 /** The adaptive last question: trips Qloo suggests from the answers so far. */
 export const followUp = action({
-  args: { city: v.optional(v.string()), entityIds: v.array(v.string()) },
-  handler: async (ctx, { city, entityIds }): Promise<{ question: Question | null; trace: Span[] }> => {
+  args: {
+    city: v.optional(v.string()),
+    /** Where the city is, when the client already knows; otherwise it is geocoded. */
+    home: v.optional(v.object({ lat: v.number(), lon: v.number() })),
+    entityIds: v.array(v.string()),
+  },
+  handler: async (ctx, { city, home: knownHome, entityIds }): Promise<{ question: Question | null; trace: Span[] }> => {
     const trace: Span[] = [];
     if (entityIds.length === 0) return { question: null, trace };
     // No city signal here: a trip is somewhere else, and the location signal
     // otherwise returns the towns next door.
-    const trips = await entitiesFromSignals(ctx, trace, "destination", entityIds, undefined, 12).catch(
+    const trips = await entitiesFromSignals(ctx, trace, "destination", entityIds, undefined, 30).catch(
       () => [] as EntityRef[],
     );
-    const options = dedupe(trips, 6);
+    // A trip is somewhere else: drop anything within reach of the shopper's own
+    // city, collapse neighbours of one destination (Santa Monica next to Los
+    // Angeles), and keep only places the map can show. If that leaves too few,
+    // loosen the radii rather than losing the question.
+    const home = knownHome ?? (city ? await locateCity(ctx, trace, city).catch(() => null) : null);
+    const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+      const r = Math.PI / 180;
+      const x = (b.lon - a.lon) * r * Math.cos(((a.lat + b.lat) / 2) * r);
+      const y = (b.lat - a.lat) * r;
+      return Math.sqrt(x * x + y * y) * 6371;
+    };
+    const pick = (homeKm: number, clusterKm: number) => {
+      const away: EntityRef[] = [];
+      for (const t of trips) {
+        if (t.lat === undefined || t.lon === undefined) continue;
+        const at = { lat: t.lat, lon: t.lon };
+        if (home && km(home, at) < homeKm) continue;
+        if (away.some((a) => km({ lat: a.lat!, lon: a.lon! }, at) < clusterKm)) continue;
+        away.push(t);
+      }
+      return dedupe(away, 6);
+    };
+    let options = pick(200, 60);
+    if (options.length < 3) options = pick(40, 20);
+    if (options.length < 3) options = pick(0, 0);
     if (options.length < 3) return { question: null, trace };
     return {
       question: {
         id: "travel",
         domain: "Travel",
-        prompt: "Where would you go next?",
-        hint: "Picked from your answers so far",
+        prompt: "A trip that sounds like you",
+        hint: "Destinations Qloo links to your answers so far",
         options,
       },
       trace,
@@ -153,6 +183,12 @@ export const followUp = action({
 });
 
 /** Resolve a free-text answer ("Wes Anderson", "Aesop", "natural wine") to a Qloo entity. */
+export const locate = action({
+  args: { query: v.string() },
+  handler: async (ctx, { query }): Promise<{ name: string; lat: number; lon: number } | null> =>
+    locateCity(ctx, [], query),
+});
+
 export const resolve = action({
   args: { query: v.string(), kind: v.optional(v.string()) },
   handler: async (ctx, { query, kind }): Promise<{ entity: EntityRef | null; trace: Span[] }> => {
