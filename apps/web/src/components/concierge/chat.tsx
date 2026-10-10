@@ -4,7 +4,7 @@ import { ArrowUp, ChevronDown, Eye, Minus, UserStar } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { PicksRail } from "./product-card";
-import { Trace } from "./trace";
+import { WhyThese } from "./why-these";
 import type { Message, PageContext, StoreInfo, TasteProfile } from "./types";
 import { SliceMark } from "./ui";
 
@@ -74,7 +74,10 @@ export function Chat({
             onTune={onTune}
           />
           <div className="flex min-w-0 items-center gap-2 px-2">
-            <SliceMark size={22} />
+            {store?.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={store.logo} alt="" className="size-[22px] object-contain" />
+            ) : null}
             <p className="truncate text-[17px] font-semibold tracking-[-0.01em]">
               {store?.name ?? "Concierge"}
             </p>
@@ -144,6 +147,7 @@ export function Chat({
                   </div>
                 ) : (
                   <ConciergeMessage
+                    storeName={store?.name ?? "the store"}
                     m={m}
                     styleLabels={styleLabels}
                     onNavigate={onNavigate}
@@ -234,6 +238,10 @@ export function Chat({
             </button>
           </div>
         </form>
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-[var(--mute)]">
+          <SliceMark size={11} />
+          Powered by Slice
+        </p>
       </div>
     </div>
   );
@@ -339,11 +347,13 @@ function TasteButton({
 
 function ConciergeMessage({
   m,
+  storeName,
   styleLabels,
   onNavigate,
   hasProfile,
 }: {
   m: Message;
+  storeName: string;
   styleLabels: Record<string, string>;
   onNavigate: (url: string, productId?: string) => void;
   hasProfile: boolean;
@@ -401,11 +411,6 @@ function ConciergeMessage({
             className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--mute)] hover:text-[var(--ink)]"
           >
             How I chose {m.picks?.length ? "these" : "this"}
-            {m.totalMs ? (
-              <span className="font-normal">
-                · {(m.totalMs / 1000).toFixed(1)}s
-              </span>
-            ) : null}
             <ChevronDown
               className={cn(
                 "size-3.5 transition-transform",
@@ -414,8 +419,8 @@ function ConciergeMessage({
             />
           </button>
           {showTrace && (
-            <div className="mt-2 rounded-xl border border-[var(--line)] bg-[var(--cream)] p-3">
-              <Trace spans={m.trace} totalMs={m.totalMs} />
+            <div className="mt-2">
+              <WhyThese spans={m.trace} totalMs={m.totalMs} storeName={storeName} styleLabels={styleLabels} />
             </div>
           )}
         </div>

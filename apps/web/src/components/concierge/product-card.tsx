@@ -4,8 +4,8 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
-  Fingerprint,
   X,
+  UserStar,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -24,15 +24,23 @@ type CardProps = {
 };
 
 /**
- * The pill text. An absolute score always lands in the eighties, so when the
- * ranker tells us where the product sat in the whole pool we say that instead:
- * "Top 3% for you" means something, "82% match" doesn't.
+ * The pill text. The raw fit score lands in the eighties for everything, so
+ * the percent shown is the product's standing among everything in the store:
+ * "99% match" means it fits the shopper's taste better than 99% of the
+ * catalog. The title spells that out.
  */
-function fitLabel(pick: Pick): string | null {
+function fitLabel(pick: Pick): { text: string; title: string } | null {
   const r = pick.rank;
-  if (r && r.pool >= 20) return `Top ${Math.max(1, Math.round((r.position / r.pool) * 100))}% for you`;
-  if (r && r.pool > 1) return `#${r.position} of ${r.pool} for you`;
-  if (pick.fit !== undefined && pick.fit !== null) return `${Math.round(pick.fit * 100)}% match`;
+  if (r && r.pool > 1) {
+    const pct = Math.round(((r.pool - r.position) / (r.pool - 1)) * 100);
+    return {
+      text: `${pct}% match`,
+      title: `Fits your taste better than ${pct}% of the ${r.pool} products in this store. Tap to see why.`,
+    };
+  }
+  if (pick.fit !== undefined && pick.fit !== null) {
+    return { text: `${Math.round(pick.fit * 100)}% match`, title: "How closely this fits your taste. Tap to see why." };
+  }
   return null;
 }
 
@@ -53,13 +61,13 @@ export function PicksRail({
   const measure = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    const progress = max > 0 ? Math.min(1, Math.max(0, el.scrollLeft / max)) : 0;
     setPos({
-      progress: max > 0 ? el.scrollLeft / max : 0,
-      ratio:
-        el.scrollWidth > 0 ? Math.min(1, el.clientWidth / el.scrollWidth) : 1,
-      atStart: el.scrollLeft <= 4,
-      atEnd: el.scrollLeft >= max - 4,
+      progress,
+      ratio: el.scrollWidth > 0 ? Math.min(1, el.clientWidth / el.scrollWidth) : 1,
+      atStart: el.scrollLeft <= 2,
+      atEnd: max === 0 || el.scrollLeft >= max - 2,
     });
   }, []);
 
@@ -67,19 +75,46 @@ export function PicksRail({
     const el = ref.current;
     if (!el) return;
     measure();
+    // Cards grow as their images land, so watch the cards, not just the rail.
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
     return () => ro.disconnect();
   }, [measure, picks.length]);
 
+  // One card per press, landing exactly on a snap point. The scroll is animated
+  // by hand with snapping paused: Chrome re-snaps (and cancels) a native smooth
+  // scroll whenever layout changes mid-flight, which the thumb's re-render does.
+  const anim = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(anim.current), []);
   function step(dir: 1 | -1) {
     const el = ref.current;
     if (!el) return;
     const first = el.querySelector("article");
-    const w = first
-      ? first.getBoundingClientRect().width + 12
-      : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * w, behavior: "smooth" });
+    const stride = first ? first.getBoundingClientRect().width + 12 : el.clientWidth * 0.8;
+    const max = el.scrollWidth - el.clientWidth;
+    const at = el.scrollLeft / stride;
+    const index = dir > 0 ? Math.floor(at + 0.02) + 1 : Math.ceil(at - 0.02) - 1;
+    const target = Math.min(max, Math.max(0, index * stride));
+    const from = el.scrollLeft;
+    const delta = target - from;
+    if (Math.abs(delta) < 1) return;
+    cancelAnimationFrame(anim.current);
+    el.style.scrollSnapType = "none";
+    const t0 = performance.now();
+    const duration = 380;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.scrollLeft = from + delta * eased;
+      if (t < 1) {
+        anim.current = requestAnimationFrame(tick);
+      } else {
+        el.style.scrollSnapType = "";
+        anim.current = 0;
+      }
+    };
+    anim.current = requestAnimationFrame(tick);
   }
 
   return (
@@ -102,11 +137,12 @@ export function PicksRail({
       {!solo && pos.ratio < 1 && (
         <div className="flex items-center gap-3 px-1">
           <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-[var(--line-2)]">
+            {/* The scroll itself is the animation; the thumb just mirrors it. */}
             <span
-              className="absolute inset-y-0 rounded-full bg-[var(--ink)] transition-[left] duration-150 ease-out"
+              className="absolute inset-y-0 left-0 rounded-full bg-[var(--ink)] will-change-transform"
               style={{
                 width: `${pos.ratio * 100}%`,
-                left: `${pos.progress * (1 - pos.ratio) * 100}%`,
+                transform: `translateX(${(pos.progress * (1 - pos.ratio)) / pos.ratio * 100}%)`,
               }}
             />
           </div>
@@ -208,15 +244,15 @@ export function ProductCard({
             type="button"
             onClick={() => setWhy((w) => !w)}
             aria-expanded={why}
-            title="Why this fits your taste"
+            title={fit.title}
             className="pick-pill absolute left-2 top-2 z-10"
           >
             {why ? (
               <X className="size-3.5" />
             ) : (
-              <Fingerprint className="size-3.5" />
+              <UserStar className="size-3.5" />
             )}
-            {fit}
+            {fit.text}
           </button>
         )}
 

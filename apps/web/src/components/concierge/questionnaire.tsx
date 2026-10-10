@@ -191,7 +191,7 @@ export function Questionnaire({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6 pt-4">
+      <div className="scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none px-5 pb-6 pt-4">
         {/* Back, progress and count sit on the page itself, no header bar. */}
         <div className="mb-5 flex shrink-0 items-center gap-3">
           <button
