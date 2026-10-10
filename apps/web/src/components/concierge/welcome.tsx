@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Minus, SlidersHorizontal } from "lucide-react";
 import type { StoreInfo } from "./types";
 import { Button, SliceMark } from "./ui";
 
@@ -8,10 +8,13 @@ export function Welcome({
   store,
   onTune,
   onBrowse,
+  onClose,
 }: {
   store: StoreInfo | null;
   onTune: () => void;
   onBrowse: () => void;
+  /** Minimizes the widget. Omitted when the embed is not inside slice.js. */
+  onClose?: () => void;
 }) {
   const name = store?.name ?? "this store";
   return (
@@ -27,6 +30,17 @@ export function Welcome({
           className="pointer-events-none absolute -left-28 top-40 h-64 w-64 rounded-full opacity-50 blur-3xl"
           style={{ background: "radial-gradient(closest-side, #ffd1a8, transparent 70%)" }}
         />
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            title="Close"
+            className="orb absolute right-4 top-4"
+          >
+            <Minus className="size-[18px]" />
+          </button>
+        )}
         <div className="relative">
           <div className="rise flex items-center gap-2 text-[12.5px] font-medium text-[var(--ink-2)]">
             <SliceMark size={16} />

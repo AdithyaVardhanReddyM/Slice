@@ -285,6 +285,7 @@ export function ConciergeApp() {
           store={store ?? null}
           onTune={() => setScreen("questionnaire")}
           onBrowse={() => setScreen("chat")}
+          onClose={framed ? () => send({ type: "slice:close" }) : undefined}
         />
       )}
       {screen === "questionnaire" && (
