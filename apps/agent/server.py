@@ -3,7 +3,7 @@
     uv run uvicorn server:app --port 8000 --reload
 
 POST /chat streams newline-delimited JSON events the widget renders as they
-arrive: status lines, tool spans, text deltas, product picks, the taste brief,
+arrive (the Pages service adds /pages/* in slice_pages/routes.py): status lines, tool spans, text deltas, product picks, the taste brief,
 and a final "done" with the whole turn's trace. Completed turns are written to
 Convex so the merchant console can replay them.
 """
@@ -37,6 +37,7 @@ from slice_agent.agent import root_agent  # noqa: E402
 from slice_agent.brief import write_brief  # noqa: E402
 from slice_agent.tagging import tag_store  # noqa: E402
 from slice_agent.trace import Span, record, start_turn  # noqa: E402
+from slice_pages.routes import router as pages_router  # noqa: E402
 
 APP_NAME = "slice_concierge"
 
@@ -50,6 +51,9 @@ app.add_middleware(
 
 sessions = InMemorySessionService()
 runner = Runner(app_name=APP_NAME, agent=root_agent, session_service=sessions)
+
+# Pages service routes (/pages/intake, /pages/build, ...); see slice_pages/routes.py.
+app.include_router(pages_router)
 
 
 class PageContext(BaseModel):
@@ -423,3 +427,4 @@ async def catalog_tag(req: TagRequest) -> dict[str, Any]:
 @app.get("/health")
 async def health() -> dict[str, Any]:
     return {"ok": True, "model": root_agent.model}
+
