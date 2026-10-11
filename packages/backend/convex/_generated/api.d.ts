@@ -13,6 +13,7 @@ import type * as catalogImport from "../catalogImport.js";
 import type * as catalogTaste from "../catalogTaste.js";
 import type * as conversations from "../conversations.js";
 import type * as http from "../http.js";
+import type * as pagesTypes from "../pagesTypes.js";
 import type * as qloo from "../qloo.js";
 import type * as qlooApi from "../qlooApi.js";
 import type * as qlooProbe from "../qlooProbe.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   catalogTaste: typeof catalogTaste;
   conversations: typeof conversations;
   http: typeof http;
+  pagesTypes: typeof pagesTypes;
   qloo: typeof qloo;
   qlooApi: typeof qlooApi;
   qlooProbe: typeof qlooProbe;

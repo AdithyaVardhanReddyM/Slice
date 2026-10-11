@@ -254,4 +254,287 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_store", ["storeKey"]),
+
+  /* Pages service ----------------------------------------------------------
+     Independent of the concierge tables: a Pages client is a brand, not a
+     store. Section documents, kits and profiles use the shapes in
+     pagesTypes.ts and are stored as v.any(). */
+
+  pagesBrands: defineTable({
+    /** URL-safe, unique; also the subdomain: {slug}.pages.<host>. */
+    slug: v.string(),
+    name: v.string(),
+    url: v.string(),
+    /** "extracting" | "review" | "ready" | "failed" */
+    status: v.string(),
+    /** 0..1 while extracting, with a short label for the current step. */
+    progress: v.optional(v.object({ value: v.number(), label: v.string() })),
+    /** BrandKit */
+    kit: v.optional(v.any()),
+    /** BrandBrief */
+    brief: v.optional(v.any()),
+    /** What Qloo knows about the brand (or about the brands it resembles). */
+    qloo: v.optional(
+      v.object({
+        entityId: v.optional(v.string()),
+        entityName: v.optional(v.string()),
+        matched: v.boolean(),
+        /** Brands used as proxies when the brand itself is not a Qloo entity. */
+        proxies: v.array(v.object({ id: v.string(), name: v.string(), image: v.optional(v.string()) })),
+        tags: v.array(v.any()),
+        similarBrands: v.array(v.object({ id: v.string(), name: v.string(), image: v.optional(v.string()) })),
+        demographics: v.optional(v.any()),
+      }),
+    ),
+    screenshot: v.optional(v.string()),
+    /** URLs the intake read. */
+    crawled: v.array(v.string()),
+    trace: v.array(spanValidator),
+    error: v.optional(v.string()),
+    /** Clerk subject of the merchant who created it; not enforced yet. */
+    owner: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_slug", ["slug"]),
+
+  pagesAudiences: defineTable({
+    brandId: v.id("pagesBrands"),
+    name: v.string(),
+    slug: v.string(),
+    /** "default" | "location" | "demographic" | "interests" | "csv" | "lead" */
+    kind: v.string(),
+    /** How it was defined; the compiler reads this. */
+    sources: v.object({
+      location: v.optional(v.object({ city: v.string(), country: v.optional(v.string()) })),
+      demographics: v.optional(v.object({ age: v.optional(v.string()), gender: v.optional(v.string()) })),
+      /** Free text or names the merchant typed. */
+      interests: v.optional(v.array(v.string())),
+      uploadId: v.optional(v.id("pagesUploads")),
+      cluster: v.optional(v.number()),
+      memberId: v.optional(v.id("pagesMembers")),
+    }),
+    /** "compiling" | "ready" | "failed" */
+    status: v.string(),
+    progress: v.optional(v.object({ value: v.number(), label: v.string() })),
+    /** AudienceProfile */
+    profile: v.optional(v.any()),
+    /** AudienceBrief, written by the agent. */
+    brief: v.optional(v.any()),
+    /** Members for CSV clusters; 1 for a lead; estimated reach otherwise. */
+    size: v.number(),
+    trace: v.array(spanValidator),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_brand", ["brandId"])
+    .index("by_brand_slug", ["brandId", "slug"]),
+
+  pagesUploads: defineTable({
+    brandId: v.id("pagesBrands"),
+    filename: v.string(),
+    columns: v.array(v.string()),
+    rowCount: v.number(),
+    /** "resolving" | "clustering" | "ready" | "failed" */
+    status: v.string(),
+    progress: v.optional(v.object({ value: v.number(), label: v.string() })),
+    /** Which columns carry taste, geo, demographics. */
+    mapping: v.object({
+      taste: v.array(v.string()),
+      city: v.optional(v.string()),
+      country: v.optional(v.string()),
+      age: v.optional(v.string()),
+      gender: v.optional(v.string()),
+      id: v.optional(v.string()),
+      name: v.optional(v.string()),
+    }),
+    clusters: v.array(
+      v.object({
+        index: v.number(),
+        name: v.string(),
+        size: v.number(),
+        audienceId: v.optional(v.id("pagesAudiences")),
+        /** Entities most over-represented in the cluster. */
+        topEntities: v.array(v.string()),
+      }),
+    ),
+    trace: v.array(spanValidator),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_brand", ["brandId"]),
+
+  pagesMembers: defineTable({
+    brandId: v.id("pagesBrands"),
+    uploadId: v.id("pagesUploads"),
+    /** The CSV row, as strings. */
+    row: v.record(v.string(), v.string()),
+    /** Resolved Qloo entities from the taste columns. */
+    entities: v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) })),
+    city: v.optional(v.string()),
+    country: v.optional(v.string()),
+    age: v.optional(v.string()),
+    gender: v.optional(v.string()),
+    cluster: v.optional(v.number()),
+    /** Set when a one-member audience exists for personal links. */
+    leadAudienceId: v.optional(v.id("pagesAudiences")),
+  })
+    .index("by_upload", ["uploadId"])
+    .index("by_brand", ["brandId"]),
+
+  pages: defineTable({
+    brandId: v.id("pagesBrands"),
+    slug: v.string(),
+    title: v.string(),
+    brief: v.object({
+      /** "launch" | "sale" | "subscription" | "waitlist" | "booking" | "other" */
+      goal: v.string(),
+      /** What the page is about, in the merchant's words. */
+      prompt: v.string(),
+      offer: v.optional(v.string()),
+      cta: v.object({ label: v.string(), href: v.string() }),
+      /** Brand item ids to feature. */
+      itemIds: v.array(v.string()),
+      facts: v.array(v.string()),
+      /** Reference sites. */
+      references: v.array(v.string()),
+      /** Inspiration image URLs. */
+      inspiration: v.array(v.string()),
+      /** "pexels" | "nano-banana-2" | "nano-banana-pro" */
+      imageMode: v.string(),
+    }),
+    audienceIds: v.array(v.id("pagesAudiences")),
+    /** "draft" | "published" */
+    status: v.string(),
+    defaultVariantId: v.optional(v.id("pagesVariants")),
+    /** RoutingRules */
+    routing: v.any(),
+    /** QuizConfig, generated at publish time. */
+    quiz: v.optional(v.any()),
+    publishedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_brand", ["brandId"])
+    .index("by_brand_slug", ["brandId", "slug"]),
+
+  pagesVariants: defineTable({
+    pageId: v.id("pages"),
+    brandId: v.id("pagesBrands"),
+    /** Unset for the default variant. */
+    audienceId: v.optional(v.id("pagesAudiences")),
+    name: v.string(),
+    /** "building" | "ready" | "failed" */
+    status: v.string(),
+    /** PageDoc */
+    doc: v.optional(v.any()),
+    screenshot: v.optional(v.string()),
+    /** Why this version: the agent's spans (Qloo evidence per choice). */
+    trace: v.array(spanValidator),
+    version: v.number(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_page", ["pageId"])
+    .index("by_audience", ["audienceId"]),
+
+  /** Builder chat per page: the merchant's messages and the agent's replies. */
+  pagesBuilds: defineTable({
+    pageId: v.id("pages"),
+    messages: v.array(
+      v.object({
+        id: v.string(),
+        /** "merchant" | "agent" */
+        role: v.string(),
+        at: v.number(),
+        text: v.string(),
+        /** Which variant the message was about / changed. */
+        variantId: v.optional(v.id("pagesVariants")),
+        trace: v.optional(v.array(spanValidator)),
+      }),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_page", ["pageId"]),
+
+  /** Raw tracker events from published pages. */
+  pagesEvents: defineTable({
+    brandId: v.id("pagesBrands"),
+    pageId: v.id("pages"),
+    variantId: v.id("pagesVariants"),
+    visitorId: v.string(),
+    sessionId: v.string(),
+    type: v.string(),
+    at: v.number(),
+    resolvedBy: v.string(),
+    path: v.string(),
+    sectionId: v.optional(v.string()),
+    label: v.optional(v.string()),
+    href: v.optional(v.string()),
+    x: v.optional(v.number()),
+    y: v.optional(v.number()),
+    value: v.optional(v.number()),
+    data: v.optional(v.record(v.string(), v.string())),
+    device: v.string(),
+    browser: v.string(),
+    os: v.string(),
+    country: v.optional(v.string()),
+    region: v.optional(v.string()),
+    city: v.optional(v.string()),
+    /** "direct" | "search" | "social" | "email" | "ads" | "referral" | "qr" */
+    source: v.string(),
+    referrerHost: v.optional(v.string()),
+    utm: v.optional(v.record(v.string(), v.string())),
+  })
+    .index("by_page_at", ["pageId", "at"])
+    .index("by_variant_at", ["variantId", "at"])
+    .index("by_session", ["sessionId"]),
+
+  /** Hourly rollups per variant, updated on ingest. */
+  pagesStats: defineTable({
+    pageId: v.id("pages"),
+    variantId: v.id("pagesVariants"),
+    /** "YYYY-MM-DD" UTC. */
+    day: v.string(),
+    hour: v.number(),
+    views: v.number(),
+    sessions: v.number(),
+    visitors: v.number(),
+    clicks: v.number(),
+    ctaClicks: v.number(),
+    formSubmits: v.number(),
+    engagedMs: v.number(),
+    scrollSum: v.number(),
+    scrollN: v.number(),
+    byDevice: v.record(v.string(), v.number()),
+    byBrowser: v.record(v.string(), v.number()),
+    byCountry: v.record(v.string(), v.number()),
+    bySource: v.record(v.string(), v.number()),
+    byResolvedBy: v.record(v.string(), v.number()),
+    bySection: v.record(v.string(), v.object({ seen: v.number(), clicks: v.number() })),
+  })
+    .index("by_page_day", ["pageId", "day"])
+    .index("by_variant_day_hour", ["variantId", "day", "hour"]),
+
+  pagesForms: defineTable({
+    brandId: v.id("pagesBrands"),
+    pageId: v.id("pages"),
+    variantId: v.id("pagesVariants"),
+    sessionId: v.string(),
+    sectionId: v.string(),
+    at: v.number(),
+    fields: v.record(v.string(), v.string()),
+  }).index("by_page_at", ["pageId", "at"]),
+
+  /** Sessions the tracker opened, for visitor/session counts and the quiz result. */
+  pagesSessions: defineTable({
+    pageId: v.id("pages"),
+    variantId: v.id("pagesVariants"),
+    sessionId: v.string(),
+    visitorId: v.string(),
+    startedAt: v.number(),
+    lastAt: v.number(),
+    resolvedBy: v.string(),
+  }).index("by_session", ["sessionId"]),
 });
