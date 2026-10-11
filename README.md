@@ -3,21 +3,22 @@
 Taste personalisation for businesses, grounded in [Qloo](https://www.qloo.com/)'s cultural taste graph so it works on a first visit with no history and no personal data. Slice is three independent services; a business subscribes to the ones it needs, and each has its own clients and setup:
 
 - **Concierge** (built): an embeddable agent that recommends from a storefront's own catalog. Its clients are widgets, one per store (Marlow and Fold are the demos).
-- **Pages** (planned): landing, sales and funnel pages whose content adapts to the visitor's taste profile, location and campaign.
+- **Pages** (built): landing pages a brand builds with an agent, one version per audience (a city, a demographic, a set of interests, a cluster of its own customers, a single lead), published at `{brand}.pages.<host>/{page}` with first-party analytics. Its clients are brands (Ridgeline Coffee Roasters and Saltline Hotels are the demos). See `docs/pages-plan.md`, `docs/pages-contracts.md` and `docs/pages-demo.md`.
 - **Media** (planned): posters, creatives and short video generated per taste cluster.
 
 ## Repo layout
 
 ```
 apps/
-  web/        Next.js 16 — marketing site, merchant console at /dashboard (Clerk): services home → /dashboard/concierge (widgets), /dashboard/pages, /dashboard/media, and /embed/* (the concierge UI the widget iframes)
+  web/        Next.js 16 — marketing site, merchant console at /dashboard (Clerk): services home → /dashboard/concierge (widgets), /dashboard/pages (brands), /dashboard/media; /embed/* (the concierge UI the widget iframes); /p/{brand}/{page} (published pages, also served on {brand}.pages.<host>)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
-  agent/      Python ADK concierge agent (Gemini 3.8 Flash on Vertex AI); deployed to Agent Runtime
-  stores/     Demo storefronts the widget is tested on (Marlow at /marlow, Fold at /fold); each embeds slice.js like a real merchant
+  agent/      Python ADK agents (Gemini 3.8 Flash on Vertex AI): the concierge (slice_agent) and the Pages intake, audience briefs and page builder (slice_pages)
+  stores/     Demo sites: storefronts the widget is tested on (Marlow at /marlow, Fold at /fold) and brand sites the Pages intake reads (Ridgeline at /ridgeline, Saltline at /saltline)
 packages/
   backend/    Convex — schema, queries/mutations/actions, auth config
   qloo/       Typed client for the Qloo API
-  demo-catalogs/  Product catalogs for the demo stores (JSON + types), validator, Pexels image fetcher
+  demo-catalogs/  Product catalogs for the demo sites (JSON + types), validator, Pexels image fetcher
+  demo-data/  Customer datasets for the Pages demos and the end-to-end seed script
 ```
 
 How the pieces talk:
@@ -118,6 +119,9 @@ pnpm dev
 |                               | `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-in`, `/sign-up`                                             |
 | `apps/widget/.env.local`      | `VITE_SLICE_APP_URL`                                             | Where the web app runs; the widget iframes `{url}/embed/concierge` |
 | `apps/stores/.env.local`      | `NEXT_PUBLIC_SLICE_SCRIPT_URL`                                   | Where the demo stores load `slice.js` from (dev: the vite source)  |
+| `apps/web/.env.local`         | `NEXT_PUBLIC_PAGES_HOST`                                         | Base host for published pages (`pages.localhost:3000` in dev)      |
+| `apps/agent/.env`             | `FIRECRAWL_API_KEY`, `PEXELS_API_KEY`                            | Pages intake of public sites (optional) and default imagery         |
+|                               | `NANO_BANANA_2_MODEL`, `NANO_BANANA_PRO_MODEL`                   | Image generation models for the page builder                        |
 | `packages/demo-catalogs/.env` | `PEXELS_API_KEY`                                                 | Only for `pnpm --filter @slice/demo-catalogs fetch-images`         |
 | Convex (`npx convex env set`) | `CLERK_JWT_ISSUER_DOMAIN`                                        | Clerk Frontend API URL                                             |
 |                               | `QLOO_API_KEY`                                                   | Hackathon key; only works against `https://hackathon.api.qloo.com` |

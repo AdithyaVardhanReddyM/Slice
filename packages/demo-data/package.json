@@ -1,0 +1,20 @@
+{
+  "name": "@slice/demo-data",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Customer datasets and seed scripts for the Pages service demos (Ridgeline Coffee, Saltline Hotels)",
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate.ts",
+    "seed": "node --env-file-if-exists=.env scripts/seed-demo.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "convex": "^1.46.0",
+    "@slice/backend": "workspace:*"
+  }
+}
