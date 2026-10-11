@@ -14,11 +14,11 @@ export default function Home() {
       />
       <div className="max-w-md space-y-3">
         <h1 className="text-3xl font-semibold tracking-tight">
-          A concierge with taste, for every storefront.
+          Pages, media and a concierge that know each visitor&apos;s taste.
         </h1>
         <p className="text-muted-foreground">
-          Recommendations grounded in Qloo&apos;s cultural graph. Works on a
-          shopper&apos;s first visit, with no history and no personal data.
+          One taste profile per visitor, grounded in Qloo&apos;s cultural graph.
+          Works on a first visit, with no history and no personal data.
         </p>
       </div>
       <Link href="/dashboard" className={buttonVariants({ size: "lg" })}>

@@ -263,7 +263,7 @@ export function SignalLog({
                   <TableCell className="truncate">{r.result}</TableCell>
                   <TableCell className="pr-4">
                     <Link
-                      href={`/dashboard/${widgetId}/conversations/${r.conversationId}`}
+                      href={`/dashboard/concierge/${widgetId}/conversations/${r.conversationId}`}
                       onClick={(e) => e.stopPropagation()}
                       className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
                     >
@@ -385,7 +385,7 @@ function Expanded({ row, widgetId }: { row: LogRow; widgetId: string }) {
           <dt className="text-muted-foreground">Conversation</dt>
           <dd className="col-span-2">
             <Link
-              href={`/dashboard/${widgetId}/conversations/${row.conversationId}`}
+              href={`/dashboard/concierge/${widgetId}/conversations/${row.conversationId}`}
               className="inline-flex items-center gap-1 font-medium hover:underline"
             >
               Open {row.conversationId}

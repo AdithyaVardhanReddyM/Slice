@@ -1,12 +1,16 @@
 # Slice
 
-A concierge with taste for every storefront. Slice gives businesses an embeddable agent that recommends from their own catalog using [Qloo](https://www.qloo.com/)'s cultural taste graph, so it works on a shopper's first visit with no history and no personal data.
+Taste personalisation for businesses, grounded in [Qloo](https://www.qloo.com/)'s cultural taste graph so it works on a first visit with no history and no personal data. Slice is three independent services; a business subscribes to the ones it needs, and each has its own clients and setup:
+
+- **Concierge** (built): an embeddable agent that recommends from a storefront's own catalog. Its clients are widgets, one per store (Marlow and Fold are the demos).
+- **Pages** (planned): landing, sales and funnel pages whose content adapts to the visitor's taste profile, location and campaign.
+- **Media** (planned): posters, creatives and short video generated per taste cluster.
 
 ## Repo layout
 
 ```
 apps/
-  web/        Next.js 16 — marketing site, merchant dashboard (Clerk), and /embed/* (the concierge UI the widget iframes)
+  web/        Next.js 16 — marketing site, merchant console at /dashboard (Clerk): services home → /dashboard/concierge (widgets), /dashboard/pages, /dashboard/media, and /embed/* (the concierge UI the widget iframes)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
   agent/      Python ADK concierge agent (Gemini 3.8 Flash on Vertex AI); deployed to Agent Runtime
   stores/     Demo storefronts the widget is tested on (Marlow at /marlow, Fold at /fold); each embeds slice.js like a real merchant

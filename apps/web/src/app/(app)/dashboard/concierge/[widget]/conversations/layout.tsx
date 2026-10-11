@@ -8,7 +8,7 @@ import { getWidget } from "@/lib/mock/widgets";
 export default function ConversationsLayout({
   children,
   params,
-}: LayoutProps<"/dashboard/[widget]/conversations">) {
+}: LayoutProps<"/dashboard/concierge/[widget]/conversations">) {
   // Fills the sheet below the 56px top bar; each pane scrolls on its own.
   return (
     <div className="flex h-[calc(100dvh-74px)] min-h-[560px]">
@@ -23,7 +23,7 @@ export default function ConversationsLayout({
 async function List({
   params,
 }: {
-  params: LayoutProps<"/dashboard/[widget]/conversations">["params"];
+  params: LayoutProps<"/dashboard/concierge/[widget]/conversations">["params"];
 }) {
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);

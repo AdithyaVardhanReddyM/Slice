@@ -40,7 +40,7 @@ import { conversationsFor } from "@/lib/mock/conversations";
 import type { QlooEntityType } from "@/lib/mock/types";
 import { getWidget, metrics } from "@/lib/mock/widgets";
 
-export const metadata: Metadata = { title: "Overview" };
+export const metadata: Metadata = { title: "Concierge" };
 
 const TYPE_LABEL: Record<QlooEntityType, string> = {
   artist: "Artist",
@@ -53,11 +53,11 @@ const TYPE_LABEL: Record<QlooEntityType, string> = {
   podcast: "Podcast",
 };
 
-type Params = PageProps<"/dashboard/[widget]">["params"];
+type Params = PageProps<"/dashboard/concierge/[widget]">["params"];
 
 export default function OverviewPage({
   params,
-}: PageProps<"/dashboard/[widget]">) {
+}: PageProps<"/dashboard/concierge/[widget]">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <Overview params={params} />
@@ -70,9 +70,9 @@ async function Overview({ params }: { params: Params }) {
   const widget = getWidget(widgetId);
   if (!widget) notFound();
   if (widget.status === "setup" || !widget.storeKey)
-    redirect(`/dashboard/${widget.id}/setup`);
+    redirect(`/dashboard/concierge/${widget.id}/setup`);
   const store = widget.storeKey;
-  const base = `/dashboard/${widget.id}`;
+  const base = `/dashboard/concierge/${widget.id}`;
 
   const days = metrics[widget.id];
   type Day = (typeof days)[number];
@@ -211,7 +211,7 @@ async function Overview({ params }: { params: Params }) {
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-6">
       <PageHeader
-        title="Overview"
+        title="Concierge"
         description={`How the ${widget.name} concierge performed over the last 30 days.`}
         actions={<RangePicker />}
       />

@@ -271,7 +271,7 @@ function WooPanel({ domain }: { domain: string }) {
         <CardDescription>Syncs every 30 minutes.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-wrap items-end gap-3">
-        <Field label="Site URL" className="min-w-64 flex-1">
+        <Field label="Widget URL" className="min-w-64 flex-1">
           <AdornedInput prefix="https://" defaultValue={domain} />
         </Field>
         <Button>Continue to WooCommerce</Button>

@@ -83,14 +83,14 @@ export function NewWidgetForm() {
     setSubmitting(true);
     // Mock: this will create the widget in Convex (name, host, vertical, market,
     // currency), mint a pk_test key, and route to the new widget's setup.
-    setTimeout(() => router.push("/dashboard/ostro/setup"), 700);
+    setTimeout(() => router.push("/dashboard/concierge/ostro/setup"), 700);
   }
 
   return (
     <form onSubmit={onSubmit} noValidate>
       <Card>
         <CardHeader>
-          <CardTitle>Store details</CardTitle>
+          <CardTitle>Widget details</CardTitle>
           <CardDescription>
             You can change all of this later in Settings.
           </CardDescription>
@@ -110,14 +110,14 @@ export function NewWidgetForm() {
               />
             </Field>
             <Field
-              label="Store URL"
+              label="Widget URL"
               hint={
                 urlBlurred && url && !hostValid ? (
                   <span className="text-destructive">
                     Enter a domain like ostro.wine
                   </span>
                 ) : (
-                  "Where the widget will run. You can add more domains later."
+                  "Where Slice will run. You can add more domains later."
                 )
               }
             >

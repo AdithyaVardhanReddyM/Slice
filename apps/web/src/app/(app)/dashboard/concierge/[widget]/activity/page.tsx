@@ -39,7 +39,7 @@ export const metadata: Metadata = { title: "Signal log" };
 
 export default function ActivityPage({
   params,
-}: PageProps<"/dashboard/[widget]/activity">) {
+}: PageProps<"/dashboard/concierge/[widget]/activity">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <ActivityContent params={params} />
@@ -50,7 +50,7 @@ export default function ActivityPage({
 async function ActivityContent({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/activity">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/activity">["params"];
 }) {
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);
@@ -81,7 +81,7 @@ async function ActivityContent({
             body="When shoppers talk to the concierge, every Qloo lookup, model call and catalog query shows up here with its latency and cache status."
             action={
               <Link
-                href={`/dashboard/${widget.id}/setup`}
+                href={`/dashboard/concierge/${widget.id}/setup`}
                 className={buttonVariants()}
               >
                 Finish setup

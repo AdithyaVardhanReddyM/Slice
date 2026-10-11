@@ -64,7 +64,7 @@ export function WidgetSidebar({
   const { widget: widgetId } = useParams<{ widget: string }>();
   const pathname = usePathname();
   const widget = getWidget(widgetId) ?? widgets[0];
-  const base = `/dashboard/${widget.id}`;
+  const base = `/dashboard/concierge/${widget.id}`;
   const setupLeft = 6 - widget.completedSteps.length;
 
   const groups: { label: string; items: NavItem[] }[] = [
@@ -207,9 +207,13 @@ function NavUser() {
               <UserRound />
               Account
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/dashboard" />}>
+            <DropdownMenuItem render={<Link href="/dashboard/concierge" />}>
               <LayoutGrid />
               All widgets
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/dashboard" />}>
+              <LayoutDashboard />
+              All services
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut({ redirectUrl: "/" })}>
@@ -252,7 +256,7 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
               {widgets.map((w) => (
                 <DropdownMenuItem
                   key={w.id}
-                  render={<Link href={`/dashboard/${w.id}`} />}
+                  render={<Link href={`/dashboard/concierge/${w.id}`} />}
                 >
                   <WidgetGlyph name={w.name} accent={w.accent} size="sm" />
                   <span className="flex-1 truncate">{w.name}</span>
@@ -261,7 +265,7 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
               ))}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/dashboard/new" />}>
+            <DropdownMenuItem render={<Link href="/dashboard/concierge/new" />}>
               <Plus className="size-4" />
               New widget
             </DropdownMenuItem>

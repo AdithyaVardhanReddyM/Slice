@@ -5,7 +5,7 @@ import { conversationsFor } from "@/lib/mock/conversations";
 import { widgets } from "@/lib/mock/widgets";
 
 export function generateStaticParams() {
-  return widgets.map((w) => ({ widget: w.id }));
+  return widgets.map((s) => ({ widget: s.id }));
 }
 
 const conversationCounts = Object.fromEntries(
@@ -14,7 +14,7 @@ const conversationCounts = Object.fromEntries(
 
 export default function WidgetLayout({
   children,
-}: LayoutProps<"/dashboard/[widget]">) {
+}: LayoutProps<"/dashboard/concierge/[widget]">) {
   return (
     <SidebarProvider>
       <WidgetSidebar conversationCounts={conversationCounts} />

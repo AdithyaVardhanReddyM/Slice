@@ -78,7 +78,7 @@ export function ConversationList({
         {visible.map((c) => (
           <li key={c.id}>
             <Link
-              href={`/dashboard/${widgetId}/conversations/${c.id}`}
+              href={`/dashboard/concierge/${widgetId}/conversations/${c.id}`}
               className={cn(
                 "block space-y-2 border-b px-4 py-3 transition-colors hover:bg-muted/50",
                 c.id === activeId && "bg-muted hover:bg-muted",

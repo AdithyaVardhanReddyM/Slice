@@ -13,16 +13,17 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/dashboard/[widget]/conversations/[id]">): Promise<Metadata> {
+}: PageProps<"/dashboard/concierge/[widget]/conversations/[id]">): Promise<Metadata> {
   const { id } = await params;
   return { title: `Conversation ${id}` };
 }
 
-type Params = PageProps<"/dashboard/[widget]/conversations/[id]">["params"];
+type Params =
+  PageProps<"/dashboard/concierge/[widget]/conversations/[id]">["params"];
 
 export default function ConversationPage({
   params,
-}: PageProps<"/dashboard/[widget]/conversations/[id]">) {
+}: PageProps<"/dashboard/concierge/[widget]/conversations/[id]">) {
   return (
     <Suspense fallback={<ConversationSkeleton />}>
       <Conversation params={params} />

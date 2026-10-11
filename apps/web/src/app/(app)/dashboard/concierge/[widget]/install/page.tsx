@@ -36,7 +36,7 @@ frame-src https://slice.so;`;
 
 export default function InstallPage({
   params,
-}: PageProps<"/dashboard/[widget]/install">) {
+}: PageProps<"/dashboard/concierge/[widget]/install">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <Install params={params} />
@@ -47,7 +47,7 @@ export default function InstallPage({
 async function Install({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/install">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/install">["params"];
 }) {
   const { widget: id } = await params;
   const widget = getWidget(id);
@@ -117,7 +117,8 @@ async function Install({
             <CardHeader>
               <CardTitle>Content Security Policy</CardTitle>
               <CardDescription>
-                Only needed if your site sends a CSP header. Add these sources.
+                Only needed if your widget sends a CSP header. Add these
+                sources.
               </CardDescription>
               <CardAction>
                 <CopyButton value={CSP} />

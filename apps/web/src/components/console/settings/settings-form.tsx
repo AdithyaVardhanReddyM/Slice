@@ -627,7 +627,7 @@ export function SettingsForm({
               <div className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div className="max-w-lg space-y-0.5">
                   <div className="text-sm font-medium">
-                    {form.live ? "Pause this widget" : "Resume this widget"}
+                    {form.live ? "Pause the concierge" : "Resume the concierge"}
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {form.live
@@ -640,7 +640,7 @@ export function SettingsForm({
                   disabled={context.inSetup}
                   onClick={() => set("live", !form.live)}
                 >
-                  {form.live ? "Pause widget" : "Resume widget"}
+                  {form.live ? "Pause concierge" : "Resume concierge"}
                 </Button>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-4 p-4">

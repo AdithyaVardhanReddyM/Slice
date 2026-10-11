@@ -44,7 +44,7 @@ export const metadata: Metadata = { title: "Taste insights" };
 
 export default function TastePage({
   params,
-}: PageProps<"/dashboard/[widget]/taste">) {
+}: PageProps<"/dashboard/concierge/[widget]/taste">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <TasteContent params={params} />
@@ -55,7 +55,7 @@ export default function TastePage({
 async function TasteContent({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/taste">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/taste">["params"];
 }) {
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);
@@ -77,7 +77,7 @@ async function TasteContent({
             body="Once shoppers start talking to the concierge, their picks resolve through Qloo and show up here as audience taste, clusters and catalog gaps."
             action={
               <Link
-                href={`/dashboard/${widget.id}/${widget.status === "setup" ? "setup" : "install"}`}
+                href={`/dashboard/concierge/${widget.id}/${widget.status === "setup" ? "setup" : "install"}`}
                 className={buttonVariants()}
               >
                 {widget.status === "setup"
@@ -117,10 +117,10 @@ async function TasteContent({
         title="Taste insights"
         description={
           <>
-            Aggregated from <span className="num">{total}</span> conversations
-            since {fmt.date(since)}. Picks from the taste questionnaire and chat
-            resolve to Qloo entities, then to taste tags, then onto your style
-            axis.
+            <span className="num">{total}</span> taste profiles since{" "}
+            {fmt.date(since)}, built from the concierge questionnaire and chat.
+            Picks resolve to Qloo entities, then to taste tags, then onto your
+            style axis. The same profiles will drive pages and media.
           </>
         }
         actions={

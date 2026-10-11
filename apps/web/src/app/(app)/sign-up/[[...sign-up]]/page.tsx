@@ -13,10 +13,7 @@ export default function SignUpPage() {
     <AuthShell>
       {/* SignUp reads the URL at request time, so it streams in after the static shell. */}
       <Suspense>
-        <SignUp
-          appearance={clerkAppearance}
-          fallbackRedirectUrl="/dashboard/new"
-        />
+        <SignUp appearance={clerkAppearance} fallbackRedirectUrl="/dashboard" />
       </Suspense>
     </AuthShell>
   );

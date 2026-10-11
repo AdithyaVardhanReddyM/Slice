@@ -35,20 +35,25 @@ export function Topbar() {
   const { widget: widgetId } = useParams<{ widget: string }>();
   const pathname = usePathname();
   const widget = getWidget(widgetId);
-  const parts = pathname.split("/").slice(3);
+  const base = `/dashboard/concierge/${widgetId}`;
+  // "/dashboard/concierge/marlow/conversations/cnv_1" → ["conversations", "cnv_1"]
+  const parts = pathname.split("/").slice(4).filter(Boolean);
 
   const crumbs: { label: string; href?: string }[] = [
-    { label: widget?.name ?? widgetId, href: `/dashboard/${widgetId}` },
+    { label: "Concierge", href: "/dashboard/concierge" },
+    { label: widget?.name ?? widgetId, href: base },
   ];
-  if (parts[0]) {
-    crumbs.push({
-      label: SECTION_LABELS[parts[0]] ?? parts[0],
-      href: parts[1] ? `/dashboard/${widgetId}/${parts[0]}` : undefined,
-    });
-  } else {
+  if (parts.length === 0) {
     crumbs.push({ label: "Overview" });
+  } else {
+    parts.forEach((part, i) => {
+      const last = i === parts.length - 1;
+      crumbs.push({
+        label: SECTION_LABELS[part] ?? part,
+        href: last ? undefined : `${base}/${parts.slice(0, i + 1).join("/")}`,
+      });
+    });
   }
-  if (parts[1]) crumbs.push({ label: parts[1] });
 
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 rounded-t-xl border-b bg-background/95 px-4 backdrop-blur">

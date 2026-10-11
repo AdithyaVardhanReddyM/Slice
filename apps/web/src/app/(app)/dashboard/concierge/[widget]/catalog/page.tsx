@@ -23,7 +23,7 @@ export const metadata: Metadata = { title: "Catalog" };
 
 export default function CatalogPage({
   params,
-}: PageProps<"/dashboard/[widget]/catalog">) {
+}: PageProps<"/dashboard/concierge/[widget]/catalog">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <CatalogContent params={params} />
@@ -34,7 +34,7 @@ export default function CatalogPage({
 async function CatalogContent({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/catalog">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/catalog">["params"];
 }) {
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);
@@ -54,7 +54,7 @@ async function CatalogContent({
             body="Upload a product file or connect a feed. Slice reads descriptions and attributes to match products against each shopper's taste."
             action={
               <Link
-                href={`/dashboard/${widget.id}/setup`}
+                href={`/dashboard/concierge/${widget.id}/setup`}
                 className={buttonVariants()}
               >
                 Connect a catalog

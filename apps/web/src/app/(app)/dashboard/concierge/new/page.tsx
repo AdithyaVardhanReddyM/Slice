@@ -31,7 +31,7 @@ export default function NewWidgetPage() {
     <StandaloneShell
       actions={
         <Link
-          href="/dashboard"
+          href="/dashboard/concierge"
           className={buttonVariants({ variant: "ghost" })}
         >
           <X data-icon="inline-start" /> Cancel

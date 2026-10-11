@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default function SettingsPage({
   params,
-}: PageProps<"/dashboard/[widget]/settings">) {
+}: PageProps<"/dashboard/concierge/[widget]/settings">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <SettingsContent params={params} />
@@ -41,7 +41,7 @@ function secretFor(publicKey: string) {
 async function SettingsContent({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/settings">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/settings">["params"];
 }) {
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);

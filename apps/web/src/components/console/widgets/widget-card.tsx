@@ -11,9 +11,8 @@ import type { Widget } from "@/lib/mock/types";
 /** One storefront. Live widgets open the dashboard; drafts continue setup. */
 export function WidgetCard({ widget }: { widget: Widget }) {
   const live = widget.status === "live";
-  const href = live
-    ? `/dashboard/${widget.id}`
-    : `/dashboard/${widget.id}/setup`;
+  const base = `/dashboard/concierge/${widget.id}`;
+  const href = live ? base : `${base}/setup`;
   const done = widget.completedSteps.length;
 
   return (
@@ -84,7 +83,7 @@ export function WidgetCard({ widget }: { widget: Widget }) {
   );
 }
 
-/** Shown when the workspace has no widgets yet. */
+/** Shown when the Concierge service has no widgets yet. */
 export function NoWidgets() {
   return (
     <div className="mx-auto flex max-w-lg flex-col items-center py-16 text-center">
@@ -104,7 +103,7 @@ export function NoWidgets() {
         taste questions, and put a concierge on your site in about ten minutes.
       </p>
       <Link
-        href="/dashboard/new"
+        href="/dashboard/concierge/new"
         className={buttonVariants({ className: "mt-6" })}
       >
         Create your first widget

@@ -67,7 +67,7 @@ const STEP_COPY: Record<SetupStep, { title: string; description: string }> = {
   },
   install: {
     title: "Install",
-    description: "Add one script to your site, then confirm it's loading.",
+    description: "Add one script to your widget, then confirm it's loading.",
   },
 };
 
@@ -452,7 +452,7 @@ function Finish({
           <p className="max-w-xl text-sm text-muted-foreground">
             {remaining.length === 0
               ? alreadyLive
-                ? "This widget is already live. Changes you made apply to new conversations straight away."
+                ? "The concierge is already live. Changes you made apply to new conversations straight away."
                 : `Going live swaps your test key for a live one and shows the launcher to shoppers on ${widget.domain}.`
               : "You can go back to any step. Everything you've done so far is saved."}
           </p>
@@ -499,13 +499,13 @@ function Finish({
         {isLive ? (
           <>
             <Link
-              href={`/dashboard/${widget.id}`}
+              href={`/dashboard/concierge/${widget.id}`}
               className={buttonVariants({ variant: "default" })}
             >
               Open overview <ArrowRight data-icon="inline-end" />
             </Link>
             <Link
-              href={`/dashboard/${widget.id}/install`}
+              href={`/dashboard/concierge/${widget.id}/install`}
               className={buttonVariants({ variant: "outline" })}
             >
               Install details

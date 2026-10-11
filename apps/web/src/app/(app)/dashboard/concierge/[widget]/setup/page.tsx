@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Setup" };
 
 export default function SetupPage({
   params,
-}: PageProps<"/dashboard/[widget]/setup">) {
+}: PageProps<"/dashboard/concierge/[widget]/setup">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <Setup params={params} />
@@ -21,7 +21,7 @@ export default function SetupPage({
 async function Setup({
   params,
 }: {
-  params: PageProps<"/dashboard/[widget]/setup">["params"];
+  params: PageProps<"/dashboard/concierge/[widget]/setup">["params"];
 }) {
   const { widget: id } = await params;
   const widget = getWidget(id);
