@@ -38,8 +38,8 @@ export const SERVICES: ServiceMeta[] = [
     label: "Pages",
     segment: "pages",
     icon: LayoutTemplate,
-    available: false,
-    clientNoun: "page",
+    available: true,
+    clientNoun: "brand",
     tagline: "Landing, sales and funnel pages that adapt to the visitor.",
     description:
       "One page, many versions. Headlines, imagery, featured offers and calls to action change with the visitor's taste profile, location and campaign.",
