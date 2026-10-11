@@ -208,6 +208,64 @@ export async function searchEntity(
   return first ? entityFromSearch(first, source) : null;
 }
 
+/**
+ * Untyped search, picking the entity a merchant most likely meant. Qloo ranks
+ * `urn:entity:author` first for many names ("Aesop" the fabulist above Aesop
+ * the brand, "Wes Anderson" as an author), and authors are weak signals for
+ * brand/aesthetic insights. Prefer exact-name matches, and among those a
+ * non-author type with real popularity; otherwise Qloo's first result.
+ */
+export async function searchEntityBest(
+  ctx: ActionCtx,
+  trace: Span[],
+  query: string,
+  source = "free_text",
+): Promise<EntityRef | null> {
+  const body = await traced<{ results?: Json[] }>(
+    ctx,
+    trace,
+    `Resolve "${query}"`,
+    "/search",
+    { query },
+    (b) => {
+      const first = b.results?.[0];
+      return first ? `${first.name} (${strs(first.types)[0] ?? "?"})` : "no match";
+    },
+  );
+  const results = body.results ?? [];
+  if (!results.length) return null;
+  const q = query.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const exact = results.filter((e) => String(e.name).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === q);
+  // Types a customer record plausibly names. Albums, authors, video games and
+  // towns mostly show up as accidental name clashes ("Running", "Swimming").
+  const ORDER = ["brand", "artist", "movie", "tv_show", "book", "podcast", "place", "destination", "person"];
+  const typeRank = (e: Json) => {
+    const t = (strs(e.types)[0] ?? "").replace("urn:entity:", "");
+    const i = ORDER.indexOf(t);
+    return i === -1 ? Infinity : i;
+  };
+  // A lower-case word in a data column ("running", "natural wine") is an
+  // interest, not a name; only a well-known brand may claim it.
+  const generic = query === query.toLowerCase();
+  const candidates = exact
+    .filter((e) => Number.isFinite(typeRank(e)))
+    .filter((e) => Number(e.popularity ?? 0) >= 0.3)
+    .filter((e) => !generic || (typeRank(e) === 0 && Number(e.popularity ?? 0) >= 0.5))
+    .sort((a, b) => typeRank(a) - typeRank(b) || Number(b.popularity ?? 0) - Number(a.popularity ?? 0));
+  const pick = candidates[0];
+  if (!pick) {
+    const last = trace[trace.length - 1];
+    if (last) last.result = `no usable match (top: ${results[0].name}, ${strs(results[0].types)[0] ?? "?"})`;
+    return null;
+  }
+  const ref = entityFromSearch(pick, source);
+  if (pick !== results[0]) {
+    const last = trace[trace.length - 1];
+    if (last) last.result = `${ref.name} (${ref.type}) over ${results[0].name} (${strs(results[0].types)[0] ?? "?"})`;
+  }
+  return ref;
+}
+
 /** Where a typed city is, so the questionnaire's map can travel there. */
 export async function locateCity(
   ctx: ActionCtx,
@@ -347,11 +405,13 @@ export async function entitiesFromSignals(
   entityIds: string[],
   city?: string,
   take = 10,
+  extra: QlooParams = {},
 ): Promise<EntityRef[]> {
   const params: QlooParams = {
     "filter.type": ENTITY[kind],
     "signal.interests.entities": entityIds.join(","),
     take,
+    ...extra,
   };
   if (city) params["signal.location.query"] = city;
   const body = await traced<{ results?: { entities?: Json[] } }>(
@@ -372,12 +432,14 @@ export async function tagInsights(
   tagTypes: string[],
   label: string,
   take = 30,
+  extra: QlooParams = {},
 ): Promise<TasteTag[]> {
   const params: QlooParams = {
     "filter.type": "urn:tag",
     "filter.tag.types": tagTypes.join(","),
     "signal.interests.entities": entityIds.join(","),
     take,
+    ...extra,
   };
   const body = await traced<{ results?: { tags?: Json[] } }>(
     ctx,
@@ -412,6 +474,7 @@ export async function tagInsightsByGroup(
   trace: Span[],
   entityIds: string[],
   groups: { types: string[]; take: number; label: string }[],
+  extra: QlooParams = {},
 ): Promise<TasteTag[]> {
   const seen = new Set<string>();
   const out: TasteTag[] = [];
@@ -420,7 +483,7 @@ export async function tagInsightsByGroup(
     for (let attempt = 0; attempt < 2; attempt++) {
       const before = trace.length;
       try {
-        tags = await tagInsights(ctx, trace, entityIds, g.types, g.label, g.take);
+        tags = await tagInsights(ctx, trace, entityIds, g.types, g.label, g.take, extra);
         break;
       } catch (err) {
         if (attempt === 0) {
@@ -484,6 +547,7 @@ export async function brandInsights(
   storeBrands: Set<string>,
   vertical: string,
   take = 20,
+  extra: QlooParams = {},
 ): Promise<TasteBrand[]> {
   const params: QlooParams = {
     "filter.type": ENTITY.brand,
@@ -491,6 +555,7 @@ export async function brandInsights(
     "feature.explainability": true,
     // 50 with explainability can exceed Convex's 1 MiB cache document.
     take: 35,
+    ...extra,
   };
   if (city) params["signal.location.query"] = city;
   const body = await traced<{ results?: { entities?: Json[] } }>(
@@ -673,10 +738,12 @@ export async function demographicInsights(
   ctx: ActionCtx,
   trace: Span[],
   entityIds: string[],
+  extra: QlooParams = {},
 ): Promise<Demographics | null> {
   const params: QlooParams = {
     "filter.type": "urn:demographics",
     "signal.interests.entities": entityIds.join(","),
+    ...extra,
   };
   const body = await traced<{ results?: { demographics?: Json[] } }>(
     ctx,

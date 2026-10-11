@@ -536,5 +536,8 @@ export default defineSchema({
     startedAt: v.number(),
     lastAt: v.number(),
     resolvedBy: v.string(),
-  }).index("by_session", ["sessionId"]),
+  })
+    .index("by_session", ["sessionId"])
+    // "First session of this visitor on this page today" (visitor counts) and purging by page.
+    .index("by_page_visitor", ["pageId", "visitorId", "startedAt"]),
 });

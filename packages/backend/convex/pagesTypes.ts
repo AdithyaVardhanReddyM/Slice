@@ -72,6 +72,8 @@ export interface BrandBrief {
   items: BrandItem[];
   /** Any brand names mentioned that are not the brand itself (partners, suppliers, stockists). */
   relatedBrands: string[];
+  /** Well-known brands whose customers overlap with this one (same category and positioning). Used as Qloo proxies when the brand itself is not a Qloo entity. */
+  comparableBrands?: string[];
 }
 
 /* Taste profile (same shape the concierge stores) --------------------------- */
