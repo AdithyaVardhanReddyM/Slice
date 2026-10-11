@@ -1,0 +1,918 @@
+[
+  {
+    "id": "sl-rm-lis-01",
+    "slug": "lisbon-cosy-room",
+    "name": "Cosy Room, Lisbon",
+    "category": "Rooms",
+    "subcategory": "Lisbon",
+    "price": 190,
+    "description": "Eighteen square metres on the second and third floors of the old shipping office, with a tall sash window onto Rua da Boavista and the original pine floorboards sanded back and oiled. A queen bed in Portuguese linen, a small writing desk, a rain shower lined in hand-glazed white tile. Quiet, simple and all you need for a city stay.",
+    "details": [
+      "18 m², floors 2 and 3",
+      "Queen bed, 160 cm, Portuguese cotton percale",
+      "Rain shower, hand-glazed tile, Claus Porto soap",
+      "Writing desk, Roberts radio, no television",
+      "Street-facing with secondary glazing",
+      "Breakfast at Maré included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "pine floorboards",
+        "linen",
+        "glazed tile"
+      ],
+      "colorFamily": [
+        "white",
+        "neutral"
+      ],
+      "colors": [
+        "chalk white",
+        "pale pine",
+        "sea glass"
+      ],
+      "useCase": [
+        "solo",
+        "couple",
+        "short city stay",
+        "weekend"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lisbon",
+      "tier-1",
+      "queen bed",
+      "street view"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-lis-01-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-lis-01-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 190
+      },
+      {
+        "id": "sl-rm-lis-01-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 380
+      }
+    ],
+    "imageQuery": "small hotel room white linen bed wooden floor window",
+    "images": [
+      "/saltline/sl-rm-lis-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 212
+  },
+  {
+    "id": "sl-rm-lis-02",
+    "slug": "lisbon-classic-room",
+    "name": "Classic Room, Lisbon",
+    "category": "Rooms",
+    "subcategory": "Lisbon",
+    "price": 240,
+    "description": "Twenty-six square metres with two tall windows, a king bed dressed in undyed linen and a reading chair by Branca Lisboa in oak and leather. The bathroom keeps the building's 1920s marble and adds a deep soaking tub. Rooms on the fourth floor catch the afternoon light off the Tagus.",
+    "details": [
+      "26 m², floors 2 to 4",
+      "King bed, 180 cm, undyed Portuguese linen",
+      "Soaking tub and separate rain shower, original marble",
+      "Branca Lisboa oak reading chair",
+      "Minibar stocked with Portuguese wine and tinned fish",
+      "Breakfast at Maré included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "food-and-wine"
+      ],
+      "material": [
+        "marble",
+        "oak",
+        "linen"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "warm white",
+        "oak",
+        "rose marble"
+      ],
+      "useCase": [
+        "couple",
+        "city break",
+        "long weekend"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lisbon",
+      "tier-2",
+      "king bed",
+      "bathtub"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-lis-02-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-lis-02-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 240
+      },
+      {
+        "id": "sl-rm-lis-02-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 480
+      }
+    ],
+    "imageQuery": "hotel room bathtub marble bathroom elegant light",
+    "images": [
+      "/saltline/sl-rm-lis-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 341,
+    "bestseller": true
+  },
+  {
+    "id": "sl-rm-lis-03",
+    "slug": "lisbon-river-terrace-room",
+    "name": "River Terrace Room, Lisbon",
+    "category": "Rooms",
+    "subcategory": "Lisbon",
+    "price": 320,
+    "description": "On the top floor, with a private terrace of about twelve square metres looking south over the rooftops of Santos to the river and the 25 de Abril bridge. Inside, a king bed, a limestone bathroom and a pair of linen armchairs angled at the view. Coffee on the terrace at 8 a.m. is the reason people rebook.",
+    "details": [
+      "32 m² plus 12 m² private terrace, floor 5",
+      "King bed, 180 cm, undyed Portuguese linen",
+      "Limestone bathroom, rain shower, double basin",
+      "Terrace with two chairs, table and a lemon tree",
+      "River and bridge view",
+      "Breakfast at Maré included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "food-and-wine"
+      ],
+      "material": [
+        "limestone",
+        "linen",
+        "terracotta"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "warm white",
+        "terracotta",
+        "river blue"
+      ],
+      "useCase": [
+        "couple",
+        "anniversary",
+        "long weekend",
+        "sunset"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lisbon",
+      "tier-3",
+      "terrace",
+      "river view",
+      "top floor"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-lis-03-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-lis-03-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 320
+      },
+      {
+        "id": "sl-rm-lis-03-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 640
+      }
+    ],
+    "imageQuery": "rooftop terrace lisbon river view chairs morning",
+    "images": [
+      "/saltline/sl-rm-lis-03.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 188
+  },
+  {
+    "id": "sl-rm-lis-04",
+    "slug": "lisbon-boavista-suite",
+    "name": "Boavista Suite, Lisbon",
+    "category": "Rooms",
+    "subcategory": "Lisbon",
+    "price": 480,
+    "description": "The former director's office, fifty-eight square metres across a corner of the fourth floor with five windows and the building's original coffered ceiling. A separate sitting room with a long sofa and a record player, a king bedroom, and a bathroom with a freestanding tub set under the window. Takes a cot or a sofa bed for a child.",
+    "details": [
+      "58 m², corner of floor 4, two rooms",
+      "King bed, 180 cm, undyed Portuguese linen",
+      "Sitting room with sofa bed, record player and a small library",
+      "Freestanding tub under the window, separate shower",
+      "Original coffered ceiling, five sash windows",
+      "Breakfast at Maré and a welcome bottle of Bairrada sparkling included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "design-and-culture"
+      ],
+      "material": [
+        "plaster",
+        "oak",
+        "linen",
+        "brass"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "warm white",
+        "oak",
+        "aged brass"
+      ],
+      "useCase": [
+        "couple",
+        "family",
+        "longer stay",
+        "celebration"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "lisbon",
+      "tier-4",
+      "suite",
+      "sitting room",
+      "family"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-lis-04-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-lis-04-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 480
+      },
+      {
+        "id": "sl-rm-lis-04-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 960
+      }
+    ],
+    "imageQuery": "luxury suite living room sofa tall windows parquet",
+    "images": [
+      "/saltline/sl-rm-lis-04.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 96
+  },
+  {
+    "id": "sl-rm-cph-01",
+    "slug": "copenhagen-cosy-room",
+    "name": "Cosy Room, Copenhagen",
+    "category": "Rooms",
+    "subcategory": "Copenhagen",
+    "price": 210,
+    "description": "Nineteen square metres in the warehouse's original timber frame, with one big window onto the courtyard, exposed Douglas fir beams and a queen bed in grey Danish linen. A compact bathroom with a heated concrete floor. Rooms are dark in the best Copenhagen way: thick walls, heavy curtains, very good sleep.",
+    "details": [
+      "19 m², courtyard side, floors 1 to 3",
+      "Queen bed, 160 cm, Danish linen",
+      "Walk-in shower, heated concrete floor",
+      "Exposed Douglas fir beams",
+      "Frama toiletries",
+      "Breakfast at Kaj included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "douglas fir",
+        "concrete",
+        "linen",
+        "wool"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "grey linen",
+        "pale fir",
+        "charcoal"
+      ],
+      "useCase": [
+        "solo",
+        "couple",
+        "short city stay",
+        "winter"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "copenhagen",
+      "tier-1",
+      "queen bed",
+      "courtyard view"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-cph-01-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-cph-01-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 210
+      },
+      {
+        "id": "sl-rm-cph-01-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 420
+      }
+    ],
+    "imageQuery": "scandinavian hotel room wooden beams grey linen bed",
+    "images": [
+      "/saltline/sl-rm-cph-01.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 264
+  },
+  {
+    "id": "sl-rm-cph-02",
+    "slug": "copenhagen-classic-room",
+    "name": "Classic Room, Copenhagen",
+    "category": "Rooms",
+    "subcategory": "Copenhagen",
+    "price": 270,
+    "description": "Twenty-seven square metres on the street side, with two warehouse windows, a king bed and a daybed under the window for reading. Furniture is Danish and mostly second-hand: a Børge Mogensen chair, a Le Klint lamp, a wool rug from a mill in Jutland. The bathroom pairs smoked oak with pale green tile.",
+    "details": [
+      "27 m², street side, floors 1 to 4",
+      "King bed, 180 cm, Danish linen",
+      "Daybed under the window",
+      "Rain shower, smoked oak and green tile",
+      "Vintage Danish furniture, Le Klint lighting",
+      "Breakfast at Kaj included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "food-and-wine"
+      ],
+      "material": [
+        "smoked oak",
+        "wool",
+        "linen",
+        "tile"
+      ],
+      "colorFamily": [
+        "neutral",
+        "cool"
+      ],
+      "colors": [
+        "warm grey",
+        "smoked oak",
+        "sea glass"
+      ],
+      "useCase": [
+        "couple",
+        "city break",
+        "design weekend"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "copenhagen",
+      "tier-2",
+      "king bed",
+      "daybed"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-cph-02-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-cph-02-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 270
+      },
+      {
+        "id": "sl-rm-cph-02-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 540
+      }
+    ],
+    "imageQuery": "danish design hotel room chair lamp window light",
+    "images": [
+      "/saltline/sl-rm-cph-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 388,
+    "bestseller": true
+  },
+  {
+    "id": "sl-rm-cph-03",
+    "slug": "copenhagen-harbour-room",
+    "name": "Harbour Room, Copenhagen",
+    "category": "Rooms",
+    "subcategory": "Copenhagen",
+    "price": 360,
+    "description": "Thirty-three square metres on the harbour side of the top two floors, with a window seat the width of the room looking across the water to the Opera House. King bed, a small kitchen counter with a kettle and good cups, and a bathroom with a tub. In summer you can watch the harbour swimmers from bed.",
+    "details": [
+      "33 m², harbour side, floors 4 and 5",
+      "King bed, 180 cm, Danish linen",
+      "Full-width window seat with harbour and Opera House view",
+      "Bathtub and separate shower",
+      "Kitchen counter with kettle, Hasle Bornholm ceramics",
+      "Breakfast at Kaj included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "active-and-outdoors"
+      ],
+      "material": [
+        "oak",
+        "wool",
+        "linen",
+        "ceramic"
+      ],
+      "colorFamily": [
+        "cool",
+        "neutral"
+      ],
+      "colors": [
+        "harbour blue",
+        "oak",
+        "warm white"
+      ],
+      "useCase": [
+        "couple",
+        "long weekend",
+        "summer",
+        "view"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "copenhagen",
+      "tier-3",
+      "harbour view",
+      "window seat",
+      "bathtub"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-cph-03-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-cph-03-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 360
+      },
+      {
+        "id": "sl-rm-cph-03-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 720
+      }
+    ],
+    "imageQuery": "hotel bedroom large window water view minimalist white",
+    "images": [
+      "/saltline/sl-rm-cph-03.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 203
+  },
+  {
+    "id": "sl-rm-cph-04",
+    "slug": "copenhagen-toldbod-suite",
+    "name": "Toldbod Suite, Copenhagen",
+    "category": "Rooms",
+    "subcategory": "Copenhagen",
+    "price": 540,
+    "description": "The gable end of the warehouse, sixty-two square metres under a double-height roof with the original hoist beam still in place. A sitting room with a wood-burning stove and a dining table for six, a mezzanine king bedroom and a bathroom in dark green marble. Harbour views from every window.",
+    "details": [
+      "62 m², gable end, floors 4 and 5 with mezzanine",
+      "King bed, 180 cm, on the mezzanine",
+      "Sitting room with wood-burning stove, dining table for six",
+      "Dark green marble bathroom, tub and shower",
+      "Harbour views on two sides",
+      "Breakfast at Kaj and a private harbour sauna slot included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "design-and-culture"
+      ],
+      "material": [
+        "douglas fir",
+        "marble",
+        "wool",
+        "steel"
+      ],
+      "colorFamily": [
+        "cool",
+        "neutral"
+      ],
+      "colors": [
+        "dark green",
+        "pale fir",
+        "charcoal"
+      ],
+      "useCase": [
+        "couple",
+        "family",
+        "longer stay",
+        "winter",
+        "celebration"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "copenhagen",
+      "tier-4",
+      "suite",
+      "mezzanine",
+      "fireplace",
+      "family"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-cph-04-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-cph-04-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 540
+      },
+      {
+        "id": "sl-rm-cph-04-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 1080
+      }
+    ],
+    "imageQuery": "loft suite high ceiling beams fireplace scandinavian",
+    "images": [
+      "/saltline/sl-rm-cph-04.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 71
+  },
+  {
+    "id": "sl-rm-bcn-01",
+    "slug": "barcelona-cosy-room",
+    "name": "Cosy Room, Barcelona",
+    "category": "Rooms",
+    "subcategory": "Barcelona",
+    "price": 180,
+    "description": "Seventeen square metres on the inner patio of the townhouse, cool and silent even in August. Catalan vaulted ceiling, hydraulic mosaic floor tiles reclaimed from the building, a queen bed and a small shower room in terrazzo. The patio below has a fig tree and the sound of the fountain.",
+    "details": [
+      "17 m², patio side, floors 1 to 3",
+      "Queen bed, 160 cm, Spanish cotton percale",
+      "Terrazzo shower room",
+      "Original hydraulic mosaic floor, vaulted ceiling",
+      "Air conditioning, ceiling fan",
+      "Breakfast at Terrat included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "hydraulic tile",
+        "terrazzo",
+        "cotton"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "chalk white",
+        "terracotta",
+        "patterned tile"
+      ],
+      "useCase": [
+        "solo",
+        "couple",
+        "short city stay",
+        "summer"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "barcelona",
+      "tier-1",
+      "queen bed",
+      "patio view"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-bcn-01-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-bcn-01-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 180
+      },
+      {
+        "id": "sl-rm-bcn-01-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 360
+      }
+    ],
+    "imageQuery": "small hotel bedroom white walls patterned tile floor bed mediterranean",
+    "images": [
+      "/saltline/sl-rm-bcn-01.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 231
+  },
+  {
+    "id": "sl-rm-bcn-02",
+    "slug": "barcelona-classic-room",
+    "name": "Classic Room, Barcelona",
+    "category": "Rooms",
+    "subcategory": "Barcelona",
+    "price": 230,
+    "description": "Twenty-five square metres with a balcony onto Carrer de la Mercè, tall shuttered doors and a king bed under a restored painted ceiling. Furniture is Catalan: a rattan Expormim chair, a cork side table, a Santa & Cole lamp. The bathroom is lined in green glazed Valencian tile with a rain shower.",
+    "details": [
+      "25 m², street side with balcony, floors 1 to 4",
+      "King bed, 180 cm, Spanish cotton percale",
+      "Rain shower, green Valencian tile",
+      "Juliet balcony with shutters",
+      "Restored painted ceiling",
+      "Breakfast at Terrat included"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "food-and-wine"
+      ],
+      "material": [
+        "glazed tile",
+        "rattan",
+        "cork",
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "warm white",
+        "olive green",
+        "rattan"
+      ],
+      "useCase": [
+        "couple",
+        "city break",
+        "long weekend"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "barcelona",
+      "tier-2",
+      "king bed",
+      "balcony"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-bcn-02-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-bcn-02-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 230
+      },
+      {
+        "id": "sl-rm-bcn-02-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 460
+      }
+    ],
+    "imageQuery": "hotel room balcony shutters barcelona old town",
+    "images": [
+      "/saltline/sl-rm-bcn-02.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 356,
+    "bestseller": true
+  },
+  {
+    "id": "sl-rm-bcn-03",
+    "slug": "barcelona-rooftop-room",
+    "name": "Rooftop Room, Barcelona",
+    "category": "Rooms",
+    "subcategory": "Barcelona",
+    "price": 310,
+    "description": "One of six rooms on the roof, each opening onto its own section of terrace with a daybed and a view over the Gothic Quarter to the sea. Thirty square metres inside with a king bed, a bath by the window and plenty of cross-breeze. Two floors up is the pool and the restaurant; you will not need shoes.",
+    "details": [
+      "30 m² plus 10 m² private terrace, floor 5",
+      "King bed, 180 cm, Spanish cotton percale",
+      "Bath by the window, separate shower",
+      "Private terrace with daybed, sea and old-town view",
+      "Direct stair to the pool and Terrat",
+      "Breakfast at Terrat included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "active-and-outdoors"
+      ],
+      "material": [
+        "lime plaster",
+        "terracotta",
+        "cotton",
+        "teak"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "sand",
+        "terracotta",
+        "sea blue"
+      ],
+      "useCase": [
+        "couple",
+        "summer",
+        "pool",
+        "sunset"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "barcelona",
+      "tier-3",
+      "terrace",
+      "sea view",
+      "rooftop"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-bcn-03-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-bcn-03-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 310
+      },
+      {
+        "id": "sl-rm-bcn-03-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 620
+      }
+    ],
+    "imageQuery": "hotel rooftop terrace daybed sea view sunny white",
+    "images": [
+      "/saltline/sl-rm-bcn-03.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 174
+  },
+  {
+    "id": "sl-rm-bcn-04",
+    "slug": "barcelona-merce-suite",
+    "name": "Mercè Suite, Barcelona",
+    "category": "Rooms",
+    "subcategory": "Barcelona",
+    "price": 450,
+    "description": "The piano nobile of the townhouse, fifty-five square metres with four balcony doors onto the street, original stucco and a four-metre ceiling. A separate sitting room with a dining table, a king bedroom and a bathroom in pink Alicante marble with a double shower. Sleeps a family of four with the sofa bed.",
+    "details": [
+      "55 m², first floor, two rooms",
+      "King bed, 180 cm, Spanish cotton percale",
+      "Sitting room with sofa bed and dining table for four",
+      "Pink Alicante marble bathroom, double shower",
+      "Four balcony doors, four-metre ceilings",
+      "Breakfast at Terrat and a bottle of Penedès cava included"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet",
+        "food-and-wine"
+      ],
+      "material": [
+        "marble",
+        "stucco",
+        "oak",
+        "cotton"
+      ],
+      "colorFamily": [
+        "warm",
+        "neutral"
+      ],
+      "colors": [
+        "warm white",
+        "pink marble",
+        "gold"
+      ],
+      "useCase": [
+        "couple",
+        "family",
+        "celebration",
+        "longer stay"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "barcelona",
+      "tier-4",
+      "suite",
+      "sitting room",
+      "family"
+    ],
+    "variants": [
+      {
+        "id": "sl-rm-bcn-04-1",
+        "label": "1 night",
+        "inStock": true
+      },
+      {
+        "id": "sl-rm-bcn-04-2",
+        "label": "2 nights",
+        "inStock": true,
+        "priceDelta": 450
+      },
+      {
+        "id": "sl-rm-bcn-04-3",
+        "label": "3 nights",
+        "inStock": true,
+        "priceDelta": 900
+      }
+    ],
+    "imageQuery": "elegant hotel suite sofa high ceiling balcony doors daylight",
+    "images": [
+      "/saltline/sl-rm-bcn-04.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 88
+  }
+]

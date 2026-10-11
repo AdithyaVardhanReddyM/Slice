@@ -1,0 +1,252 @@
+[
+  {
+    "id": "rl-gift-01",
+    "slug": "three-origins-tasting-box",
+    "name": "Three Origins Tasting Box",
+    "category": "Gift sets",
+    "subcategory": "Gift sets",
+    "price": 48,
+    "description": "Three 4-ounce bags that show how far coffee can travel in flavour: Ethiopia Guji for florals, Colombia Huila for sweetness and Brazil Cerrado for chocolate. Packed in a kraft box with a tasting mat and notes on each farm. The gift we send most in December.",
+    "details": [
+      "3 × 4 oz bags: Ethiopia Guji Hambela, Colombia Huila, Brazil Cerrado",
+      "Whole bean or ground, your choice",
+      "Printed tasting mat and farm notes",
+      "Kraft gift box with a hand-written card on request",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "bright-and-fruity",
+        "classic-and-chocolatey"
+      ],
+      "material": [
+        "whole bean",
+        "kraft box"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "kraft",
+        "marigold",
+        "brick red"
+      ],
+      "useCase": [
+        "gift",
+        "tasting",
+        "discovery",
+        "holiday"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "tasting set",
+      "holiday",
+      "under $50"
+    ],
+    "variants": [
+      {
+        "id": "rl-gift-01-wb",
+        "label": "Whole bean",
+        "inStock": true
+      },
+      {
+        "id": "rl-gift-01-gr",
+        "label": "Ground for drip",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "coffee gift box kraft bags ribbon",
+    "images": [
+      "/ridgeline/rl-gift-01.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 486,
+    "bestseller": true
+  },
+  {
+    "id": "rl-gift-02",
+    "slug": "pour-over-starter-set",
+    "name": "Pour-Over Starter Set",
+    "category": "Gift sets",
+    "subcategory": "Gift sets",
+    "price": 86,
+    "description": "Everything needed for a first proper pour-over: a ceramic Hario V60 dripper in matte cream, a box of 100 filters, our stoneware mug and a 12-ounce bag of Ethiopia Guji Hambela. Comes with a recipe card that gets a good cup out of a kitchen kettle, no scale required.",
+    "details": [
+      "Hario V60 02 ceramic dripper, matte cream",
+      "100 Hario tabbed filters",
+      "Ridgeline 12 oz stoneware mug, speckled oatmeal glaze",
+      "12 oz bag Ethiopia Guji Hambela, whole bean or ground",
+      "Illustrated recipe card for pour-over without a scale",
+      "Packed in a recycled box with paper padding"
+    ],
+    "attributes": {
+      "style": [
+        "bright-and-fruity"
+      ],
+      "material": [
+        "ceramic",
+        "stoneware",
+        "whole bean"
+      ],
+      "colorFamily": [
+        "neutral",
+        "warm"
+      ],
+      "colors": [
+        "matte cream",
+        "oatmeal",
+        "marigold"
+      ],
+      "useCase": [
+        "gift",
+        "first brewer",
+        "pour-over",
+        "housewarming"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "gift",
+      "brewing kit",
+      "pour-over",
+      "starter"
+    ],
+    "variants": [
+      {
+        "id": "rl-gift-02-wb",
+        "label": "Whole bean",
+        "inStock": true
+      },
+      {
+        "id": "rl-gift-02-gr",
+        "label": "Ground for pour-over",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pour over coffee dripper ceramic kettle",
+    "images": [
+      "/ridgeline/rl-gift-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 212
+  },
+  {
+    "id": "rl-gift-03",
+    "slug": "espresso-lovers-bundle",
+    "name": "Espresso Lover's Bundle",
+    "category": "Gift sets",
+    "subcategory": "Gift sets",
+    "price": 62,
+    "description": "Two 12-ounce bags of Burnside Espresso and a pair of our 3-ounce stoneware espresso cups in a deep rust glaze, made for us by a potter in Southeast Portland. Includes a laminated dial-in card with our current recipe and the three adjustments that fix most shots.",
+    "details": [
+      "2 × 12 oz Burnside Espresso, whole bean",
+      "2 Ridgeline 3 oz stoneware espresso cups, rust glaze",
+      "Laminated dial-in card",
+      "Cups are dishwasher safe",
+      "Packed in a recycled box with paper padding"
+    ],
+    "attributes": {
+      "style": [
+        "espresso-forward"
+      ],
+      "material": [
+        "stoneware",
+        "whole bean"
+      ],
+      "colorFamily": [
+        "warm",
+        "black"
+      ],
+      "colors": [
+        "rust",
+        "charcoal"
+      ],
+      "useCase": [
+        "gift",
+        "home espresso",
+        "anniversary"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "espresso",
+      "cups",
+      "bundle"
+    ],
+    "variants": [
+      {
+        "id": "rl-gift-03-1",
+        "label": "One set",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "espresso cups ceramic pair wooden board",
+    "images": [
+      "/ridgeline/rl-gift-03.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 174
+  },
+  {
+    "id": "rl-gift-04",
+    "slug": "camp-coffee-kit",
+    "name": "Camp Coffee Kit",
+    "category": "Gift sets",
+    "subcategory": "Gift sets",
+    "price": 54,
+    "description": "Two boxes of Trailhead Instant sticks, a 12-ounce enamel mug in forest green with our ridge mark and a small canvas pouch to hold it all. Sixteen cups of real coffee that fit in a jacket pocket. Made for the person who leaves the city on Friday afternoon.",
+    "details": [
+      "2 × Trailhead Instant boxes (16 sticks total)",
+      "12 oz enamel mug, forest green, steel rim",
+      "Waxed canvas pouch, 18 × 12 cm",
+      "Mug is campfire safe, not microwave safe",
+      "Packed in a recycled box"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "enamel",
+        "waxed canvas",
+        "freeze-dried coffee"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "forest green",
+        "natural canvas"
+      ],
+      "useCase": [
+        "gift",
+        "camping",
+        "hiking",
+        "travel"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "gift",
+      "outdoors",
+      "instant",
+      "mug"
+    ],
+    "variants": [
+      {
+        "id": "rl-gift-04-1",
+        "label": "One set",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "enamel mug campfire forest coffee",
+    "images": [
+      "/ridgeline/rl-gift-04.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 128
+  }
+]

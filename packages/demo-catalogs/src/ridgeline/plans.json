@@ -1,0 +1,204 @@
+[
+  {
+    "id": "rl-plan-01",
+    "slug": "roasters-choice-subscription",
+    "name": "Roaster's Choice",
+    "category": "Subscriptions",
+    "subcategory": "Plans",
+    "price": 20,
+    "description": "A rotating single origin, chosen by our head roaster from whatever is tasting best on the cupping table that week. One 12-ounce bag per delivery with a card on where it came from and how we brew it. Expect light to medium roasts and a lot of Ethiopia, Colombia and Kenya across a year.",
+    "details": [
+      "12 oz bag per delivery, whole bean or ground",
+      "Rotating single origins, light to medium roast",
+      "Free shipping on every delivery",
+      "Pause, skip or cancel any time from your account",
+      "First delivery ships the next roast day after you order"
+    ],
+    "attributes": {
+      "style": [
+        "bright-and-fruity",
+        "classic-and-chocolatey"
+      ],
+      "material": [
+        "whole bean",
+        "ground"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "marigold"
+      ],
+      "useCase": [
+        "pour-over",
+        "filter",
+        "discovery"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "subscription",
+      "single origin",
+      "rotating",
+      "free shipping"
+    ],
+    "variants": [
+      {
+        "id": "rl-plan-01-1w",
+        "label": "Every week",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-01-2w",
+        "label": "Every 2 weeks",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-01-4w",
+        "label": "Every 4 weeks",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "coffee bag delivery box doorstep",
+    "images": [
+      "/ridgeline/rl-plan-01.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 1310,
+    "bestseller": true
+  },
+  {
+    "id": "rl-plan-02",
+    "slug": "house-favourite-subscription",
+    "name": "House Favourite",
+    "category": "Subscriptions",
+    "subcategory": "Plans",
+    "price": 17,
+    "description": "Forest Park House Blend, on repeat, one dollar a bag cheaper than buying it outright. For the household that goes through a pot a day and does not want to think about it. Switch the bag to Cascade Dark Roast or the decaf at any point without changing your schedule.",
+    "details": [
+      "12 oz bag of Forest Park House Blend per delivery",
+      "Swap to Cascade Dark Roast or Colombia Decaf any time",
+      "Free shipping on every delivery",
+      "Add a second bag for $15",
+      "Pause, skip or cancel any time"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday",
+        "classic-and-chocolatey"
+      ],
+      "material": [
+        "whole bean",
+        "ground"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "moss green"
+      ],
+      "useCase": [
+        "drip",
+        "daily pot",
+        "family",
+        "office coffee"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "subscription",
+      "house blend",
+      "daily",
+      "free shipping"
+    ],
+    "variants": [
+      {
+        "id": "rl-plan-02-1w",
+        "label": "Every week",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-02-2w",
+        "label": "Every 2 weeks",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-02-4w",
+        "label": "Every 4 weeks",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "coffee pot kitchen morning light family",
+    "images": [
+      "/ridgeline/rl-plan-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 2204
+  },
+  {
+    "id": "rl-plan-03",
+    "slug": "espresso-at-home-subscription",
+    "name": "Espresso at Home",
+    "category": "Subscriptions",
+    "subcategory": "Plans",
+    "price": 20,
+    "description": "Burnside Espresso delivered fresh and rested, timed so it lands right as it comes into its window. Each box includes our current recipe card for the blend, because we adjust the roast slightly with each seasonal component change. Decaf Night Shift can be mixed in at no extra cost.",
+    "details": [
+      "12 oz bag of Burnside Espresso per delivery",
+      "Mix in Night Shift Decaf Espresso at no extra cost",
+      "Recipe card updated with each seasonal change",
+      "Free shipping on every delivery",
+      "Pause, skip or cancel any time"
+    ],
+    "attributes": {
+      "style": [
+        "espresso-forward"
+      ],
+      "material": [
+        "whole bean",
+        "ground"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "charcoal"
+      ],
+      "useCase": [
+        "espresso",
+        "home espresso machine",
+        "milk drinks"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "subscription",
+      "espresso",
+      "home barista",
+      "free shipping"
+    ],
+    "variants": [
+      {
+        "id": "rl-plan-03-1w",
+        "label": "Every week",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-03-2w",
+        "label": "Every 2 weeks",
+        "inStock": true
+      },
+      {
+        "id": "rl-plan-03-4w",
+        "label": "Every 4 weeks",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "espresso machine home kitchen pulling shot",
+    "images": [
+      "/ridgeline/rl-plan-03.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 968
+  }
+]

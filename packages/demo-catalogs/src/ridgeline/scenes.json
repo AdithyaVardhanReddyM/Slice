@@ -1,0 +1,464 @@
+[
+  {
+    "id": "rl-scn-01",
+    "slug": "scene-home-hero",
+    "name": "Home hero: the Alberta Street bar",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Barista pouring a flat white at the Alberta Street café bar, morning light, cream walls and oak counter.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "home hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-01-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "barista pouring latte art cafe counter natural light",
+    "images": [
+      "/ridgeline/rl-scn-01.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-02",
+    "slug": "scene-roastery",
+    "name": "The roastery",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Our 15-kilo drum roaster mid-batch, beans in the cooling tray, chaff in the air.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "about",
+        "home"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-02-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "coffee roaster drum roasting machine beans",
+    "images": [
+      "/ridgeline/rl-scn-02.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-03",
+    "slug": "scene-farm",
+    "name": "At origin",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Coffee cherries ripening on the branch on a Huila hillside, red against green.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "about",
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-03-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "coffee plant cherries farm hillside",
+    "images": [
+      "/ridgeline/rl-scn-03.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-04",
+    "slug": "scene-cafe-portland",
+    "name": "Portland café",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Inside the Alberta Street café: long oak communal table, cream walls, plants in the window.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "cafes"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-04-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "empty coffee shop interior wooden tables morning light minimal",
+    "images": [
+      "/ridgeline/rl-scn-04.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-05",
+    "slug": "scene-cafe-seattle",
+    "name": "Seattle café",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The Capitol Hill café, brick wall, rain on the windows, a line at the bar.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "cafes"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-05-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "cafe interior brick wall espresso bar customers",
+    "images": [
+      "/ridgeline/rl-scn-05.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-06",
+    "slug": "scene-cafe-austin",
+    "name": "Austin, opening soon",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The East Sixth Street space under renovation: white walls, sawdust, a roaster still in its crate.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "cafes"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-06-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "old brick warehouse building texas blue sky",
+    "images": [
+      "/ridgeline/rl-scn-06.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-07",
+    "slug": "scene-journal-pour-over",
+    "name": "Journal: pour-over at home",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A V60 mid-pour on a kitchen counter, kettle beside it.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-07-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "pour over coffee kettle kitchen counter hands",
+    "images": [
+      "/ridgeline/rl-scn-07.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-08",
+    "slug": "scene-journal-cupping",
+    "name": "Journal: the cupping table",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A row of cupping bowls with spoons, steam rising, the roaster taking notes.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-08-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "coffee cupping tasting bowls spoons",
+    "images": [
+      "/ridgeline/rl-scn-08.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-09",
+    "slug": "scene-journal-cold-brew",
+    "name": "Journal: cold brew season",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A tall glass of cold brew over ice on a sunny porch rail.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-09-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "iced coffee glass porch summer sunlight",
+    "images": [
+      "/ridgeline/rl-scn-09.jpg"
+    ]
+  },
+  {
+    "id": "rl-scn-10",
+    "slug": "scene-subscriptions",
+    "name": "Subscriptions",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A stack of Ridgeline bags with coloured labels beside a kettle and a mug.",
+    "details": [
+      "Editorial photograph used on the Ridgeline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "cream"
+      ],
+      "useCase": [
+        "subscriptions"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "rl-scn-10-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "coffee bags stack shelf cafe retail",
+    "images": [
+      "/ridgeline/rl-scn-10.jpg"
+    ]
+  }
+]

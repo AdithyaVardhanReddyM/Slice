@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 48" width="260" height="48" role="img" aria-label="Saltline Hotels">
+  <title>Saltline Hotels</title>
+  <!-- Mark: a horizon line with a tide beneath it. -->
+  <g fill="none" stroke-linecap="round" stroke-width="2.5">
+    <path d="M4 18 H44" stroke="#1f2326"/>
+    <path d="M6 28 C 12 24, 18 32, 24 28 S 36 24, 42 28" stroke="#5f9ea0"/>
+  </g>
+  <text x="58" y="31" font-family="'Cormorant Garamond', Georgia, serif" font-size="30" font-weight="500" fill="#1f2326" letter-spacing="0.5">Saltline</text>
+  <text x="178" y="31" font-family="Figtree, Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#6f757a" letter-spacing="1.6">HOTELS</text>
+</svg>

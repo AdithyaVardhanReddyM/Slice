@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" width="320" height="56" role="img" aria-label="Ridgeline Coffee Roasters">
+  <title>Ridgeline Coffee Roasters</title>
+  <!-- Ridge mark: two overlapping peaks with a sun. -->
+  <g fill="none" stroke="#2b1d14" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4 46 L22 16 L33 32 L41 22 L56 46 Z"/>
+    <path d="M22 16 L30 28"/>
+  </g>
+  <circle cx="46" cy="14" r="5" fill="#b5542a"/>
+  <text x="72" y="31" font-family="Fraunces, Georgia, serif" font-size="27" font-weight="600" fill="#2b1d14" letter-spacing="-0.5">Ridgeline</text>
+  <text x="72" y="48" font-family="Manrope, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#7d6b5c" letter-spacing="1.4">COFFEE ROASTERS · PORTLAND, OR</text>
+</svg>

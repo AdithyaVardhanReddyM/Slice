@@ -1,0 +1,226 @@
+[
+  {
+    "id": "sl-off-01",
+    "slug": "four-nights-pay-for-three",
+    "name": "Four nights, pay for three",
+    "category": "Offers",
+    "subcategory": "Offers",
+    "price": 570,
+    "compareAtPrice": 760,
+    "description": "Stay four nights at any Saltline hotel between November and March and the fourth is on us. Applies to every room tier, includes breakfast every morning and a late checkout on your last day. From $570 for four nights in a Cosy Room in Lisbon or Barcelona. The quietest months are the ones the staff love most.",
+    "details": [
+      "Valid for stays of 4 nights or more, 1 November to 31 March",
+      "All hotels and room tiers",
+      "Breakfast included daily, checkout at 14:00 on departure day",
+      "From $570 per stay (Cosy Room, Lisbon or Barcelona)",
+      "Cannot be combined with other offers"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "package"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "winter white"
+      ],
+      "useCase": [
+        "longer stay",
+        "winter",
+        "value",
+        "all hotels"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "offer",
+      "winter",
+      "4 nights",
+      "all hotels"
+    ],
+    "variants": [
+      {
+        "id": "sl-off-01-1",
+        "label": "Per stay",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "hotel bed white linen quiet morning sunlight curtains",
+    "images": [
+      "/saltline/sl-off-01.jpg"
+    ]
+  },
+  {
+    "id": "sl-off-02",
+    "slug": "winter-light-in-lisbon",
+    "name": "Winter light in Lisbon",
+    "category": "Offers",
+    "subcategory": "Offers",
+    "price": 640,
+    "compareAtPrice": 755,
+    "description": "Three nights in a Classic Room at Saltline Lisbon in January or February, when the light is low and gold and the city is yours. Includes breakfast, the market breakfast at Campo de Ourique for two and a table at Thursday's natural wine dinner. From $640 for two people, which is less than the room alone in June.",
+    "details": [
+      "3 nights, Classic Room, 6 January to 28 February",
+      "For two guests",
+      "Includes breakfast, market breakfast experience and the natural wine dinner",
+      "From $640 per stay",
+      "Upgrade to River Terrace Room for $70 per night"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "package"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "winter gold"
+      ],
+      "useCase": [
+        "couple",
+        "winter",
+        "food lovers",
+        "lisbon"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "offer",
+      "lisbon",
+      "winter",
+      "3 nights"
+    ],
+    "variants": [
+      {
+        "id": "sl-off-02-1",
+        "label": "Per stay",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "lisbon winter sunlight tram street golden",
+    "images": [
+      "/saltline/sl-off-02.jpg"
+    ]
+  },
+  {
+    "id": "sl-off-03",
+    "slug": "copenhagen-design-weekend",
+    "name": "Copenhagen design weekend",
+    "category": "Offers",
+    "subcategory": "Offers",
+    "price": 890,
+    "compareAtPrice": 1040,
+    "description": "Two nights in a Classic Room at Saltline Copenhagen, the Danish design studio walk on Saturday morning, a bike and tickets to Louisiana on Sunday, and the counter dinner at Kaj on Saturday night. Everything a design-minded weekend needs, booked in one go. From $890 for two people, Friday to Sunday, all year.",
+    "details": [
+      "2 nights, Classic Room, Friday to Sunday",
+      "For two guests",
+      "Includes breakfast, design studio walk, Louisiana ride and Kaj tasting dinner",
+      "From $890 per stay",
+      "Louisiana ride swaps to a train ticket and taxi November to March"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture"
+      ],
+      "material": [
+        "package"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "harbour grey"
+      ],
+      "useCase": [
+        "couple",
+        "weekend",
+        "design lovers",
+        "copenhagen"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "offer",
+      "copenhagen",
+      "design",
+      "weekend"
+    ],
+    "variants": [
+      {
+        "id": "sl-off-03-1",
+        "label": "Per stay",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "copenhagen nyhavn harbour colorful houses boats",
+    "images": [
+      "/saltline/sl-off-03.jpg"
+    ]
+  },
+  {
+    "id": "sl-off-04",
+    "slug": "early-summer-on-the-roof-barcelona",
+    "name": "Early summer on the roof, Barcelona",
+    "category": "Offers",
+    "subcategory": "Offers",
+    "price": 980,
+    "compareAtPrice": 1210,
+    "description": "Three nights in a Rooftop Room at Saltline Barcelona in May or early June, before the heat and the crowds. Includes breakfast on the roof, the Costa Brava sailing afternoon for two and Sunday's vermouth hour. The pool opens at 7:00 and is usually empty until 9:00. From $980 for two people.",
+    "details": [
+      "3 nights, Rooftop Room, 1 May to 15 June",
+      "For two guests",
+      "Includes breakfast, sailing afternoon and vermouth hour",
+      "From $980 per stay",
+      "Add the Boqueria lunch for $75 per person"
+    ],
+    "attributes": {
+      "style": [
+        "active-and-outdoors",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "package"
+      ],
+      "colorFamily": [
+        "warm",
+        "cool"
+      ],
+      "colors": [
+        "sea blue",
+        "terracotta"
+      ],
+      "useCase": [
+        "couple",
+        "summer",
+        "pool",
+        "barcelona"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "offer",
+      "barcelona",
+      "summer",
+      "rooftop"
+    ],
+    "variants": [
+      {
+        "id": "sl-off-04-1",
+        "label": "Per stay",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rooftop swimming pool terrace sunset mediterranean city",
+    "images": [
+      "/saltline/sl-off-04.jpg"
+    ]
+  }
+]

@@ -1,0 +1,558 @@
+[
+  {
+    "id": "sl-scn-01",
+    "slug": "scene-home-hero",
+    "name": "Home hero",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A linen-dressed bed in morning light, shutters half open onto the sea.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "home hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-01-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "hotel bed white linen headboard morning light window",
+    "images": [
+      "/saltline/sl-scn-01.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-02",
+    "slug": "scene-lisbon",
+    "name": "Lisbon",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A yellow tram climbing a tiled street in Santos with the river at the bottom of the hill.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "hotel lisbon",
+        "home"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-02-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "lisbon yellow tram street tiles sunlight",
+    "images": [
+      "/saltline/sl-scn-02.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-03",
+    "slug": "scene-copenhagen",
+    "name": "Copenhagen",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The harbour at Toldbodgade on a still morning, warehouses reflected in the water.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "hotel copenhagen",
+        "home"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-03-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "copenhagen harbour waterfront warehouses calm morning",
+    "images": [
+      "/saltline/sl-scn-03.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-04",
+    "slug": "scene-barcelona",
+    "name": "Barcelona",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Rooftops of the Gothic Quarter looking towards the sea at golden hour.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "hotel barcelona",
+        "home"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-04-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "barcelona gothic quarter rooftops sea golden hour",
+    "images": [
+      "/saltline/sl-scn-04.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-05",
+    "slug": "scene-marseille",
+    "name": "Marseille, opening spring 2027",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The Vieux Port with fishing boats and the Notre-Dame de la Garde on the hill.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "hotel marseille",
+        "home"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-05-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "marseille old port boats notre dame de la garde",
+    "images": [
+      "/saltline/sl-scn-05.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-06",
+    "slug": "scene-restaurant-mare",
+    "name": "Maré, Lisbon",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The Maré dining room: white tile, a long marble counter, grilled fish on the pass.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "restaurant lisbon"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-06-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "restaurant interior white tiles marble counter mediterranean",
+    "images": [
+      "/saltline/sl-scn-06.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-07",
+    "slug": "scene-restaurant-kaj",
+    "name": "Kaj, Copenhagen",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Kaj at dusk: oak counter, open kitchen, the harbour outside the window.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "restaurant copenhagen"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-07-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "nordic restaurant interior oak counter open kitchen",
+    "images": [
+      "/saltline/sl-scn-07.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-08",
+    "slug": "scene-restaurant-terrat",
+    "name": "Terrat, Barcelona",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The rooftop restaurant at Terrat with the pool beyond and the cathedral spire behind.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "restaurant barcelona"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-08-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "rooftop restaurant terrace pool plants evening",
+    "images": [
+      "/saltline/sl-scn-08.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-09",
+    "slug": "scene-journal-lisbon-light",
+    "name": "Journal: Lisbon in January",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Low winter sun across a tiled façade and a woman reading at a café table.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-09-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "lisbon cafe table winter sun tiled facade",
+    "images": [
+      "/saltline/sl-scn-09.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-10",
+    "slug": "scene-journal-winter-swim",
+    "name": "Journal: the cold water habit",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A swimmer climbing the ladder out of the Copenhagen harbour, steam off their shoulders.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-10-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "winter swimming harbour ladder cold water",
+    "images": [
+      "/saltline/sl-scn-10.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-11",
+    "slug": "scene-journal-barcelona-market",
+    "name": "Journal: how Marc shops",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Hands choosing tomatoes at a market stall, crates stacked behind.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "journal"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-11-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "market stall tomatoes hands choosing vegetables",
+    "images": [
+      "/saltline/sl-scn-11.jpg"
+    ]
+  },
+  {
+    "id": "sl-scn-12",
+    "slug": "scene-about",
+    "name": "About Saltline",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A hotel corridor in lime plaster and oak, a single chair, light from the stairwell.",
+    "details": [
+      "Editorial photograph used on the Saltline website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "slow-and-quiet"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "off-white"
+      ],
+      "useCase": [
+        "about"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "sl-scn-12-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "hotel corridor minimalist plaster oak chair light",
+    "images": [
+      "/saltline/sl-scn-12.jpg"
+    ]
+  }
+]

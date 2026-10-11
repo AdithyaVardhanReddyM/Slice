@@ -1,0 +1,52 @@
+{
+  "id": "saltline",
+  "name": "Saltline Hotels",
+  "logo": "/saltline/logo.svg",
+  "tagline": "Small hotels by the water in Lisbon, Copenhagen and Barcelona.",
+  "description": "Saltline is a group of three hotels, each in a restored building a few minutes from the water: a 1920s shipping office in Lisbon's Santos, a harbour-front warehouse in Copenhagen and a Gothic Quarter townhouse in Barcelona. Between 48 and 62 rooms each, a restaurant led by a local chef, and a small team who will plan your days if you let them. A fourth hotel opens in Marseille in spring 2027.",
+  "currency": "USD",
+  "styles": [
+    {
+      "id": "design-and-culture",
+      "label": "Design and culture",
+      "description": "Galleries, architecture, studios and the people who make things. Guests who book the museum before the restaurant."
+    },
+    {
+      "id": "food-and-wine",
+      "label": "Food and wine",
+      "description": "Market mornings, chef's tables, natural wine and the long lunch. The restaurant is the reason for the trip."
+    },
+    {
+      "id": "slow-and-quiet",
+      "label": "Slow and quiet",
+      "description": "Longer stays, bigger rooms, a terrace, a book. Days with one plan at most."
+    },
+    {
+      "id": "active-and-outdoors",
+      "label": "Active and outdoors",
+      "description": "Harbour swims, surf mornings, sailing and long walks. Back for breakfast with salt in your hair."
+    }
+  ],
+  "nav": [
+    {
+      "label": "Rooms",
+      "category": "Rooms",
+      "subcategories": ["Lisbon", "Copenhagen", "Barcelona"]
+    },
+    {
+      "label": "Experiences",
+      "category": "Experiences",
+      "subcategories": ["Food and wine", "Culture and design", "Outdoors and wellbeing"]
+    },
+    {
+      "label": "Offers",
+      "category": "Offers",
+      "subcategories": ["Offers"]
+    },
+    {
+      "label": "Scenes",
+      "category": "Scenes",
+      "subcategories": ["Scenes"]
+    }
+  ]
+}

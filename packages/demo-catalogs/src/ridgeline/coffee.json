@@ -1,0 +1,777 @@
+[
+  {
+    "id": "rl-cof-01",
+    "slug": "ethiopia-guji-hambela-washed",
+    "name": "Ethiopia Guji Hambela",
+    "category": "Coffee",
+    "subcategory": "Single origins",
+    "price": 22,
+    "description": "A washed lot from smallholders around Hambela in the Guji zone, roasted light so the florals stay intact. Expect bergamot and white peach up front, a jasmine finish and a tea-like body that gets sweeter as the cup cools. This is the coffee we pour when someone says they do not like coffee.",
+    "details": [
+      "Region: Hambela, Guji, Oromia",
+      "Producers: 400 smallholders through the Buku Sayisa washing station",
+      "Process: washed, dried on raised beds",
+      "Altitude: 2,100 to 2,300 m",
+      "Varieties: 74110, 74112 heirloom",
+      "Roast: light",
+      "Tasting notes: bergamot, white peach, jasmine",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "bright-and-fruity"
+      ],
+      "material": [
+        "washed"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "marigold label"
+      ],
+      "useCase": [
+        "pour-over",
+        "filter",
+        "black coffee"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "light roast",
+      "single origin",
+      "floral",
+      "direct trade"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-01-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-01-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "coffee bag kraft paper pour over ceramic",
+    "images": [
+      "/ridgeline/rl-cof-01.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 318,
+    "bestseller": true
+  },
+  {
+    "id": "rl-cof-02",
+    "slug": "colombia-huila-la-esperanza",
+    "name": "Colombia Huila, La Esperanza",
+    "category": "Coffee",
+    "subcategory": "Single origins",
+    "price": 21,
+    "description": "From Doña Rosalba Ortiz's five-hectare farm above Pitalito, where we have bought the whole harvest for six years. Red apple and panela sweetness, a cocoa finish and enough body to carry a splash of milk without losing itself. A medium roast that behaves on every brewer in the house.",
+    "details": [
+      "Region: Pitalito, Huila",
+      "Producer: Rosalba Ortiz, Finca La Esperanza",
+      "Process: washed, 36-hour fermentation",
+      "Altitude: 1,750 m",
+      "Varieties: Caturra, Colombia",
+      "Roast: medium",
+      "Tasting notes: red apple, panela, cocoa",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "classic-and-chocolatey",
+        "bright-and-fruity"
+      ],
+      "material": [
+        "washed"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "brick red label"
+      ],
+      "useCase": [
+        "pour-over",
+        "drip",
+        "milk drinks"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "medium roast",
+      "single origin",
+      "crowd pleaser",
+      "direct trade"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-02-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-02-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "coffee beans roasted bowl wooden table",
+    "images": [
+      "/ridgeline/rl-cof-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 412,
+    "bestseller": true
+  },
+  {
+    "id": "rl-cof-03",
+    "slug": "kenya-nyeri-gatomboya-ab",
+    "name": "Kenya Nyeri Gatomboya AB",
+    "category": "Coffee",
+    "subcategory": "Single origins",
+    "price": 24,
+    "description": "Our annual Kenya, from the Gatomboya factory on the slopes of Mount Kenya. Blackcurrant and pink grapefruit with a brown-sugar sweetness and the kind of juicy, tart acidity that only Kenyan coffee delivers. Roasted light and best brewed with slightly hotter water than you think.",
+    "details": [
+      "Region: Nyeri County",
+      "Producers: Barichu Farmers Cooperative Society, Gatomboya factory",
+      "Process: washed, double fermentation, soaked",
+      "Altitude: 1,800 m",
+      "Varieties: SL28, SL34, Ruiru 11",
+      "Roast: light",
+      "Tasting notes: blackcurrant, pink grapefruit, brown sugar",
+      "Limited: roughly 40 bags a week while the lot lasts"
+    ],
+    "attributes": {
+      "style": [
+        "bright-and-fruity"
+      ],
+      "material": [
+        "washed"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "plum label"
+      ],
+      "useCase": [
+        "pour-over",
+        "filter",
+        "black coffee"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "light roast",
+      "single origin",
+      "limited",
+      "juicy"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-03-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-03-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "coffee cherries red hands harvest",
+    "images": [
+      "/ridgeline/rl-cof-03.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 141,
+    "new": true
+  },
+  {
+    "id": "rl-cof-04",
+    "slug": "guatemala-huehuetenango-santa-clara",
+    "name": "Guatemala Huehuetenango, Santa Clara",
+    "category": "Coffee",
+    "subcategory": "Single origins",
+    "price": 21,
+    "description": "Grown at altitude in the dry, high valleys of Huehuetenango and roasted a shade past medium. Milk chocolate and toasted almond with a clean orange brightness that keeps it from getting heavy. The coffee our Seattle baristas reach for when the rain settles in.",
+    "details": [
+      "Region: La Libertad, Huehuetenango",
+      "Producer: Familia Villatoro, Finca Santa Clara",
+      "Process: washed, patio dried",
+      "Altitude: 1,650 to 1,900 m",
+      "Varieties: Bourbon, Caturra",
+      "Roast: medium",
+      "Tasting notes: milk chocolate, toasted almond, orange",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "classic-and-chocolatey"
+      ],
+      "material": [
+        "washed"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "forest green label"
+      ],
+      "useCase": [
+        "drip",
+        "french press",
+        "milk drinks"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "medium roast",
+      "single origin",
+      "nutty",
+      "direct trade"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-04-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-04-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "coffee cup latte wooden counter cafe",
+    "images": [
+      "/ridgeline/rl-cof-04.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 236
+  },
+  {
+    "id": "rl-cof-05",
+    "slug": "brazil-cerrado-boa-vista-natural",
+    "name": "Brazil Cerrado, Boa Vista Natural",
+    "category": "Coffee",
+    "subcategory": "Single origins",
+    "price": 19,
+    "description": "A natural-process Brazil dried whole in the fruit, which gives it hazelnut, dark chocolate and a dried-fig sweetness with almost no acidity. Big, soft and comforting. It makes an excellent single-origin espresso and an even better pot of drip for a full house.",
+    "details": [
+      "Region: Patrocínio, Cerrado Mineiro",
+      "Producer: Fazenda Boa Vista",
+      "Process: natural, mechanically dried after patio",
+      "Altitude: 1,100 m",
+      "Varieties: Yellow Catuaí, Mundo Novo",
+      "Roast: medium-dark",
+      "Tasting notes: hazelnut, dark chocolate, dried fig",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "classic-and-chocolatey",
+        "easy-everyday"
+      ],
+      "material": [
+        "natural"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "ochre label"
+      ],
+      "useCase": [
+        "drip",
+        "espresso",
+        "french press",
+        "milk drinks"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "medium-dark roast",
+      "single origin",
+      "low acidity",
+      "natural process"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-05-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-05-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "espresso shot crema glass cup",
+    "images": [
+      "/ridgeline/rl-cof-05.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 198
+  },
+  {
+    "id": "rl-cof-06",
+    "slug": "forest-park-house-blend",
+    "name": "Forest Park House Blend",
+    "category": "Coffee",
+    "subcategory": "Blends",
+    "price": 18,
+    "description": "The coffee in every carafe at our cafés: Colombia and Brazil, roasted medium, built to taste good at 7 a.m. and still be pleasant at 3 p.m. Caramel, baked apple and a little cocoa, with a round body that takes cream well. Named after the 5,000-acre forest at the edge of Portland.",
+    "details": [
+      "Components: Colombia Huila (60%), Brazil Cerrado (40%)",
+      "Roast: medium",
+      "Tasting notes: caramel, baked apple, cocoa",
+      "Brews well on anything; our café batch-brew recipe is 60 g per litre",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday",
+        "classic-and-chocolatey"
+      ],
+      "material": [
+        "washed",
+        "natural"
+      ],
+      "colorFamily": [
+        "earth"
+      ],
+      "colors": [
+        "moss green label"
+      ],
+      "useCase": [
+        "drip",
+        "batch brew",
+        "milk drinks",
+        "office coffee"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "medium roast",
+      "blend",
+      "house blend",
+      "best value"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-06-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-06-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "pouring coffee carafe cups morning kitchen",
+    "images": [
+      "/ridgeline/rl-cof-06.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 1024,
+    "bestseller": true
+  },
+  {
+    "id": "rl-cof-07",
+    "slug": "burnside-espresso",
+    "name": "Burnside Espresso",
+    "category": "Coffee",
+    "subcategory": "Blends",
+    "price": 20,
+    "description": "Our espresso since the first café. Brazil for body, Guatemala for chocolate and a seasonal Ethiopian for lift, roasted to pull syrupy and sweet at 1:2 in about 28 seconds. Dark chocolate, toffee and a bit of dried cherry in the finish. It stands up to oat milk and disappears into a flat white.",
+    "details": [
+      "Components: Brazil Cerrado, Guatemala Huehuetenango, seasonal Ethiopia",
+      "Roast: medium-dark",
+      "Tasting notes: dark chocolate, toffee, dried cherry",
+      "Starting recipe: 18 g in, 36 g out, 26 to 30 seconds, 93°C",
+      "Rested 7 to 10 days after roast before we serve it",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "espresso-forward"
+      ],
+      "material": [
+        "washed",
+        "natural"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "charcoal label"
+      ],
+      "useCase": [
+        "espresso",
+        "flat white",
+        "milk drinks",
+        "home espresso machine"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "espresso",
+      "blend",
+      "medium-dark roast",
+      "signature"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-07-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-07-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "espresso machine portafilter barista",
+    "images": [
+      "/ridgeline/rl-cof-07.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 871,
+    "bestseller": true
+  },
+  {
+    "id": "rl-cof-08",
+    "slug": "cascade-dark-roast",
+    "name": "Cascade Dark Roast",
+    "category": "Coffee",
+    "subcategory": "Blends",
+    "price": 18,
+    "description": "A proper dark roast without the ashtray. Sumatra and Brazil taken deep into second crack and pulled before the oils turn bitter, so you get baker's chocolate, molasses and a smoky edge with a thick, low-acid body. The one for the stovetop percolator and the cabin weekend.",
+    "details": [
+      "Components: Sumatra Lintong (50%), Brazil Cerrado (50%)",
+      "Roast: dark",
+      "Tasting notes: baker's chocolate, molasses, pipe tobacco",
+      "Very low acidity; a good fit for sensitive stomachs",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "classic-and-chocolatey",
+        "easy-everyday"
+      ],
+      "material": [
+        "wet-hulled",
+        "natural"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "slate blue label"
+      ],
+      "useCase": [
+        "french press",
+        "percolator",
+        "drip",
+        "camping"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "dark roast",
+      "blend",
+      "bold",
+      "low acidity"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-08-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-08-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "dark roasted coffee beans close up scoop",
+    "images": [
+      "/ridgeline/rl-cof-08.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 487
+  },
+  {
+    "id": "rl-cof-09",
+    "slug": "cold-brew-blend-coarse-ground",
+    "name": "Cold Brew Blend",
+    "category": "Coffee",
+    "subcategory": "Blends",
+    "price": 19,
+    "description": "Ground coarse and roasted for a 16-hour steep. Brazil and Colombia give it chocolate and a smooth, sweet finish with none of the sourness a hot-brew roast picks up in cold water. One 12-ounce bag makes about two litres of concentrate, enough for a week of iced coffee on the porch.",
+    "details": [
+      "Components: Brazil Cerrado, Colombia Huila",
+      "Roast: medium",
+      "Grind: coarse (sold ground only)",
+      "Recipe: 100 g per litre of cold water, 16 hours in the fridge, dilute 1:1",
+      "Tasting notes: cocoa, vanilla, graham cracker",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "washed",
+        "natural"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "sky blue label"
+      ],
+      "useCase": [
+        "cold brew",
+        "iced coffee",
+        "summer",
+        "batch brewing"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "cold brew",
+      "blend",
+      "pre-ground",
+      "summer"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-09-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-09-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "cold brew iced coffee glass ice",
+    "images": [
+      "/ridgeline/rl-cof-09.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 263
+  },
+  {
+    "id": "rl-cof-10",
+    "slug": "colombia-decaf-sugarcane",
+    "name": "Colombia Decaf, Sugarcane Process",
+    "category": "Coffee",
+    "subcategory": "Decaf",
+    "price": 21,
+    "description": "Decaffeinated in Colombia using ethyl acetate derived from fermented sugarcane, which keeps far more of the coffee's own sweetness than solvent methods. Brown sugar, red fruit and a cocoa finish, roasted medium. Most people cannot pick it out of a lineup, which is the point.",
+    "details": [
+      "Region: Tolima and Huila, Colombia",
+      "Process: washed, then sugarcane EA decaffeination at Descafecol",
+      "Roast: medium",
+      "Tasting notes: brown sugar, red fruit, cocoa",
+      "99.9% caffeine free",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "classic-and-chocolatey",
+        "easy-everyday"
+      ],
+      "material": [
+        "washed",
+        "sugarcane decaf"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "oat label"
+      ],
+      "useCase": [
+        "evening coffee",
+        "drip",
+        "pour-over",
+        "pregnancy-friendly"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "decaf",
+      "medium roast",
+      "sugarcane process",
+      "evening"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-10-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-10-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "coffee cup saucer evening window warm light",
+    "images": [
+      "/ridgeline/rl-cof-10.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 354
+  },
+  {
+    "id": "rl-cof-11",
+    "slug": "night-shift-decaf-espresso",
+    "name": "Night Shift Decaf Espresso",
+    "category": "Coffee",
+    "subcategory": "Decaf",
+    "price": 21,
+    "description": "A decaf built the way Burnside is built, not an afterthought. Swiss Water Process Brazil and Colombia, roasted medium-dark for a shot with real body and crema. Milk chocolate, hazelnut and a caramel finish. Order a decaf flat white at any of our cafés and this is what you get.",
+    "details": [
+      "Components: Brazil Cerrado, Colombia Huila",
+      "Process: Swiss Water decaffeination",
+      "Roast: medium-dark",
+      "Tasting notes: milk chocolate, hazelnut, caramel",
+      "Starting recipe: 18 g in, 38 g out, 28 seconds",
+      "Roasted to order, ships within 48 hours"
+    ],
+    "attributes": {
+      "style": [
+        "espresso-forward"
+      ],
+      "material": [
+        "swiss water decaf"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "warm grey label"
+      ],
+      "useCase": [
+        "espresso",
+        "evening coffee",
+        "milk drinks"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "decaf",
+      "espresso",
+      "swiss water",
+      "evening"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-11-12oz",
+        "label": "12 oz bag",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-11-2lb",
+        "label": "2 lb bag",
+        "inStock": true,
+        "priceDelta": 32
+      }
+    ],
+    "imageQuery": "cappuccino latte art dark background",
+    "images": [
+      "/ridgeline/rl-cof-11.jpg"
+    ],
+    "rating": 4.6,
+    "reviewCount": 142
+  },
+  {
+    "id": "rl-cof-12",
+    "slug": "trailhead-instant-sticks",
+    "name": "Trailhead Instant Coffee Sticks",
+    "category": "Coffee",
+    "subcategory": "Instant",
+    "price": 18,
+    "description": "Forest Park House Blend brewed properly, freeze-dried and sealed into single-serve sticks. Tear one into 10 ounces of hot or cold water and you get a genuinely good cup with caramel and cocoa and no silt. Eight sticks to a box, and a box weighs less than a candy bar.",
+    "details": [
+      "Contents: 8 sticks, 4.5 g each",
+      "Coffee: Forest Park House Blend, freeze-dried",
+      "Dissolves in hot or cold water in under 30 seconds",
+      "Shelf life: 12 months unopened",
+      "No additives, no sugar, just coffee",
+      "Box made from recycled board"
+    ],
+    "attributes": {
+      "style": [
+        "easy-everyday"
+      ],
+      "material": [
+        "freeze-dried"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "sunrise orange box"
+      ],
+      "useCase": [
+        "camping",
+        "travel",
+        "office",
+        "iced coffee"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "instant",
+      "travel",
+      "camping",
+      "single serve"
+    ],
+    "variants": [
+      {
+        "id": "rl-cof-12-8",
+        "label": "Box of 8",
+        "inStock": true
+      },
+      {
+        "id": "rl-cof-12-24",
+        "label": "Box of 24",
+        "inStock": true,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "camping coffee enamel mug mountain morning",
+    "images": [
+      "/ridgeline/rl-cof-12.jpg"
+    ],
+    "rating": 4.5,
+    "reviewCount": 209,
+    "new": true
+  }
+]

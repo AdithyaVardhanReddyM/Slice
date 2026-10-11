@@ -1,0 +1,852 @@
+[
+  {
+    "id": "sl-exp-01",
+    "slug": "lisbon-market-breakfast-campo-de-ourique",
+    "name": "Market breakfast at Campo de Ourique",
+    "category": "Experiences",
+    "subcategory": "Food and wine",
+    "price": 45,
+    "description": "Our chef Inês Carvalho takes four guests on the number 28 tram to the covered market in Campo de Ourique at 8:30, before the stalls get busy. You eat as you walk: pastéis de nata still warm, a slice of queijo da Serra, bread from the wood oven, a bica at the counter. Back at the hotel by 10:30 with a bag of whatever you could not resist.",
+    "details": [
+      "Tuesday, Thursday and Saturday, 8:30 to 10:30",
+      "Maximum 4 guests",
+      "Includes tram fare, all tastings and a market tote",
+      "Vegetarian and gluten-free options with notice",
+      "Meet in the Maré dining room"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "pastry gold",
+        "market green"
+      ],
+      "useCase": [
+        "morning",
+        "couple",
+        "food lovers",
+        "first day"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "lisbon",
+      "market",
+      "breakfast",
+      "tram",
+      "small group"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-01-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-01-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 45
+      },
+      {
+        "id": "sl-exp-01-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 135
+      }
+    ],
+    "imageQuery": "lisbon market fresh bread pastries stall morning",
+    "images": [
+      "/saltline/sl-exp-01.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 142,
+    "bestseller": true
+  },
+  {
+    "id": "sl-exp-02",
+    "slug": "lisbon-azulejo-architecture-walk",
+    "name": "Azulejo and architecture walk",
+    "category": "Experiences",
+    "subcategory": "Culture and design",
+    "price": 60,
+    "description": "A three-hour walk with architect Joana Reis from the hotel through Santos, Madragoa and Lapa, reading the city through its tiles: 18th-century blue-and-white panels, 1950s abstract façades, and the contemporary work of Maria Keil in the metro. Ends at the National Tile Museum with entry included and a coffee in the cloister.",
+    "details": [
+      "Daily except Monday, 10:00 to 13:00",
+      "Maximum 6 guests",
+      "Includes Tile Museum entry and taxi back",
+      "About 5 km on foot, some hills and cobbles",
+      "Meet in the lobby"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "azulejo blue",
+        "white"
+      ],
+      "useCase": [
+        "morning",
+        "design lovers",
+        "architecture",
+        "rainy day"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lisbon",
+      "walk",
+      "architecture",
+      "museum",
+      "tiles"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-02-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-02-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 60
+      },
+      {
+        "id": "sl-exp-02-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 180
+      }
+    ],
+    "imageQuery": "lisbon azulejo tiles blue white facade",
+    "images": [
+      "/saltline/sl-exp-02.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 97
+  },
+  {
+    "id": "sl-exp-03",
+    "slug": "lisbon-surf-morning-costa-da-caparica",
+    "name": "Surf morning at Costa da Caparica",
+    "category": "Experiences",
+    "subcategory": "Outdoors and wellbeing",
+    "price": 95,
+    "description": "A van leaves the hotel at 7:00 for the long beaches south of the river, twenty-five minutes away. Two hours in the water with the instructors at Caparica Surf Co., boards and wetsuits included, on waves that suit complete beginners or people who have not surfed in a decade. Back at the hotel for a late breakfast by 11:00.",
+    "details": [
+      "Daily, April to October, 7:00 to 11:00",
+      "Maximum 6 guests, all levels",
+      "Includes transfer, board, wetsuit and 2-hour lesson",
+      "Late breakfast held at Maré until 11:30",
+      "Towels and a hot shower waiting on return"
+    ],
+    "attributes": {
+      "style": [
+        "active-and-outdoors"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "atlantic blue",
+        "sand"
+      ],
+      "useCase": [
+        "morning",
+        "active",
+        "beginners",
+        "summer"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "lisbon",
+      "surf",
+      "beach",
+      "lesson",
+      "transfer"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-03-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-03-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 95
+      },
+      {
+        "id": "sl-exp-03-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 285
+      }
+    ],
+    "imageQuery": "surfers beach morning atlantic waves portugal",
+    "images": [
+      "/saltline/sl-exp-03.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 118
+  },
+  {
+    "id": "sl-exp-04",
+    "slug": "lisbon-natural-wine-dinner-mare",
+    "name": "Natural wine dinner at Maré",
+    "category": "Experiences",
+    "subcategory": "Food and wine",
+    "price": 120,
+    "description": "One long table of twelve in the Maré kitchen on Thursday nights. Inês cooks six courses from the day's fish and whatever the market had, and sommelier Tiago Baptista pours six natural wines from the Alentejo, Dão and the Azores, each with the story of the person who made it. Finishes late, with ginjinha.",
+    "details": [
+      "Thursdays at 20:00, about 3 hours",
+      "12 seats at a shared table",
+      "6 courses, 6 wines, water and coffee",
+      "Pescatarian menu by default; vegetarian with 48 hours' notice",
+      "Open to non-guests when seats remain"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "candlelight",
+        "orange wine"
+      ],
+      "useCase": [
+        "evening",
+        "couple",
+        "food lovers",
+        "wine"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "lisbon",
+      "dinner",
+      "natural wine",
+      "chef's table",
+      "shared table"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-04-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-04-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 120
+      },
+      {
+        "id": "sl-exp-04-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 360
+      }
+    ],
+    "imageQuery": "long dinner table candles wine glasses friends",
+    "images": [
+      "/saltline/sl-exp-04.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 86
+  },
+  {
+    "id": "sl-exp-05",
+    "slug": "copenhagen-harbour-swim-and-sauna",
+    "name": "Harbour swim and sauna morning",
+    "category": "Experiences",
+    "subcategory": "Outdoors and wellbeing",
+    "price": 55,
+    "description": "At 7:30 the hotel's wood-fired sauna raft at the end of the quay is yours for ninety minutes, four people at a time. Alternate the sauna with the harbour, which runs between 4 and 18 degrees depending on the month, then come back up for coffee and cardamom buns on the deck. The best way we know to wake up in Copenhagen.",
+    "details": [
+      "Daily, 7:30 to 9:00",
+      "Maximum 4 guests per slot",
+      "Includes towels, robes, coffee and buns",
+      "Harbour water is tested weekly and swimmable all year",
+      "Book the night before at reception"
+    ],
+    "attributes": {
+      "style": [
+        "active-and-outdoors",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "harbour blue",
+        "cedar"
+      ],
+      "useCase": [
+        "morning",
+        "couple",
+        "winter",
+        "wellbeing"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "copenhagen",
+      "sauna",
+      "swim",
+      "harbour",
+      "winter"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-05-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-05-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 55
+      },
+      {
+        "id": "sl-exp-05-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 165
+      }
+    ],
+    "imageQuery": "sauna wooden harbour swimming cold water copenhagen",
+    "images": [
+      "/saltline/sl-exp-05.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 203,
+    "bestseller": true
+  },
+  {
+    "id": "sl-exp-06",
+    "slug": "copenhagen-danish-design-studio-walk",
+    "name": "Danish design studio walk",
+    "category": "Experiences",
+    "subcategory": "Culture and design",
+    "price": 70,
+    "description": "Furniture historian Mads Holm walks a small group from Frederiksstaden to Christianshavn, stopping in three working studios: a cabinetmaker still building Wegner licences by hand, a ceramics workshop and a lighting studio. You see pieces being made, not just sold, and finish with lunch at the hotel's table at Kaj.",
+    "details": [
+      "Wednesday and Saturday, 10:00 to 13:30",
+      "Maximum 6 guests",
+      "Includes three studio visits and lunch at Kaj",
+      "About 4 km on foot, flat",
+      "Meet in the lobby"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "oak",
+        "white"
+      ],
+      "useCase": [
+        "morning",
+        "design lovers",
+        "makers",
+        "any weather"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "copenhagen",
+      "design",
+      "walk",
+      "studios",
+      "lunch"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-06-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-06-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 70
+      },
+      {
+        "id": "sl-exp-06-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 210
+      }
+    ],
+    "imageQuery": "woodworking workshop craftsman furniture scandinavian",
+    "images": [
+      "/saltline/sl-exp-06.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 74
+  },
+  {
+    "id": "sl-exp-07",
+    "slug": "copenhagen-bike-to-louisiana-museum",
+    "name": "Coast ride to Louisiana",
+    "category": "Experiences",
+    "subcategory": "Culture and design",
+    "price": 85,
+    "description": "Thirty-five kilometres up the coast road on one of the hotel's bikes to the Louisiana Museum of Modern Art, with the Øresund on your right the whole way. Entry included; spend as long as you like in the sculpture park and the Giacometti room, then put the bike on the train back from Humlebæk. A picnic from Kaj is in the pannier.",
+    "details": [
+      "Self-guided, any day, April to October",
+      "Includes bike, helmet, museum entry, picnic and train ticket back",
+      "Route notes and offline map on your phone",
+      "About 2 hours' riding each way, mostly flat and on cycle paths",
+      "E-bikes available for a $20 supplement"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture",
+        "active-and-outdoors"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "sea grey",
+        "green"
+      ],
+      "useCase": [
+        "full day",
+        "couple",
+        "art lovers",
+        "active"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "copenhagen",
+      "cycling",
+      "museum",
+      "art",
+      "day trip"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-07-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-07-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 85
+      },
+      {
+        "id": "sl-exp-07-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 255
+      }
+    ],
+    "imageQuery": "bicycle coastal road sea denmark summer",
+    "images": [
+      "/saltline/sl-exp-07.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 112
+  },
+  {
+    "id": "sl-exp-08",
+    "slug": "copenhagen-new-nordic-tasting-dinner-kaj",
+    "name": "Tasting dinner at Kaj",
+    "category": "Experiences",
+    "subcategory": "Food and wine",
+    "price": 160,
+    "description": "Chef Sofie Lund's eight-course tasting menu at the counter at Kaj, with the harbour going dark outside. Fish from the Øresund boats that morning, vegetables from the hotel's plot on Amager and a lot of fermentation, served by the cooks themselves. Wine pairing is five glasses from small European growers, with a non-alcoholic pairing of house ferments as the alternative.",
+    "details": [
+      "Tuesday to Saturday at 19:00, about 3 hours",
+      "8 counter seats",
+      "8 courses with wine or non-alcoholic pairing",
+      "Dietary requirements with 48 hours' notice",
+      "Open to non-guests when seats remain"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "slate",
+        "candlelight"
+      ],
+      "useCase": [
+        "evening",
+        "couple",
+        "food lovers",
+        "celebration"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "copenhagen",
+      "dinner",
+      "tasting menu",
+      "counter",
+      "chef"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-08-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-08-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 160
+      },
+      {
+        "id": "sl-exp-08-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 480
+      }
+    ],
+    "imageQuery": "fine dining chef plating counter restaurant nordic",
+    "images": [
+      "/saltline/sl-exp-08.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 68
+  },
+  {
+    "id": "sl-exp-09",
+    "slug": "barcelona-gallery-walk-el-born",
+    "name": "Gallery walk through El Born",
+    "category": "Experiences",
+    "subcategory": "Culture and design",
+    "price": 50,
+    "description": "Curator Laia Puig leads a two-hour walk through the galleries and studios of El Born and the Gothic Quarter, five or six spaces that change each season, ending at the Picasso Museum with entry included. Small enough that the gallerists talk to you, and Laia will happily tell you what is overpriced.",
+    "details": [
+      "Thursday and Saturday, 11:00 to 13:00",
+      "Maximum 6 guests",
+      "Includes gallery visits and Picasso Museum entry",
+      "About 3 km on foot, flat",
+      "Meet in the lobby"
+    ],
+    "attributes": {
+      "style": [
+        "design-and-culture"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "neutral"
+      ],
+      "colors": [
+        "white",
+        "stone"
+      ],
+      "useCase": [
+        "morning",
+        "art lovers",
+        "couple",
+        "rainy day"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "barcelona",
+      "galleries",
+      "art",
+      "walk",
+      "museum"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-09-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-09-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 50
+      },
+      {
+        "id": "sl-exp-09-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 150
+      }
+    ],
+    "imageQuery": "art gallery white walls paintings visitors barcelona",
+    "images": [
+      "/saltline/sl-exp-09.jpg"
+    ],
+    "rating": 4.8,
+    "reviewCount": 81
+  },
+  {
+    "id": "sl-exp-10",
+    "slug": "barcelona-boqueria-market-and-tapas-lunch",
+    "name": "Boqueria market and tapas lunch",
+    "category": "Experiences",
+    "subcategory": "Food and wine",
+    "price": 75,
+    "description": "Chef Marc Vila shops the Boqueria most mornings and on Fridays he takes six guests with him: the mushroom stall, the fish counter where he has bought for twelve years, a sliver of jamón from the man who knows. Then lunch at a standing bar inside the market, eight plates and a glass of cava, with Marc explaining each one.",
+    "details": [
+      "Fridays, 11:00 to 14:00",
+      "Maximum 6 guests",
+      "Includes market tastings, 8 tapas and cava",
+      "Vegetarian version available with notice",
+      "Meet in the lobby; the market is a 12-minute walk"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "warm",
+        "bold"
+      ],
+      "colors": [
+        "tomato red",
+        "saffron"
+      ],
+      "useCase": [
+        "midday",
+        "food lovers",
+        "couple",
+        "friends"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "barcelona",
+      "market",
+      "tapas",
+      "lunch",
+      "chef"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-10-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-10-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 75
+      },
+      {
+        "id": "sl-exp-10-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 225
+      }
+    ],
+    "imageQuery": "barcelona boqueria market colorful fruit stall",
+    "images": [
+      "/saltline/sl-exp-10.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 129,
+    "bestseller": true
+  },
+  {
+    "id": "sl-exp-11",
+    "slug": "barcelona-rooftop-vermouth-hour",
+    "name": "Rooftop vermouth hour",
+    "category": "Experiences",
+    "subcategory": "Food and wine",
+    "price": 35,
+    "description": "Sunday at 13:00 on the Terrat roof: house vermouth from Reus on tap, olives, anchovies, chips and a plate of boquerones, the way the city does the hour before lunch. Our bar team explains why vermouth is a Barcelona thing and pours three styles to compare. Stay for lunch after if the day gets away from you.",
+    "details": [
+      "Sundays, 13:00 to 14:00",
+      "Up to 20 guests, no booking needed for hotel guests",
+      "3 vermouths, snacks and a soda for the table",
+      "Shade and blankets on the roof depending on the month",
+      "Open to non-guests for $35"
+    ],
+    "attributes": {
+      "style": [
+        "food-and-wine",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "amber",
+        "terracotta"
+      ],
+      "useCase": [
+        "sunday",
+        "midday",
+        "friends",
+        "relaxed"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "barcelona",
+      "vermouth",
+      "rooftop",
+      "aperitif",
+      "sunday"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-11-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-11-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 35
+      },
+      {
+        "id": "sl-exp-11-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 105
+      }
+    ],
+    "imageQuery": "vermouth olives aperitivo glasses table terrace sunny",
+    "images": [
+      "/saltline/sl-exp-11.jpg"
+    ],
+    "rating": 4.7,
+    "reviewCount": 156
+  },
+  {
+    "id": "sl-exp-12",
+    "slug": "barcelona-costa-brava-sailing-afternoon",
+    "name": "Costa Brava sailing afternoon",
+    "category": "Experiences",
+    "subcategory": "Outdoors and wellbeing",
+    "price": 140,
+    "description": "A classic wooden ketch leaves the Port Vell marina at 15:00 with up to eight guests, skipper Jordi and a cooler of Empordà wine. Four hours along the coast with a swim stop in a cove you cannot reach on foot, then back into the city as the lights come on. Bring a jumper; it gets cool after sunset even in July.",
+    "details": [
+      "Daily, May to October, 15:00 to 19:00",
+      "Maximum 8 guests",
+      "Includes skipper, swim stop, wine and snacks",
+      "Marina is a 15-minute walk from the hotel",
+      "Weather-dependent; refunded if cancelled"
+    ],
+    "attributes": {
+      "style": [
+        "active-and-outdoors",
+        "slow-and-quiet"
+      ],
+      "material": [
+        "experience"
+      ],
+      "colorFamily": [
+        "cool"
+      ],
+      "colors": [
+        "mediterranean blue",
+        "teak"
+      ],
+      "useCase": [
+        "afternoon",
+        "couple",
+        "friends",
+        "summer",
+        "swim"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "barcelona",
+      "sailing",
+      "boat",
+      "swim",
+      "sunset"
+    ],
+    "variants": [
+      {
+        "id": "sl-exp-12-1",
+        "label": "1 guest",
+        "inStock": true
+      },
+      {
+        "id": "sl-exp-12-2",
+        "label": "2 guests",
+        "inStock": true,
+        "priceDelta": 140
+      },
+      {
+        "id": "sl-exp-12-4",
+        "label": "4 guests",
+        "inStock": true,
+        "priceDelta": 420
+      }
+    ],
+    "imageQuery": "sailing boat mediterranean sea coast afternoon",
+    "images": [
+      "/saltline/sl-exp-12.jpg"
+    ],
+    "rating": 4.9,
+    "reviewCount": 93,
+    "new": true
+  }
+]

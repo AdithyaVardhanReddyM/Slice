@@ -15,6 +15,18 @@ const stores = [
     kind: "Fashion & lifestyle · 24 labels, real and made-up",
     note: "Tests that recommendations follow taste, not brand fame: a third of the labels don't exist anywhere else.",
   },
+  {
+    href: "/ridgeline",
+    name: "Ridgeline Coffee Roasters",
+    kind: "Specialty coffee · Portland, Seattle, Austin opening soon",
+    note: "Brand site for the Pages service: 12 coffees, 3 plans, 4 gift sets, cafés, journal. Intake is tested against its fonts, colours and copy.",
+  },
+  {
+    href: "/saltline",
+    name: "Saltline Hotels",
+    kind: "Boutique hotels · Lisbon, Copenhagen, Barcelona",
+    note: "Brand site for the Pages service: 3 hotels with 4 room tiers, 12 experiences, 4 offers and a plan-your-stay form.",
+  },
 ];
 
 export default function Index() {

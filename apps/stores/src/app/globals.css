@@ -255,3 +255,138 @@ body:has(.fold-root) {
 @utility drop-in {
   animation: drop-in 0.25s var(--ease-fd);
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Ridgeline Coffee Roasters: warm modern craft. Cream paper, deep brown ink,
+   one rust accent, Fraunces for headlines and Manrope for everything else.
+   Fonts load from Google Fonts via <link> in the route layout (not next/font)
+   so the family names stay readable in the HTML. Tokens are prefixed `rl-`
+   and emitted on :root as plain hex; base styles are scoped to .ridgeline-root.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme static {
+  --color-rl-cream: #f6f1e8;
+  --color-rl-cream-deep: #efe6d7;
+  --color-rl-sand: #e6d9c4;
+  --color-rl-line: #d9cbb6;
+  --color-rl-ink: #2b1d14;
+  --color-rl-ink-soft: #4a3a2e;
+  --color-rl-mute: #7d6b5c;
+  --color-rl-rust: #b5542a;
+  --color-rl-rust-deep: #8e3f1e;
+  --color-rl-moss: #5d6b4a;
+
+  --font-rl-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-rl-sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+}
+
+body:has(.ridgeline-root) {
+  background: var(--color-rl-cream);
+}
+
+.ridgeline-root {
+  background: var(--color-rl-cream);
+  color: var(--color-rl-ink);
+  font-family: var(--font-rl-sans);
+  font-variation-settings: normal;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ridgeline-root ::selection {
+  background: var(--color-rl-rust);
+  color: var(--color-rl-cream);
+}
+
+.ridgeline-root :focus-visible {
+  outline: 2px solid var(--color-rl-rust);
+  outline-offset: 2px;
+}
+
+/* Headline serif with Fraunces' optical-size and softness axes set for display. */
+@utility rl-serif {
+  font-family: var(--font-rl-serif);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+}
+
+@utility rl-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1280px;
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Saltline Hotels: quiet luxury. Off-white, charcoal, a sea-glass accent,
+   Cormorant Garamond for headlines and Figtree for body and UI. Fonts load
+   from Google Fonts via <link> in the route layout. Tokens are prefixed `sl-`
+   and emitted on :root as plain hex; base styles are scoped to .saltline-root.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme static {
+  --color-sl-paper: #f7f5f0;
+  --color-sl-paper-deep: #efece4;
+  --color-sl-stone: #e3dfd5;
+  --color-sl-line: #d8d3c8;
+  --color-sl-charcoal: #1f2326;
+  --color-sl-charcoal-soft: #3d4347;
+  --color-sl-mute: #6f757a;
+  --color-sl-sea: #5f9ea0;
+  --color-sl-sea-deep: #44797b;
+  --color-sl-sea-tint: #e1eeee;
+
+  --font-sl-serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --font-sl-sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
+}
+
+body:has(.saltline-root) {
+  background: var(--color-sl-paper);
+}
+
+.saltline-root {
+  background: var(--color-sl-paper);
+  color: var(--color-sl-charcoal);
+  font-family: var(--font-sl-sans);
+  font-variation-settings: normal;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.saltline-root ::selection {
+  background: var(--color-sl-sea);
+  color: #fff;
+}
+
+.saltline-root :focus-visible {
+  outline: 2px solid var(--color-sl-sea-deep);
+  outline-offset: 2px;
+}
+
+@utility sl-serif {
+  font-family: var(--font-sl-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+@utility sl-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1360px;
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 3rem;
+  }
+}

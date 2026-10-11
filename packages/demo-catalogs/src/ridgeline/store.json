@@ -1,0 +1,52 @@
+{
+  "id": "ridgeline",
+  "name": "Ridgeline Coffee Roasters",
+  "logo": "/ridgeline/logo.svg",
+  "tagline": "Small-batch coffee roasted in Portland, Oregon.",
+  "description": "Ridgeline Coffee Roasters is a specialty roaster in Portland, Oregon. We buy coffee directly from farms and washing stations we visit every year, roast it in small batches on a 15-kilo drum roaster in our Alberta Street roastery, and ship it within 48 hours of roasting. We run cafés in Portland and Seattle, with Austin opening in November.",
+  "currency": "USD",
+  "styles": [
+    {
+      "id": "bright-and-fruity",
+      "label": "Bright and fruity",
+      "description": "Light roasts with citrus, stone fruit and florals. Best as pour-over or filter."
+    },
+    {
+      "id": "classic-and-chocolatey",
+      "label": "Classic and chocolatey",
+      "description": "Medium roasts with cocoa, caramel and nuts. Sweet, balanced, good with or without milk."
+    },
+    {
+      "id": "espresso-forward",
+      "label": "Espresso forward",
+      "description": "Developed roasts built for pressure: syrupy body, low acidity, cuts through milk."
+    },
+    {
+      "id": "easy-everyday",
+      "label": "Easy everyday",
+      "description": "Forgiving coffees for the daily pot, the cold brew jar and the trail."
+    }
+  ],
+  "nav": [
+    {
+      "label": "Coffee",
+      "category": "Coffee",
+      "subcategories": ["Single origins", "Blends", "Decaf", "Instant"]
+    },
+    {
+      "label": "Subscriptions",
+      "category": "Subscriptions",
+      "subcategories": ["Plans"]
+    },
+    {
+      "label": "Gifts",
+      "category": "Gift sets",
+      "subcategories": ["Gift sets"]
+    },
+    {
+      "label": "Scenes",
+      "category": "Scenes",
+      "subcategories": ["Scenes"]
+    }
+  ]
+}
