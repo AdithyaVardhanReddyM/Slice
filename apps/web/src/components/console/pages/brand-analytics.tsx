@@ -20,7 +20,7 @@ import { PageAnalytics, type Range } from "./analytics/page-analytics";
 import { useBrand } from "./brand-context";
 import { LiveThumb } from "./pages-list";
 
-type PageRow = Page & {
+export type PageRow = Page & {
   variants?: { _id: Id<"pagesVariants">; status: string; screenshot?: string }[];
   audiences?: Pick<Audience, "_id" | "name">[];
 };
@@ -35,11 +35,11 @@ interface Totals {
 }
 type Overview = Totals & { pageId: Id<"pages">; prev: Totals; trend: number[] };
 
-const audienceOf = (p: PageRow) => (p.audiences?.length ? p.audiences.map((a) => a.name).join(" + ") : "Everyone");
+export const audienceOf = (p: PageRow) => (p.audiences?.length ? p.audiences.map((a) => a.name).join(" + ") : "Everyone");
 
 /* Atoms ----------------------------------------------------------------------------- */
 
-function Thumb({ page, className }: { page: PageRow; className?: string }) {
+export function Thumb({ page, className }: { page: PageRow; className?: string }) {
   const brand = useBrand();
   const kit = kitOf(brand);
   const [broken, setBroken] = useState(false);
@@ -61,7 +61,7 @@ function Thumb({ page, className }: { page: PageRow; className?: string }) {
   );
 }
 
-function StatusPill({ status }: { status: string }) {
+export function StatusPill({ status }: { status: string }) {
   const live = status === "published";
   return (
     <span className={cn("inline-flex h-5 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-medium", live ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground")}>
@@ -72,7 +72,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 /** Relative change against the prior period, coloured by direction. */
-function Delta({ now, before }: { now: number; before: number }) {
+export function Delta({ now, before }: { now: number; before: number }) {
   if (!before) return <span className="text-xs text-muted-foreground">{now ? "New" : "—"}</span>;
   const change = now / before - 1;
   if (Math.abs(change) < 0.005) return <span className="text-xs text-muted-foreground">0%</span>;
@@ -86,7 +86,7 @@ function Delta({ now, before }: { now: number; before: number }) {
 }
 
 /** Visitors per day as a tiny area, scaled to its own peak. */
-function Sparkline({ values }: { values: number[] }) {
+export function Sparkline({ values }: { values: number[] }) {
   const w = 96;
   const h = 28;
   const max = Math.max(1, ...values);

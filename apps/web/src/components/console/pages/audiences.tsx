@@ -214,7 +214,8 @@ export function AudiencesScreen() {
   const params = useSearchParams();
   const audiences = useQuery(api.pagesAudiences.list, { brandId: brand._id }) as Audience[] | undefined;
   const uploads = useQuery(api.pagesUploads.list, { brandId: brand._id }) as Upload[] | undefined;
-  const [open, setOpen] = useState<string | null>(null);
+  // ?open=<id> (from the overview) opens that audience's drawer.
+  const [open, setOpen] = useState<string | null>(() => params.get("open"));
   const [filter, setFilter] = useState<string>("all");
 
   // ?new=1 opens the source picker; ?new=<kind> opens straight into that form.

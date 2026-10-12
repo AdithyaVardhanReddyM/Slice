@@ -93,7 +93,7 @@ function sum(rows: Totals[]): Totals {
 }
 
 /** The range's UTC days ending today, and the same number of days before them. */
-function useWindow(range: Range) {
+export function useWindow(range: Range) {
   const [now] = useState(() => Date.now());
   return useMemo(() => {
     const days = Array.from({ length: range }, (_, i) => dayKey(now - (range - 1 - i) * DAY));
@@ -142,7 +142,18 @@ function Change({ now, before, range }: { now: number; before: number; range: Ra
   );
 }
 
-function Overview({ stats, prev, range, window: w }: { stats: Stats | undefined; prev: Stats | undefined; range: Range; window: ReturnType<typeof useWindow> }) {
+/** KPI tiles that act as tabs for one daily chart, with the prior period dashed. Also used by the brand overview. */
+export function MetricOverview({
+  stats,
+  prev,
+  range,
+  window: w,
+}: {
+  stats: { daily: DayRow[] } | undefined;
+  prev: { daily: DayRow[] } | undefined;
+  range: Range;
+  window: ReturnType<typeof useWindow>;
+}) {
   const [metricKey, setMetricKey] = useState<MetricKey>("visitors");
   const metric = METRICS.find((m) => m.key === metricKey)!;
   const totals = useMemo(() => sum(stats?.daily ?? []), [stats]);
@@ -804,7 +815,7 @@ export function PageAnalytics({ page, variant, range }: { page: Page; variant: V
 
   return (
     <div className="space-y-6">
-      <Overview stats={stats} prev={prev} range={range} window={w} />
+      <MetricOverview stats={stats} prev={prev} range={range} window={w} />
 
       {variant?.doc ? (
         <ClickMap key={variant._id} page={page} variant={variant} sessions={sessions} from={w.from} to={w.to} range={range} />

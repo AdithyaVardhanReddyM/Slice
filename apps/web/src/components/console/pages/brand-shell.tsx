@@ -242,9 +242,9 @@ function BrandSidebar({ brand }: { brand: Brand }) {
   const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname.startsWith(item.href));
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="gap-3">
-        <Link href="/dashboard" className="px-2 pt-1.5">
-          <SliceWordmark />
+      <SidebarHeader className="gap-5">
+        <Link href="/dashboard" className="px-2 pt-2">
+          <SliceWordmark className="h-7" />
         </Link>
         <BrandSwitcher current={brand} />
       </SidebarHeader>
@@ -379,9 +379,10 @@ export function BrandShell({ children }: { children: ReactNode }) {
   if (editor) return <BrandProvider value={brand}>{children}</BrandProvider>;
   return (
     <BrandProvider value={brand}>
-      <SidebarProvider>
+      {/* The window never scrolls: the inset card does, so its scrollbar sits inside the card. */}
+      <SidebarProvider className="h-svh overflow-hidden">
         <BrandSidebar brand={brand} />
-        <SidebarInset className="border md:peer-data-[variant=inset]:shadow-none">
+        <SidebarInset className="min-h-0 overflow-x-hidden overflow-y-auto border md:peer-data-[variant=inset]:shadow-none">
           <BrandTopbar brand={brand} />
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </SidebarInset>

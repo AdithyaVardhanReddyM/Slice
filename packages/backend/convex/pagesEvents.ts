@@ -440,8 +440,11 @@ export const recent = query({
 /**
  * Per page over the last `days` (UTC days, today included): views, sessions,
  * visitors, leads, engaged time, CTA rate, the variant with the best CTA rate,
- * the same totals for the `days` before (`prev`), and visitors per day (`trend`).
+ * the same totals for the `days` before (`prev`), visitors per day (`trend`), and
+ * full per-day totals for both periods (`daily`, `prevDaily`, aligned by index).
  */
+const emptyDay = { views: 0, sessions: 0, visitors: 0, clicks: 0, ctaClicks: 0, formSubmits: 0, engagedMs: 0 };
+
 export const brandOverview = query({
   args: { brandId: v.id("pagesBrands"), days: v.number() },
   handler: async (ctx, { brandId, days }) => {
@@ -451,6 +454,7 @@ export const brandOverview = query({
     const toDay = dayOf(now);
     const prevFromDay = dayOf(now - (2 * span - 1) * 86_400_000);
     const dayList = Array.from({ length: span }, (_, i) => dayOf(now - (span - 1 - i) * 86_400_000));
+    const prevDayList = Array.from({ length: span }, (_, i) => dayOf(now - (2 * span - 1 - i) * 86_400_000));
     const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect();
     const out = [];
     for (const page of pages) {
@@ -460,6 +464,7 @@ export const brandOverview = query({
       const prev = { ...cur };
       const perDay = new Map<string, number>();
       const per = new Map<string, { views: number; ctaClicks: number }>();
+      const byDay = new Map<string, typeof cur & { clicks: number }>();
       for (const r of rows) {
         const t = r.day >= fromDay ? cur : prev;
         t.views += r.views;
@@ -468,6 +473,15 @@ export const brandOverview = query({
         t.ctaClicks += r.ctaClicks;
         t.formSubmits += r.formSubmits;
         t.engagedMs += r.engagedMs;
+        const d = byDay.get(r.day) ?? { views: 0, sessions: 0, visitors: 0, clicks: 0, ctaClicks: 0, formSubmits: 0, engagedMs: 0 };
+        d.views += r.views;
+        d.sessions += r.sessions;
+        d.visitors += r.visitors;
+        d.clicks += r.clicks;
+        d.ctaClicks += r.ctaClicks;
+        d.formSubmits += r.formSubmits;
+        d.engagedMs += r.engagedMs;
+        byDay.set(r.day, d);
         if (t !== cur) continue;
         perDay.set(r.day, (perDay.get(r.day) ?? 0) + r.visitors);
         const p = per.get(r.variantId) ?? { views: 0, ctaClicks: 0 };
@@ -507,6 +521,8 @@ export const brandOverview = query({
         ...summary(cur),
         prev: summary(prev),
         trend: dayList.map((d) => perDay.get(d) ?? 0),
+        daily: dayList.map((day) => ({ day, ...(byDay.get(day) ?? emptyDay) })),
+        prevDaily: prevDayList.map((day) => ({ day, ...(byDay.get(day) ?? emptyDay) })),
         topVariant,
       });
     }
