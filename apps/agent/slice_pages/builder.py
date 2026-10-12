@@ -276,7 +276,7 @@ VARIANT: "{variant.get('name')}" (status {variant.get('status')}, version {varia
 {generate_rules if kind == 'generate' else edit_rules}
 
 MORE TOOLS
-- qloo_search resolves any name the merchant mentions to a Qloo entity; qloo_insights asks the taste graph directly (places in a city for this audience, what fans of X also love, the tags that describe a group, demographic skew). Reach for them whenever a decision about what to show should rest on taste data rather than a guess, and cite the result in the section's evidence.
+- qloo_search resolves any name the merchant mentions to a Qloo entity; qloo_insights asks the taste graph directly (places in a city for this audience, what fans of X also love, the tags that describe a group, demographic skew). Reach for them whenever a decision about what to show should rest on taste data rather than a guess, and cite the result in the section's evidence. The "Using Qloo" section below says what to ask for and how to read what comes back.
 - google_search checks facts the merchant states or that the page needs (dates, opening hours, an address, a venue, a competitor's offer, a local event). Use it when a wrong fact would embarrass the brand; never for design.
 - Images attached to a message are in your context: a photograph is inspiration for imagery and mood, a screenshot of a page is a structure or style reference. Say what you took from them in your reply.
 
@@ -685,6 +685,7 @@ async def qloo_insights(
     signal_entity_ids: list[str] | None = None,
     location: str = "",
     tag_ids: list[str] | None = None,
+    tag_types: list[str] | None = None,
     age: str = "",
     gender: str = "",
     take: int = 8,
@@ -703,6 +704,7 @@ async def qloo_insights(
         signal_entity_ids: Qloo entity ids to use as taste signals (from qloo_search or get_audience_detail). Default: this audience's signals.
         location: A city or neighbourhood to filter places to, or to use as a signal for other types.
         tag_ids: Qloo tag urns to filter by (for places: "urn:tag:genre:place:restaurant"; for other types: style or genre tags).
+        tag_types: For entity_type "tag" only: which kinds of tags, e.g. ["urn:tag:personal_style:qloo"] or ["urn:tag:style:qloo", "urn:tag:keyword:media"]. One or two at a time; see the Qloo skill.
         age: One of "24_and_younger", "25_to_29", "30_to_34", "35_to_44", "45_to_54", "55_and_older".
         gender: "male" | "female".
         take: How many results (default 8, max 15).
@@ -724,6 +726,8 @@ async def qloo_insights(
     if tag_ids:
         key = "filter.tags" if kind != "tag" else "signal.interests.tags"
         params[key] = ",".join(t for t in tag_ids if isinstance(t, str))
+    if kind == "tag" and tag_types:
+        params["filter.tag.types"] = ",".join(t for t in tag_types if isinstance(t, str) and t.startswith("urn:tag:"))
     if age in AGE_BUCKETS:
         params["signal.demographics.age"] = age
     if gender in ("male", "female"):

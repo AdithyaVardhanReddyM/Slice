@@ -6,8 +6,11 @@ import { spanValidator } from "./schema";
 import { DEFAULT_ROUTING, validateDoc, type AudienceProfile, type QuizConfig, type RoutingRules } from "./pagesTypes";
 import { slugify } from "./pagesUtil";
 
-// Pages, their variants (one per audience plus a default) and the builder
-// chat. `bySlug` + `resolveVariant` are what the public renderer calls.
+// Pages and the builder chat. A page is one version built for its audiences:
+// none (everyone), one, or several combined into one group. The version lives
+// in `pagesVariants` (exactly one row per page, `defaultVariantId`) so events,
+// stats and forms keep their variant keys. `bySlug` + `resolveVariant` are
+// what the public renderer calls.
 
 const pageBriefValidator = v.object({
   goal: v.string(),
@@ -69,6 +72,12 @@ async function uniquePageSlug(ctx: MutationCtx, brandId: Id<"pagesBrands">, base
 const variantsOf = (ctx: QueryCtx | MutationCtx, pageId: Id<"pages">) =>
   ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).collect();
 
+/** The page's version: `defaultVariantId`, else its only row. */
+async function versionOf(ctx: QueryCtx | MutationCtx, page: Doc<"pages">) {
+  const byId = page.defaultVariantId ? await ctx.db.get(page.defaultVariantId) : null;
+  return byId ?? (await variantsOf(ctx, page._id))[0] ?? null;
+}
+
 async function audiencesOf(ctx: QueryCtx | MutationCtx, ids: Id<"pagesAudiences">[]) {
   const out: Doc<"pagesAudiences">[] = [];
   for (const id of ids) {
@@ -85,11 +94,13 @@ export const list = query({
     return Promise.all(
       pages.map(async (page) => {
         const variants = await variantsOf(ctx, page._id);
+        const audiences = await audiencesOf(ctx, page.audienceIds);
         return {
           ...page,
           variantCount: variants.length,
           readyCount: variants.filter((x) => x.status === "ready").length,
           variants: variants.map((x) => ({ _id: x._id, name: x.name, status: x.status, audienceId: x.audienceId, version: x.version })),
+          audiences: audiences.map((a) => ({ _id: a._id, name: a.name, kind: a.kind, profile: a.profile })),
         };
       }),
     );
@@ -146,13 +157,17 @@ export const publishedBySlug = query({
   },
 });
 
-async function insertVariant(ctx: MutationCtx, page: { _id: Id<"pages">; brandId: Id<"pagesBrands"> }, audience: Doc<"pagesAudiences"> | null) {
+/** "Everyone", "Berlin", "Berlin + Under 25s". */
+export const audienceLabel = (audiences: { name: string }[]) => (audiences.length ? audiences.map((a) => a.name).join(" + ") : "Everyone");
+
+/** The page's one version. `audienceId` is set only when the page targets exactly one audience. */
+async function insertVariant(ctx: MutationCtx, page: { _id: Id<"pages">; brandId: Id<"pagesBrands"> }, audiences: Doc<"pagesAudiences">[]) {
   const now = Date.now();
   return ctx.db.insert("pagesVariants", {
     pageId: page._id,
     brandId: page.brandId,
-    audienceId: audience?._id,
-    name: audience?.name ?? "Default",
+    audienceId: audiences.length === 1 ? audiences[0]._id : undefined,
+    name: audienceLabel(audiences),
     status: "building",
     trace: [],
     version: 0,
@@ -186,9 +201,7 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
-    const page = { _id: id, brandId };
-    const defaultVariantId = await insertVariant(ctx, page, null);
-    for (const a of await audiencesOf(ctx, audienceIds)) await insertVariant(ctx, page, a);
+    const defaultVariantId = await insertVariant(ctx, { _id: id, brandId }, await audiencesOf(ctx, audienceIds));
     await ctx.db.patch(id, { defaultVariantId });
     if (messages?.length) await ctx.db.insert("pagesBuilds", { pageId: id, messages, createdAt: now, updatedAt: now });
     return { id, slug };
@@ -231,25 +244,18 @@ export const updateBrief = mutation({
   },
 });
 
-/** Adds and removes variants so there is exactly one per audience plus the default. Returns the variants it created. */
+/** Retargets the page: its audiences (combined) and its version's name. The page keeps its doc until it is rebuilt. */
 export const setAudiences = mutation({
   args: { id: v.id("pages"), audienceIds: v.array(v.id("pagesAudiences")) },
-  returns: v.array(v.id("pagesVariants")),
+  returns: v.null(),
   handler: async (ctx, { id, audienceIds }) => {
     const page = await ctx.db.get(id);
     if (!page) throw new Error("Unknown page");
-    const variants = await variantsOf(ctx, id);
-    const wanted = new Set(audienceIds);
-    for (const vnt of variants) {
-      if (vnt.audienceId && !wanted.has(vnt.audienceId)) await ctx.db.delete(vnt._id);
-    }
-    const have = new Set(variants.map((x) => x.audienceId).filter(Boolean));
-    const created: Id<"pagesVariants">[] = [];
-    for (const a of await audiencesOf(ctx, audienceIds)) {
-      if (!have.has(a._id)) created.push(await insertVariant(ctx, page, a));
-    }
+    const audiences = await audiencesOf(ctx, audienceIds);
+    const vnt = await versionOf(ctx, page);
+    if (vnt) await ctx.db.patch(vnt._id, { name: audienceLabel(audiences), audienceId: audiences.length === 1 ? audiences[0]._id : undefined, updatedAt: Date.now() });
     await ctx.db.patch(id, { audienceIds, updatedAt: Date.now() });
-    return created;
+    return null;
   },
 });
 
@@ -262,53 +268,14 @@ export const setRouting = mutation({
   },
 });
 
-/** Three taste questions whose options each vote for one audience. */
-export function buildQuiz(audiences: Doc<"pagesAudiences">[]): QuizConfig | undefined {
-  type Option = { name: string; image?: string };
-  const specs: { id: string; prompt: string; candidates: (p: AudienceProfile) => Option[] }[] = [
-    {
-      id: "music",
-      prompt: "What's on repeat?",
-      candidates: (p) => [...(p.culture?.artists ?? []), ...(p.entities ?? []).filter((x) => x.type.includes("artist"))],
-    },
-    {
-      id: "place",
-      prompt: "A place you'd book",
-      candidates: (p) => [
-        ...(p.culture?.places ?? []),
-        ...(p.entities ?? []).filter((x) => /place|destination/.test(x.type)),
-        ...(p.geo ?? []).map((g) => ({ name: g.name })),
-      ],
-    },
-    { id: "brand", prompt: "A brand you trust", candidates: (p) => p.brands ?? [] },
-  ];
-  const questions: QuizConfig["questions"] = [];
-  for (const spec of specs) {
-    const options: QuizConfig["questions"][number]["options"] = [];
-    const used = new Set<string>();
-    for (const a of audiences) {
-      const profile = a.profile as AudienceProfile | undefined;
-      if (!profile) continue;
-      // Skip an option another audience already claimed so answers stay informative.
-      const pick = spec.candidates(profile).find((c) => c.name && !used.has(c.name.toLowerCase()));
-      if (!pick) continue;
-      used.add(pick.name.toLowerCase());
-      options.push({ label: pick.name, image: pick.image, votes: { [a._id]: 1 } });
-    }
-    if (options.length >= 2) questions.push({ id: spec.id, prompt: spec.prompt, options });
-  }
-  return questions.length ? { questions } : undefined;
-}
-
 export const publish = mutation({
   args: { id: v.id("pages") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
     const page = await ctx.db.get(id);
     if (!page) throw new Error("Unknown page");
-    const audiences = await audiencesOf(ctx, page.audienceIds);
-    const quiz = buildQuiz(audiences);
-    await ctx.db.patch(id, { status: "published", publishedAt: Date.now(), quiz, updatedAt: Date.now() });
+    // One version per page: nothing for a quiz to choose between.
+    await ctx.db.patch(id, { status: "published", publishedAt: Date.now(), quiz: undefined, updatedAt: Date.now() });
     return null;
   },
 });
@@ -461,12 +428,10 @@ export const purgePageData = internalMutation({
 
 /* Routing ------------------------------------------------------------------- */
 
-const lower = (s?: string) => (s ?? "").trim().toLowerCase();
-
 /**
- * Which variant a visitor gets. Order: param → lead → utm → quiz → cookie →
- * geo → default. Only `ready` variants are eligible; anything else falls
- * through. Returns null when the page does not exist.
+ * Which variant a visitor gets. A page has one version, so this is that
+ * version once it is ready; the args are kept for the renderer's call shape.
+ * Returns null when the page does not exist or is not built.
  */
 export const resolveVariant = query({
   args: {
@@ -492,78 +457,69 @@ export const resolveVariant = query({
       .withIndex("by_brand_slug", (q) => q.eq("brandId", brand._id).eq("slug", args.pageSlug))
       .unique();
     if (!page) return null;
-    const routing = { ...DEFAULT_ROUTING, ...((page.routing ?? {}) as Partial<RoutingRules>) };
-    const variants = await variantsOf(ctx, page._id);
-    const audiences = await audiencesOf(ctx, page.audienceIds);
-    const ready = (audienceId: Id<"pagesAudiences">) => variants.find((x) => x.audienceId === audienceId && x.status === "ready");
-    const byRef = (ref?: string) => {
-      const key = lower(ref);
-      if (!key) return undefined;
-      return audiences.find((a) => lower(a._id) === key || lower(a.slug) === key);
-    };
-    const resolve = (audience: Doc<"pagesAudiences"> | undefined, resolvedBy: string) => {
-      if (!audience) return null;
-      const vnt = ready(audience._id);
-      return vnt ? { variantId: vnt._id, audienceId: audience._id, resolvedBy } : null;
-    };
+    const vnt = await versionOf(ctx, page);
+    if (!vnt) return null;
+    return { variantId: vnt._id, audienceId: vnt.audienceId, resolvedBy: "default" };
+  },
+});
 
-    // 1. ?a=<audience id or slug>
-    const byParam = resolve(byRef(args.param), "param");
-    if (byParam) return byParam;
+/* Migration: pages built with one version per audience ---------------------------- */
 
-    // 2. ?g=<member id>: the member's own lead audience, else their cluster's audience.
-    if (args.lead) {
-      const memberId = ctx.db.normalizeId("pagesMembers", args.lead);
-      const member = memberId ? await ctx.db.get(memberId) : null;
-      if (member) {
-        const own = member.leadAudienceId ? audiences.find((a) => a._id === member.leadAudienceId) : undefined;
-        const viaLead = resolve(own, "lead");
-        if (viaLead) return viaLead;
-        const cluster = audiences.find(
-          (a) => a.kind === "csv" && a.sources.uploadId === member.uploadId && a.sources.cluster === member.cluster,
-        );
-        const viaCluster = resolve(cluster, "lead");
-        if (viaCluster) return viaCluster;
+/**
+ * Splits every page that still has several versions into one page per
+ * version: the default stays on the original page (for everyone), each
+ * audience version becomes its own page ("<title> for <audience>", slug
+ * "<slug>-<audience>") and takes its events, stats, forms, sessions and the
+ * chat messages about it. Idempotent. Run with
+ * `npx convex run pages:splitVersions`.
+ */
+export const splitVersions = internalMutation({
+  args: {},
+  returns: v.array(v.string()),
+  handler: async (ctx) => {
+    const out: string[] = [];
+    for (const page of await ctx.db.query("pages").collect()) {
+      const variants = await variantsOf(ctx, page._id);
+      if (variants.length <= 1) continue;
+      const def = variants.find((x) => x._id === page.defaultVariantId) ?? variants.find((x) => !x.audienceId) ?? variants[0];
+      const build = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", page._id)).unique();
+      for (const vnt of variants) {
+        if (vnt._id === def._id) continue;
+        const audience = vnt.audienceId ? await ctx.db.get(vnt.audienceId) : null;
+        const name = audience?.name ?? vnt.name;
+        const now = Date.now();
+        const slug = await uniquePageSlug(ctx, page.brandId, slugify(`${page.slug}-${audience?.slug ?? name}`));
+        const id = await ctx.db.insert("pages", {
+          brandId: page.brandId,
+          slug,
+          title: `${page.title} for ${name}`,
+          brief: page.brief,
+          audienceIds: audience ? [audience._id] : [],
+          status: page.status,
+          defaultVariantId: vnt._id,
+          routing: DEFAULT_ROUTING,
+          ...(page.publishedAt ? { publishedAt: page.publishedAt } : {}),
+          createdAt: page.createdAt,
+          updatedAt: now,
+        });
+        await ctx.db.patch(vnt._id, { pageId: id, name: audience ? audienceLabel([audience]) : vnt.name });
+        const events = await ctx.db.query("pagesEvents").withIndex("by_variant_at", (q) => q.eq("variantId", vnt._id)).collect();
+        for (const e of events) await ctx.db.patch(e._id, { pageId: id });
+        const stats = await ctx.db.query("pagesStats").withIndex("by_page_day", (q) => q.eq("pageId", page._id)).collect();
+        for (const st of stats) if (st.variantId === vnt._id) await ctx.db.patch(st._id, { pageId: id });
+        const forms = await ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", page._id)).collect();
+        for (const f of forms) if (f.variantId === vnt._id) await ctx.db.patch(f._id, { pageId: id });
+        const sessions = await ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", page._id)).collect();
+        for (const se of sessions) if (se.variantId === vnt._id) await ctx.db.patch(se._id, { pageId: id });
+        // The chat turns about this version move with it (a merchant message is kept with the agent turn after it).
+        const mine = (build?.messages ?? []).filter((m) => m.variantId === vnt._id);
+        if (mine.length) await ctx.db.insert("pagesBuilds", { pageId: id, messages: mine, createdAt: now, updatedAt: now });
+        if (build && mine.length) await ctx.db.patch(build._id, { messages: build.messages.filter((m) => m.variantId !== vnt._id) });
+        out.push(`${page.slug} → ${slug}`);
       }
+      await ctx.db.patch(def._id, { name: "Everyone", audienceId: undefined });
+      await ctx.db.patch(page._id, { audienceIds: [], defaultVariantId: def._id, quiz: undefined, updatedAt: Date.now() });
     }
-
-    // 3. UTM rules.
-    if (args.utm && routing.utm?.length) {
-      const utm: Record<string, string> = {};
-      for (const [k, val] of Object.entries(args.utm)) utm[lower(k).replace(/^utm_/, "")] = lower(val);
-      for (const rule of routing.utm) {
-        const key = lower(rule.param).replace(/^utm_/, "");
-        if (utm[key] !== undefined && utm[key] === lower(rule.value)) {
-          const hit = resolve(byRef(rule.audienceId), "utm");
-          if (hit) return hit;
-        }
-      }
-    }
-
-    // 4. Quiz result, 5. cookie from a previous visit.
-    const byQuiz = resolve(byRef(args.quizAudienceId), "quiz");
-    if (byQuiz) return byQuiz;
-    const byCookie = resolve(byRef(args.cookieAudienceId), "cookie");
-    if (byCookie) return byCookie;
-
-    // 6. Geo: city first, then country, against this page's location audiences.
-    if (routing.geo && (args.city || args.country)) {
-      const locations = audiences.filter((a) => a.kind === "location" && a.sources.location);
-      const city = lower(args.city);
-      const country = lower(args.country);
-      const byCity = city ? locations.find((a) => lower(a.sources.location!.city) === city || lower(a.sources.location!.city).startsWith(city + ",")) : undefined;
-      const geoHit = resolve(byCity, "geo");
-      if (geoHit) return geoHit;
-      if (country) {
-        const byCountry = locations.find((a) => lower(a.sources.location!.country) === country);
-        const countryHit = resolve(byCountry, "geo");
-        if (countryHit) return countryHit;
-      }
-    }
-
-    // 7. Default.
-    const def = (page.defaultVariantId && variants.find((x) => x._id === page.defaultVariantId)) || variants.find((x) => !x.audienceId);
-    if (!def) return null;
-    return { variantId: def._id, audienceId: undefined, resolvedBy: "default" };
+    return out;
   },
 });

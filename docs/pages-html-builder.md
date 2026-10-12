@@ -37,7 +37,7 @@ Images can be attached to any message (paperclip, paste or drop); they upload to
 
 ## More tools
 
-`qloo_search` resolves any name to a Qloo entity; `qloo_insights` asks the taste graph directly (any entity type, tags, demographics; signals default to the audience's). `google_search` is ADK's search sub-agent (`GoogleSearchAgentTool`), the documented way to combine grounding with function tools; the agent is told to use it for facts, never design.
+`qloo_search` resolves any name to a Qloo entity; `qloo_insights` asks the taste graph directly (any entity type, tags, demographics; signals default to the audience's). `google_search` is ADK's search sub-agent (`GoogleSearchAgentTool`), the documented way to combine grounding with function tools; the agent is told to use it for facts, never design. `skills/qloo.md` teaches the agent the API through the two tools: what to ask for per entity type, the tag vocabularies, how to read affinity and demographics, the quirks we verified (age and gender only reshape, destinations take no location, affinity saturates, rate limits) and how to cite it.
 
 ## Still to do
 
