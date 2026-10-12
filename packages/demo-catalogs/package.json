@@ -10,7 +10,8 @@
     "./fold": "./src/fold/index.ts",
     "./slice-csv": "./src/slice-csv.ts",
     "./ridgeline": "./src/ridgeline/index.ts",
-    "./saltline": "./src/saltline/index.ts"
+    "./saltline": "./src/saltline/index.ts",
+    "./tagide": "./src/tagide/index.ts"
   },
   "scripts": {
     "validate": "node scripts/validate.ts",

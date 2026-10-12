@@ -1,0 +1,567 @@
+[
+  {
+    "id": "tg-tkt-01",
+    "slug": "three-day-pass",
+    "name": "Three-day pass",
+    "category": "Tickets",
+    "subcategory": "Festival passes",
+    "price": 195,
+    "description": "All three nights, all four stages, from the first set on Friday afternoon to the last record in the Armazém on Monday morning. Phase 1 price until 30 November or until it sells out, whichever comes first.",
+    "details": [
+      "Valid 11, 12 and 13 June 2027",
+      "Access to Tejo, Ponte, Armazém and Jardim stages",
+      "Re-entry allowed every day",
+      "Phase 2 price from 1 December: €225",
+      "Under 16s free with a ticket-holding adult"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage",
+        "after-midnight",
+        "roots-and-seated",
+        "latin-and-afro"
+      ],
+      "material": [
+        "wristband"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "three days",
+        "all stages"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pass",
+      "three days",
+      "phase 1",
+      "all stages"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-01-1",
+        "label": "Phase 1",
+        "inStock": true
+      },
+      {
+        "id": "tg-tkt-01-2",
+        "label": "Phase 2",
+        "inStock": false,
+        "priceDelta": 30
+      }
+    ],
+    "imageQuery": "festival wristband close up crowd",
+    "images": [
+      "/tagide/tg-tkt-01.jpg"
+    ],
+    "bestseller": true
+  },
+  {
+    "id": "tg-tkt-02",
+    "slug": "three-day-pass-camping",
+    "name": "Three-day pass + camping",
+    "category": "Tickets",
+    "subcategory": "Festival passes",
+    "price": 245,
+    "description": "The three-day pass plus a pitch at Campo Tejo, the campsite in the shade of the Vasco da Gama bridge, five minutes' walk from the gates. Open from Thursday noon to Monday noon, with showers, lockers, phone charging and a bakery van that gets there before you wake up.",
+    "details": [
+      "Pitch for one tent of up to 4 people (each camper needs their own pass)",
+      "Campsite open Thursday 10 June, 12:00 to Monday 14 June, 12:00",
+      "Hot showers, lockers, charging station, 24h security",
+      "Pre-pitched tent upgrade: €60 per tent",
+      "Quiet zone available on request"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight",
+        "main-stage"
+      ],
+      "material": [
+        "wristband",
+        "tent"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "lilac"
+      ],
+      "useCase": [
+        "three days",
+        "camping",
+        "under 25",
+        "budget travel"
+      ],
+      "priceTier": "mid"
+    },
+    "tags": [
+      "pass",
+      "camping",
+      "campo tejo",
+      "three days"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-02-1",
+        "label": "Bring your tent",
+        "inStock": true
+      },
+      {
+        "id": "tg-tkt-02-2",
+        "label": "Pre-pitched tent",
+        "inStock": true,
+        "priceDelta": 60
+      }
+    ],
+    "imageQuery": "festival campsite tents morning",
+    "images": [
+      "/tagide/tg-tkt-02.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-03",
+    "slug": "vip-three-day",
+    "name": "VIP three-day",
+    "category": "Tickets",
+    "subcategory": "Festival passes",
+    "price": 420,
+    "description": "Three days with the river terrace: a raised viewing deck at the Tejo stage, a separate entrance, proper bathrooms, a bar that never has a queue and a restaurant run by a Lisbon chef each night. For people who want the music without the mud.",
+    "details": [
+      "Raised terrace with a view of the Tejo stage and the bridge",
+      "Dedicated entrance and VIP shuttle from Oriente station",
+      "Chef's dinner each night (menu changes daily, booking required)",
+      "Cloakroom and lockers",
+      "Access to all four stages and the general arena"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage",
+        "roots-and-seated"
+      ],
+      "material": [
+        "wristband"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "three days",
+        "comfort",
+        "35 and over",
+        "groups"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "vip",
+      "terrace",
+      "three days",
+      "restaurant"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-03-1",
+        "label": "VIP",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "rooftop terrace bar sunset river people",
+    "images": [
+      "/tagide/tg-tkt-03.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-04",
+    "slug": "day-ticket-friday",
+    "name": "Day ticket, Friday",
+    "category": "Tickets",
+    "subcategory": "Day tickets",
+    "price": 85,
+    "description": "Friday 11 June only: Fred again.. closes the Tejo stage, Peggy Gou takes the Ponte, Bon Iver plays the Jardim at dusk and the Armazém runs until 6am. Gates open at 16:00.",
+    "details": [
+      "Valid Friday 11 June 2027, 16:00 to 06:00",
+      "All four stages",
+      "No re-entry after 02:00",
+      "Camping not included"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight",
+        "main-stage"
+      ],
+      "material": [
+        "wristband"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "one day",
+        "locals",
+        "friday"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "day ticket",
+      "friday",
+      "fred again",
+      "peggy gou"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-04-1",
+        "label": "Friday",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "festival crowd hands up night stage",
+    "images": [
+      "/tagide/tg-tkt-04.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-05",
+    "slug": "day-ticket-saturday",
+    "name": "Day ticket, Saturday",
+    "category": "Tickets",
+    "subcategory": "Day tickets",
+    "price": 85,
+    "description": "Saturday 12 June only: Rosalía headlines the Tejo stage, Kaytranada and Lana Del Rey before her, Khruangbin at the Jardim, Jamie xx and Four Tet in the Armazém. The busiest night of the three.",
+    "details": [
+      "Valid Saturday 12 June 2027, 14:00 to 06:00",
+      "All four stages",
+      "No re-entry after 02:00",
+      "Camping not included"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage",
+        "latin-and-afro"
+      ],
+      "material": [
+        "wristband"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "lilac"
+      ],
+      "useCase": [
+        "one day",
+        "locals",
+        "saturday"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "day ticket",
+      "saturday",
+      "rosalía",
+      "khruangbin"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-05-1",
+        "label": "Saturday",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "concert confetti crowd night",
+    "images": [
+      "/tagide/tg-tkt-05.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-06",
+    "slug": "day-ticket-sunday",
+    "name": "Day ticket, Sunday",
+    "category": "Tickets",
+    "subcategory": "Day tickets",
+    "price": 85,
+    "description": "Sunday 13 June only: Tyler, the Creator closes the festival, with Hozier and Chris Stapleton on the Tejo stage before him, FKA twigs on the Ponte, Big Thief and Carminho at the Jardim. The Armazém closes at 4am so you can make a Monday flight.",
+    "details": [
+      "Valid Sunday 13 June 2027, 14:00 to 04:00",
+      "All four stages",
+      "No re-entry after 02:00",
+      "Camping not included"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage",
+        "roots-and-seated"
+      ],
+      "material": [
+        "wristband"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "one day",
+        "locals",
+        "sunday"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "day ticket",
+      "sunday",
+      "tyler the creator",
+      "hozier"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-06-1",
+        "label": "Sunday",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "festival sunset crowd golden hour stage",
+    "images": [
+      "/tagide/tg-tkt-06.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-07",
+    "slug": "travel-package-madrid",
+    "name": "Travel package from Madrid",
+    "category": "Tickets",
+    "subcategory": "Travel packages",
+    "price": 389,
+    "description": "Three-day pass, return flights Madrid to Lisbon on Friday morning and Monday afternoon, and three nights in a partner hotel in Oriente or Santa Apolónia, both on the festival shuttle line. Booked through our travel partner, paid in instalments.",
+    "details": [
+      "Three-day pass included",
+      "Return flights MAD to LIS, Friday out, Monday back",
+      "Three nights, twin or double room, breakfast included",
+      "Festival shuttle from the hotel door",
+      "Price per person sharing"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage",
+        "latin-and-afro"
+      ],
+      "material": [
+        "wristband",
+        "flight",
+        "hotel"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "three days",
+        "flying in",
+        "madrid"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "travel package",
+      "madrid",
+      "flight",
+      "hotel"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-07-1",
+        "label": "Per person",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "airplane window wing sunset",
+    "images": [
+      "/tagide/tg-tkt-07.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-08",
+    "slug": "travel-package-london",
+    "name": "Travel package from London",
+    "category": "Tickets",
+    "subcategory": "Travel packages",
+    "price": 449,
+    "description": "Three-day pass, return flights from London (Gatwick or Stansted) on Friday morning and Monday afternoon, and three nights in a partner hotel on the festival shuttle line. The most-booked package last year.",
+    "details": [
+      "Three-day pass included",
+      "Return flights LGW or STN to LIS, Friday out, Monday back",
+      "Three nights, twin or double room, breakfast included",
+      "Festival shuttle from the hotel door",
+      "Price per person sharing"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight",
+        "main-stage"
+      ],
+      "material": [
+        "wristband",
+        "flight",
+        "hotel"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "lilac"
+      ],
+      "useCase": [
+        "three days",
+        "flying in",
+        "london"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "travel package",
+      "london",
+      "flight",
+      "hotel"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-08-1",
+        "label": "Per person",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "Lisbon tram street yellow",
+    "images": [
+      "/tagide/tg-tkt-08.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-09",
+    "slug": "travel-package-berlin",
+    "name": "Travel package from Berlin",
+    "category": "Tickets",
+    "subcategory": "Travel packages",
+    "price": 469,
+    "description": "Three-day pass, return flights Berlin to Lisbon on Thursday evening and Monday evening, so you get the Thursday warm-up in the Armazém and the Sunday night close, and four nights in a partner hotel on the shuttle line.",
+    "details": [
+      "Three-day pass included",
+      "Return flights BER to LIS, Thursday out, Monday back",
+      "Four nights, twin or double room, breakfast included",
+      "Thursday warm-up party in the Armazém included",
+      "Price per person sharing"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "wristband",
+        "flight",
+        "hotel"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "three days",
+        "flying in",
+        "berlin",
+        "after-midnight"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "travel package",
+      "berlin",
+      "flight",
+      "hotel",
+      "warm-up"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-09-1",
+        "label": "Per person",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "nightclub dj booth red light crowd",
+    "images": [
+      "/tagide/tg-tkt-09.jpg"
+    ]
+  },
+  {
+    "id": "tg-tkt-10",
+    "slug": "travel-package-sao-paulo",
+    "name": "Travel package from São Paulo",
+    "category": "Tickets",
+    "subcategory": "Travel packages",
+    "price": 1290,
+    "description": "Three-day pass, return flights São Paulo to Lisbon on Wednesday night and the following Tuesday, and six nights in a partner hotel in the city centre, with the festival shuttle and a Lisbon transit pass. Paid in up to ten instalments.",
+    "details": [
+      "Three-day pass included",
+      "Return flights GRU to LIS, Wednesday out, Tuesday back",
+      "Six nights, twin or double room, breakfast included",
+      "Lisbon transit pass for the week",
+      "Price per person sharing, payable in up to 10 instalments"
+    ],
+    "attributes": {
+      "style": [
+        "latin-and-afro",
+        "main-stage"
+      ],
+      "material": [
+        "wristband",
+        "flight",
+        "hotel"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "three days",
+        "flying in",
+        "são paulo",
+        "long haul"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "travel package",
+      "são paulo",
+      "brazil",
+      "flight",
+      "hotel"
+    ],
+    "variants": [
+      {
+        "id": "tg-tkt-10-1",
+        "label": "Per person",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "Lisbon viewpoint city rooftops river",
+    "images": [
+      "/tagide/tg-tkt-10.jpg"
+    ]
+  }
+]

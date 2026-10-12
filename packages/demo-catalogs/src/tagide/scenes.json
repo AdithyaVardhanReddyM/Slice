@@ -1,0 +1,922 @@
+[
+  {
+    "id": "tg-scn-01",
+    "slug": "scene-hero-1",
+    "name": "Hero collage 1",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A crowd at the Tejo stage at night, hands up, stage lights in orange.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-01-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "music festival crowd night stage lights hands",
+    "images": [
+      "/tagide/tg-scn-01.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-02",
+    "slug": "scene-hero-2",
+    "name": "Hero collage 2",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Two friends laughing in glitter at the festival, daylight.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-02-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "friends festival glitter laughing daylight",
+    "images": [
+      "/tagide/tg-scn-02.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-03",
+    "slug": "scene-hero-3",
+    "name": "Hero collage 3",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A singer on stage, backlit, confetti in the air.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-03-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "singer on stage backlight confetti concert",
+    "images": [
+      "/tagide/tg-scn-03.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-04",
+    "slug": "scene-hero-4",
+    "name": "Hero collage 4",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The festival site at dusk with the bridge behind it.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "hero"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-04-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "festival sunset crowd silhouettes stage",
+    "images": [
+      "/tagide/tg-scn-04.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-05",
+    "slug": "scene-headliner-1",
+    "name": "Headliner card, Friday",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A DJ behind the decks, crowd lit in orange, hands in the air.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "headliner card"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-05-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "dj performing crowd orange lights night",
+    "images": [
+      "/tagide/tg-scn-05.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-06",
+    "slug": "scene-headliner-2",
+    "name": "Headliner card, Saturday",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A singer in red light on a big stage, seen from the crowd.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "red"
+      ],
+      "useCase": [
+        "headliner card"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-06-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "female singer stage red light concert crowd",
+    "images": [
+      "/tagide/tg-scn-06.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-07",
+    "slug": "scene-headliner-3",
+    "name": "Headliner card, Sunday",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A rapper on stage with a microphone, smoke and purple light.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "purple"
+      ],
+      "useCase": [
+        "headliner card"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-07-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "rapper on stage microphone smoke purple light",
+    "images": [
+      "/tagide/tg-scn-07.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-08",
+    "slug": "scene-grounds",
+    "name": "Grounds card",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Aerial view of a festival site by the water at golden hour.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "grounds"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-08-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "aerial view music festival site tents stage",
+    "images": [
+      "/tagide/tg-scn-08.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-09",
+    "slug": "scene-lastyear-1",
+    "name": "Last year strip 1",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A guitarist mid-song, warm stage light.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "roots-and-seated"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "amber"
+      ],
+      "useCase": [
+        "last year"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-09-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "guitarist live concert warm stage light",
+    "images": [
+      "/tagide/tg-scn-09.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-10",
+    "slug": "scene-lastyear-2",
+    "name": "Last year strip 2",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Crowd under purple lasers at night.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "purple"
+      ],
+      "useCase": [
+        "last year"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-10-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "crowd purple lasers night party",
+    "images": [
+      "/tagide/tg-scn-10.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-11",
+    "slug": "scene-lastyear-3",
+    "name": "Last year strip 3",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A friend on someone's shoulders at a daytime set.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "blue"
+      ],
+      "useCase": [
+        "last year"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-11-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "girl on shoulders festival daytime crowd",
+    "images": [
+      "/tagide/tg-scn-11.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-12",
+    "slug": "scene-lastyear-4",
+    "name": "Last year strip 4",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Festival campsite at sunrise, tents and mist.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "pastel"
+      ],
+      "colors": [
+        "pink"
+      ],
+      "useCase": [
+        "last year"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-12-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "campsite tents sunrise mist festival",
+    "images": [
+      "/tagide/tg-scn-12.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-13",
+    "slug": "scene-lastyear-5",
+    "name": "Last year strip 5",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A string of festival flags against a blue sky.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "blue"
+      ],
+      "useCase": [
+        "last year"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-13-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "festival flags blue sky summer",
+    "images": [
+      "/tagide/tg-scn-13.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-14",
+    "slug": "scene-river",
+    "name": "Lisbon and the river",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "The Vasco da Gama bridge over the Tagus at sunset.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "roots-and-seated"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "travel"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-14-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "Vasco da Gama bridge Lisbon sunset",
+    "images": [
+      "/tagide/tg-scn-14.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-15",
+    "slug": "scene-stage-tejo",
+    "name": "Tejo stage",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A big outdoor main stage at night, wide shot.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "orange"
+      ],
+      "useCase": [
+        "stage"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-15-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "big outdoor main stage night wide crowd festival",
+    "images": [
+      "/tagide/tg-scn-15.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-16",
+    "slug": "scene-stage-ponte",
+    "name": "Ponte stage",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A second stage under a tent, colourful lights, afternoon.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "latin-and-afro"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "bold"
+      ],
+      "colors": [
+        "pink"
+      ],
+      "useCase": [
+        "stage"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-16-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "festival tent stage colourful lights dancing",
+    "images": [
+      "/tagide/tg-scn-16.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-17",
+    "slug": "scene-stage-armazem",
+    "name": "Armazém stage",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A warehouse club floor, strobe and haze, 3am.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "black"
+      ],
+      "colors": [
+        "black"
+      ],
+      "useCase": [
+        "stage"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-17-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "warehouse rave strobe haze crowd dark",
+    "images": [
+      "/tagide/tg-scn-17.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-18",
+    "slug": "scene-stage-jardim",
+    "name": "Jardim stage",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "People sitting on the grass watching a small stage at golden hour.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "roots-and-seated"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "green"
+      ],
+      "useCase": [
+        "stage"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-18-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "people sitting grass outdoor acoustic concert golden hour",
+    "images": [
+      "/tagide/tg-scn-18.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-19",
+    "slug": "scene-camping",
+    "name": "Campo Tejo",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Friends outside a tent at a festival campsite in the morning.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "after-midnight"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [
+        "yellow"
+      ],
+      "useCase": [
+        "camping"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-19-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "friends camping tent morning coffee festival",
+    "images": [
+      "/tagide/tg-scn-19.jpg"
+    ]
+  },
+  {
+    "id": "tg-scn-20",
+    "slug": "scene-shuttle",
+    "name": "Getting here",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Oriente station in Lisbon, white concrete arches.",
+    "details": [
+      "Editorial photograph used on the Tágide website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "main-stage"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "white"
+      ],
+      "colors": [
+        "white"
+      ],
+      "useCase": [
+        "travel"
+      ],
+      "priceTier": "budget"
+    },
+    "tags": [
+      "scene",
+      "not for sale"
+    ],
+    "variants": [
+      {
+        "id": "tg-scn-20-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "Oriente station Lisbon architecture",
+    "images": [
+      "/tagide/tg-scn-20.jpg"
+    ]
+  }
+]

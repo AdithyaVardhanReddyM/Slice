@@ -97,7 +97,7 @@ export interface Store {
   description: string;
   /** Square mark shown in the concierge, a path on the store site (e.g. "/fold/logo.svg"). */
   logo?: string;
-  currency: "USD";
+  currency: "USD" | "EUR";
   /** The store's style axis; every product's `attributes.style` draws from it. */
   styles: { id: string; label: string; description: string }[];
   /** Home stores. */

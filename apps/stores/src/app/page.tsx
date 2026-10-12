@@ -27,6 +27,12 @@ const stores = [
     kind: "Boutique hotels · Lisbon, Copenhagen, Barcelona",
     note: "Brand site for the Pages service: 3 hotels with 4 room tiers, 12 experiences, 4 offers and a plan-your-stay form.",
   },
+  {
+    href: "/tagide",
+    name: "Tágide Festival",
+    kind: "Music festival · Lisbon, 11–13 June 2027",
+    note: "Brand site for the Pages service: 57 real acts on 4 stages, passes, day tickets and travel packages per origin city. The lineup is what Qloo re-ranks per audience.",
+  },
 ];
 
 export default function Index() {

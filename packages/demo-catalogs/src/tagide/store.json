@@ -1,0 +1,42 @@
+{
+  "id": "tagide",
+  "name": "Tágide Festival",
+  "logo": "/tagide/logo.svg",
+  "tagline": "Three nights on the river. Parque Tejo, Lisboa, 11 to 13 June 2027.",
+  "description": "Tágide is a three-day music festival on the north bank of the Tagus in Lisbon, named after the river nymphs of Camões. Four stages, 57 acts, a campsite under the Vasco da Gama bridge and a city that stays up late. Most of the crowd flies in: Madrid, London, Berlin, Paris and São Paulo are the biggest markets after Lisbon itself. The sixth edition runs 11 to 13 June 2027.",
+  "currency": "EUR",
+  "styles": [
+    {
+      "id": "after-midnight",
+      "label": "After midnight",
+      "description": "The Armazém at 3am. Techno, house, breaks, the crowd that arrives late and leaves at sunrise."
+    },
+    {
+      "id": "main-stage",
+      "label": "Main stage",
+      "description": "The headliners, the sing-alongs, the confetti. Pop and hip-hop at the Tejo stage on the river."
+    },
+    {
+      "id": "roots-and-seated",
+      "label": "Roots and seated",
+      "description": "Songwriters, folk, Americana and fado at the Jardim stage. Blankets on the grass before 10pm."
+    },
+    {
+      "id": "latin-and-afro",
+      "label": "Latin and Afro",
+      "description": "Brazil, Spain, Nigeria, Angola and Lisbon's own: the acts that make the Ponte stage move."
+    }
+  ],
+  "nav": [
+    {
+      "label": "Tickets",
+      "category": "Tickets",
+      "subcategories": ["Festival passes", "Day tickets", "Travel packages"]
+    },
+    {
+      "label": "Scenes",
+      "category": "Scenes",
+      "subcategories": ["Scenes"]
+    }
+  ]
+}

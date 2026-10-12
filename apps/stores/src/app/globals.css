@@ -390,3 +390,139 @@ body:has(.saltline-root) {
     padding-inline: 3rem;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Tágide Festival: poster grotesk. Cream paper, black ink, a tagus-orange
+   primary and a lilac secondary, Archivo expanded black for display and
+   Manrope for everything else. Fonts load from Google Fonts via <link> in the
+   route layout. Tokens are prefixed `tg-`; base styles are scoped to
+   .tagide-root.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme static {
+  --color-tg-cream: #f4eee2;
+  --color-tg-cream-deep: #eae1cf;
+  --color-tg-ink: #121212;
+  --color-tg-ink-soft: #3a3a3a;
+  --color-tg-mute: #6b665e;
+  --color-tg-orange: #f04f1f;
+  --color-tg-orange-deep: #cf3d12;
+  --color-tg-lilac: #cdb9ee;
+  --color-tg-lilac-deep: #b59de3;
+  --color-tg-line: #d9d0bf;
+
+  --font-tg-display: "Archivo", "Arial Black", Impact, sans-serif;
+  --font-tg-sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+}
+
+body:has(.tagide-root) {
+  background: var(--color-tg-cream);
+}
+
+.tagide-root {
+  background: var(--color-tg-cream);
+  color: var(--color-tg-ink);
+  font-family: var(--font-tg-sans);
+  font-variation-settings: normal;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tagide-root ::selection {
+  background: var(--color-tg-orange);
+  color: #fff;
+}
+
+.tagide-root :focus-visible {
+  outline: 3px solid var(--color-tg-orange);
+  outline-offset: 2px;
+}
+
+@utility tg-display {
+  font-family: var(--font-tg-display);
+  font-weight: 900;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+}
+
+@utility tg-label {
+  font-family: var(--font-tg-sans);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility tg-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1440px;
+  padding-inline: 1rem;
+  @media (min-width: 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility tg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.9rem 1.6rem;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 150ms ease, background-color 150ms ease, color 150ms ease;
+  &:hover {
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Marquee bands: the text track is duplicated once in the markup. */
+@keyframes tg-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.tg-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: tg-marquee 28s linear infinite;
+}
+.tg-marquee-track[data-reverse] {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tg-marquee-track {
+    animation: none;
+  }
+}
+
+/* Entrance: resting state is visible; the keyframe only adds the rise. */
+@keyframes tg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.tg-rise {
+  animation: tg-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.tg-rise-2 {
+  animation-delay: 120ms;
+}
+.tg-rise-3 {
+  animation-delay: 240ms;
+}
