@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
-import type { Audience, Span } from "@/lib/pages/types";
+import { AGE_LABEL, AUDIENCE_KIND_LABEL, type Audience, type Span } from "@/lib/pages/types";
 import { Badge, spanMeta } from "@/components/console/primitives";
 import { Progress } from "@/components/ui/progress";
 import type { SpanKind } from "@/lib/mock/types";
@@ -239,11 +239,33 @@ export function EntityStrip({
   );
 }
 
+const words = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+/** The audience's source line, or nothing when it only restates the name ("Under 25" / "Under 25"). */
+export function audienceSubtitle(a: Audience) {
+  const detail = audienceSizeLabel(a);
+  const d = words(detail);
+  const n = words(a.name);
+  return d === n || n.startsWith(d.replace(/ (older|over)$/, "")) ? undefined : detail;
+}
+
+/**
+ * What an audience was built from, for subtitles: "Berlin, Germany",
+ * "Under 25, women", "Patagonia, The Bear", "86 customers". Real counts only;
+ * reach estimates are never shown.
+ */
 export function audienceSizeLabel(a: Audience) {
   if (a.kind === "lead") return "1 person";
   if (a.kind === "csv") return `${fmt.int(a.size)} customers`;
   if (a.kind === "default") return "Everyone";
-  return `≈ ${fmt.compact(a.size)} people, estimated`;
+  const { location, demographics, interests } = a.sources;
+  const who = [
+    demographics?.age ? AGE_LABEL[demographics.age] ?? demographics.age : "",
+    demographics?.gender === "female" ? "women" : demographics?.gender === "male" ? "men" : "",
+  ].filter(Boolean);
+  if (location) return [location.city, location.country, ...who].filter(Boolean).join(", ");
+  if (interests?.length) return interests.slice(0, 3).join(", ") + (interests.length > 3 ? ` +${interests.length - 3}` : "");
+  return who.join(", ") || (AUDIENCE_KIND_LABEL[a.kind] ?? a.kind);
 }
 
 export function relativeTime(ms: number, now = Date.now()) {

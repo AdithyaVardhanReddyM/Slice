@@ -17,10 +17,13 @@ import { Label } from "@/components/ui/label";
 
 /**
  * Confirmation for irreversible actions. With `confirmText`, the merchant has
- * to type it before the action unlocks.
+ * to type it before the action unlocks. Pass `trigger`, or drive it with
+ * `open` / `onOpenChange` (e.g. from a menu item).
  */
 export function ConfirmDialog({
   trigger,
+  open: openProp,
+  onOpenChange,
   title,
   description,
   actionLabel,
@@ -28,7 +31,9 @@ export function ConfirmDialog({
   destructive = true,
   onConfirm,
 }: {
-  trigger: ReactElement;
+  trigger?: ReactElement;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: ReactNode;
   description: ReactNode;
   actionLabel: string;
@@ -37,7 +42,12 @@ export function ConfirmDialog({
   onConfirm: () => void;
 }) {
   const inputId = useId();
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = openProp ?? innerOpen;
+  const setOpen = (o: boolean) => {
+    if (openProp === undefined) setInnerOpen(o);
+    onOpenChange?.(o);
+  };
   const [typed, setTyped] = useState("");
   const locked = Boolean(confirmText) && typed !== confirmText;
 
@@ -49,7 +59,7 @@ export function ConfirmDialog({
         if (!o) setTyped("");
       }}
     >
-      <AlertDialogTrigger render={trigger} />
+      {trigger && <AlertDialogTrigger render={trigger} />}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

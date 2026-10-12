@@ -311,6 +311,8 @@ export default defineSchema({
       demographics: v.optional(v.object({ age: v.optional(v.string()), gender: v.optional(v.string()) })),
       /** Free text or names the merchant typed. */
       interests: v.optional(v.array(v.string())),
+      /** Qloo entities the merchant picked from suggestions; compiled as-is, no name search. */
+      interestEntities: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) }))),
       uploadId: v.optional(v.id("pagesUploads")),
       cluster: v.optional(v.number()),
       memberId: v.optional(v.id("pagesMembers")),

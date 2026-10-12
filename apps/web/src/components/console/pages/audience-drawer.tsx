@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Link2, RefreshCw, Trash2, Users } from "lucide-react";
-import { useState } from "react";
+import { Hourglass, Link2, MapPinOff, PenLine, RefreshCw, Trash2, Users, type LucideIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { fmt } from "@/lib/format";
@@ -19,8 +19,9 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
 import { useCompileAudience } from "./new-audience-sheet";
-import { AudienceBriefView, BrandsList, CultureLists, DemographicsBars, GeoList, TagsByGroup } from "./profile-view";
-import { EntityStrip, Hint, ProgressLine, SectionLabel, StatusBadge, TraceList, audienceSizeLabel } from "./shared";
+import { AudienceBriefView, BrandsList, CultureLists, DemographicsBars, GeoList, TagTable } from "./profile-view";
+import { CityMap } from "./city-picker";
+import { EntityStrip, Hint, ProgressLine, StatusBadge, TraceList, audienceSizeLabel, audienceSubtitle } from "./shared";
 import { KIND_ICON, TasteCover, coverTiles } from "./taste-cover";
 
 /* Members (CSV clusters) ----------------------------------------------------------- */
@@ -154,44 +155,47 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
     }
   }
 
+  const geoCity = profile?.geo.find((g) => g.lat !== undefined && g.lon !== undefined);
+  const signals = profile?.entities ?? [];
+
   return (
     <Sheet open={!!audience} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-3xl">
+      <SheetContent className="w-full gap-0 overflow-y-auto bg-background data-[side=right]:sm:max-w-3xl [&>[data-slot=sheet-close]]:z-20 [&>[data-slot=sheet-close]]:rounded-full [&>[data-slot=sheet-close]]:bg-black/55 [&>[data-slot=sheet-close]]:text-white [&>[data-slot=sheet-close]]:backdrop-blur-sm [&>[data-slot=sheet-close]]:hover:bg-black/70">
         {audience && (
           <>
             <TasteCover
               tiles={coverTiles(profile)}
               icon={KIND_ICON[audience.kind] ?? Users}
               kindLabel={AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}
+              title={audience.name}
+              subtitle={audienceSubtitle(audience)}
+              corner={audience.status !== "ready" ? <StatusBadge status={audience.status} /> : undefined}
               className="aspect-[21/8] shrink-0"
             />
-            <SheetHeader className="p-6 pb-4">
-              <div className="flex flex-wrap items-center gap-2 pr-8">
-                <SheetTitle>{audience.name}</SheetTitle>
-                <Badge variant="outline">{AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}</Badge>
-                <StatusBadge status={audience.status} />
-              </div>
-              <SheetDescription>
-                {audienceSizeLabel(audience)}
-                {audience.sources.location ? ` · ${audience.sources.location.city}` : ""}
-                {audience.sources.interests?.length ? ` · ${audience.sources.interests.slice(0, 4).join(", ")}` : ""}
-              </SheetDescription>
+            <SheetHeader className="sr-only">
+              <SheetTitle>{audience.name}</SheetTitle>
+              <SheetDescription>{audienceSizeLabel(audience)}</SheetDescription>
             </SheetHeader>
-            <div className="space-y-5 px-6 pb-8">
-              {brief?.summary && <p className="text-sm leading-relaxed">{brief.summary}</p>}
+
+            <div className="space-y-4 border-b bg-background px-6 py-5">
+              {brief?.summary ? (
+                <p className="text-[15px] leading-relaxed">{brief.summary}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">No brief yet. Write one to get a summary of who these people are.</p>
+              )}
               {audience.status !== "ready" && <ProgressLine progress={audience.progress} status={audience.status} error={audience.error} />}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => void run(audience._id)} disabled={audience.status === "compiling"}>
                   <RefreshCw data-icon="inline-start" /> Recompile
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => void writeBrief(audience._id)} disabled={briefBusy || !profile}>
-                  {briefBusy ? <Spinner data-icon="inline-start" /> : null}
+                  {briefBusy ? <Spinner data-icon="inline-start" /> : <PenLine data-icon="inline-start" />}
                   {brief ? "Rewrite brief" : "Write brief"}
                 </Button>
                 {audience.kind !== "default" && (
                   <ConfirmDialog
                     trigger={
-                      <Button variant="ghost" size="sm" className="text-destructive">
+                      <Button variant="ghost" size="sm" className="ml-auto text-destructive hover:text-destructive">
                         <Trash2 data-icon="inline-start" /> Delete
                       </Button>
                     }
@@ -205,65 +209,113 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
                   />
                 )}
               </div>
+            </div>
 
-              <Tabs defaultValue="profile">
-                <TabList className="mb-4">
-                  <Tab value="profile">Profile</Tab>
-                  <Tab value="culture">Culture</Tab>
-                  <Tab value="geo">Geo</Tab>
-                  <Tab value="brief">Brief</Tab>
-                  <Tab value="trace">Trace</Tab>
-                  {audience.kind === "csv" && <Tab value="members">Members</Tab>}
-                </TabList>
-                <TabPanel value="profile" className="space-y-6">
+            <Tabs defaultValue="profile" className="gap-0">
+              <TabList className="sticky top-0 z-10 bg-background px-6">
+                <Tab value="profile">Profile</Tab>
+                <Tab value="culture">Culture</Tab>
+                <Tab value="geo">Geo</Tab>
+                <Tab value="brief">Brief</Tab>
+                <Tab value="trace">Trace</Tab>
+                {audience.kind === "csv" && <Tab value="members">Members</Tab>}
+              </TabList>
+              <div className="min-h-[60svh] bg-neutral-50 px-6 py-6">
+                <TabPanel value="profile" className="space-y-5">
                   {profile ? (
                     <>
-                      <section className="space-y-2">
-                        <SectionLabel>Taste tags</SectionLabel>
-                        <TagsByGroup tags={profile.tags} />
-                      </section>
-                      <div className="grid gap-6 lg:grid-cols-2">
-                        <section className="space-y-2">
-                          <SectionLabel>Brands they trust</SectionLabel>
+                      <Panel title="Taste tags" description={`${fmt.int(profile.tags.length)} tags from Qloo, strongest first in each group`}>
+                        <TagTable tags={profile.tags} />
+                      </Panel>
+                      <div className="grid items-start gap-5 lg:grid-cols-2">
+                        <Panel title="Brands they trust" description="Affinity out of 100">
                           <BrandsList brands={profile.brands} max={10} />
-                        </section>
-                        <section className="space-y-2">
-                          <SectionLabel>Demographics</SectionLabel>
-                          <DemographicsBars demographics={profile.demographics} />
-                          <Hint>Skew against the Qloo baseline. Right of centre means over-indexed.</Hint>
-                        </section>
+                        </Panel>
+                        <Panel title="Demographics" description="Skew against the Qloo baseline. Right of centre means over-indexed.">
+                          <div className="p-4">
+                            <DemographicsBars demographics={profile.demographics} />
+                          </div>
+                        </Panel>
                       </div>
-                      <section className="space-y-2">
-                        <SectionLabel>Signals ({fmt.int(profile.entities.length)})</SectionLabel>
-                        <EntityStrip items={profile.entities.map((e) => ({ ...e, subtitle: e.count ? `${e.count} members` : e.type.replace("urn:entity:", "") }))} max={24} />
-                      </section>
+                      <Panel title="Signals" description={`${fmt.int(signals.length)} entities the profile was built from`}>
+                        <div className="p-4">
+                          <EntityStrip
+                            items={signals.map((e) => ({ ...e, subtitle: e.count ? `${e.count} members` : e.type.replace("urn:entity:", "") }))}
+                            max={24}
+                          />
+                        </div>
+                      </Panel>
                     </>
                   ) : (
-                    <Hint>The profile appears once compilation finishes.</Hint>
+                    <EmptyPanel icon={Hourglass} title="Not compiled yet">The profile appears once compilation finishes.</EmptyPanel>
                   )}
                 </TabPanel>
                 <TabPanel value="culture">
                   <CultureLists culture={profile?.culture} max={8} />
                 </TabPanel>
-                <TabPanel value="geo">
-                  <GeoList geo={profile?.geo} />
+                <TabPanel value="geo" className="space-y-5">
+                  {geoCity && (
+                    <CityMap
+                      city={{ name: geoCity.name, country: audience.sources.location?.country ?? "", countryCode: "", lat: geoCity.lat!, lon: geoCity.lon! }}
+                    />
+                  )}
+                  {profile?.geo.length ? (
+                    <Panel title="Where they are" description={`${fmt.int(profile.geo.length)} places`}>
+                      <GeoList geo={profile.geo} />
+                    </Panel>
+                  ) : (
+                    <EmptyPanel icon={MapPinOff} title="Not tied to a place">
+                      {audience.kind === "interests" || audience.kind === "demographic"
+                        ? "This audience is defined by taste, not location, so it reaches people wherever they are. City audiences and customer clusters show where their people live."
+                        : "No location data yet. It appears once the audience compiles."}
+                    </EmptyPanel>
+                  )}
                 </TabPanel>
                 <TabPanel value="brief">
                   <AudienceBriefView brief={brief} />
                 </TabPanel>
                 <TabPanel value="trace">
-                  <TraceList spans={audience.trace} />
+                  <Panel title="Trace" description="Every call made while compiling this audience">
+                    <div className="p-4">
+                      <TraceList spans={audience.trace} />
+                    </div>
+                  </Panel>
                 </TabPanel>
                 {audience.kind === "csv" && (
                   <TabPanel value="members">
                     <MembersTable audience={audience} />
                   </TabPanel>
                 )}
-              </Tabs>
-            </div>
+              </div>
+            </Tabs>
           </>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** A titled white panel on the drawer's tinted background. */
+function Panel({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+      <header className="border-b px-4 py-3">
+        <h3 className="text-sm font-semibold">{title}</h3>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function EmptyPanel({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col items-center rounded-xl border border-dashed bg-card px-6 py-12 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+        <Icon className="size-4 text-muted-foreground" />
+      </span>
+      <p className="mt-3 text-sm font-medium">{title}</p>
+      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{children}</p>
+    </div>
   );
 }

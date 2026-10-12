@@ -2,7 +2,7 @@
 
 import { useAction, useMutation } from "convex/react";
 import { ArrowLeft, Check, ChevronRight, FileSpreadsheet, Heart, MapPin, Plug, Upload as UploadIcon, Users, type LucideIcon } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
@@ -11,21 +11,33 @@ import { parseCsv, suggestMapping, type CsvMapping, type ParsedCsv } from "@/lib
 import { postJson } from "@/lib/pages/stream";
 import { AGE_LABEL } from "@/lib/pages/types";
 import { Field, Input, Select } from "@/components/console/form";
-import { FieldGroup, Spinner, TokenInput } from "@/components/console/setup/atoms";
+import { FieldGroup, Spinner } from "@/components/console/setup/atoms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
+import { CityAutocomplete, CityMap, searchCities, type City } from "./city-picker";
+import { EditorField } from "./editor-layout";
+import { InterestPicker, type PickedEntity } from "./interest-picker";
+import { CRMS, type CrmId } from "./crm-logos";
 
 const CHUNK = 200;
 
-/** Compile, then ask the agent for a brief. Errors from the brief are swallowed: the profile is what matters. */
+/**
+ * Compile, then ask the agent for a brief. A failed compile is recorded on the
+ * audience itself (status "failed" with the reason, shown on its card), so it
+ * is not rethrown here; brief errors are swallowed too.
+ */
 export function useCompileAudience() {
   const compile = useAction(api.pagesAudiences.compile);
   return useCallback(
     async (id: Id<"pagesAudiences">) => {
-      await compile({ id });
+      try {
+        await compile({ id });
+      } catch {
+        return;
+      }
       postJson("/api/pages/audience-brief", { audience_id: id }).catch(() => undefined);
     },
     [compile],
@@ -88,6 +100,22 @@ function LocationTab({ onDone }: { onDone: () => void }) {
   const run = useCompileAudience();
   const [city, setCity] = useState(cityOf(brand.brief?.locations?.[0]));
   const [country, setCountry] = useState("");
+  const [picked, setPicked] = useState<City | null>(null);
+
+  // The city prefilled from the brand's own locations gets its pin and country too.
+  const prefilled = useRef(city);
+  useEffect(() => {
+    if (!prefilled.current) return;
+    const ctrl = new AbortController();
+    searchCities(prefilled.current, ctrl.signal)
+      .then(([first]) => {
+        if (!first) return;
+        setPicked(first);
+        setCountry((c) => c || first.country);
+      })
+      .catch(() => undefined);
+    return () => ctrl.abort();
+  }, []);
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [name, setName] = useState("");
@@ -118,13 +146,28 @@ function LocationTab({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col gap-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="City">
-          <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Austin" autoFocus />
-        </Field>
-        <Field label="Country" optional>
-          <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="United States" />
-        </Field>
+      <div className="space-y-3">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <EditorField label="City">
+            <CityAutocomplete
+              value={city}
+              autoFocus
+              onChange={(text) => {
+                setCity(text);
+                setPicked(null);
+              }}
+              onSelect={(c) => {
+                setCity(c.name);
+                setCountry(c.country);
+                setPicked(c);
+              }}
+            />
+          </EditorField>
+          <Field label="Country" optional>
+            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Filled in from the city" />
+          </Field>
+        </div>
+        <CityMap city={picked} />
       </div>
       <DemographicFields age={age} gender={gender} onAge={setAge} onGender={setGender} />
       <Field label="Name" optional hint={`Shown on the audience card. Defaults to “${autoName || "the city"}”.`}>
@@ -183,17 +226,23 @@ function InterestsTab({ onDone }: { onDone: () => void }) {
   const brand = useBrand();
   const create = useMutation(api.pagesAudiences.create);
   const run = useCompileAudience();
-  const [interests, setInterests] = useState<string[]>([]);
+  const [picked, setPicked] = useState<PickedEntity[]>([]);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const autoName = interests.slice(0, 3).join(", ") + (interests.length > 3 ? ` +${interests.length - 3}` : "");
+  const names = picked.map((p) => p.name);
+  const autoName = names.slice(0, 3).join(", ") + (names.length > 3 ? ` +${names.length - 3}` : "");
 
   async function submit() {
     setBusy(true);
     setError(null);
     try {
-      const { id } = await create({ brandId: brand._id, name: name.trim() || autoName, kind: "interests", sources: { interests } });
+      const { id } = await create({
+        brandId: brand._id,
+        name: name.trim() || autoName,
+        kind: "interests",
+        sources: { interests: names, interestEntities: picked },
+      });
       onDone();
       void run(id);
     } catch (err) {
@@ -204,13 +253,17 @@ function InterestsTab({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex flex-1 flex-col gap-5">
-      <FieldGroup label="Interests" aside={`${interests.length} added`} hint="Press Enter after each name. Add at least two.">
-        <TokenInput values={interests} onChange={setInterests} placeholder="Khruangbin, Wes Anderson, Aesop…" />
+      <FieldGroup
+        label="Interests"
+        aside={`${picked.length} added`}
+        hint="Pick from Qloo's suggestions. A single well-known brand is enough: Qloo reads its customers' taste."
+      >
+        <InterestPicker value={picked} onChange={setPicked} />
       </FieldGroup>
       <Field label="Name" optional>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName || "People who love…"} />
       </Field>
-      <Footer busy={busy} disabled={interests.length < 2} label="Create audience" error={error} onSubmit={submit} />
+      <Footer busy={busy} disabled={picked.length < 1} label="Create audience" error={error} onSubmit={submit} />
     </div>
   );
 }
@@ -416,28 +469,51 @@ function CsvTab({ onDone }: { onDone: () => void }) {
 
 /* CRM ------------------------------------------------------------------------- */
 
-const CRMS = [
-  { name: "HubSpot", body: "Contacts with lists and properties." },
-  { name: "Salesforce", body: "Leads and contacts from a report." },
-  { name: "Klaviyo", body: "Profiles and segments." },
-  { name: "Shopify", body: "Customers with order history." },
-];
-
-function CrmTab() {
+function CrmConnectButton({ crm, onClick }: { crm: (typeof CRMS)[number]; onClick?: () => void }) {
+  const Logo = crm.logo;
   return (
-    <div className="flex flex-1 flex-col gap-5">
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col items-center gap-3 rounded-xl border bg-card px-4 py-6 text-center transition-colors outline-none hover:border-primary/50 hover:bg-primary/5 focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      <Logo className="size-10 transition-transform group-hover:scale-110" />
+      <span className="space-y-0.5">
+        <span className="block text-sm font-medium">{crm.name}</span>
+        <span className="block text-xs text-muted-foreground">{crm.body}</span>
+      </span>
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+        Connect <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </button>
+  );
+}
+
+function CrmTab({ crm, onCrm }: { crm: CrmId | null; onCrm: (id: CrmId) => void }) {
+  const chosen = CRMS.find((c) => c.id === crm);
+  if (!chosen)
+    return (
       <div className="grid gap-3 sm:grid-cols-2">
         {CRMS.map((c) => (
-          <div key={c.name} className="flex items-start justify-between gap-3 rounded-lg border p-4 opacity-70" aria-disabled>
-            <div>
-              <div className="text-sm font-medium">{c.name}</div>
-              <p className="text-xs text-muted-foreground">{c.body}</p>
-            </div>
-            <Badge variant="outline">Soon</Badge>
-          </div>
+          <CrmConnectButton key={c.id} crm={c} onClick={() => onCrm(c.id)} />
         ))}
       </div>
-      <p className="text-sm text-muted-foreground">Until then, export a customer list from your CRM and upload it as a CSV.</p>
+    );
+  const Logo = chosen.logo;
+  return (
+    <div className="flex flex-1 flex-col gap-5">
+      <div className="flex flex-col items-center gap-4 rounded-xl border px-6 py-10 text-center">
+        <Logo className="size-14" />
+        <div className="space-y-1">
+          <h3 className="font-semibold">Connect {chosen.name}</h3>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Slice syncs {chosen.body.toLowerCase()}, resolves what each customer likes with Qloo and clusters them into audiences that stay up to date.
+          </p>
+        </div>
+        <Button disabled>Connect {chosen.name}</Button>
+        <Badge variant="outline">Coming soon</Badge>
+      </div>
+      <p className="text-sm text-muted-foreground">Until then, export a customer list from {chosen.name} and upload it under Your customers.</p>
     </div>
   );
 }
@@ -483,7 +559,7 @@ export const AUDIENCE_SOURCES: { kind: AudienceSourceKind; icon: LucideIcon; tit
     body: "Upload a customer CSV. Qloo resolves what each person likes, then the rows are clustered into audiences.",
     example: "Your top customers, clustered",
   },
-  { kind: "crm", icon: Plug, title: "Connect a CRM", body: "Sync customers from HubSpot, Salesforce, Klaviyo or Shopify.", soon: true },
+  { kind: "crm", icon: Plug, title: "Connect a CRM", body: "Sync customers from HubSpot or Salesforce and keep the audiences up to date.", soon: true },
 ];
 
 export function SourceIcon({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
@@ -494,29 +570,39 @@ export function SourceIcon({ icon: Icon, className }: { icon: LucideIcon; classN
   );
 }
 
-function SourcePicker({ onPick }: { onPick: (k: AudienceSourceKind) => void }) {
+function SourcePicker({ onPick, onCrm }: { onPick: (k: AudienceSourceKind) => void; onCrm: (id: CrmId) => void }) {
   return (
-    <ul className="space-y-2">
-      {AUDIENCE_SOURCES.map((src) => (
-        <li key={src.kind}>
-          <button
-            type="button"
-            onClick={() => onPick(src.kind)}
-            className="group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <SourceIcon icon={src.icon} />
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center gap-2 text-sm font-medium">
-                {src.title}
-                {src.soon && <Badge variant="outline">Soon</Badge>}
+    <div className="space-y-8">
+      <ul className="space-y-2">
+        {AUDIENCE_SOURCES.filter((src) => src.kind !== "crm").map((src) => (
+          <li key={src.kind}>
+            <button
+              type="button"
+              onClick={() => onPick(src.kind)}
+              className="group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <SourceIcon icon={src.icon} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{src.title}</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">{src.body}</span>
               </span>
-              <span className="mt-0.5 block text-sm text-muted-foreground">{src.body}</span>
-            </span>
-            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-          </button>
-        </li>
-      ))}
-    </ul>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium">Or connect a CRM</h3>
+          <Badge variant="outline">Soon</Badge>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {CRMS.map((c) => (
+            <CrmConnectButton key={c.id} crm={c} onClick={() => onCrm(c.id)} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -537,13 +623,26 @@ export function NewAudienceSheet({
 }) {
   const close = () => onOpenChange(false);
   const source = AUDIENCE_SOURCES.find((s) => s.kind === kind) ?? null;
+  const [crm, setCrm] = useState<CrmId | null>(null);
+  const pickCrm = (id: CrmId) => {
+    setCrm(id);
+    onKindChange("crm");
+  };
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 overflow-x-hidden overflow-y-auto data-[side=right]:sm:max-w-xl">
         <SheetHeader className="gap-3 border-b p-6">
           {source ? (
             <>
-              <Button variant="ghost" size="sm" className="-ml-2 w-fit text-muted-foreground" onClick={() => onKindChange(null)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="-ml-2 w-fit text-muted-foreground"
+                onClick={() => {
+                  setCrm(null);
+                  onKindChange(null);
+                }}
+              >
                 <ArrowLeft data-icon="inline-start" /> All sources
               </Button>
               <div className="flex items-start gap-3">
@@ -562,12 +661,12 @@ export function NewAudienceSheet({
           )}
         </SheetHeader>
         <div className="flex flex-1 flex-col px-6 pt-6 pb-6 has-[.sticky]:pb-0">
-          {!source && <SourcePicker onPick={onKindChange} />}
+          {!source && <SourcePicker onPick={onKindChange} onCrm={pickCrm} />}
           {source?.kind === "location" && <LocationTab onDone={close} />}
           {source?.kind === "demographic" && <DemographicTab onDone={close} />}
           {source?.kind === "interests" && <InterestsTab onDone={close} />}
           {source?.kind === "csv" && <CsvTab onDone={close} />}
-          {source?.kind === "crm" && <CrmTab />}
+          {source?.kind === "crm" && <CrmTab crm={crm} onCrm={setCrm} />}
         </div>
       </SheetContent>
     </Sheet>

@@ -26,6 +26,7 @@ import {
   type EntityRef,
   type Span,
 } from "./qlooApi";
+import { cachedQlooGet } from "./qloo";
 import { spanValidator } from "./schema";
 import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity } from "./pagesTypes";
 import {
@@ -49,6 +50,7 @@ export const sourcesValidator = v.object({
   location: v.optional(v.object({ city: v.string(), country: v.optional(v.string()) })),
   demographics: v.optional(v.object({ age: v.optional(v.string()), gender: v.optional(v.string()) })),
   interests: v.optional(v.array(v.string())),
+  interestEntities: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) }))),
   uploadId: v.optional(v.id("pagesUploads")),
   cluster: v.optional(v.number()),
   memberId: v.optional(v.id("pagesMembers")),
@@ -327,6 +329,25 @@ async function compileLocation(ctx: ActionCtx, trace: Span[], audience: Doc<"pag
 }
 
 /**
+ * The city in a street address: "Parque Tejo, Passeio do Tejo, 1990-096 Lisboa,
+ * Portugal" → "Lisboa"; "2211 NE Alberta St, Portland, OR 97211" → "Portland";
+ * "Austin, TX" → "Austin". Postcodes and state codes are dropped.
+ */
+function cityOfAddress(location: string): string {
+  const POSTCODE = /\b\d[\d-]{2,}\b/g;
+  const parts = location.split(",").map((p) => p.trim()).filter(Boolean);
+  const clean = (p: string) => p.replace(POSTCODE, "").replace(/\s+[A-Z]{2}$/, "").trim();
+  // A later part holding a postcode and a name is the city ("13007 Marseille",
+  // "1990-096 Lisboa"); the first part is skipped, US street numbers live there.
+  const withPostcode = parts.slice(1).reverse().find((p) => /\b\d[\d-]{2,}\b/.test(p) && /\p{L}{3,}/u.test(clean(p)));
+  if (withPostcode) return clean(withPostcode);
+  const pick = parts.length >= 3 ? parts[parts.length - 2] : (parts[0] ?? "");
+  const city = clean(pick);
+  // "Portland, OR 97211, USA" picks "OR 97211"; fall back to the first part.
+  return /^[A-Z]{2}$/.test(city) || !city ? (parts[0] ?? "") : city;
+}
+
+/**
  * Demographic audiences need a base signal: Qloo returns the plain popularity
  * list when `signal.demographics.*` is the only signal (verified 2026-10-11:
  * identical results for 24_and_younger and 55_and_older alone; the same
@@ -338,22 +359,34 @@ async function compileDemographic(ctx: ActionCtx, trace: Span[], audience: Doc<"
   const qloo = brand.qloo;
   const anchorIds = qloo?.entityId ? [qloo.entityId] : (qloo?.proxies ?? []).map((p) => p.id);
   const brief = brand.brief as BrandBrief | undefined;
-  const city = brief?.locations?.[0]?.split(",")[0]?.trim();
-  const label = anchorIds.length ? `people around brands like ${brand.name}` : city ? `people in ${city}` : "people in New York City";
+  // Without a brand entity, anchor on the brand's own cities: the first one
+  // Qloo knows wins, New York City last.
+  const candidates = [...new Set([...(brief?.locations ?? []).map(cityOfAddress).filter(Boolean), "New York City"])];
+  let city = candidates[0];
+  const fetchKind = async (kind: EntityKind, take: number) =>
+    anchorIds.length
+      ? entitiesFromSignals(ctx, trace, kind, anchorIds, undefined, take, extra)
+      : entitiesForCity(ctx, trace, kind, city, take, extra);
+  await progress(0.05, anchorIds.length ? `Finding what people around brands like ${brand.name} listen to` : "Finding a city to anchor the read");
+  let artists: Awaited<ReturnType<typeof fetchKind>> = [];
+  if (anchorIds.length) {
+    artists = await soft(trace, "Artists", () => fetchKind("artist", 8), []);
+  } else {
+    for (const c of candidates) {
+      city = c;
+      artists = await soft(trace, `Artists in ${c}`, () => fetchKind("artist", 8), []);
+      if (artists.length) break;
+    }
+  }
+  const label = anchorIds.length ? `people around brands like ${brand.name}` : `people in ${city}`;
   trace.push({
     kind: "slice",
     name: "Anchor the demographic read",
     ms: 0,
     result: anchorIds.length
       ? `Demographic signal applied to ${anchorIds.length} brand entit${anchorIds.length === 1 ? "y" : "ies"} (Qloo ignores a demographic signal on its own)`
-      : `No Qloo brand entity; demographic signal applied to ${city ?? "New York City"}`,
+      : `No Qloo brand entity; demographic signal applied to ${city}`,
   });
-  const fetchKind = async (kind: EntityKind, take: number) =>
-    anchorIds.length
-      ? entitiesFromSignals(ctx, trace, kind, anchorIds, undefined, take, extra)
-      : entitiesForCity(ctx, trace, kind, city ?? "New York City", take, extra);
-  await progress(0.05, `Finding what ${label} listen to`);
-  const artists = await soft(trace, "Artists", () => fetchKind("artist", 8), []);
   await progress(0.15, `Finding what ${label} watch`);
   const movies = await soft(trace, "Movies", () => fetchKind("movie", 6), []);
   const tv = await soft(trace, "Shows", () => fetchKind("tv_show", 4), []);
@@ -368,7 +401,7 @@ async function compileDemographic(ctx: ActionCtx, trace: Span[], audience: Doc<"
     books: culturePick(books, "demographic", 4),
   };
   const entities = dedupeById([...culture.artists, ...culture.films, ...culture.books, ...culture.places]);
-  if (entities.length === 0) throw new Error("Qloo returned nothing for this demographic.");
+  if (entities.length === 0) throw new Error(`Qloo returned nothing for this demographic around ${anchorIds.length ? brand.name : city}.`);
   const signalIds = interleave([artists, movies, tv, books, places], 12).map((e) => e.id);
   const enriched = await enrich(ctx, trace, signalIds, undefined, extra, progress, 0.45);
   const d = audience.sources.demographics;
@@ -408,16 +441,28 @@ async function cultureFrom(
 }
 
 async function compileInterests(ctx: ActionCtx, trace: Span[], audience: Doc<"pagesAudiences">, progress: Progress) {
-  const names = (audience.sources.interests ?? []).map((s) => s.trim()).filter(Boolean);
-  if (!names.length) throw new Error("No interests to compile");
-  await progress(0.05, `Finding ${names.length} names in Qloo`);
-  const found = await resolveNames(ctx, trace, names, undefined, "interest", {
-    strict: false,
-    label: "Find the interests in Qloo",
-    onProgress: (done, total) => progress(0.05 + 0.25 * (done / total), `Resolved ${done} of ${total}`),
-  });
-  const entities = dedupeById([...found.values()].map((e) => toProfileEntity(e, "interest")));
-  if (entities.length === 0) throw new Error("None of the interests matched a Qloo entity.");
+  // Entities picked from suggestions are used as-is; only free-typed names are searched.
+  const picked = audience.sources.interestEntities ?? [];
+  const pickedNames = new Set(picked.map((e) => e.name.toLowerCase()));
+  const names = (audience.sources.interests ?? []).map((s) => s.trim()).filter((s) => s && !pickedNames.has(s.toLowerCase()));
+  if (!names.length && !picked.length) throw new Error("No interests to compile");
+  if (picked.length) {
+    trace.push({ kind: "slice", name: "Use the picked Qloo entities", ms: 0, result: picked.map((e) => `${e.name} (${e.type.replace("urn:entity:", "")})`).join(", ") });
+  }
+  let found = new Map<string, EntityRef>();
+  if (names.length) {
+    await progress(0.05, `Finding ${names.length} names in Qloo`);
+    found = await resolveNames(ctx, trace, names, undefined, "interest", {
+      strict: false,
+      label: "Find the interests in Qloo",
+      onProgress: (done, total) => progress(0.05 + 0.25 * (done / total), `Resolved ${done} of ${total}`),
+    });
+  }
+  const entities = dedupeById([
+    ...picked.map((e) => toProfileEntity({ ...e, source: "interest" }, "interest")),
+    ...[...found.values()].map((e) => toProfileEntity(e, "interest")),
+  ]);
+  if (entities.length === 0) throw new Error(`Qloo has no match for ${names.map((n) => `"${n}"`).join(", ")}. Check the spelling or pick a suggestion.`);
   const ids = entities.slice(0, 12).map((e) => e.id);
   const culture = await cultureFrom(ctx, trace, entities, ids, progress, 0.32);
   const enriched = await enrich(ctx, trace, ids, undefined, {}, progress, 0.55);
@@ -531,6 +576,47 @@ function compileDefault(trace: Span[], brand: Doc<"pagesBrands">) {
   return { profile, size: 0 };
 }
 
+// In the order a merchant most likely means them: "Patagonia" is the brand
+// before the dozen restaurants and parks of the same name.
+const SUGGEST_TYPES = ["brand", "artist", "movie", "tv_show", "book", "podcast", "person", "destination", "place"];
+
+/** Name suggestions for the interests field: Qloo search, cached, typed entities only. */
+export const suggestEntities = action({
+  args: { query: v.string() },
+  returns: v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()), subtitle: v.optional(v.string()) })),
+  handler: async (ctx, { query }) => {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    const { body } = await cachedQlooGet(ctx, "/search", { query: q, take: 12 });
+    const rank = (e: Record<string, unknown>) => {
+      const i = SUGGEST_TYPES.indexOf(String((e.types as string[] | undefined)?.[0] ?? "").replace("urn:entity:", ""));
+      return i === -1 ? 99 : i;
+    };
+    // Stable sort: type first, Qloo's relevance within a type.
+    const results = ((JSON.parse(body) as { results?: Record<string, unknown>[] }).results ?? [])
+      .map((e, i) => ({ e, i }))
+      .sort((a, b) => rank(a.e) - rank(b.e) || a.i - b.i)
+      .map(({ e }) => e);
+    const out: { id: string; name: string; type: string; image?: string; subtitle?: string }[] = [];
+    for (const e of results) {
+      const type = String((e.types as string[] | undefined)?.[0] ?? "");
+      if (!SUGGEST_TYPES.includes(type.replace("urn:entity:", ""))) continue;
+      const props = (e.properties ?? {}) as Record<string, unknown>;
+      const image = ((props.image as Record<string, unknown> | undefined)?.url as string | undefined) ?? undefined;
+      const subtitle = (props.short_description as string | undefined) ?? (e.disambiguation as string | undefined);
+      out.push({
+        id: String(e.entity_id ?? e.id),
+        name: String(e.name),
+        type,
+        ...(image ? { image } : {}),
+        ...(subtitle ? { subtitle: subtitle.length > 80 ? `${subtitle.slice(0, 77)}…` : subtitle } : {}),
+      });
+      if (out.length >= 6) break;
+    }
+    return out;
+  },
+});
+
 export const compile = action({
   args: { id: v.id("pagesAudiences") },
   returns: v.null(),
@@ -568,8 +654,9 @@ export const compile = action({
       }
       await ctx.runMutation(internal.pagesAudiences.setProfile, { id, profile: result.profile, size: result.size, trace });
     } catch (err) {
-      await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "failed", error: String(err).slice(0, 300), trace });
-      throw err;
+      // Recorded on the audience (its card shows the reason); not rethrown, so
+      // callers and the browser console are not handed a server error.
+      await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "failed", error: String(err).replace(/^Error: /, "").slice(0, 300), trace });
     }
     return null;
   },
