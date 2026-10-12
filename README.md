@@ -3,7 +3,7 @@
 Taste personalisation for businesses, grounded in [Qloo](https://www.qloo.com/)'s cultural taste graph so it works on a first visit with no history and no personal data. Slice is three independent services; a business subscribes to the ones it needs, and each has its own clients and setup:
 
 - **Concierge** (built): an embeddable agent that recommends from a storefront's own catalog. Its clients are widgets, one per store (Marlow and Fold are the demos).
-- **Pages** (planned): landing, sales and funnel pages whose content adapts to the visitor's taste profile, location and campaign.
+- **Pages** (built): paste a website and Slice reads its brand kit (logo, colours, fonts, voice), asks Qloo what its audience is into, and writes a landing page with one variant per taste segment. Each visitor gets the variant that fits them, picked from a shared link, an on-page taste quiz, a Slice profile, the campaign (UTM) or their city's Qloo taste. Published at `/p/<slug>`, with views and clicks per variant.
 - **Media** (planned): posters, creatives and short video generated per taste cluster.
 
 ## Repo layout
@@ -29,6 +29,9 @@ merchant site ── slice.js ──iframe──▶ web /embed/concierge ──�
                                                                             ├──▶ Convex queries: catalog:recommend, catalog:search, taste:get
                                                                             └──▶ Convex /qloo (cache) and /agent/* (brief, signals, transcripts)
 merchant      ──────────────────────▶ web /dashboard      ──▶ Convex (Clerk JWT)
+                                            └──▶ web /api/pages/* ──▶ agent POST /pages/brand, /pages/generate
+                                                                            (site fetch → brand kit → Qloo search/insights/tags → Gemini segments + copy)
+visitor       ──────────────────────▶ web /p/<slug>       ──▶ Convex pages:resolve (link, quiz, profile, UTM, city taste) and pages:track
 ```
 
 How a recommendation is made (see `docs/test-taste-profiles.md` for shoppers to try):
@@ -127,7 +130,10 @@ pnpm dev
 |                               | `GOOGLE_APPLICATION_CREDENTIALS`                                 | Local dev only; Agent Runtime uses its own service identity        |
 |                               | `CONVEX_SITE_URL`, `CONVEX_URL`, `QLOO_PROXY_SECRET`             | The agent reads via Convex's public query API and writes via `/agent/*`; Qloo only through the cached `/qloo` route |
 |                               | `AGENT_ALLOW_ORIGINS`                                            | CORS for direct calls; the widget goes through `apps/web` `/api/concierge` |
+|                               | `AGENT_SECRET`                                                   | Bearer token the web app sends to `/pages/*`; same value in `apps/web` |
+|                               | `PAGES_ALLOW_PRIVATE_HOSTS`                                      | Local dev only: `true` lets Pages read `localhost` sites (the demo stores). Leave unset in production |
 | `apps/web/.env.local`         | `AGENT_URL`, `NEXT_PUBLIC_STORES_URL`                            | Agent server address; where product images and demo stores are served |
+|                               | `AGENT_SECRET`                                                   | Shared with the agent; protects the Pages jobs                     |
 
 Server-side secrets (Google credentials, Qloo) live only in the agent and Convex, never in the Next.js or widget env. Don't commit Qloo responses to this repo: caching them privately on the server is allowed, publishing them is not. They're cached in Convex's `qlooCache` table (`packages/backend/convex/qloo.ts`); all Qloo calls go through it.
 

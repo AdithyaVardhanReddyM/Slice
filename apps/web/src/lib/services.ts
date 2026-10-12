@@ -38,7 +38,7 @@ export const SERVICES: ServiceMeta[] = [
     label: "Pages",
     segment: "pages",
     icon: LayoutTemplate,
-    available: false,
+    available: true,
     clientNoun: "page",
     tagline: "Landing, sales and funnel pages that adapt to the visitor.",
     description:
