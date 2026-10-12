@@ -20,11 +20,11 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import { Fragment, type ComponentType, type ReactNode } from "react";
+import { Fragment, useState, type ComponentType, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import type { Brand } from "@/lib/pages/types";
-import { brandDomain, faviconOf, hostOf } from "@/lib/pages/urls";
+import { brandDomain, brandHomeUrl, faviconOf, hostOf } from "@/lib/pages/urls";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
@@ -45,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Sidebar,
   SidebarContent,
@@ -64,7 +65,6 @@ import {
 import { SliceWordmark } from "@/components/console/logo";
 import { PageSkeleton } from "@/components/console/primitives";
 import { BrandProvider } from "./brand-context";
-import { Thumb } from "./shared";
 
 type NavItem = { href: string; label: string; icon: ComponentType<{ className?: string }>; count?: number; exact?: boolean };
 
@@ -76,20 +76,43 @@ const SECTION_LABELS: Record<string, string> = {
   settings: "Settings",
 };
 
+/**
+ * A square brand tile. Square marks and favicons show as-is; a wide wordmark
+ * is unreadable at this size, so it falls back to a monogram in the brand's
+ * primary colour.
+ */
 export function BrandGlyph({ brand, size = "md" }: { brand: Brand; size?: "sm" | "md" }) {
   const logo = brand.kit?.logo?.src ?? faviconOf(brand.url);
+  const [wide, setWide] = useState(false);
+  const [broken, setBroken] = useState(false);
+  const colors = brand.kit?.colors;
+  const showLogo = logo && !wide && !broken;
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted",
-        size === "sm" ? "size-5" : "size-8",
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-md",
+        size === "sm" ? "size-5 text-[10px]" : "size-8 text-sm",
+        showLogo || !colors ? "border bg-muted" : "font-semibold",
       )}
+      style={showLogo || !colors ? undefined : { background: colors.primary, color: colors.primaryForeground }}
     >
-      {logo ? (
-        <Thumb src={logo} className={size === "sm" ? "size-4" : "size-6"} rounded="rounded-none [&_img]:object-contain" />
-      ) : (
-        <Globe className={cn("text-muted-foreground", size === "sm" ? "size-3" : "size-4")} />
+      {logo && !wide && !broken && (
+        // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logo}
+          alt=""
+          className={cn("object-contain", size === "sm" ? "size-4" : "size-6")}
+          onLoad={(e) => setWide(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight * 1.5)}
+          onError={() => setBroken(true)}
+        />
       )}
+      {!showLogo &&
+        (colors ? (
+          brand.name.charAt(0).toUpperCase()
+        ) : (
+          <Globe className={cn("text-muted-foreground", size === "sm" ? "size-3" : "size-4")} />
+        ))}
     </span>
   );
 }
@@ -260,6 +283,7 @@ function BrandTopbar({ brand }: { brand: Brand }) {
   const base = `/dashboard/pages/${brand.slug}`;
   const parts = pathname.split("/").slice(4).filter(Boolean);
   const pages = useQuery(api.pages.list, { brandId: brand._id });
+  const examplePage = (pages ?? []).find((p: { status: string }) => p.status === "published")?.slug as string | undefined;
   const crumbs: { label: string; href?: string }[] = [
     { label: "Pages", href: "/dashboard/pages" },
     { label: brand.name, href: base },
@@ -295,10 +319,37 @@ function BrandTopbar({ brand }: { brand: Brand }) {
         </Breadcrumb>
       </div>
       <div className="flex items-center gap-2">
-        <span className="hidden text-xs text-muted-foreground sm:inline">{brandDomain(brand.slug)}</span>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                nativeButton={false}
+                className="hidden font-normal text-muted-foreground sm:inline-flex"
+                render={<a href={brandHomeUrl(brand.slug)} target="_blank" rel="noreferrer" />}
+              />
+            }
+          >
+            <Globe data-icon="inline-start" />
+            {brandDomain(brand.slug)}
+          </TooltipTrigger>
+          <TooltipContent side="bottom" align="end" className="block max-w-72 space-y-1 py-2">
+            <p className="font-medium">This brand&apos;s Pages subdomain</p>
+            <p className="text-background/70">
+              Every page you publish for {brand.name} goes live here
+              {examplePage ? (
+                <>
+                  , like <span className="text-background">/{examplePage}</span>
+                </>
+              ) : null}
+              . Visitors see the version written for their audience. Opens the list of published pages.
+            </p>
+          </TooltipContent>
+        </Tooltip>
+        <Separator orientation="vertical" className="hidden h-4 sm:block" />
         <Button variant="ghost" nativeButton={false} render={<a href={brand.url} target="_blank" rel="noreferrer" />}>
-          Visit site
-          <ExternalLink />
+          Brand website
+          <ExternalLink data-icon="inline-end" />
         </Button>
       </div>
     </header>

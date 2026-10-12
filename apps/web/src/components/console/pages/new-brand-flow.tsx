@@ -2,20 +2,23 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowRight, Check, RotateCcw } from "lucide-react";
+import { ArrowRight, Check, FileText, Palette, RotateCcw, UserStar } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { postStream } from "@/lib/pages/stream";
-import { briefOf, kitOf, type Brand, type BrandBrief, type BrandKit, type Span } from "@/lib/pages/types";
-import { Field, Input } from "@/components/console/form";
+import { brandDomain, hostOf } from "@/lib/pages/urls";
+import { briefOf, kitOf, slugify, type Brand, type BrandBrief, type BrandKit, type Span } from "@/lib/pages/types";
+import { Field, Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
 import { AdornedInput, Spinner } from "@/components/console/setup/atoms";
 import { PageHeader } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { BriefEditor, EMPTY_BRIEF } from "./brief-editor";
-import { EMPTY_KIT, KitEditor } from "./kit-editor";
+import { BriefFieldsEditor, BriefItemsEditor, EMPTY_BRIEF } from "./brief-editor";
+import { BrowserFrame } from "./browser-frame";
+import { EMPTY_KIT, KitIdentityEditor, KitVoiceEditor } from "./kit-editor";
+import { KitPreview } from "./kit-preview";
 import { QlooCard } from "./qloo-card";
 import { ProgressLine, StatusBadge, Thumb, TraceList } from "./shared";
 
@@ -49,22 +52,124 @@ function guessName(url: string) {
 
 /* Step 1: URL + name --------------------------------------------------------- */
 
-function BrandForm({ onCreated }: { onCreated: (id: Id<"pagesBrands">, url: string) => void }) {
+const OUTPUTS = [
+  { icon: Palette, title: "Brand kit", body: "Logo, colours, fonts, corner radius and button style, read from the CSS." },
+  { icon: FileText, title: "Brief", body: "What the brand sells, its proof points, locations and the items pages can feature." },
+  { icon: UserStar, title: "Taste read", body: "Qloo's taste tags, similar brands and audience demographics for the brand." },
+];
+
+const TIMELINE = [
+  { title: "Read the site", body: "The homepage, then up to seven linked pages.", time: "~15 s" },
+  { title: "Extract the kit", body: "Palette, type and shape from the live CSS.", time: "~10 s" },
+  { title: "Write the brief", body: "Offer, proof, locations and items.", time: "~20 s" },
+  { title: "Ask Qloo", body: "Runs in the background while you review.", time: "~15 s" },
+  { title: "You review", body: "Correct anything, then save the brand.", time: null },
+];
+
+function PublishPreview({ url }: { url: string }) {
+  const name = guessName(url);
+  const slug = name ? slugify(name) : "";
+  return (
+    <Card className="overflow-hidden pt-0">
+      <BrowserFrame
+        className="border-b"
+        priority
+        sizes="384px"
+        domain={brandDomain(slug || "your-brand")}
+        hero={
+          <span className={cn("truncate px-[4%] text-[3.6cqw] font-semibold tracking-tight", !slug && "text-neutral-400")}>
+            {name.trim() || "Your brand"}
+          </span>
+        }
+      />
+      <CardHeader>
+        <CardTitle>Where it publishes</CardTitle>
+        <CardDescription>Every page and audience version for this brand lives on its own subdomain. The name is read from the site.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border px-3 py-2.5">
+          <p className="text-xs text-muted-foreground">Subdomain</p>
+          <p className={cn("mt-0.5 text-sm break-all", slug ? "font-medium" : "text-muted-foreground")}>
+            {slug ? brandDomain(slug) : "Set from the website"}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Timeline() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>What happens next</CardTitle>
+        <CardDescription>About a minute. You watch each step as it runs.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ol>
+          {TIMELINE.map((step, i) => (
+            <li key={step.title} className="relative flex gap-3 pb-4 last:pb-0">
+              {i < TIMELINE.length - 1 && <span className="absolute top-7 bottom-1 left-3 w-px bg-border" aria-hidden />}
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full border bg-background text-xs text-muted-foreground">
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium">{step.title}</span>
+                  {step.time && <span className="text-xs text-muted-foreground">{step.time}</span>}
+                </div>
+                <p className="text-sm text-muted-foreground">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Outputs() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>What you will review</CardTitle>
+        <CardDescription>Three drafts, all editable. The builder follows them on every page.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-4">
+          {OUTPUTS.map(({ icon: Icon, title, body }) => (
+            <li key={title} className="flex gap-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Icon className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-medium">{title}</h3>
+                <p className="text-sm text-muted-foreground">{body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BrandStart({ onCreated }: { onCreated: (id: Id<"pagesBrands">, url: string) => void }) {
   const create = useMutation(api.pagesBrands.create);
   const [url, setUrl] = useState("");
-  const [name, setName] = useState("");
-  const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     const full = normalizeUrl(url);
-    if (!full || !name.trim()) return;
+    if (!full) return;
     setBusy(true);
     setError(null);
     try {
-      const { id } = await create({ name: name.trim(), url: full });
+      // A placeholder from the URL (it also sets the subdomain); the intake
+      // swaps in the name it reads from the site.
+      const { id } = await create({ name: guessName(full) || hostOf(full), url: full, nameFromSite: true });
       onCreated(id, full);
     } catch (err) {
       setError(String((err as Error).message ?? err));
@@ -73,48 +178,47 @@ function BrandForm({ onCreated }: { onCreated: (id: Id<"pagesBrands">, url: stri
   }
 
   return (
-    <form onSubmit={submit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Brand website</CardTitle>
-          <CardDescription>Slice reads the public site: colours, type, logo, voice, products and locations. Local demo sites work too.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Field label="Website" hint="The homepage. Up to seven more pages (about, products, locations) are read from it.">
-            <AdornedInput
-              prefix="https://"
-              value={url.replace(/^https?:\/\//i, "")}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                if (!touched) setName(guessName(e.target.value));
-              }}
-              placeholder="ridgeline.coffee"
-              autoFocus
-              required
-            />
-          </Field>
-          <Field label="Brand name">
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                setTouched(true);
-              }}
-              placeholder="Ridgeline Coffee"
-              required
-            />
-          </Field>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-        </CardContent>
-        <CardFooter className="justify-end">
-          <Button type="submit" disabled={busy || !url.trim() || !name.trim()}>
-            {busy ? <Spinner data-icon="inline-start" /> : null}
-            Read the site
-            <ArrowRight data-icon="inline-end" />
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+      <div className="space-y-6">
+        <form onSubmit={submit}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Brand website</CardTitle>
+              <CardDescription>The public homepage. Slice reads the brand name from it and follows its links to the about, product and location pages.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Field label="Website">
+                <AdornedInput
+                  className="h-10"
+                  prefix={/^http:\/\//i.test(url) ? "http://" : "https://"}
+                  value={url.replace(/^https?:\/\//i, "")}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="ridgeline.coffee"
+                  inputMode="url"
+                  spellCheck={false}
+                  autoFocus
+                  required
+                />
+              </Field>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </CardContent>
+            <CardFooter className="justify-between gap-4">
+              <p className="text-xs text-muted-foreground">Nothing is built until you have reviewed what Slice read.</p>
+              <Button type="submit" size="lg" disabled={busy || !url.trim()}>
+                {busy ? <Spinner data-icon="inline-start" /> : null}
+                Read the site
+                <ArrowRight data-icon="inline-end" />
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
+        <Timeline />
+      </div>
+      <div className="space-y-6 lg:sticky lg:top-20">
+        <PublishPreview url={url} />
+        <Outputs />
+      </div>
+    </div>
   );
 }
 
@@ -224,6 +328,14 @@ function IntakeProgress({
 
 /* Step 3: review ----------------------------------------------------------------- */
 
+const REVIEW_TABS = [
+  { value: "identity", label: "Identity" },
+  { value: "voice", label: "Voice" },
+  { value: "brief", label: "Brief" },
+  { value: "items", label: "Items" },
+  { value: "taste", label: "Taste" },
+] as const;
+
 export function BrandReview({ brand, onSaved, saveLabel = "Save and open the brand" }: { brand: Brand; onSaved?: () => void; saveLabel?: string }) {
   const updateKit = useMutation(api.pagesBrands.updateKit);
   const updateBrief = useMutation(api.pagesBrands.updateBrief);
@@ -232,6 +344,7 @@ export function BrandReview({ brand, onSaved, saveLabel = "Save and open the bra
   const [brief, setBrief] = useState<BrandBrief>(() => briefOf(brand) ?? EMPTY_BRIEF);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const seeded = useRef({ kit: !!brand.kit, brief: !!brand.brief });
 
@@ -248,6 +361,24 @@ export function BrandReview({ brand, onSaved, saveLabel = "Save and open the bra
     }
   }, [brand, dirty]);
 
+  const editKit = (k: BrandKit) => {
+    setKit(k);
+    setDirty(true);
+    setJustSaved(false);
+  };
+  const editBrief = (b: BrandBrief) => {
+    setBrief(b);
+    setDirty(true);
+    setJustSaved(false);
+  };
+
+  function discard() {
+    setKit(kitOf(brand) ?? EMPTY_KIT);
+    setBrief(briefOf(brand) ?? EMPTY_BRIEF);
+    setDirty(false);
+    setError(null);
+  }
+
   async function save() {
     setBusy(true);
     setError(null);
@@ -256,6 +387,8 @@ export function BrandReview({ brand, onSaved, saveLabel = "Save and open the bra
       await updateBrief({ id: brand._id, brief });
       await markReady({ id: brand._id });
       setDirty(false);
+      setJustSaved(true);
+      window.setTimeout(() => setJustSaved(false), 2000);
       onSaved?.();
     } catch (err) {
       setError(String((err as Error).message ?? err));
@@ -264,43 +397,70 @@ export function BrandReview({ brand, onSaved, saveLabel = "Save and open the bra
     }
   }
 
+  // A brand still in review needs one save to become ready, edited or not.
+  const needsSave = dirty || brand.status !== "ready";
+
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-      <div className="space-y-6">
-        <KitEditor
-          kit={kit}
-          brandName={brand.name}
-          onChange={(k) => {
-            setKit(k);
-            setDirty(true);
-          }}
-        />
-        <BriefEditor
-          brief={brief}
-          onChange={(b) => {
-            setBrief(b);
-            setDirty(true);
-          }}
-        />
-        <div className="flex items-center justify-between gap-3 rounded-xl border bg-card p-4">
-          <p className="text-sm text-muted-foreground">
-            {error ? <span className="text-destructive">{error}</span> : dirty ? "Unsaved changes." : "Saved."}
-          </p>
-          <Button onClick={save} disabled={busy}>
-            {busy && <Spinner data-icon="inline-start" />}
-            {saveLabel}
-          </Button>
+    <Tabs defaultValue="identity" className="gap-6">
+      <TabList>
+        {REVIEW_TABS.map((t) => (
+          <Tab key={t.value} value={t.value}>
+            {t.label}
+            {t.value === "items" && <span className="text-xs text-muted-foreground tabular-nums">{brief.items.length}</span>}
+          </Tab>
+        ))}
+      </TabList>
+      <div className="grid min-h-[calc(100svh-18rem)] items-start gap-x-10 gap-y-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
+        <div className="min-w-0">
+          <TabPanel value="identity">
+            <KitIdentityEditor kit={kit} brandName={brand.name} onChange={editKit} />
+          </TabPanel>
+          <TabPanel value="voice">
+            <KitVoiceEditor kit={kit} onChange={editKit} />
+          </TabPanel>
+          <TabPanel value="brief">
+            <BriefFieldsEditor brief={brief} onChange={editBrief} />
+          </TabPanel>
+          <TabPanel value="items">
+            <BriefItemsEditor brief={brief} onChange={editBrief} />
+          </TabPanel>
+          <TabPanel value="taste" className="pt-2">
+            <QlooCard brand={brand} />
+          </TabPanel>
         </div>
+        <aside className="xl:sticky xl:top-20">
+          <KitPreview kit={kit} brief={brief} brandName={brand.name} screenshot={brand.screenshot} />
+        </aside>
       </div>
-      <div className="space-y-4 xl:sticky xl:top-20">
-        {brand.screenshot && (
-          <Card className="overflow-hidden py-0">
-            <Thumb src={brand.screenshot} className="aspect-[4/3] w-full" rounded="rounded-none [&_img]:object-top" />
+
+      {(needsSave || justSaved) && (
+        <div className="pointer-events-none sticky bottom-6 z-20 flex justify-center">
+          <Card role="status" size="sm" className="pointer-events-auto flex-row items-center gap-3 px-3 shadow-lg">
+            {needsSave ? (
+              <>
+                <span className={cn("pl-1 text-sm", error && "text-destructive")}>
+                  {error ?? (dirty ? "Unsaved changes" : "Check each tab, then save")}
+                </span>
+                {dirty && (
+                  <Button variant="ghost" onClick={discard} disabled={busy}>
+                    Discard
+                  </Button>
+                )}
+                <Button onClick={save} disabled={busy}>
+                  {busy && <Spinner data-icon="inline-start" />}
+                  {saveLabel}
+                </Button>
+              </>
+            ) : (
+              <span className="flex items-center gap-2 px-1 text-sm">
+                <Check className="size-4 text-emerald-600" />
+                Changes saved
+              </span>
+            )}
           </Card>
-        )}
-        <QlooCard brand={brand} compact />
-      </div>
-    </div>
+        </div>
+      )}
+    </Tabs>
   );
 }
 
@@ -344,42 +504,15 @@ export function NewBrandFlow() {
     return (
       <>
         <PageHeader
-          title="New brand"
-          description="One brand is one client of Pages. Start from its website; the kit, brief and Qloo read are yours to correct before anything is built."
+          title="Add a brand"
+          description="Paste the brand's website. Slice reads its name and drafts its kit, brief and taste read in about a minute; nothing is used until you have reviewed it."
         />
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <BrandForm
-            onCreated={(id, url) => {
-              router.replace(`/dashboard/pages/new?brand=${id}`);
-              void runIntake(id, url);
-            }}
-          />
-          <Card>
-            <CardHeader>
-              <CardTitle>What happens next</CardTitle>
-              <CardDescription>About a minute, while you watch.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ol className="space-y-4">
-                {[
-                  ["Read the site", "Homepage plus the about, product and location pages."],
-                  ["Extract the kit", "Logo, palette, fonts, radius and button style, from the CSS."],
-                  ["Write the brief", "What the brand sells, its proof, locations and items."],
-                  ["Ask Qloo", "Taste tags, similar brands and demographics for the brand."],
-                  ["Review", "Correct anything, then save. Audiences and pages come next."],
-                ].map(([t, b], i) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full border text-xs text-muted-foreground">{i + 1}</span>
-                    <div className="min-w-0 space-y-0.5">
-                      <span className="text-sm font-medium">{t}</span>
-                      <p className="text-sm text-muted-foreground">{b}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
-        </div>
+        <BrandStart
+          onCreated={(id, url) => {
+            router.replace(`/dashboard/pages/new?brand=${id}`);
+            void runIntake(id, url);
+          }}
+        />
       </>
     );
   }

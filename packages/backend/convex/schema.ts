@@ -264,6 +264,8 @@ export default defineSchema({
     /** URL-safe, unique; also the subdomain: {slug}.pages.<host>. */
     slug: v.string(),
     name: v.string(),
+    /** The name is a placeholder guessed from the URL; the intake replaces it with the one read from the site. */
+    nameFromSite: v.optional(v.boolean()),
     url: v.string(),
     /** "extracting" | "review" | "ready" | "failed" */
     status: v.string(),

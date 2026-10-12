@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Link2, RefreshCw, Trash2 } from "lucide-react";
+import { Link2, RefreshCw, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
@@ -21,6 +21,7 @@ import { useBrand } from "./brand-context";
 import { useCompileAudience } from "./new-audience-sheet";
 import { AudienceBriefView, BrandsList, CultureLists, DemographicsBars, GeoList, TagsByGroup } from "./profile-view";
 import { EntityStrip, Hint, ProgressLine, SectionLabel, StatusBadge, TraceList, audienceSizeLabel } from "./shared";
+import { KIND_ICON, TasteCover, coverTiles } from "./taste-cover";
 
 /* Members (CSV clusters) ----------------------------------------------------------- */
 
@@ -155,10 +156,16 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
 
   return (
     <Sheet open={!!audience} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-3xl">
+      <SheetContent className="w-full gap-0 overflow-y-auto data-[side=right]:sm:max-w-3xl">
         {audience && (
           <>
-            <SheetHeader>
+            <TasteCover
+              tiles={coverTiles(profile)}
+              icon={KIND_ICON[audience.kind] ?? Users}
+              kindLabel={AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}
+              className="aspect-[21/8] shrink-0"
+            />
+            <SheetHeader className="p-6 pb-4">
               <div className="flex flex-wrap items-center gap-2 pr-8">
                 <SheetTitle>{audience.name}</SheetTitle>
                 <Badge variant="outline">{AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}</Badge>
@@ -170,7 +177,8 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
                 {audience.sources.interests?.length ? ` · ${audience.sources.interests.slice(0, 4).join(", ")}` : ""}
               </SheetDescription>
             </SheetHeader>
-            <div className="space-y-5 px-4 pb-6">
+            <div className="space-y-5 px-6 pb-8">
+              {brief?.summary && <p className="text-sm leading-relaxed">{brief.summary}</p>}
               {audience.status !== "ready" && <ProgressLine progress={audience.progress} status={audience.status} error={audience.error} />}
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => void run(audience._id)} disabled={audience.status === "compiling"}>

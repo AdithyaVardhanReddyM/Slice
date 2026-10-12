@@ -14,6 +14,11 @@ export function brandDomain(brandSlug: string) {
   return `${brandSlug}.${PAGES_HOST}`;
 }
 
+/** The brand's subdomain root, which lists its published pages. */
+export function brandHomeUrl(brandSlug: string) {
+  return `${isLocal ? "http" : "https"}://${brandDomain(brandSlug)}/`;
+}
+
 /** The app-local route the console iframes: forces a variant, disables tracking. */
 export function previewUrl(brandSlug: string, pageSlug: string, variantId: string, extra?: Record<string, string>) {
   const params = new URLSearchParams({ v: variantId, preview: "1", ...(extra ?? {}) });

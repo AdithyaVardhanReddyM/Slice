@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BrandKit } from "@/lib/pages/types";
-import { Field, Input, Segmented, Select, Textarea } from "@/components/console/form";
-import { FieldGroup, TokenInput } from "@/components/console/setup/atoms";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input, Segmented, Select, Textarea } from "@/components/console/form";
+import { TokenInput } from "@/components/console/setup/atoms";
 import { Switch } from "@/components/ui/switch";
-import { Thumb } from "./shared";
+import { EditorField, EditorRow, EditorSection } from "./editor-layout";
 
-const COLOR_ROLES: { key: keyof BrandKit["colors"]; label: string }[] = [
-  { key: "background", label: "Background" },
-  { key: "foreground", label: "Text" },
-  { key: "primary", label: "Primary" },
-  { key: "primaryForeground", label: "On primary" },
-  { key: "accent", label: "Accent" },
-  { key: "muted", label: "Muted" },
-  { key: "surface", label: "Surface" },
+const COLOR_ROLES: { key: keyof BrandKit["colors"]; label: string; hint: string }[] = [
+  { key: "background", label: "Background", hint: "Page canvas" },
+  { key: "foreground", label: "Text", hint: "Headings and body" },
+  { key: "primary", label: "Primary", hint: "Buttons and links" },
+  { key: "primaryForeground", label: "On primary", hint: "Text on buttons" },
+  { key: "accent", label: "Accent", hint: "Highlights" },
+  { key: "muted", label: "Muted", hint: "Secondary text" },
+  { key: "surface", label: "Surface", hint: "Cards and panels" },
 ];
 
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -51,20 +51,15 @@ export function googleFontHref(families: string[]) {
   return fams ? `https://fonts.googleapis.com/css2?${fams}&display=swap` : null;
 }
 
-function ColorSwatch({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (hex: string) => void;
-}) {
+function ColorSwatch({ label, hint, value, onChange }: { label: string; hint: string; value: string; onChange: (hex: string) => void }) {
   const [draft, setDraft] = useState(value);
   const valid = HEX.test(draft);
   return (
-    <div className="flex items-center gap-3 rounded-lg border p-2">
-      <label className="relative block size-9 shrink-0 cursor-pointer overflow-hidden rounded-md ring-1 ring-foreground/10" style={{ background: valid ? draft : value }}>
+    <div className="flex items-center gap-3 rounded-lg border p-2 pr-3 transition-colors focus-within:border-ring">
+      <label
+        className="relative block size-10 shrink-0 cursor-pointer overflow-hidden rounded-md ring-1 ring-foreground/10 ring-inset"
+        style={{ background: valid ? draft : value }}
+      >
         <input
           type="color"
           aria-label={`${label} colour`}
@@ -77,7 +72,10 @@ function ColorSwatch({
         />
       </label>
       <div className="min-w-0 flex-1">
-        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="truncate text-sm font-medium">{label}</span>
+          <span className="truncate text-xs text-muted-foreground">{hint}</span>
+        </div>
         <input
           value={draft}
           onChange={(e) => {
@@ -87,7 +85,8 @@ function ColorSwatch({
           }}
           onBlur={() => !valid && setDraft(value)}
           aria-invalid={!valid}
-          className={cn("num h-6 w-full bg-transparent text-sm outline-none", !valid && "text-destructive")}
+          aria-label={`${label} hex value`}
+          className={cn("num h-5 w-full bg-transparent text-sm text-muted-foreground uppercase outline-none focus:text-foreground", !valid && "text-destructive")}
           spellCheck={false}
         />
       </div>
@@ -96,155 +95,143 @@ function ColorSwatch({
 }
 
 function FontField({
-  label,
+  role,
   font,
+  sample,
   onChange,
 }: {
-  label: string;
+  role: string;
   font: BrandKit["fonts"]["heading"];
+  sample: string;
   onChange: (f: BrandKit["fonts"]["heading"]) => void;
 }) {
   const href = font.source === "google" ? googleFontHref([font.family]) : null;
   return (
-    <div className="space-y-2 rounded-lg border p-3">
+    <div className="overflow-hidden rounded-lg border">
       {href && <link rel="stylesheet" href={href} />}
-      <div className="grid gap-2 sm:grid-cols-[1fr_8rem]">
-        <Field label={label}>
+      <div className="border-b bg-muted/40 px-4 py-5">
+        <div className="text-xs text-muted-foreground">
+          {role} · {font.family || "Unset"}
+        </div>
+        <p className="mt-1 truncate text-2xl leading-tight" style={{ fontFamily: `"${font.family}", ${font.fallback || "sans-serif"}` }}>
+          {sample}
+        </p>
+      </div>
+      <div className="grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_9rem]">
+        <EditorField label="Family">
           <Input value={font.family} onChange={(e) => onChange({ ...font, family: e.target.value })} />
-        </Field>
-        <Field label="Source">
+        </EditorField>
+        <EditorField label="Source">
           <Select value={font.source} onChange={(e) => onChange({ ...font, source: e.target.value as "google" | "system" })}>
             <option value="google">Google Fonts</option>
             <option value="system">System</option>
           </Select>
-        </Field>
+        </EditorField>
+        <EditorField label="Fallback stack" className="sm:col-span-2">
+          <Input value={font.fallback} onChange={(e) => onChange({ ...font, fallback: e.target.value })} />
+        </EditorField>
       </div>
-      <p
-        className="truncate rounded-md bg-muted/60 px-3 py-2 text-xl"
-        style={{ fontFamily: `"${font.family}", ${font.fallback || "sans-serif"}` }}
-      >
-        The quick brown fox jumps over the lazy dog
-      </p>
-      <Field label="Fallback stack">
-        <Input value={font.fallback} onChange={(e) => onChange({ ...font, fallback: e.target.value })} />
-      </Field>
     </div>
   );
 }
 
-/** Edits every BrandKit field. Controlled: the parent owns the kit and saves it. */
-export function KitEditor({ kit, onChange, brandName }: { kit: BrandKit; onChange: (kit: BrandKit) => void; brandName: string }) {
+function LogoPreview({ kit, brandName }: { kit: BrandKit; brandName: string }) {
+  const [broken, setBroken] = useState<string | null>(null);
+  const src = kit.logo?.src;
+  return (
+    <div
+      className="flex h-24 items-center justify-center rounded-lg px-8 ring-1 ring-foreground/10"
+      style={{ background: kit.logo?.onDark ? kit.colors.foreground : kit.colors.background }}
+    >
+      {src && broken !== src ? (
+        // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={kit.logo?.alt ?? brandName} className="max-h-12 max-w-full object-contain" onError={() => setBroken(src)} />
+      ) : src ? (
+        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+          <ImageOff className="size-4" /> The logo URL did not load
+        </span>
+      ) : (
+        <span
+          className="truncate text-2xl font-semibold"
+          style={{
+            color: kit.logo?.onDark ? kit.colors.background : kit.colors.foreground,
+            fontFamily: `"${kit.fonts.heading.family}", ${kit.fonts.heading.fallback}`,
+          }}
+        >
+          {kit.wordmark || brandName}
+        </span>
+      )}
+    </div>
+  );
+}
+
+type KitProps = { kit: BrandKit; onChange: (kit: BrandKit) => void; brandName: string };
+
+/** Logo, colours, type and shape. Controlled: the parent owns the kit and saves it. */
+export function KitIdentityEditor({ kit, onChange, brandName }: KitProps) {
   const set = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Palette</CardTitle>
-          <CardDescription>Colour roles the pages use. Click a swatch or type a hex value.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {COLOR_ROLES.map((r) => (
-              <ColorSwatch
-                key={r.key}
-                label={r.label}
-                value={kit.colors[r.key]}
-                onChange={(hex) => set("colors", { ...kit.colors, [r.key]: hex })}
-              />
-            ))}
-          </div>
-          <div
-            className="flex flex-wrap items-center gap-3 rounded-lg p-4 ring-1 ring-foreground/10"
-            style={{ background: kit.colors.background, color: kit.colors.foreground }}
-          >
-            <span className="text-sm" style={{ fontFamily: `"${kit.fonts.heading.family}", ${kit.fonts.heading.fallback}` }}>
-              {brandName}
-            </span>
-            <span
-              className={cn("px-3 py-1.5 text-xs font-medium", kit.uppercaseLabels && "uppercase tracking-wide")}
-              style={{
-                background: kit.colors.primary,
-                color: kit.colors.primaryForeground,
-                borderRadius: kit.buttonStyle === "pill" ? 999 : kit.buttonStyle === "square" ? 0 : 8,
-              }}
-            >
-              Primary button
-            </span>
-            <span className="px-3 py-1.5 text-xs" style={{ background: kit.colors.surface, color: kit.colors.foreground, borderRadius: 8 }}>
-              Surface
-            </span>
-            <span className="size-5 rounded-full" style={{ background: kit.colors.accent }} aria-label="Accent" />
-          </div>
-        </CardContent>
-      </Card>
+    <div>
+      <EditorSection title="Logo" description="Sits in the header of every page. Paste a URL to replace the one Slice found.">
+        <LogoPreview kit={kit} brandName={brandName} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <EditorField label="Logo URL" aside="Optional">
+            <Input
+              value={kit.logo?.src ?? ""}
+              placeholder="https://…/logo.svg"
+              onChange={(e) => set("logo", e.target.value ? { src: e.target.value, alt: kit.logo?.alt ?? brandName, onDark: kit.logo?.onDark } : undefined)}
+            />
+          </EditorField>
+          <EditorField label="Wordmark" aside="Optional" hint="Shown when there is no logo image.">
+            <Input value={kit.wordmark ?? ""} placeholder={brandName} onChange={(e) => set("wordmark", e.target.value || undefined)} />
+          </EditorField>
+        </div>
+        <EditorRow label="Dark background" hint="The logo is light and needs the text colour behind it.">
+          <Switch checked={!!kit.logo?.onDark} onCheckedChange={(v) => kit.logo && set("logo", { ...kit.logo, onDark: v })} disabled={!kit.logo} />
+        </EditorRow>
+      </EditorSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Type</CardTitle>
-          <CardDescription>Heading and body families, loaded from Google Fonts when available.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-2">
-          <FontField label="Heading font" font={kit.fonts.heading} onChange={(f) => set("fonts", { ...kit.fonts, heading: f })} />
-          <FontField label="Body font" font={kit.fonts.body} onChange={(f) => set("fonts", { ...kit.fonts, body: f })} />
-        </CardContent>
-      </Card>
+      <EditorSection title="Colours" description="Seven roles every section draws from. Click a swatch or type a hex value.">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {COLOR_ROLES.map((r) => (
+            <ColorSwatch
+              key={r.key}
+              label={r.label}
+              hint={r.hint}
+              value={kit.colors[r.key]}
+              onChange={(hex) => set("colors", { ...kit.colors, [r.key]: hex })}
+            />
+          ))}
+        </div>
+      </EditorSection>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Logo and shape</CardTitle>
-          <CardDescription>Replace the logo with a URL; set corner radius, spacing and button shape.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="flex items-start gap-4">
-            <div
-              className="flex size-16 shrink-0 items-center justify-center rounded-lg ring-1 ring-foreground/10"
-              style={{ background: kit.logo?.onDark ? kit.colors.foreground : kit.colors.background }}
-            >
-              {kit.logo?.src ? (
-                <Thumb src={kit.logo.src} alt={kit.logo.alt} className="size-12" rounded="rounded-none [&_img]:object-contain" />
-              ) : (
-                <span className="text-xs text-muted-foreground">{kit.wordmark?.charAt(0) ?? brandName.charAt(0)}</span>
-              )}
-            </div>
-            <div className="grid flex-1 gap-3 sm:grid-cols-2">
-              <Field label="Logo URL" optional>
-                <Input
-                  value={kit.logo?.src ?? ""}
-                  placeholder="https://…/logo.svg"
-                  onChange={(e) =>
-                    set("logo", e.target.value ? { src: e.target.value, alt: kit.logo?.alt ?? brandName, onDark: kit.logo?.onDark } : undefined)
-                  }
-                />
-              </Field>
-              <Field label="Wordmark" hint="Shown when there is no logo image." optional>
-                <Input value={kit.wordmark ?? ""} onChange={(e) => set("wordmark", e.target.value || undefined)} />
-              </Field>
-              <label className="flex items-center justify-between gap-3 text-sm sm:col-span-2">
-                <span>Logo sits on a dark background</span>
-                <Switch checked={!!kit.logo?.onDark} onCheckedChange={(v) => kit.logo && set("logo", { ...kit.logo, onDark: v })} disabled={!kit.logo} />
-              </label>
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup label="Corner radius">
+      <EditorSection title="Typography" description="Loaded from Google Fonts when available; the fallback stack covers the rest.">
+        <FontField role="Headings" font={kit.fonts.heading} sample={brandName} onChange={(f) => set("fonts", { ...kit.fonts, heading: f })} />
+        <FontField
+          role="Body"
+          font={kit.fonts.body}
+          sample="The quick brown fox jumps over the lazy dog"
+          onChange={(f) => set("fonts", { ...kit.fonts, body: f })}
+        />
+      </EditorSection>
+
+      <EditorSection title="Shape" description="Corners, spacing and buttons. The preview shows each change.">
+        <div className="divide-y rounded-lg border">
+          <div className="p-3">
+            <EditorRow label="Corner radius" hint="Cards, images and inputs.">
               <Segmented
                 value={kit.radius}
                 onChange={(v) => set("radius", v)}
-                options={(["none", "sm", "md", "lg", "full"] as const).map((v) => ({ value: v, label: v === "none" ? "None" : v.toUpperCase() }))}
+                options={(["none", "sm", "md", "lg", "full"] as const).map((v) => ({
+                  value: v,
+                  label: { none: "None", sm: "Small", md: "Medium", lg: "Large", full: "Full" }[v],
+                }))}
               />
-            </FieldGroup>
-            <FieldGroup label="Density">
-              <Segmented
-                value={kit.density}
-                onChange={(v) => set("density", v)}
-                options={[
-                  { value: "compact", label: "Compact" },
-                  { value: "regular", label: "Regular" },
-                  { value: "airy", label: "Airy" },
-                ]}
-              />
-            </FieldGroup>
-            <FieldGroup label="Buttons">
+            </EditorRow>
+          </div>
+          <div className="p-3">
+            <EditorRow label="Buttons" hint="Shape of every call to action.">
               <Segmented
                 value={kit.buttonStyle}
                 onChange={(v) => set("buttonStyle", v)}
@@ -254,42 +241,57 @@ export function KitEditor({ kit, onChange, brandName }: { kit: BrandKit; onChang
                   { value: "square", label: "Square" },
                 ]}
               />
-            </FieldGroup>
-            <label className="flex items-center justify-between gap-3 pt-6 text-sm">
-              <span>Uppercase labels</span>
+            </EditorRow>
+          </div>
+          <div className="p-3">
+            <EditorRow label="Density" hint="Space between and inside sections.">
+              <Segmented
+                value={kit.density}
+                onChange={(v) => set("density", v)}
+                options={[
+                  { value: "compact", label: "Compact" },
+                  { value: "regular", label: "Regular" },
+                  { value: "airy", label: "Airy" },
+                ]}
+              />
+            </EditorRow>
+          </div>
+          <div className="p-3">
+            <EditorRow label="Uppercase labels" hint="Eyebrows, tags and button text.">
               <Switch checked={kit.uppercaseLabels} onCheckedChange={(v) => set("uppercaseLabels", v)} />
-            </label>
+            </EditorRow>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </EditorSection>
+    </div>
+  );
+}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Voice and imagery</CardTitle>
-          <CardDescription>How the brand writes and photographs. The builder follows this on every version.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Field label="Voice">
-            <Textarea rows={3} value={kit.voice.summary} onChange={(e) => set("voice", { ...kit.voice, summary: e.target.value })} />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup label="Do">
-              <TokenInput values={kit.voice.do} onChange={(v) => set("voice", { ...kit.voice, do: v })} placeholder="Add a rule" />
-            </FieldGroup>
-            <FieldGroup label="Avoid">
-              <TokenInput values={kit.voice.avoid} onChange={(v) => set("voice", { ...kit.voice, avoid: v })} placeholder="Add a rule" />
-            </FieldGroup>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Imagery style">
-              <Textarea rows={2} value={kit.imagery.style} onChange={(e) => set("imagery", { ...kit.imagery, style: e.target.value })} />
-            </Field>
-            <Field label="Treatment">
-              <Textarea rows={2} value={kit.imagery.treatment} onChange={(e) => set("imagery", { ...kit.imagery, treatment: e.target.value })} />
-            </Field>
-          </div>
-        </CardContent>
-      </Card>
+/** How the brand writes and photographs. */
+export function KitVoiceEditor({ kit, onChange }: Omit<KitProps, "brandName">) {
+  const set = <K extends keyof BrandKit>(key: K, value: BrandKit[K]) => onChange({ ...kit, [key]: value });
+  return (
+    <div>
+      <EditorSection title="Voice" description="How the brand sounds. The builder writes every headline and paragraph to this.">
+        <EditorField label="Summary">
+          <Textarea rows={3} value={kit.voice.summary} onChange={(e) => set("voice", { ...kit.voice, summary: e.target.value })} />
+        </EditorField>
+        <EditorField label="Do" aside={`${kit.voice.do.length} rules`}>
+          <TokenInput values={kit.voice.do} onChange={(v) => set("voice", { ...kit.voice, do: v })} placeholder="Add a rule" />
+        </EditorField>
+        <EditorField label="Avoid" aside={`${kit.voice.avoid.length} rules`}>
+          <TokenInput values={kit.voice.avoid} onChange={(v) => set("voice", { ...kit.voice, avoid: v })} placeholder="Add a rule" />
+        </EditorField>
+      </EditorSection>
+
+      <EditorSection title="Imagery" description="How the brand photographs. Used to search stock photos and to prompt generated images.">
+        <EditorField label="Style" hint="Subjects, light and mood.">
+          <Textarea rows={2} value={kit.imagery.style} onChange={(e) => set("imagery", { ...kit.imagery, style: e.target.value })} />
+        </EditorField>
+        <EditorField label="Treatment" hint="Crops, frames and finishing.">
+          <Textarea rows={2} value={kit.imagery.treatment} onChange={(e) => set("imagery", { ...kit.imagery, treatment: e.target.value })} />
+        </EditorField>
+      </EditorSection>
     </div>
   );
 }

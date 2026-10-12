@@ -410,7 +410,8 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
     kit = build_kit(raw.get("kit"), cands, brand_name)
     brief = build_brief(raw.get("brief"), cands, home.url, brand_name)
     crawled = [p.url for p in pages]
-    for ev in await step(0.85, "Asking Qloo about the brand", kit=kit, brief=brief, crawled=crawled, status="review", screenshot=home.screenshot):
+    # The name replaces the console's URL guess (Convex ignores it for names a person typed).
+    for ev in await step(0.85, "Asking Qloo about the brand", name=brand_name, kit=kit, brief=brief, crawled=crawled, status="review", screenshot=home.screenshot):
         yield ev
 
     # 5. Qloo's view of the brand (Convex action; it writes its own spans).

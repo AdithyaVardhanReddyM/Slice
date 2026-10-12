@@ -153,15 +153,20 @@ export function TokenInput({
 
   return (
     <div className="space-y-2">
-      <div className="flex min-h-9 flex-wrap items-center gap-1.5 rounded-lg border border-input bg-transparent p-1.5 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
+      <div className="flex min-h-9 min-w-0 flex-wrap items-center gap-1.5 rounded-lg border border-input bg-transparent p-1.5 transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30">
         {values.map((v) => (
-          <Badge key={v} variant="secondary" className="h-6 gap-1 pr-1">
-            {v}
+          // Long values (rules, addresses) wrap inside the chip instead of overflowing the field.
+          <Badge
+            key={v}
+            variant="secondary"
+            className="h-auto min-h-6 max-w-full justify-start gap-1 rounded-2xl pr-1 text-left leading-snug whitespace-normal"
+          >
+            <span className="min-w-0 break-words">{v}</span>
             <button
               type="button"
               aria-label={`Remove ${v}`}
               onClick={() => onChange(values.filter((x) => x !== v))}
-              className="flex size-4 items-center justify-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground"
+              className="flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground"
             >
               <X />
             </button>

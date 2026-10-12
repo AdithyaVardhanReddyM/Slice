@@ -1,7 +1,7 @@
 "use client";
 
 import { useAction, useMutation } from "convex/react";
-import { Check, Upload as UploadIcon } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, FileSpreadsheet, Heart, MapPin, Plug, Upload as UploadIcon, Users, type LucideIcon } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
@@ -10,14 +10,13 @@ import { fmt } from "@/lib/format";
 import { parseCsv, suggestMapping, type CsvMapping, type ParsedCsv } from "@/lib/pages/csv";
 import { postJson } from "@/lib/pages/stream";
 import { AGE_LABEL } from "@/lib/pages/types";
-import { Field, Input, Select, Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
+import { Field, Input, Select } from "@/components/console/form";
 import { FieldGroup, Spinner, TokenInput } from "@/components/console/setup/atoms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
-import { Hint } from "./shared";
 
 const CHUNK = 200;
 
@@ -69,8 +68,10 @@ function DemographicFields({
 
 function Footer({ busy, disabled, label, error, onSubmit }: { busy: boolean; disabled: boolean; label: string; error: string | null; onSubmit: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t pt-4">
-      <p className="text-xs text-muted-foreground">{error ? <span className="text-destructive">{error}</span> : "Compiling takes about 20 seconds; the card fills in as Qloo answers."}</p>
+    <div className="sticky bottom-0 -mx-6 mt-auto flex items-center justify-between gap-4 border-t bg-popover px-6 py-4">
+      <p className="text-xs text-muted-foreground">
+        {error ? <span className="text-destructive">{error}</span> : "Takes about 20 seconds. The audience card fills in as Qloo answers."}
+      </p>
       <Button onClick={onSubmit} disabled={busy || disabled}>
         {busy && <Spinner data-icon="inline-start" />}
         {label}
@@ -116,8 +117,7 @@ function LocationTab({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="space-y-5">
-      <Hint>Qloo reads what a city listens to, watches, reads and books, then writes a taste profile for it. Add an age or gender to narrow it.</Hint>
+    <div className="flex flex-1 flex-col gap-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="City">
           <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Austin" autoFocus />
@@ -127,7 +127,7 @@ function LocationTab({ onDone }: { onDone: () => void }) {
         </Field>
       </div>
       <DemographicFields age={age} gender={gender} onAge={setAge} onGender={setGender} />
-      <Field label="Name" optional hint={`Defaults to “${autoName || "the city"}”.`}>
+      <Field label="Name" optional hint={`Shown on the audience card. Defaults to “${autoName || "the city"}”.`}>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName} />
       </Field>
       <Footer busy={busy} disabled={!city.trim()} label="Create audience" error={error} onSubmit={submit} />
@@ -167,8 +167,7 @@ function DemographicTab({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="space-y-5">
-      <Hint>A taste profile for an age band and gender across every market, from Qloo&apos;s demographic signals.</Hint>
+    <div className="flex flex-1 flex-col gap-5">
       <DemographicFields age={age} gender={gender} onAge={setAge} onGender={setGender} />
       <Field label="Name" optional hint={`Defaults to “${autoName}”.`}>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName} />
@@ -204,9 +203,8 @@ function InterestsTab({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="space-y-5">
-      <Hint>Type artists, films, books, places or brands this audience loves. Qloo resolves each name and builds the profile from what they have in common.</Hint>
-      <FieldGroup label="Interests" aside={`${interests.length} added`}>
+    <div className="flex flex-1 flex-col gap-5">
+      <FieldGroup label="Interests" aside={`${interests.length} added`} hint="Press Enter after each name. Add at least two.">
         <TokenInput values={interests} onChange={setInterests} placeholder="Khruangbin, Wes Anderson, Aesop…" />
       </FieldGroup>
       <Field label="Name" optional>
@@ -282,11 +280,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="space-y-5">
-      <Hint>
-        A spreadsheet of customers with columns for what they like (artists, films, brands, restaurants) and optionally where they live and how old they are. Qloo
-        resolves every name, then the rows are clustered into audiences.
-      </Hint>
+    <div className="flex flex-1 flex-col gap-5">
       <input
         ref={fileRef}
         type="file"
@@ -431,8 +425,7 @@ const CRMS = [
 
 function CrmTab() {
   return (
-    <div className="space-y-5">
-      <Hint>Connect a CRM to sync customers without a CSV. Until then, export a list and use the Upload CSV tab.</Hint>
+    <div className="flex flex-1 flex-col gap-5">
       <div className="grid gap-3 sm:grid-cols-2">
         {CRMS.map((c) => (
           <div key={c.name} className="flex items-start justify-between gap-3 rounded-lg border p-4 opacity-70" aria-disabled>
@@ -444,9 +437,7 @@ function CrmTab() {
           </div>
         ))}
       </div>
-      <Button disabled variant="outline">
-        Connect
-      </Button>
+      <p className="text-sm text-muted-foreground">Until then, export a customer list from your CRM and upload it as a CSV.</p>
     </div>
   );
 }
@@ -461,40 +452,122 @@ function cityOf(location: string | undefined): string {
   return /\d/.test(pick) ? "" : pick;
 }
 
-export function NewAudienceSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+export type AudienceSourceKind = "location" | "demographic" | "interests" | "csv" | "crm";
+
+export const AUDIENCE_SOURCES: { kind: AudienceSourceKind; icon: LucideIcon; title: string; body: string; example?: string; soon?: boolean }[] = [
+  {
+    kind: "location",
+    icon: MapPin,
+    title: "A city",
+    body: "What a city listens to, watches, reads and books. Narrow it by age or gender.",
+    example: "Austin, 25 to 29",
+  },
+  {
+    kind: "demographic",
+    icon: Users,
+    title: "A demographic",
+    body: "An age band and gender across every market, from Qloo's demographic signals.",
+    example: "Women, 30 to 34",
+  },
+  {
+    kind: "interests",
+    icon: Heart,
+    title: "Shared interests",
+    body: "Artists, films, places or brands these people love. Qloo builds the profile from what they have in common.",
+    example: "Khruangbin, Wes Anderson, Aesop",
+  },
+  {
+    kind: "csv",
+    icon: FileSpreadsheet,
+    title: "Your customers",
+    body: "Upload a customer CSV. Qloo resolves what each person likes, then the rows are clustered into audiences.",
+    example: "Your top customers, clustered",
+  },
+  { kind: "crm", icon: Plug, title: "Connect a CRM", body: "Sync customers from HubSpot, Salesforce, Klaviyo or Shopify.", soon: true },
+];
+
+export function SourceIcon({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
+  return (
+    <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground", className)}>
+      <Icon className="size-4" />
+    </span>
+  );
+}
+
+function SourcePicker({ onPick }: { onPick: (k: AudienceSourceKind) => void }) {
+  return (
+    <ul className="space-y-2">
+      {AUDIENCE_SOURCES.map((src) => (
+        <li key={src.kind}>
+          <button
+            type="button"
+            onClick={() => onPick(src.kind)}
+            className="group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            <SourceIcon icon={src.icon} />
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-2 text-sm font-medium">
+                {src.title}
+                {src.soon && <Badge variant="outline">Soon</Badge>}
+              </span>
+              <span className="mt-0.5 block text-sm text-muted-foreground">{src.body}</span>
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Two steps in one sheet: pick where the audience comes from, then define it.
+ * `kind` preselects a source (the empty state's cards open straight into one).
+ */
+export function NewAudienceSheet({
+  open,
+  kind,
+  onOpenChange,
+  onKindChange,
+}: {
+  open: boolean;
+  kind: AudienceSourceKind | null;
+  onOpenChange: (o: boolean) => void;
+  onKindChange: (k: AudienceSourceKind | null) => void;
+}) {
   const close = () => onOpenChange(false);
+  const source = AUDIENCE_SOURCES.find((s) => s.kind === kind) ?? null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-x-hidden overflow-y-auto sm:max-w-2xl">
-        <SheetHeader>
-          <SheetTitle>New audience</SheetTitle>
-          <SheetDescription>Define who the page is for. Qloo turns the definition into a taste profile the builder writes against.</SheetDescription>
+      <SheetContent className="w-full gap-0 overflow-x-hidden overflow-y-auto data-[side=right]:sm:max-w-xl">
+        <SheetHeader className="gap-3 border-b p-6">
+          {source ? (
+            <>
+              <Button variant="ghost" size="sm" className="-ml-2 w-fit text-muted-foreground" onClick={() => onKindChange(null)}>
+                <ArrowLeft data-icon="inline-start" /> All sources
+              </Button>
+              <div className="flex items-start gap-3">
+                <SourceIcon icon={source.icon} />
+                <div className="min-w-0 space-y-0.5">
+                  <SheetTitle>{source.title}</SheetTitle>
+                  <SheetDescription>{source.body}</SheetDescription>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <SheetTitle>New audience</SheetTitle>
+              <SheetDescription>Who is the page for? Pick where the audience comes from; Qloo turns it into a taste profile the builder writes against.</SheetDescription>
+            </>
+          )}
         </SheetHeader>
-        <div className="px-4 pb-6">
-          <Tabs defaultValue="location">
-            <TabList className="mb-5 h-auto flex-wrap">
-              <Tab value="location">Location</Tab>
-              <Tab value="demographic">Demographics</Tab>
-              <Tab value="interests">Interests</Tab>
-              <Tab value="csv">Upload CSV</Tab>
-              <Tab value="crm">Connect CRM</Tab>
-            </TabList>
-            <TabPanel value="location">
-              <LocationTab onDone={close} />
-            </TabPanel>
-            <TabPanel value="demographic">
-              <DemographicTab onDone={close} />
-            </TabPanel>
-            <TabPanel value="interests">
-              <InterestsTab onDone={close} />
-            </TabPanel>
-            <TabPanel value="csv">
-              <CsvTab onDone={close} />
-            </TabPanel>
-            <TabPanel value="crm">
-              <CrmTab />
-            </TabPanel>
-          </Tabs>
+        <div className="flex flex-1 flex-col px-6 pt-6 pb-6 has-[.sticky]:pb-0">
+          {!source && <SourcePicker onPick={onKindChange} />}
+          {source?.kind === "location" && <LocationTab onDone={close} />}
+          {source?.kind === "demographic" && <DemographicTab onDone={close} />}
+          {source?.kind === "interests" && <InterestsTab onDone={close} />}
+          {source?.kind === "csv" && <CsvTab onDone={close} />}
+          {source?.kind === "crm" && <CrmTab />}
         </div>
       </SheetContent>
     </Sheet>

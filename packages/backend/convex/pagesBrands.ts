@@ -68,14 +68,15 @@ async function uniqueSlug(ctx: MutationCtx, base: string): Promise<string> {
 }
 
 export const create = mutation({
-  args: { name: v.string(), url: v.string(), slug: v.optional(v.string()) },
+  args: { name: v.string(), url: v.string(), slug: v.optional(v.string()), nameFromSite: v.optional(v.boolean()) },
   returns: v.object({ id: v.id("pagesBrands"), slug: v.string() }),
-  handler: async (ctx, { name, url, slug: wanted }) => {
+  handler: async (ctx, { name, url, slug: wanted, nameFromSite }) => {
     const now = Date.now();
     const slug = await uniqueSlug(ctx, slugify(wanted ?? name));
     const id = await ctx.db.insert("pagesBrands", {
       slug,
       name: name.trim(),
+      ...(nameFromSite ? { nameFromSite: true } : {}),
       url: url.trim(),
       status: "extracting",
       progress: { value: 0, label: "Starting" },
@@ -124,7 +125,7 @@ export const rename = mutation({
   args: { id: v.id("pagesBrands"), name: v.string() },
   returns: v.null(),
   handler: async (ctx, { id, name }) => {
-    await ctx.db.patch(id, { name: name.trim(), updatedAt: Date.now() });
+    await ctx.db.patch(id, { name: name.trim(), nameFromSite: undefined, updatedAt: Date.now() });
     return null;
   },
 });
@@ -152,6 +153,8 @@ export const patch = internalMutation({
   args: {
     id: v.id("pagesBrands"),
     patch: v.object({
+      /** Applied only while the current name is a placeholder (`nameFromSite`). */
+      name: v.optional(v.string()),
       status: v.optional(v.string()),
       progress: v.optional(progressValidator),
       kit: v.optional(v.any()),
@@ -167,10 +170,14 @@ export const patch = internalMutation({
   handler: async (ctx, { id, patch }) => {
     const brand = await ctx.db.get(id);
     if (!brand) throw new Error("Unknown brand");
-    const { spans, ...fields } = patch;
+    const { spans, name, ...fields } = patch;
     const update: Partial<Doc<"pagesBrands">> = { updatedAt: Date.now() };
     for (const [k, val] of Object.entries(fields)) {
       if (val !== undefined) (update as Record<string, unknown>)[k] = val;
+    }
+    if (name?.trim() && brand.nameFromSite) {
+      update.name = name.trim();
+      update.nameFromSite = undefined;
     }
     if (spans?.length) update.trace = [...brand.trace, ...spans];
     await ctx.db.patch(id, update);

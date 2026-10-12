@@ -43,7 +43,7 @@ export function TagChips({ tags, max = 8, className }: { tags: ProfileTag[]; max
     <div className={cn("flex flex-wrap gap-1.5", className)}>
       {sorted.map((t) => (
         <Badge key={t.id} variant="secondary" className="font-normal" title={`${groupLabel(tagGroup(t.type))} · affinity ${Math.round(t.affinity * 100)}`}>
-          {t.name}
+          {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
         </Badge>
       ))}
     </div>
