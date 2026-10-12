@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { dayTickets, eur, faqs, festival, href, passes, travelPackages } from "@/lib/tagide";
 import { TicketCard } from "@/components/tagide/ticket-card";
-
-const SITE = "http://localhost:3002";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Tickets",

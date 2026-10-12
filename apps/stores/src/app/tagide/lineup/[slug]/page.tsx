@@ -4,8 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { actBySlug, acts, actsAt, day, dayTickets, eur, festival, href, runningOrder, sameDayOthers, sceneSrc, stage } from "@/lib/tagide";
 import { Photo } from "@/components/tagide/photo";
 import { TicketCard } from "@/components/tagide/ticket-card";
-
-const SITE = "http://localhost:3002";
+import { SITE } from "@/lib/site";
 
 export function generateStaticParams() {
   return acts.map((a) => ({ slug: a.slug }));

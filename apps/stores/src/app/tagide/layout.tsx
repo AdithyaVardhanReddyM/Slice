@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { festival, sceneSrc, tagide } from "@/lib/tagide";
 import { Footer } from "@/components/tagide/footer";
 import { Header } from "@/components/tagide/header";
-
-const SITE = "http://localhost:3002";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: { default: "Tágide Festival", template: "%s · Tágide Festival" },

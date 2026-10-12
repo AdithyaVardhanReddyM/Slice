@@ -6,8 +6,7 @@ import { Photo } from "@/components/tagide/photo";
 import { Poster } from "@/components/tagide/poster";
 import { Ribbon, Spark } from "@/components/tagide/ribbon";
 import { TicketCard } from "@/components/tagide/ticket-card";
-
-const SITE = "http://localhost:3002";
+import { SITE } from "@/lib/site";
 
 export default function TagideHome() {
   const { store } = tagide;
