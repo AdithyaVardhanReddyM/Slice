@@ -296,7 +296,7 @@ export const variant = query({
 async function applyVariantPatch(
   ctx: MutationCtx,
   id: Id<"pagesVariants">,
-  patch: { doc?: unknown; trace?: Doc<"pagesVariants">["trace"]; appendTrace?: boolean; status?: string; error?: string; name?: string; screenshot?: string },
+  patch: { doc?: unknown; trace?: Doc<"pagesVariants">["trace"]; appendTrace?: boolean; status?: string; error?: string; name?: string; screenshot?: string; insights?: unknown },
 ) {
   const vnt = await ctx.db.get(id);
   if (!vnt) throw new Error("Unknown variant");
@@ -313,6 +313,7 @@ async function applyVariantPatch(
   if (patch.error !== undefined) update.error = patch.error;
   if (patch.name) update.name = patch.name;
   if (patch.screenshot) update.screenshot = patch.screenshot;
+  if (patch.insights !== undefined) update.insights = patch.insights;
   if (patch.doc !== undefined && !patch.status && vnt.status !== "ready") update.status = "ready";
   await ctx.db.patch(id, update);
   return { version: update.version ?? vnt.version };
@@ -340,6 +341,7 @@ export const patchVariant = internalMutation({
       error: v.optional(v.string()),
       name: v.optional(v.string()),
       screenshot: v.optional(v.string()),
+      insights: v.optional(v.any()),
       spans: v.optional(v.array(spanValidator)),
       /** Replace the trace instead of appending (a fresh generation). */
       replaceTrace: v.optional(v.boolean()),
@@ -353,6 +355,7 @@ export const patchVariant = internalMutation({
       error: patch.error,
       name: patch.name,
       screenshot: patch.screenshot,
+      insights: patch.insights,
       trace: patch.spans,
       appendTrace: !patch.replaceTrace,
     }),

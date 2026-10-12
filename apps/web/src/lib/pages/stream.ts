@@ -44,6 +44,7 @@ export const TOOL_LABEL: Record<string, string> = {
   edit_page: "Editing the page",
   review_page: "Reviewing the page against the brand's homepage",
   start_new_page: "Starting a new page",
+  explain_page: "Writing up why the page is built this way",
 };
 
 export async function* postStream(

@@ -560,3 +560,44 @@ export interface QuizConfig {
     options: { label: string; image?: string; votes: Record<string, number> }[];
   }[];
 }
+
+/* Insights ------------------------------------------------------------------------ */
+
+/** A real Qloo reference the explanation points at (from the audience's profile). */
+export interface InsightRef {
+  name: string;
+  /** "artist", "brand", "place", "film", "style tag", … */
+  kind: string;
+  image?: string;
+  /** How it shaped the section (section refs only). */
+  why?: string;
+}
+
+/** Why one section of the page is built and worded the way it is. */
+export interface SectionInsight {
+  /** The section's data-section id. */
+  id: string;
+  title: string;
+  role: string;
+  why: string;
+  /** Phrases copied from the section, each with why that wording. */
+  wording: { quote: string; why: string }[];
+  taste: InsightRef[];
+  /** What was carried over from the brand's own site. */
+  brand: string[];
+  imagery?: string;
+}
+
+/** The plain-language explanation of a built page (pagesVariants.insights), written by the agent. */
+export interface PageInsights {
+  /** The doc version it explains; older than the variant's version means stale. */
+  version: number;
+  at: number;
+  headline: string;
+  summary: string;
+  portrait: string;
+  traits: { label: string; detail: string; refs: InsightRef[] }[];
+  sections: SectionInsight[];
+  /** "builder": written by the builder while it made the page; "review": reconstructed afterwards. */
+  source?: "builder" | "review";
+}

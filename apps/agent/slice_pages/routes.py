@@ -7,6 +7,7 @@ POST /pages/name-clusters   {upload_id}                        {ok, names}
 POST /pages/plan            {brand_id, prompt, audience_ids?, source_page_id?}  {ok, plan}
 POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
+POST /pages/insights        {variant_id}                       {ok, insights}
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ from slice_agent.trace import Span, record, start_turn
 from . import builder as B
 from . import capture, images
 from .audience_brief import name_clusters, write_audience_brief
+from .insights import write_insights
 from .intake import run_intake
 from .plan import plan_page
 
@@ -198,6 +200,31 @@ async def image(req: ImageRequest) -> dict[str, Any]:
     return {"ok": True, "images": out, "trace": spans}
 
 
+# --- insights (why the page is built the way it is) --------------------------------------------
+
+
+class InsightsRequest(BaseModel):
+    variant_id: str
+
+
+@router.post("/insights")
+async def insights(req: InsightsRequest) -> dict[str, Any]:
+    spans = start_turn()
+    try:
+        return {**(await write_insights(req.variant_id)), "trace": spans}
+    except Exception as err:
+        return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
+
+
+async def _refresh_insights(variant_id: str) -> None:
+    """Fallback after a turn that changed the page without explain_page, so the Insights screen opens ready."""
+    start_turn()
+    try:
+        await write_insights(variant_id)
+    except Exception as err:
+        print(f"[slice-pages] insights failed for {variant_id}: {err}")
+
+
 # --- builder -----------------------------------------------------------------------------------
 
 
@@ -294,6 +321,9 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
         return ", ".join(p.get("name", "") for p in (resp.get("items") or [])[:4])
     if name == "fetch_reference":
         return "read" if resp.get("ok") else "could not read"
+    if name == "explain_page":
+        n = resp.get("explained")
+        return f"{n} section{'s' if n != 1 else ''} explained" + (f", {len(resp.get('warnings') or [])} notes" if resp.get("warnings") else "")
     if name == "start_new_page":
         req = (args or {}).get("request") if isinstance(args, dict) else ""
         return str(req or "")[:140]
@@ -416,7 +446,7 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                     yield _ndjson({"type": "status", "text": label})
                     args = _safe(part.function_call.args)
                     if isinstance(args, dict):
-                        args = {k: (f"<{len(str(v))} chars>" if k in ("doc", "html", "css", "edits") else v) for k, v in args.items()}
+                        args = {k: (f"<{len(str(v))} chars>" if k in ("doc", "html", "css", "edits", "sections", "strategy") else v) for k, v in args.items()}
                     call_args[name] = part.function_call.args
                     steps.append({"kind": "tool", "name": name, "label": label, "status": "running"})
                     yield _ndjson({"type": "tool_call", "name": name, "label": label, "args": args})
@@ -494,6 +524,12 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             st["status"] = "failed"
     yield _ndjson({"type": "done", "messageId": message_id, "variantId": req.variant_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": doc_version})
     asyncio.create_task(_persist_build(req, message_id, merchant_text, full_text, spans, steps))
+    # The builder explains its own work (explain_page); if this turn changed the page without it, reconstruct the explanation.
+    if last_doc is not None and doc_version != int(state.get(B.DOC_VERSION) or 0):
+        fresh = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=session.id)
+        explained = ((fresh.state if fresh else {}).get(B.INSIGHTS) or {}).get("version")
+        if explained != doc_version:
+            asyncio.create_task(_refresh_insights(req.variant_id))
 
 
 async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span], steps: list[dict[str, Any]]) -> None:

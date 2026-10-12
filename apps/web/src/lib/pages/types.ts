@@ -7,6 +7,7 @@ import type {
   AudienceProfile,
   BrandBrief,
   BrandKit,
+  PageInsights,
   QuizConfig,
   RoutingRules,
   VariantDoc,
@@ -21,13 +22,16 @@ export type {
   BrandItem,
   HtmlDoc,
   ImageRef,
+  InsightRef,
   PageDoc,
+  PageInsights,
   ProfileBrand,
   ProfileEntity,
   ProfileTag,
   QuizConfig,
   RoutingRules,
   Section,
+  SectionInsight,
   VariantDoc,
 } from "@slice/backend/convex/pagesTypes";
 
@@ -58,6 +62,7 @@ export const briefOf = (b: Brand | null | undefined) => (b?.brief ?? null) as Br
 export const profileOf = (a: Audience | null | undefined) => (a?.profile ?? null) as AudienceProfile | null;
 export const audienceBriefOf = (a: Audience | null | undefined) => (a?.brief ?? null) as AudienceBrief | null;
 export const docOf = (v: Variant | null | undefined) => (v?.doc ?? null) as VariantDoc | null;
+export const insightsOf = (v: Variant | null | undefined) => (v?.insights ?? null) as PageInsights | null;
 export const routingOf = (p: Page | null | undefined) => (p?.routing ?? null) as RoutingRules | null;
 export const quizOf = (p: Page | null | undefined) => (p?.quiz ?? null) as QuizConfig | null;
 

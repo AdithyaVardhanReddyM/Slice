@@ -25,7 +25,6 @@ import { PageSettingsSheet, type PageSettings } from "./settings-sheet";
 import { useStartPage } from "./start-page";
 import { usePagesModel } from "@/lib/pages/models";
 import { useBuilder } from "./use-builder";
-import { WhyPanel } from "./why-panel";
 
 interface PageBundle {
   page: Page;
@@ -75,7 +74,7 @@ function PageEditor() {
   const startPage = useStartPage(brand);
 
   const [device, setDevice] = useState<Device>("desktop");
-  const [side, setSide] = useState<"insights" | "images" | null>(null);
+  const [side, setSide] = useState<"images" | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -147,10 +146,6 @@ function PageEditor() {
     );
   }
 
-  const scrollPreviewTo = (sectionId: string) => {
-    frame.current?.contentWindow?.postMessage({ type: "pg:scrollTo", sectionId }, "*");
-  };
-
   /** Every message edits this page; the agent starts a new page when it asks for another audience. */
   function send({ text, mentions, attachments }: ComposerValue) {
     if (!version) return;
@@ -220,7 +215,7 @@ function PageEditor() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <AudienceStrip audiences={pageAudiences} working={!!builder.live && builder.live.status !== null && !builder.live.handoff} />
               <div className="flex items-center gap-1">
-                <Button variant={side === "insights" ? "secondary" : "ghost"} size="sm" onClick={() => setSide(side === "insights" ? null : "insights")}>
+                <Button variant="ghost" size="sm" nativeButton={false} render={<Link href={`/dashboard/pages/${brand.slug}/${page.slug}/insights`} />}>
                   <Lightbulb data-icon="inline-start" /> Insights
                 </Button>
                 <Button variant={side === "images" ? "secondary" : "ghost"} size="sm" onClick={() => setSide(side === "images" ? null : "images")}>
@@ -246,25 +241,19 @@ function PageEditor() {
               {side && (
                 <div className="scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl border bg-background p-4 shadow-xs">
                   <div className="mb-3 flex items-center justify-between gap-2">
-                    <h2 className="text-sm font-medium">{side === "insights" ? "What shaped this page" : "Swap an image"}</h2>
+                    <h2 className="text-sm font-medium">Swap an image</h2>
                     <Button variant="ghost" size="icon-xs" aria-label="Close panel" onClick={() => setSide(null)}>
                       <X />
                     </Button>
                   </div>
-                  {side === "insights" ? (
-                    <WhyPanel variant={version} onPick={scrollPreviewTo} />
-                  ) : (
-                    <>
-                      {version && !version.doc && <p className="mb-3 text-xs text-muted-foreground">Build the page first.</p>}
-                      <ImageTool
-                        brandId={brand._id}
-                        variant={version}
-                        defaultMode={page.brief.imageMode}
-                        disabled={builder.busy}
-                        onApply={(msg) => version && void builder.send(version._id, msg)}
-                      />
-                    </>
-                  )}
+                  {version && !version.doc && <p className="mb-3 text-xs text-muted-foreground">Build the page first.</p>}
+                  <ImageTool
+                    brandId={brand._id}
+                    variant={version}
+                    defaultMode={page.brief.imageMode}
+                    disabled={builder.busy}
+                    onApply={(msg) => version && void builder.send(version._id, msg)}
+                  />
                 </div>
               )}
             </div>

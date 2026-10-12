@@ -453,6 +453,8 @@ export default defineSchema({
     screenshot: v.optional(v.string()),
     /** Why this version: the agent's spans (Qloo evidence per choice). */
     trace: v.array(spanValidator),
+    /** PageInsights: the plain-language explanation per section, for doc `insights.version`. */
+    insights: v.optional(v.any()),
     version: v.number(),
     error: v.optional(v.string()),
     createdAt: v.number(),

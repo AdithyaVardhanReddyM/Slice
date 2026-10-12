@@ -34,6 +34,7 @@ from .timing import timer
 
 from . import browser, capture, crawl, images
 from .audience_brief import profile_summary
+from .insights import catalogue, quote_on_page, remember_entities, resolve_name, section_text
 from .llm import clip, generate_json, generate_text
 from .pagedoc import section_ids, validate_html_doc
 from .skills import load_skills
@@ -53,6 +54,8 @@ DOC_VERSION = "pg_doc_version"
 KIND = "pg_kind"  # "generate" | "edit" for the current turn
 REVIEWS = "pg_reviews"  # review_page calls this turn
 LAST_REVIEW = "pg_last_review"  # the previous review's issues, so the next one judges progress
+INSIGHTS = "pg_insights"  # the page's explanation (PageInsights), merged by explain_page
+SEEN = "pg_seen"  # named things with pictures from this session's tool results, for explain_page
 
 PLACE_TAGS = {"restaurant": "urn:tag:genre:place:restaurant"}
 CULTURE_KINDS = {"artist", "movie", "tv_show", "book", "place", "destination", "brand", "podcast", "videogame"}
@@ -162,7 +165,8 @@ async def load_build_state(page_id: str, variant_id: str) -> dict[str, Any]:
     doc = variant.get("doc")
     if isinstance(doc, dict) and doc.get("kind") != "html":
         doc = None  # a page from the old section builder: this builder starts fresh
-    return {BRAND: brand, PAGE: page, VARIANT: variant, AUDIENCE: audience, DOC: doc, DOC_VERSION: int(variant.get("version") or 0), REVIEWS: 0}
+    insights = variant.get("insights") if isinstance(variant.get("insights"), dict) else None
+    return {BRAND: brand, PAGE: page, VARIANT: variant, AUDIENCE: audience, DOC: doc, DOC_VERSION: int(variant.get("version") or 0), REVIEWS: 0, INSIGHTS: insights}
 
 
 async def ensure_site(brand: dict[str, Any]) -> dict[str, Any] | None:
@@ -294,10 +298,11 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
 2. {'The audience has a place: call qloo_places(city, kind) for a local section (places near them that fit the brand).' if has_geo else 'No geo for this audience: no local section unless the brand itself has locations worth one.'} {'Culture lists exist in the detail: use them for a culture moment (4 to 6 names with images from the detail); call qloo_culture only to fill a missing kind.' if has_culture else 'No culture signals: skip the culture section.'}
 3. Imagery: {image_rule} One search_images call per missing picture, specific queries in the brand's imagery style, run together.
 4. write_page once: a complete page that answers the brief for this audience, in the brand's design language, with the items reordered by taste fit. Then review_page. Fix what it finds with edit_page (write_page again only for a rewrite), and review once more only if brandMatch was below 7 or a high-severity issue remains. At most {MAX_REVIEWS_PER_TURN} reviews per turn.
-5. Reply to the merchant in 2 to 4 sentences: what the page leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
+5. explain_page, last, once the page is final: the strategy and every section (see EXPLAINING YOUR WORK).
+6. Reply to the merchant in 2 to 4 sentences: what the page leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
 
     edit_rules = f"""HOW TO EDIT (kind = edit)
-Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Reply in one or two sentences saying what changed."""
+Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Then explain_page for the sections whose words, pictures or purpose changed (only those; add strategy only if the page's angle changed; after a write_page, explain the whole page). Reply in one or two sentences saying what changed."""
 
     return f"""You are the Slice page builder. You write a landing page for {brand.get('name', 'this brand')} aimed at its audience, as complete HTML and CSS, so that it looks like a page the brand's own designers made: an extension of their site, not a template. Taste comes from Qloo, the cultural taste graph: an audience is defined by what its people love (artists, films, places, brands) and by Qloo's tags for them. You can see your own work: review_page screenshots the page and compares it with the brand's homepage.
 
@@ -331,6 +336,14 @@ MORE TOOLS
 - qloo_search resolves any name the merchant mentions to a Qloo entity; qloo_insights asks the taste graph directly (places in a city for this audience, what fans of X also love, the tags that describe a group, demographic skew). Reach for them whenever a decision about what to show should rest on taste data rather than a guess, and cite the result in the section's evidence. The "Using Qloo" section below says what to ask for and how to read what comes back.
 - google_search checks facts the merchant states or that the page needs (dates, opening hours, an address, a venue, a competitor's offer, a local event). Use it when a wrong fact would embarrass the brand; never for design.
 - Images attached to a message are in your context: a photograph is inspiration for imagery and mood, a screenshot of a page is a structure or style reference. Say what you took from them in your reply.
+
+EXPLAINING YOUR WORK (explain_page)
+The merchant opens an Insights screen: the page with a box around each section and your explanation beside it. Write it for a smart marketer, not an engineer: plain, warm, specific English about your real reasons. No jargon (never "affinity", "entity", "signal", "tag", "urn", "variant", "LLM", pixel sizes or CSS terms); "people in this audience love…" and "Qloo's taste data shows…" are fine. No em dashes, no exclamation marks, no markdown.
+- strategy: headline (the page's angle in under 12 words), summary (2 or 3 sentences), portrait (who these people are, 1 or 2 sentences, as you would describe friends), traits (3 or 4: label of 2 to 4 words, one sentence detail, refs naming 1 to 4 artists, films, places or brands that show it).
+- sections, one per section you explain: title (2 to 4 words a marketer would use), role (one short sentence: what it does for the visitor), why (2 or 3 sentences connecting the taste data to the concrete choices you made), wording (1 to 3 phrases copied exactly from that section, 3 to 12 words, each with why you chose those words), taste (0 to 4 names from the Qloo data you used, written exactly as the tools returned them, each with how it shaped the section), brand (0 to 2 sentences on what you carried over from the brand's site), imagery (one sentence on why these pictures, or empty).
+- Only real reasons: the Qloo data, the brief, the brand's site, the reviews. Never invent data or results.
+- Honesty over coverage: cite a taste reference only where it truly shaped that section's words, picks or pictures. Navigation, tickets, travel and practical sections usually have none; leave taste empty there and say plainly what drove them (the brief, the brand's site, clarity). A page for everyone with little taste data gets few references, and that is fine.
+- brand notes in everyday words ("the same cream background and orange ticket button as the homepage"); never sizes, borders, percentages or other numbers.
 
 ONE PAGE, ONE AUDIENCE
 This page is built for the audience above and only that. When the merchant asks for a page or a version for another audience or group (an @audience that is not this page's, "now do one for students", "make a Berlin version"), call start_new_page with a self-contained request: what the new page is for and who it targets, carrying over this page's facts, offer and goal unless they change them, and adding no facts of your own. Do not edit this page for it. Then reply in one sentence that you are opening the new page. Changing who this page is for is a new page too.
@@ -1195,6 +1208,129 @@ async def review_page(tool_context: ToolContext, focus: str = "") -> dict:
     }
 
 
+def _merge_insights(old: dict[str, Any] | None, strategy: dict[str, Any] | None, sections: list[dict[str, Any]], order: list[str], version: int) -> dict[str, Any]:
+    base = dict(old or {})
+    if strategy:
+        for k in ("headline", "summary", "portrait", "traits"):
+            if strategy.get(k):
+                base[k] = strategy[k]
+    by_id = {s["id"]: s for s in (base.get("sections") or []) if isinstance(s, dict) and s.get("id")}
+    for sec in sections:
+        by_id[sec["id"]] = sec
+    import time as _time
+
+    return {
+        "headline": base.get("headline", ""),
+        "summary": base.get("summary", ""),
+        "portrait": base.get("portrait", ""),
+        "traits": base.get("traits") or [],
+        "sections": [by_id[i] for i in order if i in by_id],
+        "version": version,
+        "at": int(_time.time() * 1000),
+        "source": "builder",
+    }
+
+
+async def explain_page(sections: list, tool_context: ToolContext, strategy: dict | None = None) -> dict:
+    """Explain the page to the merchant, for the Insights screen: why it is built and worded the
+    way it is for this audience. Call last in a generate turn (whole page, with strategy), and
+    after edits for the sections you changed. See EXPLAINING YOUR WORK.
+
+    Args:
+        sections: [{id, title, role, why, wording: [{quote, why}], taste: [{name, why}], brand: [str], imagery}], one per section explained, ids as in data-section.
+        strategy: {headline, summary, portrait, traits: [{label, detail, refs: [name]}]}. Required on the first explanation of a page and after a rewrite; omit to keep the current one.
+    """
+    state = tool_context.state
+    doc = state.get(DOC)
+    if not isinstance(doc, dict) or doc.get("kind") != "html":
+        return {"ok": False, "error": "no page to explain yet; write_page first"}
+    try:
+        sections = _coerce(sections, "sections") or []
+        strategy = _coerce(strategy, "strategy") if strategy else None
+    except ValueError as err:
+        return {"ok": False, "problems": [str(err)]}
+    texts = section_text(doc.get("html") or "")
+    order = [s.get("id") for s in doc.get("sections") or [] if isinstance(s, dict)]
+    profile = (state.get(AUDIENCE) or {}).get("profile") or {}
+    cat = catalogue(profile)
+    seen = state.get(SEEN) or {}
+    warnings: list[str] = []
+    unknown: list[str] = []
+
+    def ref(name: Any, why: Any = None) -> dict[str, Any] | None:
+        hit = resolve_name(str(name or ""), cat, seen)
+        if not hit:
+            unknown.append(str(name))
+            return None
+        return {"name": hit["name"], "kind": hit.get("kind", ""), **({"image": hit["image"]} if hit.get("image") else {}), **({"why": str(why).strip()} if why else {})}
+
+    clean: list[dict[str, Any]] = []
+    for sec in sections:
+        if not isinstance(sec, dict) or sec.get("id") not in order:
+            warnings.append(f"no section {sec.get('id') if isinstance(sec, dict) else sec!r} on the page")
+            continue
+        sid = sec["id"]
+        text = (texts.get(sid) or {}).get("text", "")
+        wording = []
+        for w in sec.get("wording") or []:
+            if isinstance(w, dict) and quote_on_page(str(w.get("quote") or ""), text):
+                wording.append({"quote": str(w["quote"]).strip(), "why": str(w.get("why") or "").strip()})
+            elif isinstance(w, dict):
+                warnings.append(f"{sid}: quote not found in the section, dropped: {str(w.get('quote'))[:60]}")
+        taste = [r for r in (ref(t.get("name"), t.get("why")) for t in (sec.get("taste") or []) if isinstance(t, dict)) if r]
+        clean.append({
+            "id": sid,
+            "title": str(sec.get("title") or sid).strip(),
+            "role": str(sec.get("role") or "").strip(),
+            "why": str(sec.get("why") or "").strip(),
+            "wording": wording[:3],
+            "taste": taste[:4],
+            "brand": [str(b).strip() for b in (sec.get("brand") or []) if str(b).strip()][:2],
+            **({"imagery": str(sec["imagery"]).strip()} if str(sec.get("imagery") or "").strip() else {}),
+        })
+    strat = None
+    if isinstance(strategy, dict):
+        strat = {
+            "headline": str(strategy.get("headline") or "").strip(),
+            "summary": str(strategy.get("summary") or "").strip(),
+            "portrait": str(strategy.get("portrait") or "").strip(),
+            "traits": [
+                {"label": str(t.get("label") or "").strip(), "detail": str(t.get("detail") or "").strip(), "refs": [r for r in (ref(n) for n in (t.get("refs") or [])) if r]}
+                for t in (strategy.get("traits") or [])[:4]
+                if isinstance(t, dict) and t.get("label")
+            ],
+        }
+    old = state.get(INSIGHTS)
+    if not strat and not (old or {}).get("headline"):
+        return {"ok": False, "problems": ["the first explanation of a page needs strategy (headline, summary, portrait, traits)"]}
+    merged = _merge_insights(old, strat, clean, order, int(state.get(DOC_VERSION) or 0))
+    state[INSIGHTS] = merged
+    variant = state.get(VARIANT) or {}
+    with timer() as t:
+        try:
+            await convex.site("/pages/variant", {"variantId": variant.get("_id"), "patch": {"insights": merged}})
+        except Exception as err:
+            record("slice", "Save the explanation", f"failed: {str(err)[:140]}", ms=t.ms, started=t.started)
+            return {"ok": False, "error": f"could not save: {str(err)[:160]}"}
+    missing = [i for i in order if i not in {s["id"] for s in merged["sections"]}]
+    record("slice", "Explain the page", f"{len(clean)} section{'s' if len(clean) != 1 else ''} explained", ms=t.ms, started=t.started)
+    if unknown:
+        warnings.append("not in the Qloo data you saw, left out: " + ", ".join(unknown[:8]) + " (cite names exactly as the tools returned them)")
+    return {"ok": True, "explained": len(clean), "sectionsWithoutExplanation": missing, **({"warnings": warnings} if warnings else {})}
+
+
+async def _remember(tool: Any, args: dict[str, Any], tool_context: ToolContext, tool_response: Any) -> None:
+    """after_tool_callback: keep what Qloo (and the item picker) returned, so explain_page can cite it with pictures."""
+    if getattr(tool, "name", "") in ("explain_page", "write_page", "edit_page", "get_page", "review_page"):
+        return None
+    seen = dict(tool_context.state.get(SEEN) or {})
+    before = len(seen)
+    remember_entities(seen, tool_response)
+    if len(seen) != before:
+        tool_context.state[SEEN] = seen
+    return None
+
+
 async def start_new_page(request: str, audience_ids: list[str], tool_context: ToolContext) -> dict:
     """Starts a separate page for another audience or group. The console plans it (title,
     audiences, including new ones described in words), creates it and opens its editor,
@@ -1244,6 +1380,7 @@ TOOLS = [
     write_page,
     edit_page,
     review_page,
+    explain_page,
     start_new_page,
 ]
 
@@ -1265,6 +1402,7 @@ STATUS_FOR_TOOL = {
     "edit_page": "Editing the page",
     "review_page": "Reviewing the page against the brand's homepage",
     "start_new_page": "Starting a new page",
+    "explain_page": "Writing up why the page is built this way",
 }
 
 
@@ -1280,6 +1418,7 @@ def _make_agent(model: str) -> LlmAgent:
             temperature=0.6,
         ),
         tools=TOOLS,
+        after_tool_callback=_remember,
     )
 
 

@@ -12,9 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { BrandGlyph } from "../brand-shell";
 import { BrowserFrame } from "../browser-frame";
 
-/** Full-screen editor: a slim top bar, the chat on the left, the canvas on the right. */
-export function EditorLayout({ topbar, chat, canvas }: { topbar: ReactNode; chat: ReactNode; canvas: ReactNode }) {
-  // The editor is a fixed app surface: the document never scrolls or rubber-bands, only its panels do.
+/** A fixed app surface: the document never scrolls or rubber-bands, only its panels do. */
+export function useAppSurface() {
   useEffect(() => {
     // Both: Chrome reads overscroll-behavior on <html>, Safari on <body>.
     const els = [document.documentElement, document.body];
@@ -30,6 +29,11 @@ export function EditorLayout({ topbar, chat, canvas }: { topbar: ReactNode; chat
       });
     };
   }, []);
+}
+
+/** Full-screen editor: a slim top bar, the chat on the left, the canvas on the right. */
+export function EditorLayout({ topbar, chat, canvas }: { topbar: ReactNode; chat: ReactNode; canvas: ReactNode }) {
+  useAppSurface();
   return (
     <div className="fixed inset-0 flex min-h-0 flex-col overflow-hidden overscroll-none bg-background">
       {topbar}

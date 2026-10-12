@@ -51,7 +51,15 @@ export function AudienceCard({ audience, onOpen }: { audience: Audience; onOpen:
           kindLabel={AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}
           title={audience.name}
           subtitle={audienceSubtitle(audience)}
-          corner={!ready ? <StatusBadge status={audience.status} className="mr-10" /> : undefined}
+          corner={
+            !ready ? (
+              // Slides left only while the "⋯" menu (hidden until hover/focus) is showing.
+              <StatusBadge
+                status={audience.status}
+                className="transition-[margin] group-focus-within:mr-10 group-hover:mr-10 group-has-data-popup-open:mr-10"
+              />
+            ) : undefined
+          }
         />
         <div className="flex flex-1 flex-col gap-3 p-4">
           {!ready && <ProgressLine progress={audience.progress} status={audience.status} error={audience.error} />}
