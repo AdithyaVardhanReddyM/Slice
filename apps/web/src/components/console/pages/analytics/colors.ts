@@ -1,18 +1,23 @@
-// Chart colours for Pages analytics. Categorical slots are assigned to
-// versions by their position in the page's variant order (default first) and
-// never re-ordered when a filter hides one, so a version keeps its colour.
-// The set was run through the dataviz palette validator (light surface): all
-// adjacent pairs pass CVD and normal-vision separation; three slots sit below
-// 3:1 contrast, which the comparison table and legends compensate for.
+// Colours for Pages analytics. A page is one version, so the charts carry a
+// single series in brand orange; magnitude uses one sequential ramp.
 
-export const VARIANT_COLORS = ["#ea580c", "#2a78d6", "#1baf7a", "#4a3aa7", "#e87ba4", "#eda100"];
+/** Weekday × hour grid: brand orange at rising opacity, empty cells stay muted. */
+const GRID_STEPS = [0.14, 0.28, 0.44, 0.6, 0.78, 1];
 
-export const variantColor = (index: number) => VARIANT_COLORS[index % VARIANT_COLORS.length];
-
-/** Single-hue sequential ramp for the hourly grid: brand orange at rising opacity. */
-export const HEAT_STEPS = [0.08, 0.2, 0.34, 0.5, 0.66, 0.82, 1];
-
-export const heatColor = (t: number) => {
-  const step = HEAT_STEPS[Math.min(HEAT_STEPS.length - 1, Math.max(0, Math.floor(t * HEAT_STEPS.length)))];
-  return `color-mix(in oklch, var(--chart-1) ${Math.round(step * 100)}%, transparent)`;
+export const gridColor = (t: number) => {
+  const step = GRID_STEPS[Math.min(GRID_STEPS.length - 1, Math.max(0, Math.floor(t * GRID_STEPS.length)))];
+  return `color-mix(in oklch, var(--chart-1) ${Math.round(step * 100)}%, var(--muted))`;
 };
+
+/** Click density, light to dark (amber → brand orange → deep red), drawn over a dimmed page. */
+export const HEAT_STOPS: [number, string][] = [
+  [0, "rgba(255, 214, 102, 0)"],
+  [0.18, "#ffd666"],
+  [0.45, "#fb923c"],
+  [0.72, "#ea580c"],
+  [1, "#b42318"],
+];
+
+export const heatLegend = `linear-gradient(90deg, ${HEAT_STOPS.slice(1)
+  .map(([, c]) => c)
+  .join(", ")})`;

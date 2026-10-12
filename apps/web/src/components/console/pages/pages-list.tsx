@@ -92,7 +92,7 @@ function engaged(ms: number) {
 /* Thumbnail ------------------------------------------------------------------- */
 
 /** The page itself at 1440px, scaled into its box: used until the builder has screenshotted it. */
-function LiveThumb({ src }: { src: string }) {
+export function LiveThumb({ src }: { src: string }) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ scale: 0, height: 0 });
   const [loaded, setLoaded] = useState(false);

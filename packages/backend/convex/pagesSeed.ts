@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalAction } from "./_generated/server";
-import type { PageDoc } from "./pagesTypes";
+import { internalAction, internalMutation } from "./_generated/server";
+import { isHtmlDoc, type PageDoc } from "./pagesTypes";
 import type { IngestArgs } from "./pagesEvents";
 import { rng } from "./pagesCsv";
 import { hash32 } from "./pagesUtil";
@@ -12,6 +12,7 @@ import { hash32 } from "./pagesUtil";
 //
 //   npx convex run pagesSeed:simulateTraffic '{"pageId":"...","days":14,"sessionsPerDay":40}'
 //   npx convex run pagesSeed:reset '{"brandSlug":"ridgeline"}'
+//   npx convex run pagesSeed:clearTraffic '{"pageId":"..."}'
 
 const DAY = 86_400_000;
 const HOUR_CURVE = [0.2, 0.1, 0.1, 0.1, 0.1, 0.2, 0.4, 0.7, 0.9, 1.0, 1.1, 1.2, 1.3, 1.2, 1.1, 1.0, 1.0, 1.1, 1.2, 1.3, 1.2, 0.9, 0.6, 0.4];
@@ -22,8 +23,14 @@ const CITY_COUNTRY: Record<string, string> = {
   denver: "US", "san francisco": "US", nashville: "US", boston: "US", london: "GB", manchester: "GB", edinburgh: "GB",
   berlin: "DE", munich: "DE", hamburg: "DE", paris: "FR", marseille: "FR", lyon: "FR", lisbon: "PT", porto: "PT",
   copenhagen: "DK", barcelona: "ES", madrid: "ES", amsterdam: "NL", stockholm: "SE", dublin: "IE", milan: "IT", rome: "IT",
-  toronto: "CA", vancouver: "CA", montreal: "CA", sydney: "AU", melbourne: "AU", tokyo: "JP",
+  toronto: "CA", vancouver: "CA", montreal: "CA", sydney: "AU", melbourne: "AU", tokyo: "JP", "são paulo": "BR", "sao paulo": "BR",
 };
+const COUNTRY_CODE: Record<string, string> = {
+  "united states": "US", usa: "US", "united kingdom": "GB", uk: "GB", germany: "DE", france: "FR", portugal: "PT", spain: "ES",
+  brazil: "BR", canada: "CA", australia: "AU", netherlands: "NL", sweden: "SE", denmark: "DK", ireland: "IE", italy: "IT", japan: "JP",
+};
+/** ISO code for a country given as a code or an English name ("Germany" is DE, not GE). */
+const countryCode = (c: string | undefined) => (!c ? undefined : c.length === 2 ? c.toUpperCase() : COUNTRY_CODE[c.toLowerCase()]);
 const COUNTRY_MIX: [string, number][] = [["US", 45], ["GB", 15], ["DE", 8], ["FR", 7], ["CA", 6], ["AU", 5], ["NL", 4], ["ES", 4], ["PT", 3], ["SE", 3]];
 
 type Weighted<T> = [T, number][];
@@ -37,6 +44,41 @@ const pickWeighted = <T>(random: () => number, options: Weighted<T>): T => {
   return options[options.length - 1][0];
 };
 const between = (random: () => number, lo: number, hi: number) => lo + (hi - lo) * random();
+
+/** A clickable element inside a section, in section-relative 0..1 units (measured from the rendered page). */
+interface Hotspot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  cta?: boolean;
+  label?: string;
+}
+
+const hotspotValidator = v.object({
+  x: v.number(),
+  y: v.number(),
+  w: v.number(),
+  h: v.number(),
+  cta: v.optional(v.boolean()),
+  label: v.optional(v.string()),
+});
+
+/** Section ids in order, plus the ones holding a form and the main CTA, for either doc kind. */
+function docShape(doc: unknown): { sections: string[]; formId?: string; ctaId?: string } {
+  if (isHtmlDoc(doc)) {
+    // Split the HTML at each top-level data-section and look inside each chunk.
+    const chunks = doc.html.split(/(?=<[a-z]+[^>]*\sdata-section=")/i);
+    const at = (re: RegExp) => chunks.find((c) => re.test(c))?.match(/data-section="([^"]+)"/)?.[1];
+    return { sections: doc.sections.map((s) => s.id), formId: at(/<form\b/i), ctaId: at(/data-cta/i) };
+  }
+  const d = doc as PageDoc | undefined;
+  return {
+    sections: d?.sections?.map((s) => s.id) ?? [],
+    formId: d?.sections?.find((s) => s.type === "form")?.id,
+    ctaId: d?.sections?.find((s) => s.type === "cta")?.id,
+  };
+}
 
 interface VariantPlan {
   variant: Doc<"pagesVariants">;
@@ -56,10 +98,10 @@ function planVariants(
   const sorted = [...variants].sort((a, b) => Number(!!a.audienceId) - Number(!!b.audienceId));
   const audienceVariants = sorted.filter((x) => x.audienceId).length;
   return sorted.map((variant, i) => {
-    const doc = variant.doc as PageDoc | undefined;
-    const sections = doc?.sections?.map((s) => s.id) ?? ["hero", "s2", "s3", "s4", "s5", "cta"];
-    const formId = doc?.sections?.find((s) => s.type === "form")?.id;
-    const ctaId = doc?.sections?.find((s) => s.type === "cta")?.id ?? sections[sections.length - 1];
+    const shape = docShape(variant.doc);
+    const sections = shape.sections.length ? shape.sections : ["hero", "s2", "s3", "s4", "s5", "cta"];
+    const formId = shape.formId;
+    const ctaId = shape.ctaId ?? sections[sections.length - 1];
     const isDefault = !variant.audienceId;
     const share = audienceVariants === 0 ? 1 : isDefault ? 0.35 : 0.65 / audienceVariants;
     // A built-in spread so there is a winner even without explicit weights.
@@ -93,7 +135,7 @@ function resolvedByFor(random: () => number, plan: VariantPlan): string {
 function geoFor(random: () => number, plan: VariantPlan, resolvedBy: string): { country: string; city?: string } {
   const loc = plan.audience?.sources.location;
   if (loc) {
-    const country = loc.country?.toUpperCase().slice(0, 2) ?? CITY_COUNTRY[loc.city.toLowerCase()] ?? "US";
+    const country = countryCode(loc.country) ?? CITY_COUNTRY[loc.city.toLowerCase()] ?? "US";
     if (resolvedBy === "geo" || random() < 0.7) return { country, city: loc.city };
   }
   const memberCities = (plan.audience?.profile as { geo?: { name: string; count: number }[] } | undefined)?.geo;
@@ -160,6 +202,7 @@ function buildSession(
   startAt: number,
   visitorId: string,
   sessionId: string,
+  hotspots: Record<string, Hotspot[]> | undefined,
 ): IngestArgs {
   const resolvedBy = resolvedByFor(random, plan);
   const geo = geoFor(random, plan, resolvedBy);
@@ -193,23 +236,40 @@ function buildSession(
   }
   if (!bounce) {
     const clicks = pickWeighted(random, [[0, 35], [1, 35], [2, 20], [3, 10]]);
+    // A point inside a measured element (most clicks), else a stray click on the section.
+    const pointIn = (sectionId: string, ctaOnly: boolean) => {
+      const spots = (hotspots?.[sectionId] ?? []).filter((h) => !ctaOnly || h.cta);
+      if (spots.length && random() < 0.88) {
+        const h = pickWeighted(random, spots.map((x) => [x, x.cta ? 4 : 1] as [Hotspot, number]));
+        const jitter = () => (random() + random() + random()) / 3; // centre-weighted
+        return { x: h.x + h.w * jitter(), y: h.y + h.h * jitter(), label: h.label };
+      }
+      return { x: Math.min(0.98, Math.max(0.02, 0.5 + (random() - 0.5) * 0.8)), y: Math.min(0.98, Math.max(0.02, 0.5 + (random() - 0.5) * 0.8)), label: undefined };
+    };
+    const round = (n: number) => Math.round(Math.min(1, Math.max(0, n)) * 1000) / 1000;
     for (let c = 0; c < clicks; c++) {
       const sectionId = plan.sectionIds[Math.floor(random() * seenCount)];
+      const p = pointIn(sectionId, false);
       events.push({
         type: "click",
         at: Math.round(startAt + between(random, 2000, engagedMs)),
         sectionId,
-        x: Math.min(0.98, Math.max(0.02, 0.5 + (random() - 0.5) * 0.7)),
-        y: Math.min(0.98, Math.max(0.02, 0.6 + (random() - 0.5) * 0.6)),
-        label: pickWeighted(random, [["Learn more", 3], ["See details", 2], ["View", 2], ["Image", 3]]),
+        x: round(p.x),
+        y: round(p.y),
+        // Stray clicks (on text or images) carry no element label, as with real visitors' non-control clicks.
+        label: p.label ?? (hotspots ? undefined : pickWeighted(random, [["Learn more", 3], ["See details", 2], ["View", 2], ["Image", 3]])),
       });
     }
     if (random() < plan.ctaP) {
-      const sectionId = random() < 0.6 ? plan.sectionIds[0] : plan.ctaId;
+      const ctaSections = hotspots ? Object.keys(hotspots).filter((id) => hotspots[id].some((h) => h.cta)) : [];
+      const sectionId = ctaSections.length
+        ? (random() < 0.6 ? ctaSections[0] : ctaSections[Math.floor(random() * ctaSections.length)])
+        : random() < 0.6 ? plan.sectionIds[0] : plan.ctaId;
       const at = Math.round(startAt + between(random, 4000, engagedMs));
-      const label = page.brief.cta.label || "Get started";
-      events.push({ type: "click", at, sectionId, x: 0.5 + (random() - 0.5) * 0.2, y: 0.7 + (random() - 0.5) * 0.1, label, href: page.brief.cta.href });
-      events.push({ type: "cta_click", at: at + 1, sectionId, label, href: page.brief.cta.href });
+      const p = ctaSections.length ? pointIn(sectionId, true) : { x: 0.5 + (random() - 0.5) * 0.2, y: 0.7 + (random() - 0.5) * 0.1, label: undefined };
+      const label = p.label || page.brief.cta.label || "Get started";
+      events.push({ type: "click", at, sectionId, x: round(p.x), y: round(p.y), label, href: page.brief.cta.href });
+      events.push({ type: "cta_click", at: at + 1, sectionId, label, href: page.brief.cta.href, x: round(p.x), y: round(p.y) });
     }
     const formP = plan.formId ? 0.05 : 0.008;
     if (random() < formP && depth > 0.5) {
@@ -258,9 +318,11 @@ export const simulateTraffic = internalAction({
     sessionsPerDay: v.number(),
     weights: v.optional(v.record(v.string(), v.number())),
     seed: v.optional(v.number()),
+    /** Clickable elements per section id, measured from the rendered page, so simulated clicks land on real buttons. */
+    hotspots: v.optional(v.record(v.string(), v.array(hotspotValidator))),
   },
   returns: v.object({ sessions: v.number(), events: v.number(), perVariant: v.record(v.string(), v.number()) }),
-  handler: async (ctx, { pageId, days, sessionsPerDay, weights, seed }) => {
+  handler: async (ctx, { pageId, days, sessionsPerDay, weights, seed, hotspots }) => {
     const data = await ctx.runQuery(internal.pages.getInternal, { id: pageId });
     if (!data) throw new Error("Unknown page");
     const { page, variants, audiences } = data;
@@ -296,7 +358,7 @@ export const simulateTraffic = internalAction({
           visitors.push(visitorId);
         }
         const sessionId = `sim_s_${hash32(`${pageId}|${seed ?? 0}|s${sessions}`).toString(36)}`;
-        pending.push(buildSession(random, plan, page, brand?.slug ?? "brand", startAt, visitorId, sessionId));
+        pending.push(buildSession(random, plan, page, brand?.slug ?? "brand", startAt, visitorId, sessionId, hotspots));
         perVariant[plan.variant._id] = (perVariant[plan.variant._id] ?? 0) + 1;
         sessions++;
         if (pending.length >= 8) await flush();
@@ -304,6 +366,45 @@ export const simulateTraffic = internalAction({
     }
     await flush();
     return { sessions, events, perVariant };
+  },
+});
+
+const CLEAR_BATCH = 2000;
+
+/** One batch of a page's analytics rows (events, rollups, sessions, forms). */
+export const clearTrafficChunk = internalMutation({
+  args: { pageId: v.id("pages") },
+  returns: v.object({ deleted: v.number(), more: v.boolean() }),
+  handler: async (ctx, { pageId }) => {
+    let left = CLEAR_BATCH;
+    const tables = [
+      ctx.db.query("pagesEvents").withIndex("by_page_at", (q) => q.eq("pageId", pageId)),
+      ctx.db.query("pagesStats").withIndex("by_page_day", (q) => q.eq("pageId", pageId)),
+      ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", pageId)),
+      ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", pageId)),
+    ];
+    for (const query of tables) {
+      if (left <= 0) break;
+      const rows = await query.take(left);
+      for (const r of rows) await ctx.db.delete(r._id);
+      left -= rows.length;
+    }
+    return { deleted: CLEAR_BATCH - left, more: left <= 0 };
+  },
+});
+
+/** Wipes a page's analytics so its traffic can be simulated again. The page itself is untouched. */
+export const clearTraffic = internalAction({
+  args: { pageId: v.id("pages") },
+  returns: v.object({ deleted: v.number() }),
+  handler: async (ctx, { pageId }) => {
+    let deleted = 0;
+    for (let i = 0; i < 1000; i++) {
+      const r = await ctx.runMutation(internal.pagesSeed.clearTrafficChunk, { pageId });
+      deleted += r.deleted;
+      if (!r.more) break;
+    }
+    return { deleted };
   },
 });
 

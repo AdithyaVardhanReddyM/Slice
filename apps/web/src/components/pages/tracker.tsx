@@ -263,7 +263,9 @@ export function Tracker({ meta }: { meta: TrackingMeta }) {
       const anchor = target.closest<HTMLAnchorElement>("a[href]");
       const control = target.closest<HTMLElement>("a, button, [role=button], summary, input, select, label");
       const ctaEl = target.closest<HTMLElement>("[data-cta]");
-      const text = (ctaEl?.dataset.cta ?? control?.textContent ?? target.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+      // Name what was pressed: a CTA, a control, or an image. A click on plain text stays unnamed (it is still placed on the map).
+      const image = target.closest<HTMLImageElement>("img");
+      const text = (ctaEl?.dataset.cta ?? control?.textContent ?? image?.alt ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
       const href = anchor?.getAttribute("href") ?? undefined;
 
       push({ type: "click", sectionId, label: text || undefined, href, x, y });

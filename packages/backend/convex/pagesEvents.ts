@@ -157,8 +157,8 @@ export async function ingestOne(ctx: MutationCtx, args: IngestArgs): Promise<num
         bumpSection(d.bySection, e.sectionId, "clicks");
         break;
       case "cta_click":
+        // The tracker also sends a plain "click" for the same press, which already counted for the section.
         d.ctaClicks += 1;
-        bumpSection(d.bySection, e.sectionId, "clicks");
         break;
       case "section_seen":
         bumpSection(d.bySection, e.sectionId, "seen");
@@ -326,7 +326,18 @@ export const stats = query({
     const byResolvedBy: Record<string, number> = {};
     const hourly: number[][] = Array.from({ length: 24 }, () => new Array<number>(7).fill(0));
     const series: { day: string; hour: number; variantId: Id<"pagesVariants">; views: number; sessions: number; ctaClicks: number }[] = [];
+    // Whole page per UTC day, every version summed.
+    const daily = new Map<string, { day: string; views: number; sessions: number; visitors: number; clicks: number; ctaClicks: number; formSubmits: number; engagedMs: number }>();
     for (const r of rows) {
+      const day = daily.get(r.day) ?? { day: r.day, views: 0, sessions: 0, visitors: 0, clicks: 0, ctaClicks: 0, formSubmits: 0, engagedMs: 0 };
+      day.views += r.views;
+      day.sessions += r.sessions;
+      day.visitors += r.visitors;
+      day.clicks += r.clicks;
+      day.ctaClicks += r.ctaClicks;
+      day.formSubmits += r.formSubmits;
+      day.engagedMs += r.engagedMs;
+      daily.set(r.day, day);
       let d = byVariant.get(r.variantId);
       if (!d) {
         d = emptyDelta();
@@ -373,7 +384,8 @@ export const stats = query({
     });
     // Default first, then by views.
     variantRows.sort((a, b) => Number(!!a.audienceId) - Number(!!b.audienceId) || b.views - a.views);
-    return { variants: variantRows, series, byDevice, byBrowser, byCountry, bySource, byResolvedBy, hourly, from: fromDay, to: toDay };
+    const days = [...daily.values()].sort((a, b) => (a.day < b.day ? -1 : 1));
+    return { variants: variantRows, series, daily: days, byDevice, byBrowser, byCountry, bySource, byResolvedBy, hourly, from: fromDay, to: toDay };
   },
 });
 
@@ -385,7 +397,7 @@ export const heatmap = query({
     const events = await ctx.db
       .query("pagesEvents")
       .withIndex("by_variant_at", (q) => q.eq("variantId", variantId).gte("at", fromMs).lte("at", toMs))
-      .filter((q) => q.or(q.eq(q.field("type"), "click"), q.eq(q.field("type"), "cta_click")))
+      .filter((q) => q.eq(q.field("type"), "click"))
       .take(5000);
     const points = events
       .filter((e) => e.sectionId && e.x !== undefined && e.y !== undefined)
@@ -425,32 +437,39 @@ export const recent = query({
       .take(Math.min(take, 500)),
 });
 
-/** Per page over the last `days`: views, sessions, visitors, leads, engaged time, CTA rate and the variant with the best CTA rate. */
+/**
+ * Per page over the last `days` (UTC days, today included): views, sessions,
+ * visitors, leads, engaged time, CTA rate, the variant with the best CTA rate,
+ * the same totals for the `days` before (`prev`), and visitors per day (`trend`).
+ */
 export const brandOverview = query({
   args: { brandId: v.id("pagesBrands"), days: v.number() },
   handler: async (ctx, { brandId, days }) => {
     const now = Date.now();
-    const fromDay = dayOf(now - Math.max(0, days - 1) * 86_400_000);
+    const span = Math.max(1, days);
+    const fromDay = dayOf(now - (span - 1) * 86_400_000);
     const toDay = dayOf(now);
+    const prevFromDay = dayOf(now - (2 * span - 1) * 86_400_000);
+    const dayList = Array.from({ length: span }, (_, i) => dayOf(now - (span - 1 - i) * 86_400_000));
     const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect();
     const out = [];
     for (const page of pages) {
-      const rows: StatsRow[] = await statsRows(ctx, page._id, fromDay, toDay);
+      const rows: StatsRow[] = await statsRows(ctx, page._id, prevFromDay, toDay);
       const variants = await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", page._id)).collect();
-      let views = 0;
-      let sessions = 0;
-      let visitors = 0;
-      let ctaClicks = 0;
-      let formSubmits = 0;
-      let engagedMs = 0;
+      const cur = { views: 0, sessions: 0, visitors: 0, ctaClicks: 0, formSubmits: 0, engagedMs: 0 };
+      const prev = { ...cur };
+      const perDay = new Map<string, number>();
       const per = new Map<string, { views: number; ctaClicks: number }>();
       for (const r of rows) {
-        views += r.views;
-        sessions += r.sessions;
-        visitors += r.visitors;
-        ctaClicks += r.ctaClicks;
-        formSubmits += r.formSubmits;
-        engagedMs += r.engagedMs;
+        const t = r.day >= fromDay ? cur : prev;
+        t.views += r.views;
+        t.sessions += r.sessions;
+        t.visitors += r.visitors;
+        t.ctaClicks += r.ctaClicks;
+        t.formSubmits += r.formSubmits;
+        t.engagedMs += r.engagedMs;
+        if (t !== cur) continue;
+        perDay.set(r.day, (perDay.get(r.day) ?? 0) + r.visitors);
         const p = per.get(r.variantId) ?? { views: 0, ctaClicks: 0 };
         p.views += r.views;
         p.ctaClicks += r.ctaClicks;
@@ -469,6 +488,15 @@ export const brandOverview = query({
           };
         }
       }
+      const summary = (t: typeof cur) => ({
+        views: t.views,
+        sessions: t.sessions,
+        visitors: t.visitors,
+        ctaClicks: t.ctaClicks,
+        formSubmits: t.formSubmits,
+        avgEngagedMs: t.sessions > 0 ? Math.round(t.engagedMs / t.sessions) : 0,
+        ctaRate: ratio(t.ctaClicks, t.views),
+      });
       out.push({
         pageId: page._id,
         title: page.title,
@@ -476,13 +504,9 @@ export const brandOverview = query({
         status: page.status,
         publishedAt: page.publishedAt,
         variantCount: variants.length,
-        views,
-        sessions,
-        visitors,
-        ctaClicks,
-        formSubmits,
-        avgEngagedMs: sessions > 0 ? Math.round(engagedMs / sessions) : 0,
-        ctaRate: ratio(ctaClicks, views),
+        ...summary(cur),
+        prev: summary(prev),
+        trend: dayList.map((d) => perDay.get(d) ?? 0),
         topVariant,
       });
     }
