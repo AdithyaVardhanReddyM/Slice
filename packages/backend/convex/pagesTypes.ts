@@ -344,8 +344,74 @@ export interface PageDoc {
   footer?: { text?: string; links?: Cta[] };
 }
 
+/* HTML document ----------------------------------------------------------- */
+
+/**
+ * A page the builder wrote as markup: the whole body (header, sections,
+ * footer) plus page-scoped CSS. Rendered sanitised inside `.pg-root`, so the
+ * kit's `--pg-*` variables are available to the CSS. Sections are elements
+ * with `data-section="<id>"`; CTAs carry `data-cta`; forms are
+ * `<form data-pg-form="<name>">` and the tracker posts them.
+ */
+export interface HtmlDoc {
+  kind: "html";
+  meta: { title: string; description: string; image?: string; /** Extra Google font families the CSS uses. */ fonts?: string[] };
+  html: string;
+  css: string;
+  /** Why each section says what it says (console Insights); ids match `data-section`. */
+  sections: { id: string; label: string; evidence: string }[];
+}
+
+export type VariantDoc = PageDoc | HtmlDoc;
+
+export const isHtmlDoc = (doc: unknown): doc is HtmlDoc =>
+  !!doc && typeof doc === "object" && (doc as { kind?: unknown }).kind === "html" && typeof (doc as { html?: unknown }).html === "string";
+
+const HTML_FORBIDDEN: [RegExp, string][] = [
+  [/<script\b/i, "html may not contain <script>"],
+  [/<(iframe|object|embed|link|meta|base)\b/i, "html may not contain iframe, object, embed, link, meta or base tags"],
+  [/\son[a-z]+\s*=/i, "html may not contain on* event handlers"],
+  [/javascript:/i, "html may not contain javascript: URLs"],
+];
+const CSS_FORBIDDEN: [RegExp, string][] = [
+  [/@import\b/i, "css may not use @import (list Google fonts in meta.fonts instead)"],
+  [/expression\s*\(/i, "css may not use expression()"],
+  [/javascript:/i, "css may not contain javascript: URLs"],
+  [/behavior\s*:/i, "css may not use behavior:"],
+];
+
+export function validateHtmlDoc(doc: unknown): string[] {
+  const problems: string[] = [];
+  const d = doc as Partial<HtmlDoc> | null;
+  if (!d || typeof d !== "object") return ["doc is not an object"];
+  if (!d.meta || typeof d.meta.title !== "string" || !d.meta.title.trim()) problems.push("meta.title missing");
+  if (typeof d.html !== "string" || d.html.trim().length < 200) problems.push("html missing or too short");
+  if (typeof d.css !== "string") problems.push("css missing (use an empty string if there is none)");
+  if (typeof d.html === "string") {
+    for (const [re, msg] of HTML_FORBIDDEN) if (re.test(d.html)) problems.push(msg);
+    if (/<\/?(html|head|body)\b/i.test(d.html)) problems.push("html is the page body only: no <html>, <head> or <body> tags");
+    if (/<style\b/i.test(d.html)) problems.push("put CSS in `css`, not in <style> tags");
+    const ids = [...d.html.matchAll(/data-section\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
+    if (ids.length === 0) problems.push("html needs sections: top-level elements with data-section=\"<id>\"");
+    const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+    if (dupes.length) problems.push("duplicate data-section ids: " + [...new Set(dupes)].join(", "));
+    if (!/data-cta\s*=/.test(d.html)) problems.push("at least one call to action needs data-cta=\"<label>\"");
+    if (!Array.isArray(d.sections)) problems.push("sections (id, label, evidence per data-section) missing");
+    else {
+      const known = new Set(ids);
+      const missing = ids.filter((id) => !d.sections!.some((s) => s && s.id === id));
+      if (missing.length) problems.push("sections entries missing for: " + missing.join(", "));
+      const unknown = d.sections.filter((s) => s && !known.has(s.id)).map((s) => s.id);
+      if (unknown.length) problems.push("sections entries without a data-section in the html: " + unknown.join(", "));
+    }
+  }
+  if (typeof d.css === "string") for (const [re, msg] of CSS_FORBIDDEN) if (re.test(d.css)) problems.push(msg);
+  return problems;
+}
+
 /** Cheap structural check before a doc is saved or rendered. Returns problems, empty when fine. */
 export function validateDoc(doc: unknown): string[] {
+  if (isHtmlDoc(doc) || (!!doc && typeof doc === "object" && (doc as { kind?: unknown }).kind === "html")) return validateHtmlDoc(doc);
   const problems: string[] = [];
   const d = doc as Partial<PageDoc> | null;
   if (!d || typeof d !== "object") return ["doc is not an object"];

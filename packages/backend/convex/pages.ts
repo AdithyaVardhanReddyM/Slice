@@ -31,6 +31,22 @@ const buildMessageValidator = v.object({
   text: v.string(),
   variantId: v.optional(v.id("pagesVariants")),
   trace: v.optional(v.array(spanValidator)),
+  steps: v.optional(v.array(v.any())),
+  attachments: v.optional(v.array(v.object({ url: v.string(), name: v.string(), type: v.string() }))),
+});
+
+/* Attachments (images the merchant drops into the builder chat) -------------- */
+
+export const attachmentUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => ctx.storage.generateUploadUrl(),
+});
+
+export const attachmentUrl = mutation({
+  args: { storageId: v.id("_storage") },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, { storageId }) => ctx.storage.getUrl(storageId),
 });
 
 const strip = <T extends { trace?: unknown }>(doc: T): Omit<T, "trace"> => {

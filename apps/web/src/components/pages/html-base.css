@@ -1,0 +1,103 @@
+/* Base for builder-written pages (.pg-page). The page's own CSS does the
+   design; this only normalises the box model, media, forms and focus, and
+   styles the tracker's form success state. Element rules use :where() so
+   they carry no specificity and never beat the page's own classes. */
+
+.pg-page {
+  background: var(--pg-brand-bg);
+  color: var(--pg-brand-fg);
+  font-family: var(--pg-font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.pg-page *,
+.pg-page *::before,
+.pg-page *::after {
+  box-sizing: border-box;
+}
+
+.pg-page-body > *:first-child {
+  margin-top: 0;
+}
+
+.pg-page :where(h1, h2, h3, h4) {
+  font-family: var(--pg-font-heading);
+  margin: 0;
+}
+
+.pg-page :where(p, ul, ol, figure) {
+  margin: 0;
+}
+
+.pg-page :where(img, video, svg) {
+  max-width: 100%;
+  display: block;
+}
+
+.pg-page :where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pg-page :where(button, input, select, textarea) {
+  font: inherit;
+  color: inherit;
+}
+
+.pg-page :where(button) {
+  cursor: pointer;
+}
+
+.pg-page :focus-visible {
+  outline: 2px solid var(--pg-brand-primary);
+  outline-offset: 3px;
+}
+
+.pg-page ::selection {
+  background: color-mix(in srgb, var(--pg-brand-primary) 28%, transparent);
+}
+
+/* Tracker-owned form states. */
+.pg-page form[data-pg-form][data-state="sending"] button[type="submit"] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.pg-page .pg-form-success {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--pg-brand-fg) 16%, transparent);
+  border-radius: var(--pg-radius);
+  font-weight: 500;
+}
+
+.pg-page .pg-form-success::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--pg-brand-primary);
+  flex: none;
+}
+
+.pg-page .pg-form-error {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  color: #b42318;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-page *,
+  .pg-page *::before,
+  .pg-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

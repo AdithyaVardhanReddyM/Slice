@@ -8,11 +8,40 @@ import type { Span } from "./types";
 export type PagesAgentEvent =
   | { type: "status"; text: string }
   | { type: "span"; span: Span }
+  | { type: "thought"; delta: string }
+  | { type: "tool_call"; name: string; label?: string; args?: unknown }
+  | { type: "tool_result"; name: string; ok: boolean; summary?: string; problems?: string[] | null }
   | { type: "text"; delta: string }
   | { type: "text_done"; text: string }
   | { type: "doc"; doc: PageDoc }
   | { type: "error"; message: string }
   | { type: "done"; messageId?: string; text?: string; trace?: Span[]; [k: string]: unknown };
+
+/** One entry of an agent turn as the chat shows it; persisted on build messages as `steps`. */
+export type BuildStep =
+  | { kind: "thought"; text: string; ms?: number }
+  | { kind: "tool"; name: string; label: string; status: "running" | "done" | "failed"; summary?: string; ms?: number }
+  | { kind: "text"; text: string };
+
+/** What a tool is doing, in the merchant's words, when the agent did not say. */
+export const TOOL_LABEL: Record<string, string> = {
+  get_brand_site: "Reading the brand's homepage",
+  get_audience_detail: "Reading the audience's taste profile",
+  qloo_places: "Asking Qloo for places this audience would love",
+  qloo_culture: "Asking Qloo for cultural references",
+  qloo_insights: "Asking Qloo",
+  qloo_search: "Looking up on Qloo",
+  pick_items: "Ranking the items by taste fit",
+  search_images: "Finding photographs",
+  generate_image: "Generating an image",
+  fetch_reference: "Reading the reference site",
+  describe_image: "Looking at the image",
+  google_search: "Searching the web",
+  get_page: "Reading the page",
+  write_page: "Writing the page",
+  edit_page: "Editing the page",
+  review_page: "Reviewing the page against the brand's homepage",
+};
 
 export async function* postStream(
   url: string,

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import { postStream } from "@/lib/pages/stream";
+import { postJson, postStream } from "@/lib/pages/stream";
 import { brandDomain, hostOf } from "@/lib/pages/urls";
 import { briefOf, kitOf, slugify, type Brand, type BrandBrief, type BrandKit, type Span } from "@/lib/pages/types";
 import { Field, Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
@@ -429,7 +429,14 @@ export function BrandReview({ brand, onSaved, saveLabel = "Save and open the bra
           </TabPanel>
         </div>
         <aside className="xl:sticky xl:top-20">
-          <KitPreview kit={kit} brief={brief} brandName={brand.name} screenshot={brand.screenshot} />
+          <KitPreview
+            kit={kit}
+            brief={brief}
+            brandName={brand.name}
+            screenshot={brand.site?.screenshot ?? brand.screenshot}
+            anatomy={brand.site?.anatomy}
+            onRecapture={() => postJson("/api/pages/capture", { brand_id: brand._id }).then(() => undefined)}
+          />
         </aside>
       </div>
 

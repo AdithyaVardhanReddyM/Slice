@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { useBrand } from "../brand-context";
 import { StatusBadge } from "../shared";
 import { BuilderChat } from "./chat";
+import { useAttachmentUpload } from "./attachments";
 import { PromptComposer, type ComposerHandle, type ComposerValue } from "./composer";
 import { ChatWelcome, EditorLayout, EditorTopbar } from "./editor-shell";
 import { ImageTool } from "./image-tool";
@@ -57,6 +58,7 @@ export function PageBuilder() {
   const variants = useMemo(() => (page && bundle ? orderVariants(page, bundle.variants) : []), [page, bundle]);
   const setAudiences = useMutation(api.pages.setAudiences);
   const updateSettings = useMutation(api.pages.updateSettings);
+  const upload = useAttachmentUpload();
 
   const [activeId, setActiveId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
@@ -121,7 +123,7 @@ export function PageBuilder() {
    * An @audience already on the page targets its version; one that is not yet
    * on the page gets a new version, built with this message as the brief.
    */
-  async function send({ text, mentions }: ComposerValue) {
+  async function send({ text, mentions, attachments }: ComposerValue) {
     if (!page) return;
     const fresh = mentions.filter((a) => !page.audienceIds.includes(a._id));
     if (fresh.length) {
@@ -129,12 +131,12 @@ export function PageBuilder() {
         id: page._id,
         audienceIds: [...page.audienceIds, ...fresh.map((a) => a._id)],
       });
-      void builder.generateAll(created, text);
+      void builder.generateAll(created, text, attachments);
       return;
     }
     const targets = mentions.map((a) => variants.find((v) => v.audienceId === a._id)).filter((v): v is Variant => !!v);
     const ids = targets.length ? targets.map((v) => v._id) : active ? [active._id] : [];
-    if (ids.length) void builder.send(ids, text);
+    if (ids.length) void builder.send(ids, text, attachments);
   }
 
   async function saveSettings(v: Partial<PageSettings>) {
@@ -186,19 +188,12 @@ export function PageBuilder() {
               brandSlug={brand.slug}
               audiences={brandAudiences}
               placeholder={label ? `Ask for a change to the ${label} version…` : "Ask for a change…"}
-              hint={
-                builder.queue.length > 0 ? (
-                  `${builder.queue.length} more version${builder.queue.length === 1 ? "" : "s"} queued`
-                ) : active ? (
-                  <>
-                    Editing <span className="text-foreground">{label}</span>
-                  </>
-                ) : null
-              }
+              hint={builder.queue.length > 0 ? `${builder.queue.length} more version${builder.queue.length === 1 ? "" : "s"} queued` : null}
               busy={builder.busy}
               onStop={builder.stop}
               model={model}
               onModelChange={setModel}
+              onUpload={upload}
               disabled={variants.length === 0}
               onSubmit={(v) => void send(v)}
             />

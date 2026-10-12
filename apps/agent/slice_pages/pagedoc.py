@@ -129,3 +129,74 @@ def _all_text(obj: Any) -> str:
     if isinstance(obj, list):
         return "".join(_all_text(v) for v in obj)
     return ""
+
+
+# --- HTML documents (mirrors validateHtmlDoc in pagesTypes.ts) ----------------------
+
+_HTML_FORBIDDEN = [
+    (re.compile(r"<script\b", re.I), "html may not contain <script>"),
+    (re.compile(r"<(iframe|object|embed|link|meta|base)\b", re.I), "html may not contain iframe, object, embed, link, meta or base tags"),
+    (re.compile(r"\son[a-z]+\s*=", re.I), "html may not contain on* event handlers"),
+    (re.compile(r"javascript:", re.I), "html may not contain javascript: URLs"),
+]
+_CSS_FORBIDDEN = [
+    (re.compile(r"@import\b", re.I), "css may not use @import (list Google fonts in meta.fonts instead)"),
+    (re.compile(r"expression\s*\(", re.I), "css may not use expression()"),
+    (re.compile(r"javascript:", re.I), "css may not contain javascript: URLs"),
+    (re.compile(r"behavior\s*:", re.I), "css may not use behavior:"),
+]
+_SECTION_ID = re.compile(r'data-section\s*=\s*"([^"]+)"')
+
+
+def section_ids(html: str) -> list[str]:
+    return _SECTION_ID.findall(html or "")
+
+
+def validate_html_doc(doc: Any) -> list[str]:
+    problems: list[str] = []
+    if not isinstance(doc, dict):
+        return ["doc is not an object"]
+    meta = doc.get("meta")
+    if not isinstance(meta, dict) or not str(meta.get("title") or "").strip():
+        problems.append("meta.title missing")
+    html = doc.get("html")
+    css = doc.get("css")
+    if not isinstance(html, str) or len(html.strip()) < 200:
+        problems.append("html missing or too short")
+    if not isinstance(css, str):
+        problems.append("css missing (use an empty string if there is none)")
+    if isinstance(html, str):
+        for rx, msg in _HTML_FORBIDDEN:
+            if rx.search(html):
+                problems.append(msg)
+        if re.search(r"</?(html|head|body)\b", html, re.I):
+            problems.append("html is the page body only: no <html>, <head> or <body> tags")
+        if re.search(r"<style\b", html, re.I):
+            problems.append("put CSS in `css`, not in <style> tags")
+        ids = section_ids(html)
+        if not ids:
+            problems.append('html needs sections: top-level elements with data-section="<id>"')
+        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        if dupes:
+            problems.append("duplicate data-section ids: " + ", ".join(dupes))
+        if not re.search(r"data-cta\s*=", html):
+            problems.append('at least one call to action needs data-cta="<label>"')
+        sections = doc.get("sections")
+        if not isinstance(sections, list):
+            problems.append("sections (id, label, evidence per data-section) missing")
+        else:
+            have = {s.get("id") for s in sections if isinstance(s, dict)}
+            missing = [i for i in ids if i not in have]
+            if missing:
+                problems.append("sections entries missing for: " + ", ".join(missing))
+            unknown = [str(s.get("id")) for s in sections if isinstance(s, dict) and s.get("id") not in ids]
+            if unknown:
+                problems.append("sections entries without a data-section in the html: " + ", ".join(unknown))
+            empty = [str(s.get("id")) for s in sections if isinstance(s, dict) and not str(s.get("evidence") or "").strip()]
+            if empty:
+                problems.append("evidence missing on sections: " + ", ".join(empty))
+    if isinstance(css, str):
+        for rx, msg in _CSS_FORBIDDEN:
+            if rx.search(css):
+                problems.append(msg)
+    return problems

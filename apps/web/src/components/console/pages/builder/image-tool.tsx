@@ -4,7 +4,7 @@ import { Check, Image as ImageIcon, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { postJson } from "@/lib/pages/stream";
-import { IMAGE_MODES, docOf, type ImageRef, type Section, type Variant } from "@/lib/pages/types";
+import { IMAGE_MODES, docOf, isHtmlDoc, type ImageRef, type Section, type Variant } from "@/lib/pages/types";
 import { Field, Input, Select, Tab, TabList, TabPanel, Tabs, Textarea } from "@/components/console/form";
 import { Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
@@ -45,9 +45,30 @@ function slotsOf(sections: Section[]): Slot[] {
   return out;
 }
 
-/** Builds the structured edit message the agent's patch_section tool understands. */
+/** Every <img> in a builder-written page, keyed to the data-section it sits in. */
+function slotsOfHtml(html: string): Slot[] {
+  const starts = [...html.matchAll(/data-section\s*=\s*"([^"]+)"/g)].map((m) => ({ id: m[1], at: m.index ?? 0 }));
+  const out: Slot[] = [];
+  let n = 0;
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    const src = /\ssrc\s*=\s*"([^"]+)"/i.exec(tag)?.[1];
+    if (!src) continue;
+    const alt = /\salt\s*=\s*"([^"]*)"/i.exec(tag)?.[1] ?? "";
+    const section = [...starts].reverse().find((s) => s.at < (m.index ?? 0))?.id ?? "page";
+    n += 1;
+    out.push({ sectionId: section, label: `${section} · ${alt || src.split("/").pop()?.slice(0, 40) || `image ${n}`}`, current: { src, alt, source: "brand" }, path: `img:${src}` });
+  }
+  return out;
+}
+
+/** Builds the edit message the agent's page tools understand. */
 export function imageEditMessage(slot: Slot, img: { src: string; alt?: string; credit?: string; source?: string; prompt?: string }) {
-  const where = slot.path === "image" ? `the image of section ${slot.sectionId}` : `${slot.path} of section ${slot.sectionId}`;
+  const where = slot.path.startsWith("img:")
+    ? `the image ${slot.path.slice(4)} in section ${slot.sectionId}`
+    : slot.path === "image"
+      ? `the image of section ${slot.sectionId}`
+      : `${slot.path} of section ${slot.sectionId}`;
   const bits = [`Replace ${where} with ${img.src}`];
   if (img.alt) bits.push(`(alt: ${img.alt})`);
   const meta = [img.source ? `source: ${img.source}` : null, img.credit ? `credit: ${img.credit}` : null, img.prompt ? `prompt: ${img.prompt}` : null].filter(Boolean);
@@ -69,7 +90,7 @@ export function ImageTool({
   disabled?: boolean;
 }) {
   const doc = docOf(variant);
-  const slots = useMemo(() => (doc ? slotsOf(doc.sections) : []), [doc]);
+  const slots = useMemo(() => (!doc ? [] : isHtmlDoc(doc) ? slotsOfHtml(doc.html) : slotsOf(doc.sections)), [doc]);
   const [slotKey, setSlotKey] = useState("");
   const slot = slots.find((s) => `${s.sectionId}:${s.path}` === slotKey) ?? slots[0] ?? null;
   const [query, setQuery] = useState("");

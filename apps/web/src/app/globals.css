@@ -119,3 +119,28 @@
     scrollbar-color: var(--border) transparent;
   }
 }
+
+/* Builder chat: text that shimmers while the agent is thinking or a step is running. */
+.pg-shimmer {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--foreground) 55%, transparent) 0%, var(--foreground) 50%, color-mix(in oklab, var(--foreground) 55%, transparent) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: pg-shimmer 1.6s linear infinite;
+}
+@keyframes pg-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg-shimmer {
+    animation: none;
+    color: var(--muted-foreground);
+    background: none;
+  }
+}

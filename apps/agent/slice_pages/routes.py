@@ -1,6 +1,7 @@
 """FastAPI routes for the Pages service (registered in server.py).
 
 POST /pages/intake          {brand_id, url}                    NDJSON stream
+POST /pages/capture         {brand_id, url?}                   {ok, site}
 POST /pages/audience-brief  {audience_id}                      {ok, brief, name?}
 POST /pages/name-clusters   {upload_id}                        {ok, names}
 POST /pages/plan            {brand_id, prompt, audience_ids?}  {ok, plan}
@@ -29,7 +30,7 @@ from slice_agent import convex_client as convex
 from slice_agent.trace import Span, record, start_turn
 
 from . import builder as B
-from . import images
+from . import capture, images
 from .audience_brief import name_clusters, write_audience_brief
 from .intake import run_intake
 from .plan import plan_page
@@ -73,6 +74,34 @@ async def _intake_stream(req: IntakeRequest) -> AsyncIterator[bytes]:
 @router.post("/intake")
 async def intake(req: IntakeRequest) -> StreamingResponse:
     return StreamingResponse(_intake_stream(req), media_type="application/x-ndjson")
+
+
+# --- site capture (screenshot, markup, photos, anatomy of the brand's homepage) -----------
+
+
+class CaptureRequest(BaseModel):
+    brand_id: str
+    url: str | None = None
+
+
+@router.post("/capture")
+async def capture_route(req: CaptureRequest) -> dict[str, Any]:
+    spans = start_turn()
+    url = req.url
+    if not url:
+        brand = await convex.query("pagesBrands:get", {"id": req.brand_id})
+        url = (brand or {}).get("url")
+    if not url:
+        return {"ok": False, "error": "unknown brand", "trace": spans}
+    try:
+        site = await capture.capture_site(req.brand_id, url)
+    except Exception as err:
+        return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
+    try:
+        await convex.site("/pages/brand", {"brandId": req.brand_id, "patch": {"spans": spans}})
+    except Exception:
+        pass
+    return {"ok": True, "site": site, "trace": spans}
 
 
 # --- audience brief, cluster names ---------------------------------------------------------
@@ -175,6 +204,12 @@ class HistoryMessage(BaseModel):
     text: str = ""
 
 
+class Attachment(BaseModel):
+    url: str
+    name: str = ""
+    type: str = "image/png"
+
+
 class BuildRequest(BaseModel):
     page_id: str
     variant_id: str
@@ -182,6 +217,22 @@ class BuildRequest(BaseModel):
     message: str | None = None
     history: list[HistoryMessage] = []
     model: str | None = None  # one of builder.MODELS; defaults to builder.MODEL
+    attachments: list[Attachment] = []
+
+
+async def _image_part(url: str, mime_hint: str = "") -> types.Part | None:
+    try:
+        data = await capture.site_bytes(url)
+    except Exception:
+        return None
+    mime = mime_hint if mime_hint.startswith("image/") else "image/png"
+    if data[:3] == b"\xff\xd8\xff":
+        mime = "image/jpeg"
+    elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        mime = "image/webp"
+    elif data[:8] == b"\x89PNG\r\n\x1a\n":
+        mime = "image/png"
+    return types.Part.from_bytes(data=data, mime_type=mime)
 
 
 async def _replay(session: Any, history: list[HistoryMessage]) -> None:
@@ -201,6 +252,40 @@ async def _replay(session: Any, history: list[HistoryMessage]) -> None:
                 await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text="[Generate this version.]")])))
             await sessions.append_event(session, Event(invocation_id=invocation, author=B.root_agent.name, content=types.Content(role="model", parts=[types.Part(text=text)])))
             prev = "model"
+
+
+def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
+    """One line for the chat's tool step: what came back."""
+    if not isinstance(resp, dict):
+        return ""
+    if resp.get("ok") is False:
+        probs = resp.get("problems") or ([resp["error"]] if resp.get("error") else [])
+        return ("; ".join(str(p) for p in probs[:2]))[:160] if probs else "failed"
+    if name == "review_page":
+        n = len(resp.get("issues") or [])
+        bm, q = resp.get("brandMatch"), resp.get("quality")
+        return f"brand match {bm}/10, quality {q}/10, {n} issue{'s' if n != 1 else ''}" if bm is not None else f"{n} issues from the DOM checks"
+    if name in ("write_page", "edit_page"):
+        secs = resp.get("sections") or []
+        return (f"{resp.get('applied')} change{'s' if resp.get('applied') != 1 else ''}, " if name == "edit_page" else "") + f"{len(secs)} sections" + ("" if resp.get("saved", True) else " (not saved)")
+    if name == "search_images":
+        return f"{len(resp.get('images') or [])} photos" + (f" for \"{args.get('query')}\"" if isinstance(args, dict) and args.get("query") else "")
+    if name == "generate_image":
+        return "1 image generated" + (" (Pexels fallback)" if resp.get("fallback") else "")
+    if name == "pick_items":
+        return ", ".join(i.get("name", "") for i in (resp.get("items") or [])[:4])
+    if name == "get_brand_site":
+        return f"{len(resp.get('images') or [])} site photos, {len(resp.get('html') or '') // 1024} KB markup"
+    if name == "get_audience_detail":
+        tags = resp.get("tags") or {}
+        return f"{sum(len(v) for v in tags.values())} tags, {len(resp.get('brands') or [])} brands, {sum(len(v) for v in (resp.get('culture') or {}).values())} culture refs"
+    if name == "qloo_places":
+        return ", ".join(p.get("name", "") for p in (resp.get("places") or [])[:4])
+    if name == "qloo_culture":
+        return ", ".join(p.get("name", "") for p in (resp.get("items") or [])[:4])
+    if name == "fetch_reference":
+        return "read" if resp.get("ok") else "could not read"
+    return ""
 
 
 async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
@@ -226,6 +311,15 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
 
     sid = f"{req.page_id}:{req.variant_id}"
     session = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=sid)
+    fresh_session = session is None
+    # The brand's homepage, captured once, is what every version must look like.
+    brand = state[B.BRAND]
+    if not ((brand.get("site") or {}).get("fold")):
+        yield _ndjson({"type": "status", "text": "Capturing the brand's homepage"})
+        await B.ensure_site(brand)
+        while emitted < len(spans):
+            yield _ndjson({"type": "span", "span": spans[emitted]})
+            emitted += 1
     if session is None:
         session = await sessions.create_session(app_name=APP_NAME, user_id=sid, session_id=sid, state=state)
         await _replay(session, req.history)
@@ -239,13 +333,47 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     else:
         user_text = (req.message or "").strip()
         merchant_text = user_text
-    content = types.Content(role="user", parts=[types.Part(text=user_text)])
+    parts: list[types.Part] = [types.Part(text=user_text)]
+    # The homepage screenshots go with the first turn of a session (and every generate), so the model sees the brand.
+    if fresh_session or kind == "generate":
+        for key in ("fold", "screenshot"):
+            u = (brand.get("site") or {}).get(key)
+            if not u:
+                continue
+            try:
+                parts.append(types.Part.from_bytes(data=await capture.site_bytes(u), mime_type="image/png"))
+            except Exception:
+                pass
+        if len(parts) > 1:
+            parts.insert(1, types.Part(text="The brand's homepage, top of the page and then the whole page:"))
+        # Images the merchant attached to the first prompt live on the brief as inspiration.
+        inspo = [u for u in ((state[B.PAGE].get("brief") or {}).get("inspiration") or []) if isinstance(u, str) and u.startswith("http")][:4]
+        inspo_parts = [p for p in [await _image_part(u) for u in inspo] if p]
+        if inspo_parts:
+            parts.append(types.Part(text=f"{len(inspo_parts)} image{'s' if len(inspo_parts) != 1 else ''} the merchant attached as inspiration or reference:"))
+            parts.extend(inspo_parts)
+    # Images attached to this message.
+    attached = [p for p in [await _image_part(a.url, a.type) for a in req.attachments[:6]] if p]
+    if attached:
+        parts.append(types.Part(text=f"{len(attached)} image{'s' if len(attached) != 1 else ''} attached to this message:"))
+        parts.extend(attached)
+    content = types.Content(role="user", parts=parts)
 
     doc_version = int(state.get(B.DOC_VERSION) or 0)
     text_parts: list[str] = []
     streamed = ""
     seen_calls: set[str] = set()
     last_doc: Any = state.get(B.DOC)
+    # The turn as the chat shows it, persisted with the reply.
+    steps: list[dict[str, Any]] = []
+    thought_streamed = 0
+    call_args: dict[str, Any] = {}
+
+    def add_text(delta: str, kind: str) -> None:
+        if steps and steps[-1].get("kind") == kind:
+            steps[-1]["text"] += delta
+        else:
+            steps.append({"kind": kind, "text": delta})
     try:
         runner = runners.get(req.model or "") or runners[B.MODEL]
         async for ev in runner.run_async(
@@ -267,15 +395,26 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                     if key in seen_calls:
                         continue
                     seen_calls.add(key)
-                    yield _ndjson({"type": "status", "text": B.STATUS_FOR_TOOL.get(name, "Working")})
+                    label = B.STATUS_FOR_TOOL.get(name, "Working")
+                    yield _ndjson({"type": "status", "text": label})
                     args = _safe(part.function_call.args)
-                    if isinstance(args, dict) and "doc" in args:
-                        args = {**args, "doc": f"<PageDoc, {len(json.dumps(args['doc'], default=str))} chars>"}
-                    yield _ndjson({"type": "tool_call", "name": name, "args": args})
+                    if isinstance(args, dict):
+                        args = {k: (f"<{len(str(v))} chars>" if k in ("doc", "html", "css", "edits") else v) for k, v in args.items()}
+                    call_args[name] = part.function_call.args
+                    steps.append({"kind": "tool", "name": name, "label": label, "status": "running"})
+                    yield _ndjson({"type": "tool_call", "name": name, "label": label, "args": args})
                 elif part.function_response:
                     name = part.function_response.name or ""
                     resp = part.function_response.response or {}
-                    yield _ndjson({"type": "tool_result", "name": name, "ok": bool(resp.get("ok", True)), "problems": resp.get("problems")})
+                    ok = bool(resp.get("ok", True))
+                    summary = _summarise(name, call_args.get(name), resp)
+                    for st in reversed(steps):
+                        if st.get("kind") == "tool" and st.get("name") == name and st.get("status") == "running":
+                            st["status"] = "done" if ok else "failed"
+                            if summary:
+                                st["summary"] = summary
+                            break
+                    yield _ndjson({"type": "tool_result", "name": name, "ok": ok, "summary": summary, "problems": resp.get("problems")})
                     fresh = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=session.id)
                     st = fresh.state if fresh else {}
                     v = int(st.get(B.DOC_VERSION) or 0)
@@ -283,16 +422,32 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                         doc_version = v
                         last_doc = st.get(B.DOC)
                         yield _ndjson({"type": "doc", "doc": last_doc, "version": v, "saved": bool(resp.get("saved", True))})
+                elif part.text and part.thought:
+                    # Reasoning summaries (include_thoughts): streamed for the chat, never part of the reply.
+                    # Partial chunks arrive first; a non-partial copy is skipped if chunks were seen.
+                    if ev.partial:
+                        thought_streamed += len(part.text)
+                        add_text(part.text, "thought")
+                        yield _ndjson({"type": "thought", "delta": part.text})
+                    elif thought_streamed == 0:
+                        add_text(part.text, "thought")
+                        yield _ndjson({"type": "thought", "delta": part.text})
+                    else:
+                        thought_streamed = 0
                 elif part.text and not part.thought:
                     if ev.partial:
                         streamed += part.text
+                        add_text(part.text, "text")
                         yield _ndjson({"type": "text", "delta": part.text})
                     else:
                         if streamed and part.text.startswith(streamed[: min(len(streamed), 40)]):
                             text_parts.append(part.text)
+                            if steps and steps[-1].get("kind") == "text":
+                                steps[-1]["text"] = part.text
                             yield _ndjson({"type": "text_done", "text": part.text})
                         elif part.text.strip():
                             text_parts.append(part.text)
+                            add_text(part.text, "text")
                             yield _ndjson({"type": "text", "delta": part.text})
                             yield _ndjson({"type": "text_done", "text": part.text})
                         streamed = ""
@@ -311,15 +466,22 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             await convex.site("/pages/variant", {"variantId": req.variant_id, "patch": {"status": "failed", "error": "The builder finished without writing a page", "spans": spans}})
         except Exception:
             pass
-    yield _ndjson({"type": "done", "messageId": message_id, "variantId": req.variant_id, "text": full_text, "trace": spans, "totalMs": total_ms, "docVersion": doc_version})
-    asyncio.create_task(_persist_build(req, message_id, merchant_text, full_text, spans))
+    for st in steps:
+        if st.get("kind") == "tool" and st.get("status") == "running":
+            st["status"] = "failed"
+    yield _ndjson({"type": "done", "messageId": message_id, "variantId": req.variant_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": doc_version})
+    asyncio.create_task(_persist_build(req, message_id, merchant_text, full_text, spans, steps))
 
 
-async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span]) -> None:
+async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span], steps: list[dict[str, Any]]) -> None:
     now = int(time.time() * 1000)
     messages = [
-        *([{"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, "variantId": req.variant_id}] if merchant_text else []),
-        {"id": message_id, "role": "agent", "at": now + 1, "text": reply, "variantId": req.variant_id, "trace": spans},
+        *(
+            [{"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, "variantId": req.variant_id, **({"attachments": [a.model_dump() for a in req.attachments]} if req.attachments else {})}]
+            if merchant_text or req.attachments
+            else []
+        ),
+        {"id": message_id, "role": "agent", "at": now + 1, "text": reply, "variantId": req.variant_id, "trace": spans, "steps": steps},
     ]
     try:
         await convex.site("/pages/build", {"pageId": req.page_id, "messages": messages})

@@ -25,7 +25,7 @@ from slice_agent import convex_client as convex
 from slice_agent.trace import Span, record, start_turn
 from .timing import timer
 
-from . import crawl
+from . import capture, crawl
 from .extract import Extracted, apply_branding, extract, font_fallback, parse_color
 from .llm import clip, generate_json
 
@@ -342,6 +342,9 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
         yield _event("error", message=msg)
         return
 
+    # The look of the homepage (screenshot, markup, photos, anatomy) is captured alongside the rest.
+    capture_task = asyncio.create_task(capture.capture_site(brand_id, home.url, home=home))
+
     # 2. Linked pages.
     candidates = list(home.links)
     if crawl.use_firecrawl(url):
@@ -352,7 +355,7 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
             candidates += mapped
     picked = crawl.pick_links(home.url, candidates, take=MAX_LINKED_PAGES)
     yield _event("status", text=f"Following {len(picked)} links", progress=0.2)
-    for ev in await step(0.2, f"Following {len(picked)} links", crawled=[home.url] + picked, screenshot=home.screenshot):
+    for ev in await step(0.2, f"Following {len(picked)} links", crawled=[home.url] + picked):
         yield ev
     pages: list[crawl.Page] = [home]
     if picked:
@@ -411,7 +414,19 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
     brief = build_brief(raw.get("brief"), cands, home.url, brand_name)
     crawled = [p.url for p in pages]
     # The name replaces the console's URL guess (Convex ignores it for names a person typed).
-    for ev in await step(0.85, "Asking Qloo about the brand", name=brand_name, kit=kit, brief=brief, crawled=crawled, status="review", screenshot=home.screenshot):
+    for ev in await step(0.85, "Asking Qloo about the brand", name=brand_name, kit=kit, brief=brief, crawled=crawled, status="review"):
+        yield ev
+
+    # The capture usually finished during the brief; wait for it now.
+    yield _event("status", text="Capturing how the site looks", progress=0.88)
+    site: dict[str, Any] | None = None
+    try:
+        site = await asyncio.wait_for(capture_task, timeout=120)
+    except Exception as err:
+        record("slice", "Capture the homepage", f"failed: {type(err).__name__}: {str(err)[:140]}", ms=0)
+        if home.screenshot:
+            await _patch(brand_id, {"screenshot": home.screenshot})
+    for ev in drain():
         yield ev
 
     # 5. Qloo's view of the brand (Convex action; it writes its own spans).
@@ -435,7 +450,8 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
         kit=kit,
         brief=brief,
         crawled=crawled,
-        screenshot=home.screenshot,
+        screenshot=(site or {}).get("screenshot") or home.screenshot,
+        site=site,
         qloo=qloo_result,
         totalMs=int((time.perf_counter() - t_start) * 1000),
     )

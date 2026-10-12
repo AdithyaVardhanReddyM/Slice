@@ -5,7 +5,9 @@ import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { BrandBrief, BrandKit } from "@/lib/pages/types";
 import { Segmented } from "@/components/console/form";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/console/setup/atoms";
 import { googleFontHref } from "./kit-editor";
 
 const RADIUS: Record<BrandKit["radius"], number> = { none: 0, sm: 4, md: 8, lg: 12, full: 18 };
@@ -118,9 +120,36 @@ function SourceShot({ src }: { src: string }) {
 }
 
 /** Rail card: the kit rendered as a page, the source screenshot, and the palette at a glance. */
-export function KitPreview({ kit, brief, brandName, screenshot }: { kit: BrandKit; brief: BrandBrief; brandName: string; screenshot?: string }) {
+export function KitPreview({
+  kit,
+  brief,
+  brandName,
+  screenshot,
+  anatomy,
+  onRecapture,
+}: {
+  kit: BrandKit;
+  brief: BrandBrief;
+  brandName: string;
+  screenshot?: string;
+  /** How the site looks, as the builder reads it (pagesBrands.site.anatomy). */
+  anatomy?: string;
+  /** Re-run the homepage capture (screenshot, markup, anatomy). */
+  onRecapture?: () => Promise<void>;
+}) {
   const [view, setView] = useState<"kit" | "site">("kit");
+  const [capturing, setCapturing] = useState(false);
+  const [showAnatomy, setShowAnatomy] = useState(false);
   const colors = Object.values(kit.colors);
+  const recapture = async () => {
+    if (!onRecapture) return;
+    setCapturing(true);
+    try {
+      await onRecapture();
+    } finally {
+      setCapturing(false);
+    }
+  };
   return (
     <Card className="gap-0 overflow-hidden py-0">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -147,6 +176,23 @@ export function KitPreview({ kit, brief, brandName, screenshot }: { kit: BrandKi
           <span key={i} className="flex-1" style={{ background: hex }} />
         ))}
       </div>
+      {(onRecapture || anatomy) && (
+        <div className="border-t px-4 py-3 text-sm">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" className="text-left font-medium" onClick={() => setShowAnatomy((v) => !v)} aria-expanded={showAnatomy} disabled={!anatomy}>
+              How the site looks
+              <span className="block text-xs font-normal text-muted-foreground">{anatomy ? "What the builder read from the homepage" : "Not captured yet"}</span>
+            </button>
+            {onRecapture && (
+              <Button variant="outline" size="sm" onClick={recapture} disabled={capturing}>
+                {capturing && <Spinner data-icon="inline-start" />}
+                {anatomy ? "Recapture" : "Capture site"}
+              </Button>
+            )}
+          </div>
+          {showAnatomy && anatomy && <p className="mt-3 max-h-80 overflow-y-auto text-xs leading-5 whitespace-pre-line text-muted-foreground">{anatomy}</p>}
+        </div>
+      )}
     </Card>
   );
 }

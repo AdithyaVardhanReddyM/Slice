@@ -173,13 +173,13 @@ http.route({
   }),
 });
 
-/** Raw image upload (generated hero images) → a public storage URL. */
+/** Raw file upload (generated images, site captures, screenshots, markup) → a public storage URL. */
 http.route({
   path: "/pages/file",
   method: "POST",
   handler: withErrors(async (ctx, req) => {
     const type = req.headers.get("Content-Type") ?? "";
-    if (!/^image\//.test(type)) return json({ error: "Content-Type must be image/*" }, 400);
+    if (!/^(image\/|text\/(html|plain))/.test(type)) return json({ error: "Content-Type must be image/*, text/html or text/plain" }, 400);
     const brandId = new URL(req.url).searchParams.get("brandId");
     if (!brandId) return json({ error: "brandId query param required" }, 400);
     const blob = await req.blob();

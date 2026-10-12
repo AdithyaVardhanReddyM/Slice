@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useBrand } from "../brand-context";
 import { useCompileAudience } from "../new-audience-sheet";
 import { BuilderChat } from "./chat";
+import { useAttachmentUpload } from "./attachments";
 import { PromptComposer, type ComposerHandle, type ComposerValue } from "./composer";
 import { CanvasPlaceholder, ChatWelcome, EditorLayout, EditorTopbar } from "./editor-shell";
 import { PageSettingsSheet, type PageSettings } from "./settings-sheet";
@@ -60,8 +61,9 @@ export function NewPageBuilder() {
 
   const status = (text: string) => setTurn((t) => (t ? { ...t, status: text } : t));
 
-  async function start({ text, mentions }: ComposerValue) {
-    setTurn({ variantId: "", kind: "edit", status: "Reading your brief", spans: [], text: "", error: null, prompt: text });
+  const upload = useAttachmentUpload();
+  async function start({ text, mentions, attachments }: ComposerValue) {
+    setTurn({ variantId: "", kind: "edit", status: "Reading your brief", spans: [], steps: [], text: "", error: null, prompt: text });
     try {
       const res = await postJson<PlanResponse>("/api/pages/plan", { brand_id: brand._id, prompt: text, audience_ids: mentions.map((a) => a._id), model });
       if (!res.ok) throw new Error(res.error);
@@ -92,11 +94,13 @@ export function NewPageBuilder() {
           offer: (settings.offer?.trim() || plan.offer) || undefined,
           cta: { label: settings.ctaLabel?.trim() || plan.cta.label, href: settings.ctaHref?.trim() || plan.cta.href },
           itemIds: plan.itemIds,
+          // Attached images ride along as inspiration: the builder sees them on every generate turn.
+          inspiration: attachments.map((a) => a.url),
           imageMode: settings.imageMode || "pexels",
         },
         audienceIds: [...(plan.audienceIds as Id<"pagesAudiences">[]), ...fresh],
         messages: [
-          { id: `${key}-m`, role: "merchant", at: now, text },
+          { id: `${key}-m`, role: "merchant", at: now, text, ...(attachments.length ? { attachments } : {}) },
           { id: key, role: "agent", at: now + 1, text: plan.reply || `Building ${pageTitle}.`, trace: cleanSpans(res.trace) },
         ],
       });
@@ -139,6 +143,7 @@ export function NewPageBuilder() {
               disabled={busy}
               model={model}
               onModelChange={setModel}
+              onUpload={upload}
               onSubmit={(v) => void start(v)}
             />
           }

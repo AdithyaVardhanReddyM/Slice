@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
-import type { BrandKit, PageDoc, QuizConfig } from "@slice/backend/convex/pagesTypes";
+import { isHtmlDoc, type BrandKit, type QuizConfig, type VariantDoc } from "@slice/backend/convex/pagesTypes";
 import { EmptyVariant, PageRenderer } from "@/components/pages/render-doc";
+import { HtmlPageRenderer } from "@/components/pages/render-html";
 import { QuizBar } from "@/components/pages/quiz-bar";
 import { CookieSync } from "@/components/pages/cookie-sync";
 import { audienceCookieName, first, loadPage, resolveRequest } from "@/components/pages/resolve";
@@ -21,7 +22,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!data) return { title: "Page not found", robots: { index: false } };
   const forced = first(sp.v);
   const variant = (forced && data.variants.find((v) => v._id === forced)) || data.variants.find((v) => v._id === data.page.defaultVariantId) || data.variants[0];
-  const meta = (variant?.doc as PageDoc | undefined)?.meta;
+  const meta = (variant?.doc as VariantDoc | undefined)?.meta;
   const draft = data.page.status !== "published";
   const preview = first(sp.preview) === "1" || Boolean(forced);
   return {
@@ -63,17 +64,18 @@ async function Resolved({ params, searchParams }: Props) {
 
   const audienceIds = data.variants.filter((v) => v.audienceId && v.status === "ready").map((v) => v.audienceId as string);
 
+  const common = {
+    brand: { name: brand.name, slug: brand.slug, url: brand.url },
+    kit,
+    variantId: res.resolved.variantId,
+    pageId: page._id,
+    trackingMeta: { resolvedBy: res.resolved.resolvedBy, disabled: res.preview, overrides: res.overrides },
+    quiz: res.showQuiz && page.quiz ? <QuizBar pageId={page._id} quiz={page.quiz as QuizConfig} audienceIds={audienceIds} /> : null,
+  };
+
   return (
     <>
-      <PageRenderer
-        brand={{ name: brand.name, slug: brand.slug, url: brand.url }}
-        kit={kit}
-        doc={res.doc}
-        variantId={res.resolved.variantId}
-        pageId={page._id}
-        trackingMeta={{ resolvedBy: res.resolved.resolvedBy, disabled: res.preview, overrides: res.overrides }}
-        quiz={res.showQuiz && page.quiz ? <QuizBar pageId={page._id} quiz={page.quiz as QuizConfig} audienceIds={audienceIds} /> : null}
-      />
+      {isHtmlDoc(res.doc) ? <HtmlPageRenderer {...common} doc={res.doc} /> : <PageRenderer {...common} doc={res.doc} />}
       {res.remember ? <CookieSync pageId={page._id} audienceId={res.resolved.audienceId} how={res.resolved.resolvedBy} /> : null}
     </>
   );

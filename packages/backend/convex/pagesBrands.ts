@@ -161,6 +161,7 @@ export const patch = internalMutation({
       brief: v.optional(v.any()),
       qloo: v.optional(v.any()),
       screenshot: v.optional(v.string()),
+      site: v.optional(v.any()),
       crawled: v.optional(v.array(v.string())),
       error: v.optional(v.string()),
       spans: v.optional(v.array(spanValidator)),

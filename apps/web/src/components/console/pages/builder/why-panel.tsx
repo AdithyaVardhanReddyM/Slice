@@ -2,7 +2,7 @@
 
 import { Lightbulb } from "lucide-react";
 import type { Section, Variant } from "@/lib/pages/types";
-import { docOf } from "@/lib/pages/types";
+import { docOf, isHtmlDoc } from "@/lib/pages/types";
 import { Badge } from "@/components/ui/badge";
 import { Hint, TraceList } from "../shared";
 
@@ -34,6 +34,9 @@ export function WhyPanel({ variant, onPick }: { variant: Variant | null; onPick?
   const doc = docOf(variant);
   if (!variant) return <Hint>Pick a version.</Hint>;
   if (!doc) return <Hint>Build this version to see what shaped each section.</Hint>;
+  const rows: { id: string; title: string; tag: string; evidence?: string }[] = isHtmlDoc(doc)
+    ? doc.sections.map((s) => ({ id: s.id, title: s.label || s.id, tag: s.id, evidence: s.evidence }))
+    : doc.sections.map((s) => ({ id: s.id, title: sectionTitle(s) || s.id, tag: s.type, evidence: s.evidence }));
   return (
     <div className="space-y-5 text-sm">
       <div className="flex items-start gap-2 rounded-lg bg-muted/60 p-3">
@@ -43,15 +46,15 @@ export function WhyPanel({ variant, onPick }: { variant: Variant | null; onPick?
         </p>
       </div>
       <ol className="space-y-3">
-        {doc.sections.map((s, i) => (
+        {rows.map((s, i) => (
           <li key={s.id}>
             <button type="button" onClick={() => onPick?.(s.id)} className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-muted/50">
               <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="num text-xs text-muted-foreground">{i + 1}</span>
-                  <span className="truncate font-medium">{sectionTitle(s) || s.id}</span>
+                  <span className="truncate font-medium">{s.title}</span>
                 </span>
-                <Badge variant="outline">{s.type}</Badge>
+                <Badge variant="outline">{s.tag}</Badge>
               </div>
               <p className={s.evidence ? "mt-1.5 text-muted-foreground" : "mt-1.5 text-xs text-muted-foreground"}>
                 {s.evidence ?? "No notes for this section."}

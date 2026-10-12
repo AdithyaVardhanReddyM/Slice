@@ -75,8 +75,8 @@ function fontStack(font: BrandFont): string {
   return `${quoted}, ${fallback}`;
 }
 
-/** `https://fonts.googleapis.com/css2?...` for the kit's Google fonts, or null when none. */
-export function googleFontsHref(kit: BrandKit): string | null {
+/** `https://fonts.googleapis.com/css2?...` for the kit's Google fonts (plus `extra` families a page asks for), or null when none. */
+export function googleFontsHref(kit: BrandKit, extra?: string[]): string | null {
   const fams = new Map<string, Set<number>>();
   const add = (font: BrandFont, defaults: number[]) => {
     if (font.source !== "google" || !font.family.trim()) return;
@@ -86,6 +86,11 @@ export function googleFontsHref(kit: BrandKit): string | null {
   };
   add(kit.fonts.heading, [400, 500, 600, 700]);
   add(kit.fonts.body, [400, 500, 600]);
+  for (const family of extra ?? []) {
+    const name = String(family).trim();
+    if (!/^[A-Za-z0-9 +]{2,40}$/.test(name) || fams.has(name)) continue;
+    fams.set(name, new Set([400, 500, 600, 700]));
+  }
   if (fams.size === 0) return null;
   const parts = [...fams.entries()].map(([family, weights]) => {
     const name = family.trim().replace(/\s+/g, "+");

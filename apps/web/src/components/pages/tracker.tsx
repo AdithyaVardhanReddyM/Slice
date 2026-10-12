@@ -9,7 +9,7 @@
 import { useEffect } from "react";
 import type { TrackEvent } from "@slice/backend/convex/pagesTypes";
 import { getSessionId, getVisitorId } from "./track-ids";
-import type { TrackBody, TrackingMeta } from "./types";
+import type { FormBody, TrackBody, TrackingMeta } from "./types";
 
 const FLUSH_MS = 4000;
 const HEARTBEAT_MS = 5000;
@@ -82,9 +82,61 @@ export function Tracker({ meta }: { meta: TrackingMeta }) {
     window.addEventListener("load", scheduleSections);
     window.addEventListener("resize", scheduleSections);
     const onParentMessage = (e: MessageEvent) => {
-      if (e.data && e.data.type === "pg:measure") postSections();
+      if (!e.data) return;
+      if (e.data.type === "pg:measure") postSections();
+      if (e.data.type === "pg:scrollTo" && typeof e.data.sectionId === "string") {
+        document.querySelector<HTMLElement>(`[data-section="${CSS.escape(e.data.sectionId)}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     };
     window.addEventListener("message", onParentMessage);
+
+    /* Forms on builder-written pages: <form data-pg-form> posts to /api/pages/form. */
+    const onSubmit = (e: SubmitEvent) => {
+      const form = e.target as HTMLFormElement | null;
+      if (!form || !form.matches("form[data-pg-form]") || form.dataset.state === "sending") return;
+      e.preventDefault();
+      const fields: Record<string, string> = {};
+      new FormData(form).forEach((v, k) => {
+        if (typeof v === "string") fields[k] = v.slice(0, 2000);
+      });
+      const sectionId = form.closest<HTMLElement>("[data-section]")?.dataset.section ?? form.dataset.pgForm ?? "form";
+      const success = form.dataset.success || "Thank you. We will be in touch.";
+      form.dataset.state = "sending";
+      form.querySelector(".pg-form-error")?.remove();
+      const done = () => {
+        const p = document.createElement("p");
+        p.className = "pg-form-success";
+        p.setAttribute("role", "status");
+        p.textContent = success;
+        form.replaceWith(p);
+      };
+      const fail = () => {
+        form.dataset.state = "idle";
+        const p = document.createElement("p");
+        p.className = "pg-form-error";
+        p.textContent = "Something went wrong. Please try again.";
+        form.append(p);
+      };
+      if (disabled) {
+        setTimeout(done, 400);
+        return;
+      }
+      const body: FormBody = {
+        pageId,
+        variantId,
+        visitorId: getVisitorId(),
+        sessionId: getSessionId(),
+        resolvedBy,
+        path: location.pathname,
+        sectionId,
+        fields,
+        overrides: city || country ? { city, country } : undefined,
+      };
+      fetch("/api/pages/form", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
+        .then((r) => (r.ok ? done() : fail()))
+        .catch(fail);
+    };
+    document.addEventListener("submit", onSubmit);
 
     if (disabled) {
       window.__pgTrack = () => {};
@@ -94,6 +146,7 @@ export function Tracker({ meta }: { meta: TrackingMeta }) {
         window.removeEventListener("load", scheduleSections);
         window.removeEventListener("resize", scheduleSections);
         window.removeEventListener("message", onParentMessage);
+        document.removeEventListener("submit", onSubmit);
         delete window.__pgTrack;
       };
     }
@@ -249,6 +302,7 @@ export function Tracker({ meta }: { meta: TrackingMeta }) {
       window.removeEventListener("load", scheduleSections);
       window.removeEventListener("resize", scheduleSections);
       window.removeEventListener("message", onParentMessage);
+      document.removeEventListener("submit", onSubmit);
       document.removeEventListener("click", onClick, { capture: true });
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);

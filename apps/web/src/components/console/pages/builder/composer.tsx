@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, AtSign, Check, ChevronDown, Square, Users } from "lucide-react";
+import { ArrowUp, AtSign, Check, ChevronDown, Paperclip, Square, Users } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { AUDIENCE_KIND_LABEL, profileOf, type Audience } from "@/lib/pages/types";
@@ -9,13 +9,18 @@ import { PAGES_MODELS, type PagesModel } from "@/lib/pages/models";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { StatusDot } from "../shared";
+import { AttachmentStrip, type Attachment } from "./attachments";
 import { KIND_ICON, coverTiles } from "../taste-cover";
 
 export interface ComposerValue {
   /** Plain text; each mention is written as "@Name". */
   text: string;
   mentions: Audience[];
+  /** Images attached to the message, already uploaded. */
+  attachments: Attachment[];
 }
+
+type Pending = Attachment & { id: number; pending: boolean; error?: string; preview: string };
 
 export interface ComposerHandle {
   focus(): void;
@@ -91,7 +96,7 @@ export function MentionText({ text, audiences }: { text: string; audiences: Audi
   return <>{parts.map((p, i) => (typeof p === "string" ? <span key={i}>{p}</span> : <AudiencePill key={i} audience={p} name={p.name} />))}</>;
 }
 
-function serialize(root: HTMLElement, audiences: Audience[]): ComposerValue {
+function serialize(root: HTMLElement, audiences: Audience[]): Omit<ComposerValue, "attachments"> {
   let text = "";
   const mentions: Audience[] = [];
   const walk = (node: Node) => {
@@ -180,6 +185,8 @@ export const PromptComposer = forwardRef<
     audiences: Audience[];
     placeholder: string;
     onSubmit: (value: ComposerValue) => void;
+    /** Uploads one image and returns where it lives; enables the paperclip, paste and drop. */
+    onUpload?: (file: File) => Promise<Attachment>;
     /** A turn is running: the send button becomes Stop. */
     busy?: boolean;
     onStop?: () => void;
@@ -193,10 +200,33 @@ export const PromptComposer = forwardRef<
     className?: string;
     brandSlug: string;
   }
->(function PromptComposer({ audiences, placeholder, onSubmit, busy, onStop, disabled, autoFocus, hint, className, brandSlug, model, onModelChange }, ref) {
+>(function PromptComposer({ audiences, placeholder, onSubmit, busy, onStop, disabled, autoFocus, hint, className, brandSlug, model, onModelChange, onUpload }, ref) {
   const field = useRef<HTMLDivElement>(null);
   const [empty, setEmpty] = useState(true);
   const [menu, setMenu] = useState<MenuState | null>(null);
+  const [files, setFiles] = useState<Pending[]>([]);
+  const picker = useRef<HTMLInputElement>(null);
+  const nextId = useRef(1);
+
+  const attach = (list: FileList | File[] | null) => {
+    if (!onUpload || !list) return;
+    for (const file of Array.from(list)) {
+      if (!file.type.startsWith("image/")) continue;
+      const id = nextId.current++;
+      const preview = URL.createObjectURL(file);
+      setFiles((f) => [...f, { id, url: "", name: file.name, type: file.type, pending: true, preview }]);
+      onUpload(file)
+        .then((a) => setFiles((f) => f.map((x) => (x.id === id ? { ...x, ...a, pending: false } : x))))
+        .catch((err: Error) => setFiles((f) => f.map((x) => (x.id === id ? { ...x, pending: false, error: err.message } : x))));
+    }
+  };
+  const removeFile = (index: number) =>
+    setFiles((f) => {
+      const gone = f[index];
+      if (gone) URL.revokeObjectURL(gone.preview);
+      return f.filter((_, i) => i !== index);
+    });
+  const uploading = files.some((f) => f.pending);
   const [index, setIndex] = useState(0);
   const menuRef = useRef<MenuState | null>(null);
   useEffect(() => {
@@ -267,11 +297,14 @@ export const PromptComposer = forwardRef<
 
   const submit = () => {
     const el = field.current;
-    if (!el || busy || disabled) return;
+    if (!el || busy || disabled || uploading) return;
     const value = serialize(el, audiences);
-    if (!value.text) return;
-    onSubmit(value);
+    const attachments = files.filter((f) => f.url && !f.error).map(({ url, name, type }) => ({ url, name, type }));
+    if (!value.text && attachments.length === 0) return;
+    onSubmit({ ...value, attachments });
     el.innerHTML = "";
+    files.forEach((f) => URL.revokeObjectURL(f.preview));
+    setFiles([]);
     setEmpty(true);
     setMenu(null);
   };
@@ -378,8 +411,18 @@ export const PromptComposer = forwardRef<
               onBlur={() => setTimeout(() => setMenu(null), 120)}
               onPaste={(e) => {
                 e.preventDefault();
-                insertText(e.clipboardData.getData("text/plain"));
+                const images = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+                if (images.length && onUpload) attach(images);
+                else insertText(e.clipboardData.getData("text/plain"));
                 sync();
+              }}
+              onDragOver={(e) => {
+                if (onUpload && e.dataTransfer.types.includes("Files")) e.preventDefault();
+              }}
+              onDrop={(e) => {
+                if (!onUpload || !e.dataTransfer.files.length) return;
+                e.preventDefault();
+                attach(e.dataTransfer.files);
               }}
               onKeyDown={(e) => {
                 if (open && matches.length > 0) {
@@ -407,6 +450,7 @@ export const PromptComposer = forwardRef<
               className="scrollbar-thin max-h-60 min-h-[4.5rem] overflow-y-auto overscroll-contain px-3.5 pt-3 pb-1 text-sm leading-6 break-words whitespace-pre-wrap outline-none"
             />
           </div>
+          <AttachmentStrip items={files} onRemove={removeFile} className="px-3 pb-2" size="sm" />
           <div className="flex items-center justify-between gap-2 px-2.5 pb-2.5">
             <div className="flex min-w-0 items-center gap-2">
               <button
@@ -423,6 +467,22 @@ export const PromptComposer = forwardRef<
                 <AtSign className="size-3.5" />
                 Audience
               </button>
+              {onUpload && (
+                <>
+                  <input ref={picker} type="file" accept="image/*" multiple className="hidden" onChange={(e) => (attach(e.target.files), (e.target.value = ""))} />
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    aria-label="Attach an image"
+                    title="Attach an image (or paste or drop one)"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => picker.current?.click()}
+                    className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <Paperclip className="size-4" />
+                  </button>
+                </>
+              )}
               {hint && <span className="min-w-0 truncate text-xs text-muted-foreground">{hint}</span>}
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
@@ -436,7 +496,7 @@ export const PromptComposer = forwardRef<
                   type="button"
                   size="icon-sm"
                   onClick={submit}
-                  disabled={empty || disabled}
+                  disabled={(empty && files.length === 0) || uploading || disabled}
                   aria-label="Send"
                   className="size-8 rounded-full bg-linear-to-b from-primary/85 to-primary shadow-sm shadow-primary/30 disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
                 >

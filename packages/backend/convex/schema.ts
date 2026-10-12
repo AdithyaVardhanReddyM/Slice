@@ -289,6 +289,23 @@ export default defineSchema({
       }),
     ),
     screenshot: v.optional(v.string()),
+    /** The homepage as captured for the builder: a permanent screenshot, the markup, its images and a written read of its look. */
+    site: v.optional(
+      v.object({
+        /** Full-page screenshot in Convex storage. */
+        screenshot: v.optional(v.string()),
+        /** Above-the-fold screenshot (1440x900) in Convex storage. */
+        fold: v.optional(v.string()),
+        /** Cleaned homepage markup, in Convex storage. */
+        htmlUrl: v.optional(v.string()),
+        /** Photos on the homepage the builder may reuse. */
+        images: v.array(v.object({ src: v.string(), alt: v.string() })),
+        /** How the site looks and is built, written by a vision pass. */
+        anatomy: v.optional(v.string()),
+        capturedAt: v.number(),
+        error: v.optional(v.string()),
+      }),
+    ),
     /** URLs the intake read. */
     crawled: v.array(v.string()),
     trace: v.array(spanValidator),
@@ -457,6 +474,10 @@ export default defineSchema({
         /** Which variant the message was about / changed. */
         variantId: v.optional(v.id("pagesVariants")),
         trace: v.optional(v.array(spanValidator)),
+        /** The agent's turn as the chat shows it: BuildStep[] (thought | tool | text), in order. */
+        steps: v.optional(v.array(v.any())),
+        /** Images the merchant attached to the message. */
+        attachments: v.optional(v.array(v.object({ url: v.string(), name: v.string(), type: v.string() }))),
       }),
     ),
     createdAt: v.number(),

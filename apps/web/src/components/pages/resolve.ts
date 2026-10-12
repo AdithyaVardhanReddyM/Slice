@@ -8,7 +8,7 @@ import { cache } from "react";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
-import type { PageDoc, RoutingRules } from "@slice/backend/convex/pagesTypes";
+import type { RoutingRules, VariantDoc } from "@slice/backend/convex/pagesTypes";
 import { DEFAULT_ROUTING } from "@slice/backend/convex/pagesTypes";
 import { type BySlugResult, type ResolveResult, audienceCookieName, parseAudienceCookie } from "./types";
 
@@ -33,7 +33,7 @@ export const loadPage = cache(async (brandSlug: string, pageSlug: string): Promi
 
 export interface Resolution {
   variant: Doc<"pagesVariants"> | null;
-  doc: PageDoc | null;
+  doc: VariantDoc | null;
   resolved: ResolveResult;
   preview: boolean;
   /** Set when the server resolved via a signal the cookie should remember (param, lead, utm, geo). */
@@ -61,7 +61,7 @@ export async function resolveRequest(data: BySlugResult, { sp, cookie, headers }
   const overrides = city || country ? { city, country } : undefined;
 
   const defaultVariant = variants.find((v) => v._id === page.defaultVariantId) ?? variants.find((v) => !v.audienceId) ?? variants[0] ?? null;
-  const docOf = (v: Doc<"pagesVariants"> | null | undefined): PageDoc | null => (v?.doc && typeof v.doc === "object" ? (v.doc as PageDoc) : null);
+  const docOf = (v: Doc<"pagesVariants"> | null | undefined): VariantDoc | null => (v?.doc && typeof v.doc === "object" ? (v.doc as VariantDoc) : null);
 
   /* ?v= forces a variant (console preview). Freshest copy via api.pages.variant. */
   if (forced) {

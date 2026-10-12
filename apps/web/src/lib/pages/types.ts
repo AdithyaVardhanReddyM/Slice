@@ -7,10 +7,11 @@ import type {
   AudienceProfile,
   BrandBrief,
   BrandKit,
-  PageDoc,
   QuizConfig,
   RoutingRules,
+  VariantDoc,
 } from "@slice/backend/convex/pagesTypes";
+export { isHtmlDoc } from "@slice/backend/convex/pagesTypes";
 
 export type {
   AudienceBrief,
@@ -18,6 +19,7 @@ export type {
   BrandBrief,
   BrandKit,
   BrandItem,
+  HtmlDoc,
   ImageRef,
   PageDoc,
   ProfileBrand,
@@ -26,6 +28,7 @@ export type {
   QuizConfig,
   RoutingRules,
   Section,
+  VariantDoc,
 } from "@slice/backend/convex/pagesTypes";
 
 /** A trace step as the backend stores it (`spanValidator`). */
@@ -54,7 +57,7 @@ export const kitOf = (b: Brand | null | undefined) => (b?.kit ?? null) as BrandK
 export const briefOf = (b: Brand | null | undefined) => (b?.brief ?? null) as BrandBrief | null;
 export const profileOf = (a: Audience | null | undefined) => (a?.profile ?? null) as AudienceProfile | null;
 export const audienceBriefOf = (a: Audience | null | undefined) => (a?.brief ?? null) as AudienceBrief | null;
-export const docOf = (v: Variant | null | undefined) => (v?.doc ?? null) as PageDoc | null;
+export const docOf = (v: Variant | null | undefined) => (v?.doc ?? null) as VariantDoc | null;
 export const routingOf = (p: Page | null | undefined) => (p?.routing ?? null) as RoutingRules | null;
 export const quizOf = (p: Page | null | undefined) => (p?.quiz ?? null) as QuizConfig | null;
 
