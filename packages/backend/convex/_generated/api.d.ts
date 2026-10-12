@@ -8,11 +8,15 @@
  * @module
  */
 
+import type * as brands from "../brands.js";
 import type * as catalog from "../catalog.js";
 import type * as catalogImport from "../catalogImport.js";
 import type * as catalogTaste from "../catalogTaste.js";
 import type * as conversations from "../conversations.js";
 import type * as http from "../http.js";
+import type * as pageRouting from "../pageRouting.js";
+import type * as pageUtil from "../pageUtil.js";
+import type * as pages from "../pages.js";
 import type * as qloo from "../qloo.js";
 import type * as qlooApi from "../qlooApi.js";
 import type * as qlooProbe from "../qlooProbe.js";
@@ -29,11 +33,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  brands: typeof brands;
   catalog: typeof catalog;
   catalogImport: typeof catalogImport;
   catalogTaste: typeof catalogTaste;
   conversations: typeof conversations;
   http: typeof http;
+  pageRouting: typeof pageRouting;
+  pageUtil: typeof pageUtil;
+  pages: typeof pages;
   qloo: typeof qloo;
   qlooApi: typeof qlooApi;
   qlooProbe: typeof qlooProbe;

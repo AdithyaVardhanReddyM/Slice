@@ -84,4 +84,47 @@ http.route({
   }),
 });
 
+// --- Pages: the agent reads a brand's site and writes page variants ---------
+
+/** A brand (to extract) or a page with its brand (to generate). */
+http.route({
+  path: "/agent/pages/load",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    if (!authorized(req)) return json({ error: "unauthorized" }, 401);
+    const { brandId, pageId } = await req.json();
+    if (typeof pageId === "string") {
+      return json(await ctx.runQuery(internal.pages.agentLoad, { id: pageId as Id<"pages"> }));
+    }
+    if (typeof brandId === "string") {
+      return json(await ctx.runQuery(internal.brands.agentLoad, { id: brandId as Id<"brands"> }));
+    }
+    return json({ error: "brandId or pageId required" }, 400);
+  }),
+});
+
+/** Extraction progress and the finished brand kit. */
+http.route({
+  path: "/agent/pages/brand",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    if (!authorized(req)) return json({ error: "unauthorized" }, 401);
+    const { brandId, patch } = await req.json();
+    await ctx.runMutation(internal.brands.agentPatch, { id: brandId as Id<"brands">, ...patch });
+    return json({ ok: true });
+  }),
+});
+
+/** Generation progress and the finished variants. */
+http.route({
+  path: "/agent/pages/page",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    if (!authorized(req)) return json({ error: "unauthorized" }, 401);
+    const { pageId, patch } = await req.json();
+    await ctx.runMutation(internal.pages.agentPatch, { id: pageId as Id<"pages">, ...patch });
+    return json({ ok: true });
+  }),
+});
+
 export default http;

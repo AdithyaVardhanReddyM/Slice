@@ -149,7 +149,156 @@ export const briefValidator = v.object({
   avoid: v.array(v.string()),
 });
 
+// ---------------------------------------------------------------------------
+// Pages: taste-personalized landing pages built from a merchant's website.
+
+/** A brand kit read from the merchant's site: identity, look and voice. */
+export const brandKitValidator = v.object({
+  name: v.string(),
+  tagline: v.string(),
+  description: v.string(),
+  vertical: v.string(),
+  audience: v.string(),
+  offer: v.string(),
+  valueProps: v.array(v.string()),
+  voice: v.object({ tone: v.array(v.string()), summary: v.string() }),
+  /** Absolute http(s) URL or a data:image/svg+xml URI lifted from inline SVG. */
+  logo: v.optional(v.string()),
+  icon: v.optional(v.string()),
+  images: v.array(v.string()),
+  colors: v.object({
+    primary: v.string(),
+    accent: v.string(),
+    background: v.string(),
+    text: v.string(),
+    /** Every brand colour found on the site, most used first. */
+    palette: v.array(v.string()),
+  }),
+  fonts: v.object({ heading: v.optional(v.string()), body: v.optional(v.string()) }),
+});
+
+/** What Qloo knows about the brand's audience. */
+export const brandTasteValidator = v.object({
+  /** The brand's own Qloo entity, when Qloo knows it. */
+  qlooBrand: v.optional(entityRefValidator),
+  /** Qloo entities the audience is into (the brand, similar brands, cultural seeds). */
+  entities: v.array(entityRefValidator),
+  tags: v.array(tasteTagValidator),
+  demographics: v.optional(v.any()),
+});
+
+export const pageSectionValidator = v.object({
+  id: v.string(),
+  /** "hero" | "benefits" | "story" | "products" | "fit" | "faq" | "cta" */
+  kind: v.string(),
+  eyebrow: v.optional(v.string()),
+  heading: v.string(),
+  body: v.optional(v.string()),
+  image: v.optional(v.string()),
+  cta: v.optional(v.object({ label: v.string(), href: v.string() })),
+  secondaryCta: v.optional(v.object({ label: v.string(), href: v.string() })),
+  items: v.optional(
+    v.array(
+      v.object({
+        title: v.string(),
+        body: v.optional(v.string()),
+        image: v.optional(v.string()),
+        href: v.optional(v.string()),
+        price: v.optional(v.string()),
+      }),
+    ),
+  ),
+});
+
+/** One audience variant of a page: a Qloo taste cluster and the copy written for it. */
+export const pageSegmentValidator = v.object({
+  id: v.string(),
+  name: v.string(),
+  /** Who these visitors are, in a sentence. */
+  summary: v.string(),
+  /** How their Qloo taste shaped this variant, for the merchant. */
+  why: v.string(),
+  isDefault: v.boolean(),
+  /** The Qloo entities that define the segment. */
+  anchors: v.array(entityRefValidator),
+  tags: v.array(tasteTagValidator),
+  demographics: v.optional(v.any()),
+  /** utm_campaign / utm_term / utm_content words that route a visitor here. */
+  utmKeywords: v.array(v.string()),
+  accent: v.optional(v.string()),
+  seo: v.object({ title: v.string(), description: v.string() }),
+  sections: v.array(pageSectionValidator),
+});
+
+export const cityFitValidator = v.object({
+  city: v.string(),
+  segmentId: v.string(),
+  score: v.number(),
+  /** The city's Qloo tags that matched the segment. */
+  matched: v.array(v.string()),
+});
+
 export default defineSchema({
+  brands: defineTable({
+    /** Clerk subject of the merchant. */
+    ownerId: v.string(),
+    url: v.string(),
+    domain: v.string(),
+    /** "extracting" | "ready" | "failed" */
+    status: v.string(),
+    progress: v.optional(v.string()),
+    error: v.optional(v.string()),
+    kit: v.optional(brandKitValidator),
+    taste: v.optional(brandTasteValidator),
+    trace: v.array(spanValidator),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_owner", ["ownerId"]),
+
+  pages: defineTable({
+    ownerId: v.string(),
+    brandId: v.id("brands"),
+    slug: v.string(),
+    name: v.string(),
+    /** "leads" | "sales" | "signup" | "booking" */
+    goal: v.string(),
+    brief: v.object({
+      offer: v.string(),
+      audience: v.optional(v.string()),
+      ctaLabel: v.string(),
+      ctaUrl: v.string(),
+      notes: v.optional(v.string()),
+    }),
+    /** A Slice store whose products fill each variant, ranked for its taste. */
+    storeKey: v.optional(v.string()),
+    segmentCount: v.number(),
+    /** "generating" | "ready" | "failed" */
+    status: v.string(),
+    progress: v.optional(v.string()),
+    error: v.optional(v.string()),
+    published: v.boolean(),
+    segments: v.array(pageSegmentValidator),
+    /** Which variant each city's taste is closest to (pageRouting.ts). */
+    cityMap: v.array(cityFitValidator),
+    trace: v.array(spanValidator),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_slug", ["slug"]),
+
+  pageEvents: defineTable({
+    pageId: v.id("pages"),
+    segmentId: v.string(),
+    /** "view" | "cta" | "quiz" */
+    type: v.string(),
+    visitorId: v.string(),
+    /** Why the visitor got this variant: "quiz" | "profile" | "utm" | "geo" | "default" | "link". */
+    source: v.string(),
+    city: v.optional(v.string()),
+    at: v.number(),
+  }).index("by_page", ["pageId"]),
+
   // Private read-through cache of Qloo responses (see qloo.ts). The hackathon
   // key is rate limited and Qloo data must not be redistributed, so it lives
   // here and never in the repo.
