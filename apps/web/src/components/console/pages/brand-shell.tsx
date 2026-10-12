@@ -342,7 +342,7 @@ function BrandTopbar({ brand }: { brand: Brand }) {
                   , like <span className="text-background">/{examplePage}</span>
                 </>
               ) : null}
-              . Visitors see the version written for their audience. Opens the list of published pages.
+              . Each page is written for its audience. Opens the list of published pages.
             </p>
           </TooltipContent>
         </Tooltip>

@@ -425,7 +425,7 @@ export const recent = query({
       .take(Math.min(take, 500)),
 });
 
-/** Per page over the last `days`: views, sessions, CTA rate and the variant with the best CTA rate. */
+/** Per page over the last `days`: views, sessions, visitors, leads, engaged time, CTA rate and the variant with the best CTA rate. */
 export const brandOverview = query({
   args: { brandId: v.id("pagesBrands"), days: v.number() },
   handler: async (ctx, { brandId, days }) => {
@@ -439,12 +439,18 @@ export const brandOverview = query({
       const variants = await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", page._id)).collect();
       let views = 0;
       let sessions = 0;
+      let visitors = 0;
       let ctaClicks = 0;
+      let formSubmits = 0;
+      let engagedMs = 0;
       const per = new Map<string, { views: number; ctaClicks: number }>();
       for (const r of rows) {
         views += r.views;
         sessions += r.sessions;
+        visitors += r.visitors;
         ctaClicks += r.ctaClicks;
+        formSubmits += r.formSubmits;
+        engagedMs += r.engagedMs;
         const p = per.get(r.variantId) ?? { views: 0, ctaClicks: 0 };
         p.views += r.views;
         p.ctaClicks += r.ctaClicks;
@@ -472,7 +478,10 @@ export const brandOverview = query({
         variantCount: variants.length,
         views,
         sessions,
+        visitors,
         ctaClicks,
+        formSubmits,
+        avgEngagedMs: sessions > 0 ? Math.round(engagedMs / sessions) : 0,
         ctaRate: ratio(ctaClicks, views),
         topVariant,
       });

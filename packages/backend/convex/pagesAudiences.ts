@@ -30,6 +30,7 @@ import { cachedQlooGet } from "./qloo";
 import { spanValidator } from "./schema";
 import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity } from "./pagesTypes";
 import {
+  audienceLabel,
   cultureKind,
   dedupeById,
   estimateReach,
@@ -118,22 +119,30 @@ export const create = mutation({
   },
 });
 
+/** Re-names the versions of the brand's pages that target `id` (and drops it from them when `drop`). */
+async function relabelPages(ctx: MutationCtx, brandId: Id<"pagesBrands">, id: Id<"pagesAudiences">, drop: boolean) {
+  const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
+  for (const page of pages) {
+    if (!page.audienceIds.includes(id)) continue;
+    const audienceIds = drop ? page.audienceIds.filter((a) => a !== id) : page.audienceIds;
+    const audiences = (await Promise.all(audienceIds.map((a) => ctx.db.get(a)))).filter((a) => a !== null);
+    if (drop) await ctx.db.patch(page._id, { audienceIds, updatedAt: Date.now() });
+    const versions = await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", page._id)).collect();
+    for (const vnt of versions) {
+      await ctx.db.patch(vnt._id, { name: audienceLabel(audiences), audienceId: audiences.length === 1 ? audiences[0]._id : undefined, updatedAt: Date.now() });
+    }
+  }
+}
+
 export const remove = mutation({
   args: { id: v.id("pagesAudiences") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
     const audience = await ctx.db.get(id);
     if (!audience) return null;
-    // Variants built for this audience go too; pages drop it from their list.
-    const variants = await ctx.db.query("pagesVariants").withIndex("by_audience", (q) => q.eq("audienceId", id)).collect();
-    for (const vnt of variants) await ctx.db.delete(vnt._id);
-    const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", audience.brandId)).collect();
-    for (const page of pages) {
-      if (page.audienceIds.includes(id)) {
-        await ctx.db.patch(page._id, { audienceIds: page.audienceIds.filter((a) => a !== id), updatedAt: Date.now() });
-      }
-    }
+    // Pages built for it keep their version and drop it from their audiences.
     await ctx.db.delete(id);
+    await relabelPages(ctx, audience.brandId, id, true);
     return null;
   },
 });
@@ -225,12 +234,9 @@ export const patch = internalMutation({
       update.slug = await uniqueAudienceSlug(ctx, audience.brandId, slugify(name));
     }
     if (spans?.length) update.trace = [...audience.trace, ...spans];
-    // Variants named after the audience follow a rename.
-    if (update.name) {
-      const variants = await ctx.db.query("pagesVariants").withIndex("by_audience", (q) => q.eq("audienceId", id)).collect();
-      for (const vnt of variants) if (vnt.name === audience.name) await ctx.db.patch(vnt._id, { name: update.name, updatedAt: Date.now() });
-    }
     await ctx.db.patch(id, update);
+    // Page versions are named after their audiences.
+    if (update.name) await relabelPages(ctx, audience.brandId, id, false);
     return null;
   },
 });

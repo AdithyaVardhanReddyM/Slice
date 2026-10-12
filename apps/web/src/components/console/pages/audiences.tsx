@@ -106,7 +106,7 @@ function CardMenu({ audience }: { audience: Audience }) {
         open={confirm}
         onOpenChange={setConfirm}
         title={`Delete ${audience.name}?`}
-        description="Pages that target this audience lose that version. This cannot be undone."
+        description="Pages built for this audience keep what they say and stop listing it. This cannot be undone."
         actionLabel="Delete audience"
         onConfirm={() => void remove({ id: audience._id })}
       />
@@ -124,7 +124,7 @@ function NoAudiences({ onPick }: { onPick: (k: AudienceSourceKind | null) => voi
         <div className="space-y-1">
           <h2 className="font-semibold">Build the first audience</h2>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Pick where it comes from. Qloo fills the cover with the artists, places and brands these people love, and every page gets a version written for them.
+            Pick where it comes from. Qloo fills the cover with the artists, places and brands these people love, and the builder can write pages for them.
           </p>
         </div>
         <Button variant="outline" onClick={() => onPick(null)}>
@@ -226,7 +226,7 @@ export function AudiencesScreen() {
     <div className="mx-auto w-full max-w-7xl px-6 py-6">
       <PageHeader
         title="Audiences"
-        description="Who the pages are written for. Each audience is a taste profile Qloo built from a city, a demographic, shared interests or your own customers; every page gets one version per audience."
+        description="Who the pages are written for. Each audience is a taste profile Qloo built from a city, a demographic, shared interests or your own customers; a page is built for one of them, a few combined, or everyone."
         actions={
           audiences && audiences.length > 0 ? (
             <Button onClick={() => openSheet(null)}>

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import type { Audience, Build, Page, Variant } from "@/lib/pages/types";
+import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { PageSkeleton } from "@/components/console/primitives";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,9 +19,10 @@ import { useAttachmentUpload } from "./attachments";
 import { PromptComposer, type ComposerHandle, type ComposerValue } from "./composer";
 import { ChatWelcome, EditorLayout, EditorTopbar } from "./editor-shell";
 import { ImageTool } from "./image-tool";
-import { DeviceToggle, PreviewFrame, VariantTabs, versionLabel, type Device } from "./preview";
+import { AudienceStrip, DeviceToggle, PreviewFrame, type Device } from "./preview";
 import { PublishDialog } from "./publish-dialog";
 import { PageSettingsSheet, type PageSettings } from "./settings-sheet";
+import { useStartPage } from "./start-page";
 import { usePagesModel } from "@/lib/pages/models";
 import { useBuilder } from "./use-builder";
 import { WhyPanel } from "./why-panel";
@@ -31,16 +33,24 @@ interface PageBundle {
   audiences: Audience[];
 }
 
-/** Default first, then audience versions in the page's audience order. */
-function orderVariants(page: Page, variants: Variant[]) {
-  const def = variants.find((v) => v._id === page.defaultVariantId) ?? variants.find((v) => !v.audienceId);
-  const rest = variants.filter((v) => v !== def).sort((a, b) => page.audienceIds.indexOf(a.audienceId!) - page.audienceIds.indexOf(b.audienceId!));
-  return def ? [def, ...rest] : rest;
-}
+/** The page's one version: `defaultVariantId`, else the only row. */
+const versionOf = (page: Page, variants: Variant[]) => variants.find((v) => v._id === page.defaultVariantId) ?? variants[0] ?? null;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** /dashboard/pages/[brand]/[page]: keyed by the slug so opening another page starts a fresh editor. */
 export function PageBuilder() {
+  const { page } = useParams<{ page: string }>();
+  return <PageEditor key={page} />;
+}
+
+/**
+ * The editor for one page: the chat on the left, the page's single version on
+ * the right. A page is built for its audiences (combined) or for everyone; when
+ * the merchant asks for a page for another audience, the agent hands off and a
+ * new page is planned, created and opened here.
+ */
+function PageEditor() {
   const brand = useBrand();
   const router = useRouter();
   const params = useSearchParams();
@@ -55,12 +65,15 @@ export function PageBuilder() {
   const build = useQuery(api.pages.build, page ? { pageId: page._id } : "skip") as Build | null | undefined;
   const audienceList = useQuery(api.pagesAudiences.list, { brandId: brand._id }) as Audience[] | undefined;
   const brandAudiences = useMemo(() => audienceList ?? [], [audienceList]);
-  const variants = useMemo(() => (page && bundle ? orderVariants(page, bundle.variants) : []), [page, bundle]);
-  const setAudiences = useMutation(api.pages.setAudiences);
+  const version = useMemo(() => (page && bundle ? versionOf(page, bundle.variants) : null), [page, bundle]);
+  const pageAudiences = useMemo(
+    () => (page?.audienceIds ?? []).map((id) => brandAudiences.find((a) => a._id === id) ?? bundle?.audiences.find((a) => a._id === id)).filter((a): a is Audience => !!a),
+    [page, brandAudiences, bundle],
+  );
   const updateSettings = useMutation(api.pages.updateSettings);
   const upload = useAttachmentUpload();
+  const startPage = useStartPage(brand);
 
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [device, setDevice] = useState<Device>("desktop");
   const [side, setSide] = useState<"insights" | "images" | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
@@ -68,40 +81,59 @@ export function PageBuilder() {
   const frame = useRef<HTMLIFrameElement>(null);
   const composer = useRef<ComposerHandle>(null);
 
-  // The wait loop reads the latest variants and audiences, not the ones it started with.
-  const latest = useRef({ variants, audiences: brandAudiences });
+  // The wait loop reads the latest page and audiences, not the ones it started with.
+  const latest = useRef({ page, audiences: brandAudiences });
   useEffect(() => {
-    latest.current = { variants, audiences: brandAudiences };
-  }, [variants, brandAudiences]);
+    latest.current = { page, audiences: brandAudiences };
+  }, [page, brandAudiences]);
 
-  /** A version for a just-created audience waits until Qloo has compiled it. */
-  const waitFor = useCallback(async (variantId: string, status: (text: string) => void, stopped: () => boolean) => {
+  /** A page for just-created audiences waits until Qloo has compiled them. */
+  const waitFor = useCallback(async (_variantId: string, status: (text: string) => void, stopped: () => boolean) => {
     const deadline = Date.now() + 5 * 60_000;
     while (!stopped() && Date.now() < deadline) {
-      const v = latest.current.variants.find((x) => x._id === variantId);
-      const a = v?.audienceId ? latest.current.audiences.find((x) => x._id === v.audienceId) : undefined;
-      if (v && !v.audienceId) return true;
-      if (a?.status === "ready") return true;
-      if (a?.status === "failed") throw new Error(`Could not read the ${a.name} audience from Qloo${a.error ? `: ${a.error}` : ""}. Its version was skipped.`);
-      if (a) status(`Reading the ${a.name} audience from Qloo${a.progress?.label ? ` · ${a.progress.label}` : ""}`);
+      const ids = latest.current.page?.audienceIds ?? [];
+      const auds = ids.map((id) => latest.current.audiences.find((x) => x._id === id));
+      const failed = auds.find((a) => a?.status === "failed");
+      if (failed) throw new Error(`Could not read the ${failed.name} audience from Qloo${failed.error ? `: ${failed.error}` : ""}.`);
+      const pending = auds.filter((a) => a?.status !== "ready");
+      if (pending.length === 0) return true;
+      const a = pending.find((x) => x);
+      status(a ? `Reading the ${a.name} audience from Qloo${a.progress?.label ? ` · ${a.progress.label}` : ""}` : "Waiting for the audience");
       await sleep(700);
     }
     return false;
   }, []);
 
-  // Follow the version being built so the merchant sees it appear.
   const [model, setModel] = usePagesModel();
-  const builder = useBuilder({ pageId: (page?._id ?? "") as Page["_id"], build, onStart: setActiveId, waitFor, model });
-  const active = variants.find((v) => v._id === activeId) ?? variants[0] ?? null;
 
-  // A freshly created page lands here with ?generate=1: kick off every version once.
+  /** The agent asked for a page for another audience: plan it, create it, open it (it builds there). */
+  const onNewPage = useCallback(
+    async ({ request, audienceIds }: { request: string; audienceIds: string[] }, status: (text: string) => void) => {
+      const current = latest.current.page;
+      const { slug } = await startPage({
+        text: request,
+        audienceIds,
+        model,
+        source: current ? { id: current._id as Id<"pages">, brief: current.brief } : undefined,
+        onStatus: status,
+        onPlan: (title) => status(`Setting up ${title}`),
+      });
+      status("Opening the new page");
+      router.push(`/dashboard/pages/${brand.slug}/${slug}?generate=1`);
+    },
+    [startPage, router, brand.slug, model],
+  );
+
+  const builder = useBuilder({ pageId: (page?._id ?? "") as Page["_id"], build, waitFor, model, onNewPage });
+
+  // A freshly created page lands here with ?generate=1: build it once (after its audiences compile).
   const kicked = useRef(false);
   useEffect(() => {
-    if (kicked.current || params.get("generate") !== "1" || !page || variants.length === 0) return;
+    if (kicked.current || params.get("generate") !== "1" || !page || !version) return;
     kicked.current = true;
     router.replace(`/dashboard/pages/${brand.slug}/${page.slug}`);
-    if (variants.every((v) => !v.doc)) void builder.generateAll(variants.map((v) => v._id));
-  }, [params, page, variants, router, brand.slug, builder]);
+    if (!version.doc) void builder.generateAll([version._id]);
+  }, [params, page, version, router, brand.slug, builder]);
 
   if (list === undefined || (listed && bundle === undefined)) return <PageSkeleton />;
   if (!listed || bundle === null || !page) {
@@ -119,24 +151,10 @@ export function PageBuilder() {
     frame.current?.contentWindow?.postMessage({ type: "pg:scrollTo", sectionId }, "*");
   };
 
-  /**
-   * An @audience already on the page targets its version; one that is not yet
-   * on the page gets a new version, built with this message as the brief.
-   */
-  async function send({ text, mentions, attachments }: ComposerValue) {
-    if (!page) return;
-    const fresh = mentions.filter((a) => !page.audienceIds.includes(a._id));
-    if (fresh.length) {
-      const created = await setAudiences({
-        id: page._id,
-        audienceIds: [...page.audienceIds, ...fresh.map((a) => a._id)],
-      });
-      void builder.generateAll(created, text, attachments);
-      return;
-    }
-    const targets = mentions.map((a) => variants.find((v) => v.audienceId === a._id)).filter((v): v is Variant => !!v);
-    const ids = targets.length ? targets.map((v) => v._id) : active ? [active._id] : [];
-    if (ids.length) void builder.send(ids, text, attachments);
+  /** Every message edits this page; the agent starts a new page when it asks for another audience. */
+  function send({ text, mentions, attachments }: ComposerValue) {
+    if (!version) return;
+    void builder.send(version._id, text, attachments, mentions.map((a) => ({ id: a._id, name: a.name })));
   }
 
   async function saveSettings(v: Partial<PageSettings>) {
@@ -153,8 +171,6 @@ export function PageBuilder() {
     });
     if (slug !== page.slug) router.replace(`/dashboard/pages/${brand.slug}/${slug}`);
   }
-
-  const label = active ? versionLabel(active) : null;
 
   return (
     <EditorLayout
@@ -179,7 +195,6 @@ export function PageBuilder() {
         <BuilderChat
           build={build}
           live={builder.live}
-          variants={variants}
           audiences={brandAudiences}
           empty={<ChatWelcome brand={brand} audiences={brandAudiences} onPick={(parts) => composer.current?.set(parts)} />}
           composer={
@@ -187,14 +202,13 @@ export function PageBuilder() {
               ref={composer}
               brandSlug={brand.slug}
               audiences={brandAudiences}
-              placeholder={label ? `Ask for a change to the ${label} version…` : "Ask for a change…"}
-              hint={builder.queue.length > 0 ? `${builder.queue.length} more version${builder.queue.length === 1 ? "" : "s"} queued` : null}
+              placeholder="Ask for a change, or a page for another audience…"
               busy={builder.busy}
               onStop={builder.stop}
               model={model}
               onModelChange={setModel}
               onUpload={upload}
-              disabled={variants.length === 0}
+              disabled={!version}
               onSubmit={(v) => void send(v)}
             />
           }
@@ -204,14 +218,7 @@ export function PageBuilder() {
         <>
           <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <VariantTabs
-                variants={variants}
-                activeId={active?._id ?? null}
-                onSelect={setActiveId}
-                liveId={builder.live?.variantId}
-                queued={builder.queue}
-                audiences={brandAudiences}
-              />
+              <AudienceStrip audiences={pageAudiences} working={!!builder.live && builder.live.status !== null && !builder.live.handoff} />
               <div className="flex items-center gap-1">
                 <Button variant={side === "insights" ? "secondary" : "ghost"} size="sm" onClick={() => setSide(side === "insights" ? null : "insights")}>
                   <Lightbulb data-icon="inline-start" /> Insights
@@ -228,33 +235,33 @@ export function PageBuilder() {
                 ref={frame}
                 brandSlug={brand.slug}
                 pageSlug={page.slug}
-                variant={active}
+                variant={version}
                 device={device}
                 reloadKey={builder.docVersion}
                 className="min-h-0"
-                building={builder.live?.variantId === active?._id ? builder.live?.status : null}
-                onBuild={() => active && void builder.generate(active._id)}
+                building={builder.live && !builder.live.handoff ? builder.live.status : null}
+                onBuild={() => version && void builder.generate(version._id)}
                 busy={builder.busy}
               />
               {side && (
                 <div className="scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl border bg-background p-4 shadow-xs">
                   <div className="mb-3 flex items-center justify-between gap-2">
-                    <h2 className="text-sm font-medium">{side === "insights" ? `What shaped the ${label ?? ""} version` : "Swap an image"}</h2>
+                    <h2 className="text-sm font-medium">{side === "insights" ? "What shaped this page" : "Swap an image"}</h2>
                     <Button variant="ghost" size="icon-xs" aria-label="Close panel" onClick={() => setSide(null)}>
                       <X />
                     </Button>
                   </div>
                   {side === "insights" ? (
-                    <WhyPanel variant={active} onPick={scrollPreviewTo} />
+                    <WhyPanel variant={version} onPick={scrollPreviewTo} />
                   ) : (
                     <>
-                      {active && !active.doc && <p className="mb-3 text-xs text-muted-foreground">Build this version first.</p>}
+                      {version && !version.doc && <p className="mb-3 text-xs text-muted-foreground">Build the page first.</p>}
                       <ImageTool
                         brandId={brand._id}
-                        variant={active}
+                        variant={version}
                         defaultMode={page.brief.imageMode}
                         disabled={builder.busy}
-                        onApply={(msg) => active && void builder.send(active._id, msg)}
+                        onApply={(msg) => version && void builder.send(version._id, msg)}
                       />
                     </>
                   )}
@@ -262,7 +269,7 @@ export function PageBuilder() {
               )}
             </div>
           </div>
-          <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} brandSlug={brand.slug} page={page} variants={variants} audiences={bundle?.audiences ?? []} />
+          <PublishDialog open={publishOpen} onOpenChange={setPublishOpen} brandSlug={brand.slug} page={page} version={version} audiences={pageAudiences} />
           <PageSettingsSheet
             open={settingsOpen}
             onOpenChange={setSettingsOpen}

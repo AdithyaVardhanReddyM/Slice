@@ -32,8 +32,9 @@ function PersonalLink({ member }: { member: Member }) {
   const run = useCompileAudience();
   const pages = useQuery(api.pages.list, { brandId: brand._id }) as Page[] | undefined;
   const [busy, setBusy] = useState(false);
-  const published = (pages ?? []).filter((p) => p.status === "published");
   const hasLead = !!member.leadAudienceId;
+  // Pages built for this one person (their lead audience), published.
+  const theirs = (pages ?? []).filter((p) => p.status === "published" && !!member.leadAudienceId && p.audienceIds.includes(member.leadAudienceId));
 
   async function make() {
     setBusy(true);
@@ -54,7 +55,7 @@ function PersonalLink({ member }: { member: Member }) {
         <div>
           <div className="text-sm font-medium">Personal link</div>
           <p className="text-xs text-muted-foreground">
-            Opens any published page as a version written for this one person. The first visit builds their profile from their row.
+            A page written for this one person. Create their audience, then ask the builder for a page for them with @ and their name.
           </p>
         </div>
         {!hasLead ? (
@@ -62,12 +63,12 @@ function PersonalLink({ member }: { member: Member }) {
             {busy && <Spinner data-icon="inline-start" />}
             Create their audience
           </Button>
-        ) : published.length === 0 ? (
-          <Hint>Publish a page first; the link is ?g={member._id} on any page.</Hint>
+        ) : theirs.length === 0 ? (
+          <Hint>No published page for them yet. In the builder, @mention their audience and ask for a page for them.</Hint>
         ) : (
           <ul className="space-y-2">
-            {published.map((p) => {
-              const url = publicPageUrl(brand.slug, p.slug, { g: member._id });
+            {theirs.map((p) => {
+              const url = publicPageUrl(brand.slug, p.slug);
               return (
                 <li key={p._id} className="flex items-center justify-between gap-2 text-xs">
                   <span className="truncate">{p.title}</span>
@@ -200,7 +201,7 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
                       </Button>
                     }
                     title={`Delete ${audience.name}?`}
-                    description="Pages that target this audience lose that version. This cannot be undone."
+                    description="Pages built for this audience keep what they say and stop listing it. This cannot be undone."
                     actionLabel="Delete audience"
                     onConfirm={async () => {
                       await remove({ id: audience._id });

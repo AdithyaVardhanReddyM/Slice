@@ -1,7 +1,11 @@
-"""The page builder: an ADK agent that writes and edits one variant of a page as HTML and CSS.
+"""The page builder: an ADK agent that writes and edits a page as HTML and CSS.
 
-State per session (one session per page × variant): brand (kit, brief, qloo,
-captured site), page, variant, audience (profile + brief), the current doc.
+A page is one version aimed at its audiences: none (everyone: the brand's own
+Qloo read), one, or several combined into one group (their profiles merged).
+A request for a page for some other audience starts a new page (start_new_page).
+
+State per session (one session per page): brand (kit, brief, qloo, captured
+site), page, its version (the variant row), the audience (combined), the doc.
 Tools read the brand's homepage, Qloo through the Convex cache, pick items,
 find or generate imagery, write and edit the page, and review it: a headless
 browser screenshots the preview and a vision pass judges it against the
@@ -76,13 +80,65 @@ def default_audience(brand: dict[str, Any]) -> dict[str, Any]:
         for b in (q.get("similarBrands") or []) if isinstance(b, dict)
     ]
     return {
-        "name": "Default",
+        "name": "Everyone",
         "kind": "default",
         "size": 0,
         "sources": {},
         "profile": {"entities": [], "tags": tags, "brands": brands, "demographics": q.get("demographics"), "geo": [], "culture": {"artists": [], "films": [], "places": [], "books": []}},
         "brief": None,
-        "note": "Everyone who is not matched to a specific audience. Use the brand's own taste read (its Qloo tags and the brands its customers also love) and the brand brief; no local section.",
+        "note": "This page is for everyone, not one audience. Use the brand's own taste read (its Qloo tags and the brands its customers also love) and the brand brief; no local section.",
+    }
+
+
+def _merge_by(key: str, *lists: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Round-robin merge so each audience leads in turn; first copy of a key wins."""
+    out: list[dict[str, Any]] = []
+    seen: set[Any] = set()
+    for i in range(max((len(x) for x in lists), default=0)):
+        for x in lists:
+            if i < len(x) and isinstance(x[i], dict):
+                k = x[i].get(key) or x[i].get("name")
+                if k not in seen:
+                    seen.add(k)
+                    out.append(x[i])
+    return out
+
+
+def combine_audiences(audiences: list[dict[str, Any]]) -> dict[str, Any]:
+    """Several audiences on one page read as one group: profiles merged, briefs kept side by side."""
+    if len(audiences) == 1:
+        return audiences[0]
+    profiles = [a.get("profile") or {} for a in audiences]
+    tags: dict[str, dict[str, Any]] = {}
+    for p in profiles:
+        for t in p.get("tags") or []:
+            k = t.get("id") or t.get("name")
+            if k not in tags or float(t.get("affinity") or 0) > float(tags[k].get("affinity") or 0):
+                tags[k] = t
+    demo: dict[str, dict[str, float]] = {}
+    for p in profiles:
+        for group, vals in ((p.get("demographics") or {}).items()):
+            if isinstance(vals, dict):
+                for k, val in vals.items():
+                    if isinstance(val, (int, float)):
+                        demo.setdefault(group, {})[k] = demo.get(group, {}).get(k, 0) + val / len(profiles)
+    culture = {k: _merge_by("id", *[((p.get("culture") or {}).get(k) or []) for p in profiles]) for k in ("artists", "films", "places", "books")}
+    names = " + ".join(str(a.get("name")) for a in audiences)
+    return {
+        "name": names,
+        "kind": "combined",
+        "size": sum(int(a.get("size") or 0) for a in audiences),
+        "sources": {"combined": [{"name": a.get("name"), "kind": a.get("kind"), **(a.get("sources") or {})} for a in audiences]},
+        "profile": {
+            "entities": _merge_by("id", *[p.get("entities") or [] for p in profiles]),
+            "tags": sorted(tags.values(), key=lambda t: -float(t.get("affinity") or 0)),
+            "brands": _merge_by("id", *[p.get("brands") or [] for p in profiles]),
+            "demographics": demo or None,
+            "geo": _merge_by("name", *[p.get("geo") or [] for p in profiles]),
+            "culture": culture,
+        },
+        "brief": {a.get("name"): a.get("brief") for a in audiences if a.get("brief")} or None,
+        "note": f"One page for {len(audiences)} audiences combined: " + "; ".join(f"{a.get('name')} ({a.get('kind')})" for a in audiences) + ". Write for the overlap: what these people share, with nods to each where they differ. The profile below merges theirs.",
     }
 
 
@@ -100,13 +156,9 @@ async def load_build_state(page_id: str, variant_id: str) -> dict[str, Any]:
     brand = await convex.query("pagesBrands:get", {"id": page["brandId"]})
     if not brand:
         raise ValueError(f"brand {page['brandId']} not found")
-    audience = None
-    if variant.get("audienceId"):
-        audience = next((a for a in (bundle.get("audiences") or []) if a.get("_id") == variant["audienceId"]), None)
-        if audience is None:
-            audience = await convex.query("pagesAudiences:get", {"id": variant["audienceId"]})
-    if audience is None:
-        audience = default_audience(brand)
+    # The page's audiences (bundle.audiences follows page.audienceIds), combined into one.
+    audiences = [a for a in (bundle.get("audiences") or []) if isinstance(a, dict)]
+    audience = combine_audiences(audiences) if audiences else default_audience(brand)
     doc = variant.get("doc")
     if isinstance(doc, dict) and doc.get("kind") != "html":
         doc = None  # a page from the old section builder: this builder starts fresh
@@ -220,7 +272,7 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
     has_culture = any(culture.get(k) for k in ("artists", "films", "places", "books")) or bool(profile.get("entities"))
 
     audience_block = (
-        f"AUDIENCE for this version: \"{audience.get('name')}\" (kind {audience.get('kind')}, size {audience.get('size')}).\n"
+        f"AUDIENCE for this page: \"{audience.get('name')}\" (kind {audience.get('kind')}, size {audience.get('size')}).\n"
         + (f"Note: {audience['note']}\n" if audience.get("note") else "")
         + "Qloo taste profile (summary; get_audience_detail has the full lists):\n"
         + json.dumps(profile_summary(profile, tags_per_type=6, brands=8, culture=5), ensure_ascii=False, indent=1)
@@ -242,12 +294,12 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
 2. {'The audience has a place: call qloo_places(city, kind) for a local section (places near them that fit the brand).' if has_geo else 'No geo for this audience: no local section unless the brand itself has locations worth one.'} {'Culture lists exist in the detail: use them for a culture moment (4 to 6 names with images from the detail); call qloo_culture only to fill a missing kind.' if has_culture else 'No culture signals: skip the culture section.'}
 3. Imagery: {image_rule} One search_images call per missing picture, specific queries in the brand's imagery style, run together.
 4. write_page once: a complete page that answers the brief for this audience, in the brand's design language, with the items reordered by taste fit. Then review_page. Fix what it finds with edit_page (write_page again only for a rewrite), and review once more only if brandMatch was below 7 or a high-severity issue remains. At most {MAX_REVIEWS_PER_TURN} reviews per turn.
-5. Reply to the merchant in 2 to 4 sentences: what this version leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
+5. Reply to the merchant in 2 to 4 sentences: what the page leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
 
     edit_rules = f"""HOW TO EDIT (kind = edit)
 Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Reply in one or two sentences saying what changed."""
 
-    return f"""You are the Slice page builder. You write one version of a landing page for {brand.get('name', 'this brand')} aimed at one audience, as complete HTML and CSS, so that it looks like a page the brand's own designers made: an extension of their site, not a template. Taste comes from Qloo, the cultural taste graph: an audience is defined by what its people love (artists, films, places, brands) and by Qloo's tags for them. You can see your own work: review_page screenshots the page and compares it with the brand's homepage.
+    return f"""You are the Slice page builder. You write a landing page for {brand.get('name', 'this brand')} aimed at its audience, as complete HTML and CSS, so that it looks like a page the brand's own designers made: an extension of their site, not a template. Taste comes from Qloo, the cultural taste graph: an audience is defined by what its people love (artists, films, places, brands) and by Qloo's tags for them. You can see your own work: review_page screenshots the page and compares it with the brand's homepage.
 
 BRAND: {brand.get('name')} ({brand.get('url')})
 {brief.get('summary', '')}
@@ -265,7 +317,7 @@ PAGE: "{page.get('title')}" (/{page.get('slug')}), goal {pb.get('goal')}, imageM
 Merchant's brief (their words; facts, dates and numbers in it are true and should be used): {pb.get('prompt', '')}
 Offer: {pb.get('offer') or 'none'}. Primary CTA: {json.dumps(pb.get('cta') or {}, ensure_ascii=False)}
 {_extras_block(pb)}
-VARIANT: "{variant.get('name')}" (status {variant.get('status')}, version {variant.get('version')}). This turn: {kind}.
+Built for: {variant.get('name')} (status {variant.get('status')}, revision {variant.get('version')}). This turn: {kind}.
 
 {audience_block}
 
@@ -280,14 +332,17 @@ MORE TOOLS
 - google_search checks facts the merchant states or that the page needs (dates, opening hours, an address, a venue, a competitor's offer, a local event). Use it when a wrong fact would embarrass the brand; never for design.
 - Images attached to a message are in your context: a photograph is inspiration for imagery and mood, a screenshot of a page is a structure or style reference. Say what you took from them in your reply.
 
-PERSONALISATION LEVERS (make them visible; a judge compares versions side by side)
+ONE PAGE, ONE AUDIENCE
+This page is built for the audience above and only that. When the merchant asks for a page or a version for another audience or group (an @audience that is not this page's, "now do one for students", "make a Berlin version"), call start_new_page with a self-contained request: what the new page is for and who it targets, carrying over this page's facts, offer and goal unless they change them, and adding no facts of your own. Do not edit this page for it. Then reply in one sentence that you are opening the new page. Changing who this page is for is a new page too.
+
+PERSONALISATION LEVERS (make them visible; pages for different audiences get compared side by side)
 - Headline angle from the audience's emotional_tone and core_values tags.
 - Imagery direction from personal_style / aesthetic tags (muted and minimal vs bold and saturated), inside the brand's palette and type.
 - Cultural hooks: artists, films, places, brands they love, in a culture moment, a quote, or a line of copy.
 - Items reordered by taste fit (pick_items), with a one-clause reason in each description where natural.
 - Local section for geo audiences: neighbourhood, nearby places from Qloo, opening or delivery details.
 - Copy tone and length from lifestyle tags and the demographic skew. Offer framing (price-led, craft-led, convenience-led) from the merchant's brief.
-Every section's `evidence` names the Qloo tags, brands or entities that drove it, in one or two sentences. The default version's evidence cites the brand's own Qloo read and the brief.
+Every section's `evidence` names the Qloo tags, brands or entities that drove it, in one or two sentences. A page for everyone cites the brand's own Qloo read and the brief.
 
 {load_skills()}
 
@@ -325,7 +380,7 @@ def _entity_ids(profile: dict[str, Any], n: int = 12) -> list[str]:
 
 
 async def get_audience_detail(tool_context: ToolContext) -> dict:
-    """The full Qloo taste profile of this version's audience: tags by type with affinity,
+    """The full Qloo taste profile of this page's audience: tags by type with affinity,
     brand affinities with each brand's own style words, cultural references (artists, films,
     places, books) with images, where they are (geo), demographic skew, and the audience brief.
     Call once per turn before writing."""
@@ -1140,6 +1195,28 @@ async def review_page(tool_context: ToolContext, focus: str = "") -> dict:
     }
 
 
+async def start_new_page(request: str, audience_ids: list[str], tool_context: ToolContext) -> dict:
+    """Starts a separate page for another audience or group. The console plans it (title,
+    audiences, including new ones described in words), creates it and opens its editor,
+    where it is built. Use when the merchant asks for a page or version for an audience
+    that is not this page's.
+
+    Args:
+        request: The new page's brief in the merchant's voice, self-contained: who it is for
+            and what it is about, with this page's facts, offer and goal carried over unless
+            the merchant changes them ("A launch page for the camping pass, for under 25s: ...").
+            Only facts from this page's brief and the merchant's messages; add no new ones
+            (no travel times, prices or dates you looked up or assumed).
+        audience_ids: Saved audience ids the merchant mentioned for the new page (from the
+            message's @mentions); empty when they described the group in words.
+    """
+    req = (request or "").strip()
+    if not req:
+        return {"ok": False, "error": "describe the new page"}
+    record("slice", "Start a new page", req[:140], ms=0)
+    return {"ok": True, "note": "The console is creating the new page and will open it; nothing to do on this page."}
+
+
 search_agent = LlmAgent(
     name="google_search",
     model=MODEL,
@@ -1167,6 +1244,7 @@ TOOLS = [
     write_page,
     edit_page,
     review_page,
+    start_new_page,
 ]
 
 STATUS_FOR_TOOL = {
@@ -1186,6 +1264,7 @@ STATUS_FOR_TOOL = {
     "write_page": "Writing the page",
     "edit_page": "Editing the page",
     "review_page": "Reviewing the page against the brand's homepage",
+    "start_new_page": "Starting a new page",
 }
 
 
@@ -1194,7 +1273,7 @@ def _make_agent(model: str) -> LlmAgent:
     return LlmAgent(
         name="slice_pages_builder",
         model=model,
-        description="Writes one audience's version of a landing page as HTML and CSS from a brand's site, kit and a Qloo taste profile.",
+        description="Writes a landing page for one audience (or a combined group) as HTML and CSS from a brand's site, kit and a Qloo taste profile.",
         instruction=build_instruction,
         generate_content_config=types.GenerateContentConfig(
             thinking_config=types.ThinkingConfig(thinking_level="MEDIUM", include_thoughts=True),
@@ -1209,9 +1288,8 @@ root_agent = agents[MODEL]
 
 
 def generate_message(state: dict[str, Any], merchant_note: str | None) -> str:
-    variant = state.get(VARIANT) or {}
     aud = state.get(AUDIENCE) or {}
-    text = f"[Generate the \"{variant.get('name')}\" version of this page now for the audience \"{aud.get('name')}\". Follow HOW TO GENERATE: read the audience, the items and the brand's site, gather imagery, write_page, review_page and fix, then reply in 2 to 4 sentences naming the Qloo evidence. The brand's homepage screenshots are attached: match its look.]"
+    text = f"[Generate this page now for {'everyone' if aud.get('kind') == 'default' else 'the audience ' + json.dumps(aud.get('name'), ensure_ascii=False)}. Follow HOW TO GENERATE: read the audience, the items and the brand's site, gather imagery, write_page, review_page and fix, then reply in 2 to 4 sentences naming the Qloo evidence. The brand's homepage screenshots are attached: match its look.]"
     if merchant_note and merchant_note.strip():
-        text += "\nMerchant's note for this version: " + merchant_note.strip()
+        text += "\nMerchant's note for this page: " + merchant_note.strip()
     return text

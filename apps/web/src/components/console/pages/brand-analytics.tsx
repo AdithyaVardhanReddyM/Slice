@@ -36,7 +36,7 @@ export function BrandAnalytics() {
       <div className="mx-auto w-full max-w-7xl px-6 pt-6">
         <PageHeader
           title="Analytics"
-          description="First-party measurement per page: which version visitors respond to, when they come, where they click."
+          description="First-party measurement per page: how visitors respond, when they come, where they click."
           actions={
             pages && pages.length > 0 ? (
               <Select value={selectedSlug ?? ""} onChange={(e) => router.replace(`/dashboard/pages/${brand.slug}/analytics?page=${e.target.value}`)} className="min-w-56">

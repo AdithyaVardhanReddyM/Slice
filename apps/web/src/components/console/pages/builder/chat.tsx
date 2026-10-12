@@ -1,15 +1,14 @@
 "use client";
 
-import { AlertCircle, Check, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, ChevronRight, FilePlus2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { BuildStep } from "@/lib/pages/stream";
-import type { Audience, Build, Variant } from "@/lib/pages/types";
+import type { Audience, Build } from "@/lib/pages/types";
 import { Spinner } from "@/components/console/setup/atoms";
 import { TraceList } from "../shared";
 import { AttachmentStrip, type Attachment } from "./attachments";
 import { MentionText } from "./composer";
-import { versionLabel } from "./preview";
 import type { LiveTurn } from "./use-builder";
 
 /* Timeline pieces -------------------------------------------------------------- */
@@ -121,14 +120,12 @@ function MerchantBubble({ text, audiences, attachments, children }: { text: stri
 export function BuilderChat({
   build,
   live,
-  variants,
   audiences,
   empty,
   composer,
 }: {
   build: Build | null | undefined;
   live: LiveTurn | null;
-  variants: Variant[];
   /** The brand's audiences, so "@Name" in messages shows as a pill. */
   audiences: Audience[];
   /** Shown when there are no messages yet. */
@@ -137,9 +134,6 @@ export function BuilderChat({
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   const messages = build?.messages ?? [];
-  const variantOf = (id?: string) => variants.find((v) => v._id === id);
-  const liveVariant = variantOf(live?.variantId);
-  const liveLabel = liveVariant ? versionLabel(liveVariant) : null;
 
   useEffect(() => {
     const el = scroller.current;
@@ -157,7 +151,6 @@ export function BuilderChat({
         ) : (
           <div className="space-y-5 p-4">
             {messages.map((m) => {
-              const v = variantOf(m.variantId);
               if (m.role === "merchant") {
                 return (
                   <MerchantBubble key={m.id} text={m.text} audiences={audiences} attachments={m.attachments as Attachment[] | undefined}>
@@ -176,7 +169,6 @@ export function BuilderChat({
                   )}
                   {m.text && !hasReplyStep && <p className="text-sm leading-6 whitespace-pre-wrap">{m.text}</p>}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {v && <span>{versionLabel(v)} version ·</span>}
                     <span>{time(m.at)}</span>
                   </div>
                   {m.trace && m.trace.length > 0 && (
@@ -196,7 +188,13 @@ export function BuilderChat({
                   ) : (
                     <div className="w-full">
                       {live.steps.length > 0 && <Timeline steps={live.steps} live />}
-                      {live.status && !liveHasReply && (
+                      {live.handoff && live.status && (
+                        <p className="mt-2 flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-xs text-muted-foreground shadow-xs">
+                          <FilePlus2 className="size-3.5 shrink-0" />
+                          <span className="pg-shimmer">{live.handoff}</span>
+                        </p>
+                      )}
+                      {live.status && !liveHasReply && !live.handoff && (
                         <p className={cn("flex items-center gap-2 py-1", live.steps.length === 0 ? "text-muted-foreground" : "text-xs text-muted-foreground")}>
                           <span className="pg-shimmer">{live.status}</span>
                         </p>
@@ -205,7 +203,7 @@ export function BuilderChat({
                   )}
                   {live.spans.length > 0 && (
                     <div className="w-full">
-                      <Steps spans={live.spans} label={live.kind === "generate" ? `Building the ${liveLabel ?? ""} version` : "Calls so far"} />
+                      <Steps spans={live.spans} label={live.kind === "generate" ? "Building the page" : "Calls so far"} />
                     </div>
                   )}
                 </div>

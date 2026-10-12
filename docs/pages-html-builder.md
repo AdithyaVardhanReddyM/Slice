@@ -42,3 +42,12 @@ Images can be attached to any message (paperclip, paste or drop); they upload to
 ## Still to do
 
 A mobile screenshot in the review, a per-turn token and cost readout, and a way to pin a reference page as the structural model for a build.
+
+## One page, one audience (2026-10-13)
+
+A page is one version built for its audiences: none (everyone, from the brand's own Qloo read), one, or several combined into one group (`combine_audiences` in `builder.py` merges their profiles; briefs stay side by side). There are no per-audience versions, no visitor routing and no quiz any more: share each page's link with the people it was built for.
+
+- Storage: `pagesVariants` keeps exactly one row per page (`page.defaultVariantId`), so events, stats, forms and sessions keep their variant keys. Its `name` is the audience label ("Berlin + Under 25s", "Everyone"); `audienceId` is set only for a single-audience page. `resolveVariant` always returns that row.
+- Another audience is another page. The builder's `start_new_page(request, audience_ids)` tool streams a `new_page` event; the editor (`builder.tsx` → `useStartPage` in `builder/start-page.ts`, shared with the new-page screen) plans it with `/pages/plan` + `source_page_id` (goal, offer, CTA and items carry over), creates any new audiences and the page, and opens it with `?generate=1`. Edits pass the message's @mentions so the agent knows which audiences belong to this page.
+- `pages:splitVersions` (internal) migrated pages that had several versions: the default stays as the page for everyone, each audience version becomes `<slug>-<audience>` / "<title> for <audience>" with its chat turns; `moveVersionData` re-points its analytics rows in batches.
+- The demo seed builds each brief once for everyone and once per audience as separate pages.

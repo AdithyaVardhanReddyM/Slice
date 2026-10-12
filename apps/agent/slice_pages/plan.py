@@ -3,8 +3,11 @@
 The console used to ask for title, slug, goal, offer, CTA, items and audiences
 in a form. Now the merchant just describes the page (mentioning audiences with
 @) and this decides the rest: page settings, items worth featuring, which
-existing audiences get a version, and new audiences to compile when the prompt
-names a group in plain words ("for people under 25", "for Berlin").
+existing audiences the page is for, and new audiences to compile when the
+prompt names a group in plain words ("for people under 25", "for Berlin").
+A page is one version: for everyone, for one audience, or for several
+audiences combined into one group. The builder's start_new_page passes the
+page it came from (`source_page_id`), whose settings carry over.
 """
 
 from __future__ import annotations
@@ -64,7 +67,7 @@ def _audience_line(a: dict[str, Any]) -> str:
     return f"  - {a['_id']}: {a.get('name')} [{a.get('kind')}{'; ' + '; '.join(bits) if bits else ''}]"
 
 
-async def plan_page(brand_id: str, prompt: str, mentioned: list[str], *, model: str = "gemini-3.8-flash") -> dict[str, Any]:
+async def plan_page(brand_id: str, prompt: str, mentioned: list[str], *, model: str = "gemini-3.8-flash", source_page_id: str | None = None) -> dict[str, Any]:
     brand = await convex.query("pagesBrands:get", {"id": brand_id})
     if not brand:
         raise ValueError(f"brand {brand_id} not found")
@@ -77,8 +80,21 @@ async def plan_page(brand_id: str, prompt: str, mentioned: list[str], *, model: 
     mentioned_set = set(mentioned)
     named = [a for a in audiences if a["_id"] in mentioned_set]
     others = [a for a in audiences if a["_id"] not in mentioned_set and a.get("status") != "failed"]
+    source_block = ""
+    if source_page_id:
+        try:
+            src = ((await convex.query("pages:get", {"id": source_page_id})) or {}).get("page") or {}
+        except Exception:
+            src = {}
+        if src:
+            sb = src.get("brief") or {}
+            source_block = f"""
+THE MERCHANT ASKED FOR THIS PAGE WHILE EDITING ANOTHER ONE: "{src.get('title')}" (/{src.get('slug')}), goal {sb.get('goal')}, offer {sb.get('offer') or 'none'}, CTA {sb.get('cta')}, items {', '.join(sb.get('itemIds') or []) or 'none'}.
+Its brief: {sb.get('prompt', '')}
+Keep its goal, offer, CTA and items unless the request changes them. The title names the new audience ("Camping pass for under 25s"); the slug is new.
+"""
 
-    text = f"""You set up a targeted landing page for {brand.get('name')} ({brand.get('url')}) from the merchant's request. A page has one version per audience plus a default version for everyone else; a builder agent then writes each version from Qloo taste data. Decide the page settings and the audiences.
+    text = f"""You set up a targeted landing page for {brand.get('name')} ({brand.get('url')}) from the merchant's request. A page is built for one audience, or for several audiences combined into one group, or for everyone when it names none; a builder agent then writes it from Qloo taste data. Decide the page settings and the audiences.
 
 BRAND: {brief.get('summary', '')}
 Sells to: {brief.get('audience', '')}. Site CTAs: {', '.join(brief.get('ctas') or []) or 'none'}
@@ -90,6 +106,7 @@ AUDIENCES THE MERCHANT MENTIONED WITH @ (always include their ids in existingAud
 OTHER SAVED AUDIENCES (include one only if the request clearly describes it, e.g. it names the same city or group):
 {chr(10).join(_audience_line(a) for a in others[:30]) or '  (none)'}
 
+{source_block}
 MERCHANT'S REQUEST:
 {prompt}
 
@@ -99,8 +116,8 @@ RULES
 - offer: only if the request states one (a discount, a perk, a bundle price); otherwise an empty string. Never invent one.
 - ctaLabel: 1 to 3 words in sentence case, matching the goal and the brand's site CTAs ("Get tickets", "Book a room", "Join the waitlist"). ctaHref: the URL of the item the page is about when there is exactly one, else the brand URL {brand.get('url')}.
 - itemIds: the items the request is about or clearly implies, by id, at most 6. Empty when the request is general; the builder then ranks items by taste.
-- newAudiences: only when the request asks to target or personalise for a group that no mentioned or saved audience covers. One per group named. kind demographic for age or gender ("under 20" and "teenagers" map to age 24_and_younger, "students" too; "over 60" to 55_and_older; gender only when stated), location for a city or country (city, country), interests for people defined by what they love (interests: 2 to 6 artists, brands, films, books or places that define them). name: a short audience name in sentence case ("Under 25s", "Berlin", "Indie music fans"). Do not create an audience for "everyone"; the default version covers that.
-- reply: one or two plain sentences to the merchant saying what you set up: the page, and the versions that will be built (the default plus each audience by name). No markdown, no em dashes, no exclamation marks.
+- newAudiences: only when the request asks to target or personalise for a group that no mentioned or saved audience covers. One per group named. Several groups in one request ("for Berlin under 25s", "for London and Paris") all go on this one page, combined. kind demographic for age or gender ("under 20" and "teenagers" map to age 24_and_younger, "students" too; "over 60" to 55_and_older; gender only when stated), location for a city or country (city, country), interests for people defined by what they love (interests: 2 to 6 artists, brands, films, books or places that define them). name: a short audience name in sentence case ("Under 25s", "Berlin", "Indie music fans"). Do not create an audience for "everyone"; a page with no audiences is for everyone.
+- reply: one or two plain sentences to the merchant saying what you set up: the page and who it is for (everyone, or the audiences by name, combined when there are several). No markdown, no em dashes, no exclamation marks.
 """
     plan = await generate_json(
         text,

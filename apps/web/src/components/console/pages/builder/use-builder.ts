@@ -18,6 +18,8 @@ export interface LiveTurn {
   /** The merchant message that started it (edit turns). */
   prompt?: string;
   attachments?: Attachment[];
+  /** Set while the console sets up a new page the agent asked for (shown under the reply). */
+  handoff?: string;
 }
 
 /** Append to the live turn's timeline, merging consecutive thought and text deltas. */
@@ -57,6 +59,8 @@ function withStep(steps: BuildStep[], ev: { type: string } & Record<string, unkn
   return steps;
 }
 
+type Mention = { id: string; name: string };
+
 type HistoryItem = { role: string; text: string; variantId?: string };
 
 function compactHistory(build: Build | null | undefined): HistoryItem[] {
@@ -65,7 +69,7 @@ function compactHistory(build: Build | null | undefined): HistoryItem[] {
 
 /**
  * Drives /api/pages/build turns: one live turn at a time, a queue for
- * "generate all", and a counter the preview iframe keys on so it reloads
+ * turns waiting on it, and a counter the preview iframe keys on so it reloads
  * whenever the agent writes a doc.
  */
 export function useBuilder({
@@ -74,6 +78,7 @@ export function useBuilder({
   onStart,
   waitFor,
   model,
+  onNewPage,
 }: {
   pageId: Id<"pages">;
   build: Build | null | undefined;
@@ -87,6 +92,12 @@ export function useBuilder({
   waitFor?: (variantId: string, status: (text: string) => void, stopped: () => boolean) => Promise<boolean>;
   /** The agent's model for every turn (see lib/pages/models). */
   model?: string;
+  /**
+   * The agent asked for a separate page (another audience): called once the
+   * turn ends, with `status` for the live turn while the page is set up.
+   * Rejecting shows the error on the turn.
+   */
+  onNewPage?: (ask: { request: string; audienceIds: string[] }, status: (text: string) => void) => Promise<void>;
 }) {
   const [live, setLive] = useState<LiveTurn | null>(null);
   const [queue, setQueue] = useState<string[]>([]);
@@ -101,17 +112,19 @@ export function useBuilder({
   }, [build]);
 
   const runTurn = useCallback(
-    async (variantId: string, kind: "generate" | "edit", message?: string, attachments?: Attachment[]) => {
+    async (variantId: string, kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[]) => {
       abort.current?.abort();
       const ctrl = new AbortController();
       abort.current = ctrl;
       onStart?.(variantId);
+      let newPage: { request: string; audienceIds: string[] } | null = null;
       setLive({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", spans: [], steps: [], text: "", error: null, prompt: message, attachments });
       for await (const ev of postStream(
         "/api/pages/build",
-        { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current), model, attachments: attachments ?? [] },
+        { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current), model, attachments: attachments ?? [], mentions: mentions ?? [] },
         ctrl.signal,
       )) {
+        if (ev.type === "new_page") newPage = { request: ev.request, audienceIds: ev.audienceIds ?? [] };
         if (ev.type === "status") setLive((l) => (l ? { ...l, status: ev.text } : l));
         else if (ev.type === "span") setLive((l) => (l ? { ...l, spans: [...l.spans, ev.span] } : l));
         else if (ev.type === "thought" || ev.type === "tool_call" || ev.type === "tool_result") setLive((l) => (l ? { ...l, steps: withStep(l.steps, ev) } : l));
@@ -126,17 +139,27 @@ export function useBuilder({
           setLive((l) => (l ? { ...l, status: null, text: ev.text ?? l.text } : l));
         }
       }
+      if (newPage && onNewPage && !ctrl.signal.aborted) {
+        const status = (text: string) => setLive((l) => (l && l.variantId === variantId ? { ...l, status: text, handoff: text } : l));
+        status("Planning the new page");
+        try {
+          await onNewPage(newPage, status);
+        } catch (err) {
+          setLive((l) => (l ? { ...l, status: null, error: `Could not start the new page: ${String((err as Error).message ?? err).replace(/^Error: /, "")}` } : l));
+        }
+        return;
+      }
       // Give Convex a beat to deliver the persisted message before dropping the live one.
       setTimeout(() => setLive((l) => (l && l.variantId === variantId && !l.error ? null : l)), 800);
     },
-    [pageId, onStart, model],
+    [pageId, onStart, model, onNewPage],
   );
 
   const generate = useCallback((variantId: string) => runTurn(variantId, "generate"), [runTurn]);
 
   /** Run turns one after another; the queue shows what is still waiting. */
   const runAll = useCallback(
-    async (variantIds: string[], kind: "generate" | "edit", message?: string, attachments?: Attachment[]) => {
+    async (variantIds: string[], kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[]) => {
       const mine = ++run.current;
       setQueue(variantIds);
       for (const id of variantIds) {
@@ -155,18 +178,18 @@ export function useBuilder({
           if (run.current !== mine) return;
           if (!ok) continue;
         }
-        await runTurn(id, kind, message, attachments);
+        await runTurn(id, kind, message, attachments, mentions);
       }
       if (run.current === mine) setQueue([]);
     },
     [runTurn, waitFor, onStart],
   );
 
-  /** Generate every listed variant; `note` is the merchant's ask for these versions. */
+  /** Generate the listed variants (a page has one); `note` is the merchant's ask. */
   const generateAll = useCallback((variantIds: string[], note?: string, attachments?: Attachment[]) => runAll(variantIds, "generate", note, attachments), [runAll]);
-  /** The same edit applied to each listed variant in turn. */
+  /** An edit to the page's version; `mentions` are the audiences the merchant @mentioned. */
   const send = useCallback(
-    (variantIds: string | string[], message: string, attachments?: Attachment[]) => runAll(typeof variantIds === "string" ? [variantIds] : variantIds, "edit", message, attachments),
+    (variantId: string, message: string, attachments?: Attachment[], mentions?: Mention[]) => runAll([variantId], "edit", message, attachments, mentions),
     [runAll],
   );
 

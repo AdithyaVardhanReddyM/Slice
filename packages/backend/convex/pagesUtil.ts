@@ -6,6 +6,9 @@ import type { EntityRef, Span, TasteBrand, TasteTag } from "./qlooApi";
 import { searchEntity, searchEntityBest, type EntityKind } from "./qlooApi";
 import type { ProfileBrand, ProfileEntity, ProfileTag } from "./pagesTypes";
 
+/** A page version's name from its audiences: "Everyone", "Berlin", "Berlin + Under 25s". */
+export const audienceLabel = (audiences: { name: string }[]) => (audiences.length ? audiences.map((a) => a.name).join(" + ") : "Everyone");
+
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export function slugify(text: string): string {

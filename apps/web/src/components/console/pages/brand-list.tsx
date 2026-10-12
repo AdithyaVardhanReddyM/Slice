@@ -107,14 +107,14 @@ function NoBrands() {
       <h2 className="text-xl font-semibold tracking-tight">No brands yet</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Paste a brand&apos;s website. Slice reads its colours, type, voice and products, asks Qloo what the brand means to
-        people, and then builds landing pages with one version per audience: a city, a demographic, a cluster of your own
-        customers. Every version is published on the brand&apos;s own subdomain and measured.
+        people, and then builds a landing page for each audience: a city, a demographic, a cluster of your own customers, or
+        a few combined. Every page is published on the brand&apos;s own subdomain and measured.
       </p>
       <ol className="mt-6 grid w-full gap-3 text-left sm:grid-cols-3">
         {[
           ["1. Read the site", "Kit and brief extracted from the public website."],
           ["2. Define audiences", "Location, demographics, interests or a customer CSV, each turned into a taste profile."],
-          ["3. Build and publish", "The agent writes a version per audience; the router serves the right one."],
+          ["3. Build and publish", "The agent writes each page for its audience; share the link with them."],
         ].map(([t, b]) => (
           <li key={t} className="rounded-lg border p-3">
             <div className="text-sm font-medium">{t}</div>

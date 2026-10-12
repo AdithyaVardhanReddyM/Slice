@@ -3,8 +3,8 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { spanValidator } from "./schema";
-import { DEFAULT_ROUTING, validateDoc, type AudienceProfile, type QuizConfig, type RoutingRules } from "./pagesTypes";
-import { slugify } from "./pagesUtil";
+import { DEFAULT_ROUTING, validateDoc, type RoutingRules } from "./pagesTypes";
+import { audienceLabel, slugify } from "./pagesUtil";
 
 // Pages and the builder chat. A page is one version built for its audiences:
 // none (everyone), one, or several combined into one group. The version lives
@@ -99,7 +99,7 @@ export const list = query({
           ...page,
           variantCount: variants.length,
           readyCount: variants.filter((x) => x.status === "ready").length,
-          variants: variants.map((x) => ({ _id: x._id, name: x.name, status: x.status, audienceId: x.audienceId, version: x.version })),
+          variants: variants.map((x) => ({ _id: x._id, name: x.name, status: x.status, audienceId: x.audienceId, version: x.version, screenshot: x.screenshot, updatedAt: x.updatedAt })),
           audiences: audiences.map((a) => ({ _id: a._id, name: a.name, kind: a.kind, profile: a.profile })),
         };
       }),
@@ -156,9 +156,6 @@ export const publishedBySlug = query({
     return { brand: strip(brand), pages: pages.filter((p) => p.status === "published") };
   },
 });
-
-/** "Everyone", "Berlin", "Berlin + Under 25s". */
-export const audienceLabel = (audiences: { name: string }[]) => (audiences.length ? audiences.map((a) => a.name).join(" + ") : "Everyone");
 
 /** The page's one version. `audienceId` is set only when the page targets exactly one audience. */
 async function insertVariant(ctx: MutationCtx, page: { _id: Id<"pages">; brandId: Id<"pagesBrands"> }, audiences: Doc<"pagesAudiences">[]) {
@@ -470,8 +467,8 @@ export const resolveVariant = query({
  * version: the default stays on the original page (for everyone), each
  * audience version becomes its own page ("<title> for <audience>", slug
  * "<slug>-<audience>") and takes its events, stats, forms, sessions and the
- * chat messages about it. Idempotent. Run with
- * `npx convex run pages:splitVersions`.
+ * chat messages about it. One page per run; it schedules itself for the
+ * next. Idempotent. Run with `npx convex run pages:splitVersions`.
  */
 export const splitVersions = internalMutation({
   args: {},
@@ -481,8 +478,13 @@ export const splitVersions = internalMutation({
     for (const page of await ctx.db.query("pages").collect()) {
       const variants = await variantsOf(ctx, page._id);
       if (variants.length <= 1) continue;
+      if (out.length) {
+        await ctx.scheduler.runAfter(0, internal.pages.splitVersions, {});
+        break;
+      }
       const def = variants.find((x) => x._id === page.defaultVariantId) ?? variants.find((x) => !x.audienceId) ?? variants[0];
       const build = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", page._id)).unique();
+      let remaining = build?.messages ?? [];
       for (const vnt of variants) {
         if (vnt._id === def._id) continue;
         const audience = vnt.audienceId ? await ctx.db.get(vnt.audienceId) : null;
@@ -503,23 +505,48 @@ export const splitVersions = internalMutation({
           updatedAt: now,
         });
         await ctx.db.patch(vnt._id, { pageId: id, name: audience ? audienceLabel([audience]) : vnt.name });
-        const events = await ctx.db.query("pagesEvents").withIndex("by_variant_at", (q) => q.eq("variantId", vnt._id)).collect();
-        for (const e of events) await ctx.db.patch(e._id, { pageId: id });
-        const stats = await ctx.db.query("pagesStats").withIndex("by_page_day", (q) => q.eq("pageId", page._id)).collect();
-        for (const st of stats) if (st.variantId === vnt._id) await ctx.db.patch(st._id, { pageId: id });
-        const forms = await ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", page._id)).collect();
-        for (const f of forms) if (f.variantId === vnt._id) await ctx.db.patch(f._id, { pageId: id });
-        const sessions = await ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", page._id)).collect();
-        for (const se of sessions) if (se.variantId === vnt._id) await ctx.db.patch(se._id, { pageId: id });
+        // Events, stats, forms and sessions follow in batches (demo brands have a lot of them).
+        await ctx.scheduler.runAfter(0, internal.pages.moveVersionData, { variantId: vnt._id, from: page._id, to: id, table: "pagesEvents" });
         // The chat turns about this version move with it (a merchant message is kept with the agent turn after it).
-        const mine = (build?.messages ?? []).filter((m) => m.variantId === vnt._id);
+        const mine = remaining.filter((m) => m.variantId === vnt._id);
         if (mine.length) await ctx.db.insert("pagesBuilds", { pageId: id, messages: mine, createdAt: now, updatedAt: now });
-        if (build && mine.length) await ctx.db.patch(build._id, { messages: build.messages.filter((m) => m.variantId !== vnt._id) });
+        remaining = remaining.filter((m) => m.variantId !== vnt._id);
         out.push(`${page.slug} → ${slug}`);
       }
+      if (build) await ctx.db.patch(build._id, { messages: remaining });
       await ctx.db.patch(def._id, { name: "Everyone", audienceId: undefined });
       await ctx.db.patch(page._id, { audienceIds: [], defaultVariantId: def._id, quiz: undefined, updatedAt: Date.now() });
+      out.push(`${page.slug}: kept for everyone`);
     }
     return out;
+  },
+});
+
+const MOVE_TABLES = ["pagesEvents", "pagesStats", "pagesForms", "pagesSessions"] as const;
+
+/** splitVersions' second half: re-points one version's analytics rows at its new page, 400 at a time. */
+export const moveVersionData = internalMutation({
+  args: {
+    variantId: v.id("pagesVariants"),
+    from: v.id("pages"),
+    to: v.id("pages"),
+    table: v.union(...MOVE_TABLES.map((t) => v.literal(t))),
+    cursor: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { variantId, from, to, table, cursor }) => {
+    const opts = { cursor: cursor ?? null, numItems: 400 };
+    const res =
+      table === "pagesEvents"
+        ? await ctx.db.query("pagesEvents").withIndex("by_variant_at", (q) => q.eq("variantId", variantId)).paginate(opts)
+        : table === "pagesStats"
+          ? await ctx.db.query("pagesStats").withIndex("by_variant_day_hour", (q) => q.eq("variantId", variantId)).paginate(opts)
+          : table === "pagesForms"
+            ? await ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", from)).paginate(opts)
+            : await ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", from)).paginate(opts);
+    for (const row of res.page) if (row.variantId === variantId && row.pageId !== to) await ctx.db.patch(row._id, { pageId: to });
+    const next = res.isDone ? MOVE_TABLES[MOVE_TABLES.indexOf(table) + 1] : table;
+    if (next) await ctx.scheduler.runAfter(0, internal.pages.moveVersionData, { variantId, from, to, table: next, ...(res.isDone ? {} : { cursor: res.continueCursor }) });
+    return null;
   },
 });

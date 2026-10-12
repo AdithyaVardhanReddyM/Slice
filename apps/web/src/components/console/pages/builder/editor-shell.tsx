@@ -95,8 +95,8 @@ function starters(brand: Brand, audiences: Audience[]): Starter[] {
     },
     {
       icon: Tag,
-      label: "A sale page, personalised for under 25s",
-      parts: ["A sale page with 15% off this week, personalised for people under 25."],
+      label: "A sale page for under 25s",
+      parts: ["A sale page with 15% off this week, for people under 25."],
     },
     audience
       ? {
@@ -106,8 +106,8 @@ function starters(brand: Brand, audiences: Audience[]): Starter[] {
         }
       : {
           icon: Users,
-          label: "Versions for London and Berlin",
-          parts: ["A page with a version for people in London and one for people in Berlin, each with local picks."],
+          label: "A page for people in Berlin",
+          parts: ["A page for people in Berlin, with local picks and what the city loves."],
         },
   ];
 }

@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
 import { StatusBadge } from "./shared";
+import { AudienceStrip } from "./builder/preview";
 
 interface OverviewRow {
   pageId: string;
@@ -35,10 +36,6 @@ export function BrandOverview() {
   const views = (overview ?? []).reduce((s, r) => s + (r.views ?? 0), 0);
   const sessions = (overview ?? []).reduce((s, r) => s + (r.sessions ?? 0), 0);
   const published = (pages ?? []).filter((p) => p.status === "published").length;
-  const topVariantLabel = (r?: OverviewRow) => {
-    if (!r?.topVariant) return "—";
-    return typeof r.topVariant === "string" ? r.topVariant : r.topVariant.name ?? "—";
-  };
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-6">
@@ -72,7 +69,7 @@ export function BrandOverview() {
         <Card>
           <CardHeader>
             <CardTitle>Pages</CardTitle>
-            <CardDescription>Views, click-through and the version visitors respond to most, last 7 days.</CardDescription>
+            <CardDescription>Views and click-through per page, last 7 days.</CardDescription>
           </CardHeader>
           <CardContent>
             {pages === undefined ? (
@@ -93,7 +90,7 @@ export function BrandOverview() {
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Views</TableHead>
                     <TableHead className="text-right">CTA rate</TableHead>
-                    <TableHead>Top version</TableHead>
+                    <TableHead>For</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -112,7 +109,9 @@ export function BrandOverview() {
                         </TableCell>
                         <TableCell className="num text-right">{r ? fmt.compact(r.views) : "—"}</TableCell>
                         <TableCell className="num text-right">{r ? fmt.pct(r.ctaRate ?? 0) : "—"}</TableCell>
-                        <TableCell className="text-muted-foreground">{topVariantLabel(r)}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          <AudienceStrip audiences={((p as Page & { audiences?: Audience[] }).audiences ?? []) as Audience[]} className="h-7 border-0 bg-transparent px-0 shadow-none" bare />
+                        </TableCell>
                       </TableRow>
                     );
                   })}

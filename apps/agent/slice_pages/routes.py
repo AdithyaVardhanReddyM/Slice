@@ -4,8 +4,8 @@ POST /pages/intake          {brand_id, url}                    NDJSON stream
 POST /pages/capture         {brand_id, url?}                   {ok, site}
 POST /pages/audience-brief  {audience_id}                      {ok, brief, name?}
 POST /pages/name-clusters   {upload_id}                        {ok, names}
-POST /pages/plan            {brand_id, prompt, audience_ids?}  {ok, plan}
-POST /pages/build           {page_id, variant_id, kind, message?, history?}   NDJSON stream
+POST /pages/plan            {brand_id, prompt, audience_ids?, source_page_id?}  {ok, plan}
+POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
 """
 
@@ -155,13 +155,15 @@ class PlanRequest(BaseModel):
     prompt: str
     audience_ids: list[str] = []
     model: str | None = None
+    # The page the merchant was editing when they asked for this one (start_new_page).
+    source_page_id: str | None = None
 
 
 @router.post("/plan")
 async def plan(req: PlanRequest) -> dict[str, Any]:
     spans = start_turn()
     try:
-        result = await plan_page(req.brand_id, req.prompt, req.audience_ids, model=req.model if req.model in B.MODELS else B.MODEL)
+        result = await plan_page(req.brand_id, req.prompt, req.audience_ids, model=req.model if req.model in B.MODELS else B.MODEL, source_page_id=req.source_page_id)
     except Exception as err:
         return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
     return {"ok": True, "plan": result, "trace": spans}
@@ -210,6 +212,11 @@ class Attachment(BaseModel):
     type: str = "image/png"
 
 
+class Mention(BaseModel):
+    id: str
+    name: str = ""
+
+
 class BuildRequest(BaseModel):
     page_id: str
     variant_id: str
@@ -218,6 +225,8 @@ class BuildRequest(BaseModel):
     history: list[HistoryMessage] = []
     model: str | None = None  # one of builder.MODELS; defaults to builder.MODEL
     attachments: list[Attachment] = []
+    # Audiences the merchant @mentioned in the message.
+    mentions: list[Mention] = []
 
 
 async def _image_part(url: str, mime_hint: str = "") -> types.Part | None:
@@ -249,7 +258,7 @@ async def _replay(session: Any, history: list[HistoryMessage]) -> None:
             prev = "user"
         else:
             if prev != "user":
-                await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text="[Generate this version.]")])))
+                await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text="[Generate this page.]")])))
             await sessions.append_event(session, Event(invocation_id=invocation, author=B.root_agent.name, content=types.Content(role="model", parts=[types.Part(text=text)])))
             prev = "model"
 
@@ -285,6 +294,9 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
         return ", ".join(p.get("name", "") for p in (resp.get("items") or [])[:4])
     if name == "fetch_reference":
         return "read" if resp.get("ok") else "could not read"
+    if name == "start_new_page":
+        req = (args or {}).get("request") if isinstance(args, dict) else ""
+        return str(req or "")[:140]
     return ""
 
 
@@ -333,6 +345,11 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     else:
         user_text = (req.message or "").strip()
         merchant_text = user_text
+    if req.mentions:
+        own = set(state[B.PAGE].get("audienceIds") or [])
+        user_text += "\n[Audiences mentioned: " + "; ".join(
+            f"@{m.name} (id {m.id}, {'this page is built for it' if m.id in own else 'not this page: a page for it is a new page'})" for m in req.mentions
+        ) + "]"
     parts: list[types.Part] = [types.Part(text=user_text)]
     # The homepage screenshots go with the first turn of a session (and every generate), so the model sees the brand.
     if fresh_session or kind == "generate":
@@ -403,6 +420,12 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                     call_args[name] = part.function_call.args
                     steps.append({"kind": "tool", "name": name, "label": label, "status": "running"})
                     yield _ndjson({"type": "tool_call", "name": name, "label": label, "args": args})
+                    if name == "start_new_page":
+                        a = part.function_call.args or {}
+                        ids = [i for i in (a.get("audience_ids") or []) if isinstance(i, str)]
+                        if str(a.get("request") or "").strip():
+                            # The console plans, creates and opens the page once this turn ends.
+                            yield _ndjson({"type": "new_page", "request": str(a.get("request")).strip(), "audienceIds": ids})
                 elif part.function_response:
                     name = part.function_response.name or ""
                     resp = part.function_response.response or {}

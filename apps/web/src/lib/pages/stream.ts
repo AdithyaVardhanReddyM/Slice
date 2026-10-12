@@ -14,6 +14,8 @@ export type PagesAgentEvent =
   | { type: "text"; delta: string }
   | { type: "text_done"; text: string }
   | { type: "doc"; doc: PageDoc }
+  /** The agent asked for a separate page (another audience); the console plans and opens it. */
+  | { type: "new_page"; request: string; audienceIds: string[] }
   | { type: "error"; message: string }
   | { type: "done"; messageId?: string; text?: string; trace?: Span[]; [k: string]: unknown };
 
@@ -41,6 +43,7 @@ export const TOOL_LABEL: Record<string, string> = {
   write_page: "Writing the page",
   edit_page: "Editing the page",
   review_page: "Reviewing the page against the brand's homepage",
+  start_new_page: "Starting a new page",
 };
 
 export async function* postStream(

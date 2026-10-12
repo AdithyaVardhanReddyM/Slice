@@ -13,8 +13,51 @@ import { KIND_ICON, coverTiles } from "../taste-cover";
 
 export type Device = "desktop" | "mobile";
 
-/** The default version is the one everyone else sees. */
-export const versionLabel = (v: Variant) => (v.audienceId ? v.name : "Everyone");
+/** Who a version is for: its audiences' names ("Berlin + Under 25s"), or everyone. */
+export const versionLabel = (v: Variant) => (v.name && v.name !== "Default" ? v.name : "Everyone");
+
+/** An audience's face: its top Qloo pick, else its kind icon. */
+function AudienceFace({ audience, className }: { audience: Audience; className?: string }) {
+  const [broken, setBroken] = useState(false);
+  const image = coverTiles(profileOf(audience), 1)[0]?.image;
+  const Icon = KIND_ICON[audience.kind] || Users;
+  return (
+    <span className={cn("flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-[5px] bg-neutral-800 text-white/80 ring-2 ring-background", className)}>
+      {image && !broken ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt="" className="size-full object-cover" onError={() => setBroken(true)} />
+      ) : (
+        <Icon className="size-3" />
+      )}
+    </span>
+  );
+}
+
+/** Who the page is built for: its audiences' faces and names, or Everyone. */
+export function AudienceStrip({ audiences, working, className, bare }: { audiences: Audience[]; working?: boolean; className?: string; bare?: boolean }) {
+  const label = audiences.length ? audiences.map((a) => a.name).join(" + ") : "Everyone";
+  return (
+    <div className={cn("inline-flex h-9 max-w-full min-w-0 items-center gap-2 rounded-xl border bg-background pr-3 pl-1.5 text-sm shadow-xs", className)} title={`Built for ${label}`}>
+      {working ? (
+        <span className="flex size-5 items-center justify-center">
+          <Spinner className="size-3.5" />
+        </span>
+      ) : audiences.length ? (
+        <span className="flex shrink-0 -space-x-1.5">
+          {audiences.slice(0, 3).map((a) => (
+            <AudienceFace key={a._id} audience={a} />
+          ))}
+        </span>
+      ) : (
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-[5px] bg-foreground/5 text-muted-foreground">
+          <Globe className="size-3.5" />
+        </span>
+      )}
+      {!bare && <span className="text-muted-foreground">For</span>}
+      <span className={cn("min-w-0 truncate", !bare && "font-medium")}>{label}</span>
+    </div>
+  );
+}
 
 /** The version's face: the audience's top Qloo pick, the globe for the default. */
 function VersionAvatar({ variant, audience, working }: { variant: Variant; audience?: Audience; working: boolean }) {
@@ -124,16 +167,16 @@ export const PreviewFrame = forwardRef<
     className?: string;
     overlay?: ReactNode;
     onLoad?: () => void;
-    /** What the agent is doing to this version right now, if anything. */
+    /** What the agent is doing to the page right now, if anything. */
     building?: string | null;
-    /** Build (or rebuild) this version; shows the buttons when given. */
+    /** Build (or rebuild) the page; shows the buttons when given. */
     onBuild?: () => void;
     /** Another turn is running, so building is not possible right now. */
     busy?: boolean;
   }
 >(function PreviewFrame({ brandSlug, pageSlug, variant, device, reloadKey, className, overlay, onLoad, building, onBuild, busy }, ref) {
   if (!variant) {
-    return <div className={cn("flex items-center justify-center rounded-xl border bg-background text-sm text-muted-foreground", className)}>Pick a version to preview.</div>;
+    return <div className={cn("flex items-center justify-center rounded-xl border bg-background text-sm text-muted-foreground", className)}>Nothing to preview yet.</div>;
   }
   const src = previewUrl(brandSlug, pageSlug, variant._id);
   const empty = !variant.doc;
@@ -154,7 +197,7 @@ export const PreviewFrame = forwardRef<
               <TooltipTrigger render={<Button variant="ghost" size="xs" onClick={onBuild} disabled={busy} />}>
                 <RotateCcw data-icon="inline-start" /> Rebuild
               </TooltipTrigger>
-              <TooltipContent>Write this version again from scratch</TooltipContent>
+              <TooltipContent>Write the page again from scratch</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>
@@ -177,7 +220,7 @@ export const PreviewFrame = forwardRef<
               ) : variant.status === "failed" ? (
                 <>
                   <p className="max-w-sm">
-                    The {variant.name} version could not be built{variant.error ? `: ${variant.error}` : "."}
+                    The page could not be built{variant.error ? `: ${variant.error}` : "."}
                   </p>
                   {onBuild && (
                     <Button size="sm" variant="outline" onClick={onBuild} disabled={busy}>
@@ -187,7 +230,7 @@ export const PreviewFrame = forwardRef<
                 </>
               ) : (
                 <>
-                  <p>{variant.audienceId ? `The ${variant.name} version is not built yet.` : "This version is not built yet."}</p>
+                  <p>This page is not built yet.</p>
                   {onBuild && (
                     <Button size="sm" onClick={onBuild} disabled={busy}>
                       Build it now
