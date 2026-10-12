@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-from fastapi import FastAPI  # noqa: E402
+from fastapi import FastAPI, Header, HTTPException  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.responses import StreamingResponse  # noqa: E402
 from google.adk.agents.run_config import RunConfig, StreamingMode  # noqa: E402
@@ -35,6 +35,8 @@ from slice_agent import convex_client as convex  # noqa: E402
 from slice_agent import tools as T  # noqa: E402
 from slice_agent.agent import root_agent  # noqa: E402
 from slice_agent.brief import write_brief  # noqa: E402
+from slice_agent.pages.brand import extract_brand  # noqa: E402
+from slice_agent.pages.generate import generate_page  # noqa: E402
 from slice_agent.tagging import tag_store  # noqa: E402
 from slice_agent.trace import Span, record, start_turn  # noqa: E402
 
@@ -423,3 +425,37 @@ async def catalog_tag(req: TagRequest) -> dict[str, Any]:
 @app.get("/health")
 async def health() -> dict[str, Any]:
     return {"ok": True, "model": root_agent.model}
+
+
+# --- Pages -------------------------------------------------------------------
+# Called by the web app after it has checked the merchant owns the brand/page.
+# These fetch arbitrary websites and spend model and Qloo quota, so they need
+# the shared AGENT_SECRET whenever it is set (always, outside local dev).
+
+
+class BrandJob(BaseModel):
+    brand_id: str
+
+
+class PageJob(BaseModel):
+    page_id: str
+
+
+def _check_secret(authorization: str | None) -> None:
+    secret = os.environ.get("AGENT_SECRET")
+    if secret and authorization != f"Bearer {secret}":
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+
+@app.post("/pages/brand")
+async def pages_brand(job: BrandJob, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """Read the brand's website into a brand kit and its Qloo audience taste."""
+    _check_secret(authorization)
+    return await extract_brand(job.brand_id)
+
+
+@app.post("/pages/generate")
+async def pages_generate(job: PageJob, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """Write one page variant per Qloo taste segment of the brand's audience."""
+    _check_secret(authorization)
+    return await generate_page(job.page_id)
