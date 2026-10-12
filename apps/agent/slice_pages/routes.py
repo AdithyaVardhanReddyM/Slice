@@ -3,6 +3,7 @@
 POST /pages/intake          {brand_id, url}                    NDJSON stream
 POST /pages/audience-brief  {audience_id}                      {ok, brief, name?}
 POST /pages/name-clusters   {upload_id}                        {ok, names}
+POST /pages/plan            {brand_id, prompt, audience_ids?}  {ok, plan}
 POST /pages/build           {page_id, variant_id, kind, message?, history?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
 """
@@ -31,12 +32,14 @@ from . import builder as B
 from . import images
 from .audience_brief import name_clusters, write_audience_brief
 from .intake import run_intake
+from .plan import plan_page
 
 router = APIRouter(prefix="/pages", tags=["pages"])
 
 APP_NAME = "slice_pages"
 sessions = InMemorySessionService()
-runner = Runner(app_name=APP_NAME, agent=B.root_agent, session_service=sessions)
+# One runner per model over the same sessions, so the merchant can switch models mid-chat.
+runners = {m: Runner(app_name=APP_NAME, agent=a, session_service=sessions) for m, a in B.agents.items()}
 
 
 def _ndjson(obj: dict[str, Any]) -> bytes:
@@ -115,6 +118,26 @@ async def name_clusters_route(req: NameClustersRequest) -> dict[str, Any]:
     return result
 
 
+# --- page plan (the builder's first prompt) ----------------------------------------------------
+
+
+class PlanRequest(BaseModel):
+    brand_id: str
+    prompt: str
+    audience_ids: list[str] = []
+    model: str | None = None
+
+
+@router.post("/plan")
+async def plan(req: PlanRequest) -> dict[str, Any]:
+    spans = start_turn()
+    try:
+        result = await plan_page(req.brand_id, req.prompt, req.audience_ids, model=req.model if req.model in B.MODELS else B.MODEL)
+    except Exception as err:
+        return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
+    return {"ok": True, "plan": result, "trace": spans}
+
+
 # --- image picker ----------------------------------------------------------------------------
 
 
@@ -158,6 +181,7 @@ class BuildRequest(BaseModel):
     kind: str = "generate"  # "generate" | "edit"
     message: str | None = None
     history: list[HistoryMessage] = []
+    model: str | None = None  # one of builder.MODELS; defaults to builder.MODEL
 
 
 async def _replay(session: Any, history: list[HistoryMessage]) -> None:
@@ -210,7 +234,8 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         delta = dict(state)
     if kind == "generate":
         user_text = B.generate_message(state, req.message)
-        merchant_text = (req.message or "").strip() or f"Generate the {(state.get(B.VARIANT) or {}).get('name', '')} version".strip()
+        # An automatic build (no note from the merchant) gets no merchant bubble in the chat.
+        merchant_text = (req.message or "").strip()
     else:
         user_text = (req.message or "").strip()
         merchant_text = user_text
@@ -222,6 +247,7 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     seen_calls: set[str] = set()
     last_doc: Any = state.get(B.DOC)
     try:
+        runner = runners.get(req.model or "") or runners[B.MODEL]
         async for ev in runner.run_async(
             user_id=sid,
             session_id=session.id,
@@ -292,7 +318,7 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
 async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span]) -> None:
     now = int(time.time() * 1000)
     messages = [
-        {"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, "variantId": req.variant_id},
+        *([{"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, "variantId": req.variant_id}] if merchant_text else []),
         {"id": message_id, "role": "agent", "at": now + 1, "text": reply, "variantId": req.variant_id, "trace": spans},
     ]
     try:

@@ -31,17 +31,29 @@ export function useBuilder({
   pageId,
   build,
   onStart,
+  waitFor,
+  model,
 }: {
   pageId: Id<"pages">;
   build: Build | null | undefined;
   /** Called when a turn begins, so the UI can follow the version being built. */
   onStart?: (variantId: string) => void;
+  /**
+   * Before a generate turn: resolves true once the version can be built (its
+   * audience is compiled), false to skip it with the message it throws. Calls
+   * `status` while it waits.
+   */
+  waitFor?: (variantId: string, status: (text: string) => void, stopped: () => boolean) => Promise<boolean>;
+  /** The agent's model for every turn (see lib/pages/models). */
+  model?: string;
 }) {
   const [live, setLive] = useState<LiveTurn | null>(null);
   const [queue, setQueue] = useState<string[]>([]);
   const [docVersion, setDocVersion] = useState(0);
   const [lastDoc, setLastDoc] = useState<{ variantId: string; doc: PageDoc } | null>(null);
   const abort = useRef<AbortController | null>(null);
+  // Bumped by stop(), so a running "generate all" loop knows to end.
+  const run = useRef(0);
   const buildRef = useRef(build);
   useEffect(() => {
     buildRef.current = build;
@@ -56,7 +68,7 @@ export function useBuilder({
       setLive({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", spans: [], text: "", error: null, prompt: message });
       for await (const ev of postStream(
         "/api/pages/build",
-        { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current) },
+        { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current), model },
         ctrl.signal,
       )) {
         if (ev.type === "status") setLive((l) => (l ? { ...l, status: ev.text } : l));
@@ -75,26 +87,46 @@ export function useBuilder({
       // Give Convex a beat to deliver the persisted message before dropping the live one.
       setTimeout(() => setLive((l) => (l && l.variantId === variantId && !l.error ? null : l)), 800);
     },
-    [pageId, onStart],
+    [pageId, onStart, model],
   );
 
-  const send = useCallback((variantId: string, message: string) => runTurn(variantId, "edit", message), [runTurn]);
   const generate = useCallback((variantId: string) => runTurn(variantId, "generate"), [runTurn]);
 
-  /** Generate every listed variant, one after another. */
-  const generateAll = useCallback(
-    async (variantIds: string[]) => {
+  /** Run turns one after another; the queue shows what is still waiting. */
+  const runAll = useCallback(
+    async (variantIds: string[], kind: "generate" | "edit", message?: string) => {
+      const mine = ++run.current;
       setQueue(variantIds);
       for (const id of variantIds) {
+        if (run.current !== mine) return;
         setQueue((q) => q.filter((x) => x !== id));
-        await runTurn(id, "generate");
+        if (kind === "generate" && waitFor) {
+          onStart?.(id);
+          setLive({ variantId: id, kind, status: "Waiting for the audience", spans: [], text: "", error: null, prompt: message });
+          let ok = false;
+          try {
+            ok = await waitFor(id, (text) => setLive((l) => (l && l.variantId === id ? { ...l, status: text } : l)), () => run.current !== mine);
+          } catch (err) {
+            setLive((l) => (l ? { ...l, status: null, error: String((err as Error).message ?? err) } : l));
+            continue;
+          }
+          if (run.current !== mine) return;
+          if (!ok) continue;
+        }
+        await runTurn(id, kind, message);
       }
-      setQueue([]);
+      if (run.current === mine) setQueue([]);
     },
-    [runTurn],
+    [runTurn, waitFor, onStart],
   );
 
+  /** Generate every listed variant; `note` is the merchant's ask for these versions. */
+  const generateAll = useCallback((variantIds: string[], note?: string) => runAll(variantIds, "generate", note), [runAll]);
+  /** The same edit applied to each listed variant in turn. */
+  const send = useCallback((variantIds: string | string[], message: string) => runAll(typeof variantIds === "string" ? [variantIds] : variantIds, "edit", message), [runAll]);
+
   const stop = useCallback(() => {
+    run.current++;
     abort.current?.abort();
     setQueue([]);
     setLive(null);

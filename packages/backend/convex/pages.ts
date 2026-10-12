@@ -15,10 +15,22 @@ const pageBriefValidator = v.object({
   offer: v.optional(v.string()),
   cta: v.object({ label: v.string(), href: v.string() }),
   itemIds: v.array(v.string()),
-  facts: v.array(v.string()),
-  references: v.array(v.string()),
-  inspiration: v.array(v.string()),
+  facts: v.optional(v.array(v.string())),
+  references: v.optional(v.array(v.string())),
+  inspiration: v.optional(v.array(v.string())),
   imageMode: v.string(),
+});
+
+// Hub routes under /dashboard/pages/[brand]/ that a page slug must not shadow.
+const RESERVED_SLUGS = new Set(["new", "audiences", "pages", "analytics", "kit", "settings"]);
+
+const buildMessageValidator = v.object({
+  id: v.string(),
+  role: v.string(),
+  at: v.number(),
+  text: v.string(),
+  variantId: v.optional(v.id("pagesVariants")),
+  trace: v.optional(v.array(spanValidator)),
 });
 
 const strip = <T extends { trace?: unknown }>(doc: T): Omit<T, "trace"> => {
@@ -26,14 +38,14 @@ const strip = <T extends { trace?: unknown }>(doc: T): Omit<T, "trace"> => {
   return rest;
 };
 
-async function uniquePageSlug(ctx: MutationCtx, brandId: Id<"pagesBrands">, base: string): Promise<string> {
+async function uniquePageSlug(ctx: MutationCtx, brandId: Id<"pagesBrands">, base: string, self?: Id<"pages">): Promise<string> {
   let slug = base;
   for (let n = 2; ; n++) {
     const taken = await ctx.db
       .query("pages")
       .withIndex("by_brand_slug", (q) => q.eq("brandId", brandId).eq("slug", slug))
       .unique();
-    if (!taken) return slug;
+    if (!RESERVED_SLUGS.has(slug) && (!taken || taken._id === self)) return slug;
     slug = `${base}-${n}`;
   }
 }
@@ -140,9 +152,11 @@ export const create = mutation({
     slug: v.optional(v.string()),
     brief: pageBriefValidator,
     audienceIds: v.array(v.id("pagesAudiences")),
+    /** The opening of the builder chat (the merchant's first prompt and the plan reply). */
+    messages: v.optional(v.array(buildMessageValidator)),
   },
-  returns: v.object({ id: v.id("pages") }),
-  handler: async (ctx, { brandId, title, slug: wanted, brief, audienceIds }) => {
+  returns: v.object({ id: v.id("pages"), slug: v.string() }),
+  handler: async (ctx, { brandId, title, slug: wanted, brief, audienceIds, messages }) => {
     const now = Date.now();
     const slug = await uniquePageSlug(ctx, brandId, slugify(wanted ?? title));
     const id = await ctx.db.insert("pages", {
@@ -160,7 +174,35 @@ export const create = mutation({
     const defaultVariantId = await insertVariant(ctx, page, null);
     for (const a of await audiencesOf(ctx, audienceIds)) await insertVariant(ctx, page, a);
     await ctx.db.patch(id, { defaultVariantId });
-    return { id };
+    if (messages?.length) await ctx.db.insert("pagesBuilds", { pageId: id, messages, createdAt: now, updatedAt: now });
+    return { id, slug };
+  },
+});
+
+/** The page settings panel: title, slug and the brief's goal, offer, CTA and image mode. Returns the (unique) slug. */
+export const updateSettings = mutation({
+  args: {
+    id: v.id("pages"),
+    title: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    goal: v.optional(v.string()),
+    /** Empty string clears the offer. */
+    offer: v.optional(v.string()),
+    cta: v.optional(v.object({ label: v.string(), href: v.string() })),
+    imageMode: v.optional(v.string()),
+  },
+  returns: v.object({ slug: v.string() }),
+  handler: async (ctx, { id, title, slug: wanted, goal, offer, cta, imageMode }) => {
+    const page = await ctx.db.get(id);
+    if (!page) throw new Error("Unknown page");
+    const slug = wanted !== undefined && slugify(wanted) !== page.slug ? await uniquePageSlug(ctx, page.brandId, slugify(wanted), id) : page.slug;
+    const brief = { ...page.brief };
+    if (goal) brief.goal = goal;
+    if (offer !== undefined) brief.offer = offer.trim() || undefined;
+    if (cta) brief.cta = { label: cta.label.trim(), href: cta.href.trim() };
+    if (imageMode) brief.imageMode = imageMode;
+    await ctx.db.patch(id, { brief, slug, ...(title?.trim() ? { title: title.trim() } : {}), updatedAt: Date.now() });
+    return { slug };
   },
 });
 
@@ -173,10 +215,10 @@ export const updateBrief = mutation({
   },
 });
 
-/** Adds and removes variants so there is exactly one per audience plus the default. */
+/** Adds and removes variants so there is exactly one per audience plus the default. Returns the variants it created. */
 export const setAudiences = mutation({
   args: { id: v.id("pages"), audienceIds: v.array(v.id("pagesAudiences")) },
-  returns: v.null(),
+  returns: v.array(v.id("pagesVariants")),
   handler: async (ctx, { id, audienceIds }) => {
     const page = await ctx.db.get(id);
     if (!page) throw new Error("Unknown page");
@@ -186,11 +228,12 @@ export const setAudiences = mutation({
       if (vnt.audienceId && !wanted.has(vnt.audienceId)) await ctx.db.delete(vnt._id);
     }
     const have = new Set(variants.map((x) => x.audienceId).filter(Boolean));
+    const created: Id<"pagesVariants">[] = [];
     for (const a of await audiencesOf(ctx, audienceIds)) {
-      if (!have.has(a._id)) await insertVariant(ctx, page, a);
+      if (!have.has(a._id)) created.push(await insertVariant(ctx, page, a));
     }
     await ctx.db.patch(id, { audienceIds, updatedAt: Date.now() });
-    return null;
+    return created;
   },
 });
 
@@ -345,15 +388,6 @@ export const resetVariant = mutation({
 });
 
 /* Builder chat --------------------------------------------------------------- */
-
-const buildMessageValidator = v.object({
-  id: v.string(),
-  role: v.string(),
-  at: v.number(),
-  text: v.string(),
-  variantId: v.optional(v.id("pagesVariants")),
-  trace: v.optional(v.array(spanValidator)),
-});
 
 export const build = query({
   args: { pageId: v.id("pages") },

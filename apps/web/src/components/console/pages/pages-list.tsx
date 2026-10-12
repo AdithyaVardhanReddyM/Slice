@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { ExternalLink, FileText, Plus } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
-import { NewPageDialog } from "./new-page-dialog";
 import { StatusBadge, relativeTime } from "./shared";
 
 type PageRow = Page & { variantCount?: number; readyCount?: number; variants?: { status: string }[] };
@@ -21,11 +20,9 @@ type PageRow = Page & { variantCount?: number; readyCount?: number; variants?: {
 export function PagesScreen() {
   const brand = useBrand();
   const router = useRouter();
-  const params = useSearchParams();
   const pages = useQuery(api.pages.list, { brandId: brand._id }) as PageRow[] | undefined;
   const base = `/dashboard/pages/${brand.slug}`;
-  const open = params.get("new") === "1";
-  const setOpen = (o: boolean) => router.replace(o ? `${base}/pages?new=1` : `${base}/pages`);
+  const newPage = () => router.push(`${base}/new`);
 
   const counts = (p: PageRow) => {
     const total = p.variantCount ?? p.variants?.length ?? p.audienceIds.length + 1;
@@ -39,7 +36,7 @@ export function PagesScreen() {
         title="Pages"
         description="Each page is one brief with one version per audience. Build in the editor, publish on the brand's subdomain, compare in Analytics."
         actions={
-          <Button onClick={() => setOpen(true)} disabled={brand.status !== "ready" && brand.status !== "review"}>
+          <Button onClick={newPage} disabled={brand.status !== "ready" && brand.status !== "review"}>
             <Plus data-icon="inline-start" /> New page
           </Button>
         }
@@ -49,9 +46,9 @@ export function PagesScreen() {
       ) : pages.length === 0 ? (
         <EmptyState
           title="No pages yet"
-          body="Write a short brief: what the page is about, the offer and the call to action. The builder writes a version for each audience."
+          body="Describe the page in a sentence or two and the builder sets it up, with a version for each audience you mention."
           action={
-            <Button onClick={() => setOpen(true)}>
+            <Button onClick={newPage}>
               <FileText data-icon="inline-start" /> New page
             </Button>
           }
@@ -107,7 +104,6 @@ export function PagesScreen() {
           </Table>
         </div>
       )}
-      <NewPageDialog key={String(open)} open={open} onOpenChange={setOpen} />
     </div>
   );
 }

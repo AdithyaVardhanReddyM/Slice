@@ -1,6 +1,6 @@
 "use client";
 
-import { Fingerprint } from "lucide-react";
+import { Lightbulb } from "lucide-react";
 import type { Section, Variant } from "@/lib/pages/types";
 import { docOf } from "@/lib/pages/types";
 import { Badge } from "@/components/ui/badge";
@@ -33,14 +33,13 @@ function sectionTitle(s: Section) {
 export function WhyPanel({ variant, onPick }: { variant: Variant | null; onPick?: (sectionId: string) => void }) {
   const doc = docOf(variant);
   if (!variant) return <Hint>Pick a version.</Hint>;
-  if (!doc) return <Hint>Generate this version to see why each section says what it says.</Hint>;
-  const cited = doc.sections.filter((s) => s.evidence).length;
+  if (!doc) return <Hint>Build this version to see what shaped each section.</Hint>;
   return (
     <div className="space-y-5 text-sm">
       <div className="flex items-start gap-2 rounded-lg bg-muted/60 p-3">
-        <Fingerprint className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <Lightbulb className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <p className="text-muted-foreground">
-          {cited} of {doc.sections.length} sections cite the taste evidence that shaped them. Click a section to scroll the preview to it.
+          Each section notes the audience&apos;s tastes it was written around. Click one to jump to it in the preview.
         </p>
       </div>
       <ol className="space-y-3">
@@ -55,7 +54,7 @@ export function WhyPanel({ variant, onPick }: { variant: Variant | null; onPick?
                 <Badge variant="outline">{s.type}</Badge>
               </div>
               <p className={s.evidence ? "mt-1.5 text-muted-foreground" : "mt-1.5 text-xs text-muted-foreground"}>
-                {s.evidence ?? "No evidence recorded for this section."}
+                {s.evidence ?? "No notes for this section."}
               </p>
             </button>
           </li>
@@ -63,7 +62,7 @@ export function WhyPanel({ variant, onPick }: { variant: Variant | null; onPick?
       </ol>
       {variant.trace.length > 0 && (
         <div className="space-y-2 border-t pt-4">
-          <h3 className="text-sm font-medium">Steps behind this version</h3>
+          <h3 className="text-sm font-medium">How it was built</h3>
           <TraceList spans={variant.trace} compact />
         </div>
       )}

@@ -32,7 +32,8 @@ async def generate_json(
         response_mime_type="application/json",
         response_schema=schema,
         temperature=temperature,
-        thinking_config=types.ThinkingConfig(thinking_level="LOW") if thinking else types.ThinkingConfig(thinking_budget=0),
+        # Pro models cannot turn thinking off; they get the lowest level instead.
+        thinking_config=types.ThinkingConfig(thinking_level="LOW") if thinking or "pro" in model else types.ThinkingConfig(thinking_budget=0),
     )
     try:
         res = await client().aio.models.generate_content(model=model, contents=prompt, config=config)

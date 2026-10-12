@@ -359,7 +359,11 @@ function BrandTopbar({ brand }: { brand: Brand }) {
 /** Resolves the brand from the URL slug and wraps the hub in sidebar + topbar. */
 export function BrandShell({ children }: { children: ReactNode }) {
   const { brand: slug } = useParams<{ brand: string }>();
+  const pathname = usePathname();
   const brand = useQuery(api.pagesBrands.bySlug, { slug });
+  // The page editor (/new and /[page]) is full screen, without the hub's sidebar and top bar.
+  const section = pathname.split("/")[4];
+  const editor = !!section && !SECTION_LABELS[section];
   if (brand === undefined) return <PageSkeleton />;
   if (brand === null) {
     return (
@@ -372,6 +376,7 @@ export function BrandShell({ children }: { children: ReactNode }) {
       </div>
     );
   }
+  if (editor) return <BrandProvider value={brand}>{children}</BrandProvider>;
   return (
     <BrandProvider value={brand}>
       <SidebarProvider>

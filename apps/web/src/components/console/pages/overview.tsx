@@ -50,7 +50,7 @@ export function BrandOverview() {
             <Link href={`${base}/audiences`} className={buttonVariants({ variant: "outline" })}>
               <Users data-icon="inline-start" /> New audience
             </Link>
-            <Link href={`${base}/pages?new=1`} className={buttonVariants()}>
+            <Link href={`${base}/new`} className={buttonVariants()}>
               <Plus data-icon="inline-start" /> New page
             </Link>
           </>
@@ -80,7 +80,7 @@ export function BrandOverview() {
             ) : pages.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
                 No pages yet.{" "}
-                <Link href={`${base}/pages?new=1`} className="text-foreground underline underline-offset-4">
+                <Link href={`${base}/new`} className="text-foreground underline underline-offset-4">
                   Create the first one
                 </Link>
                 .
@@ -188,7 +188,7 @@ export function BrandOverview() {
               <CardTitle>Quick actions</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-2">
-              <Link href={`${base}/pages?new=1`} className={buttonVariants({ variant: "outline", className: "justify-start" })}>
+              <Link href={`${base}/new`} className={buttonVariants({ variant: "outline", className: "justify-start" })}>
                 <FileText data-icon="inline-start" /> New page
               </Link>
               <Link href={`${base}/audiences?new=1`} className={buttonVariants({ variant: "outline", className: "justify-start" })}>

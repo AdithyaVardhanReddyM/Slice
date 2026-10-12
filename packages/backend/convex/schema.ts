@@ -399,11 +399,12 @@ export default defineSchema({
       cta: v.object({ label: v.string(), href: v.string() }),
       /** Brand item ids to feature. */
       itemIds: v.array(v.string()),
-      facts: v.array(v.string()),
+      /** Legacy brief fields from the old form; the builder now takes these from the chat. */
+      facts: v.optional(v.array(v.string())),
       /** Reference sites. */
-      references: v.array(v.string()),
+      references: v.optional(v.array(v.string())),
       /** Inspiration image URLs. */
-      inspiration: v.array(v.string()),
+      inspiration: v.optional(v.array(v.string())),
       /** "pexels" | "nano-banana-2" | "nano-banana-pro" */
       imageMode: v.string(),
     }),
