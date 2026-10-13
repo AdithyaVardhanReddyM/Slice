@@ -80,8 +80,7 @@ export function Footer() {
 
         <div className="mt-16 grid gap-6 border-t border-white/10 pt-8 text-[12.5px] leading-relaxed text-white/45 lg:grid-cols-[2fr_1fr]">
           <p>
-            Gwen is a financial technology company, not a bank. {card.name} is issued by {card.issuer}, pursuant to a license from Visa U.S.A.
-            Inc. Approval is subject to credit review. Statement credits are paid up to the stated amount per period and do not roll over. Points
+            Gwen is a financial technology company, not a bank. {card.name} is issued by {card.issuer}. Approval is subject to credit review. Statement credits are paid up to the stated amount per period and do not roll over. Points
             are worth 1.25 cents each when redeemed for travel booked through Gwen Travel. See rates and fees for current terms.
           </p>
           <p className="lg:text-right">

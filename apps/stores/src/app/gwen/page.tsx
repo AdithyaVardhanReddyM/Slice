@@ -412,7 +412,7 @@ export default function GwenHome() {
               {[
                 "Two finishes, Graphite and Pearl, for you and your authorized users",
                 "Contactless, Apple Pay and Google Pay from the minute you're approved",
-                "Visa Infinite: trip delay cover, purchase protection, no foreign transaction fees",
+                "Trip delay cover, purchase protection and no foreign transaction fees",
                 "A virtual number for every subscription, frozen in one tap",
               ].map((t) => (
                 <li key={t} className="flex gap-3">

@@ -30,7 +30,6 @@ export const href = {
 export const card = {
   company: "Gwen",
   name: "Gwen Reserve",
-  network: "Visa Infinite",
   annualFee: 695,
   authorizedUser: 195,
   apr: "20.74% to 28.49% variable",
@@ -170,7 +169,7 @@ export const faq = [
   },
   {
     q: "Who issues the card?",
-    a: "Gwen Reserve is issued by Harlow National Bank, N.A., Member FDIC, pursuant to a license from Visa U.S.A. Inc. Gwen is a financial technology company, not a bank.",
+    a: "Gwen Reserve is issued by Harlow National Bank, N.A., Member FDIC. Gwen is a financial technology company, not a bank.",
   },
 ];
 

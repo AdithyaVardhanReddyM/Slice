@@ -5,7 +5,7 @@ import { Mark } from "./logo";
  * Gwen Reserve, drawn in CSS so it stays sharp at any size. The wrapper is a
  * size container, so every measurement inside is a share of the card's width.
  * Gold carries the detail: mark, wordmark, engraved rings, inset frame, the
- * horizon line and the chip.
+ * horizon line, the chip and the tier name.
  */
 export function CardArt({
   finish = "graphite",
@@ -55,14 +55,6 @@ export function CardArt({
             gwen
           </span>
         </div>
-        <span
-          className={cn(
-            "absolute right-[7cqw] top-[9.2cqw] text-[2.3cqw] font-semibold uppercase tracking-[0.34em]",
-            dark ? "gw-gold-text" : "gw-gold-text-deep",
-          )}
-        >
-          Reserve
-        </span>
 
         {/* Chip */}
         <div
@@ -102,9 +94,14 @@ export function CardArt({
         >
           {holder}
         </span>
-        <span className="absolute bottom-[6.4cqw] right-[7cqw] flex flex-col items-end leading-none">
-          <span className={cn("text-[6.6cqw] font-extrabold italic tracking-[-0.02em]", dark ? "text-white" : "text-gw-ink")}>VISA</span>
-          <span className={cn("mt-[0.9cqw] text-[2.4cqw] font-semibold", dark ? "gw-gold-text" : "gw-gold-text-deep")}>Infinite</span>
+        {/* The tier, in the serif the site uses for its one accent word. */}
+        <span
+          className={cn(
+            "gw-serif absolute bottom-[5.6cqw] right-[7cqw] pr-[0.6cqw] text-[8.2cqw] leading-none",
+            dark ? "gw-gold-text" : "gw-gold-text-deep",
+          )}
+        >
+          Reserve
         </span>
 
         {glint && (

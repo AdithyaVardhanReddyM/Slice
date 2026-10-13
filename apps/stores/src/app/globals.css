@@ -565,6 +565,12 @@ body:has(.gwen-root) {
   background: var(--color-gw-paper);
 }
 
+/* No elastic overscroll: the bounce showed the paper above the sky. */
+html:has(.gwen-root),
+body:has(.gwen-root) {
+  overscroll-behavior-y: none;
+}
+
 .gwen-root {
   background: var(--color-gw-paper);
   color: var(--color-gw-ink);

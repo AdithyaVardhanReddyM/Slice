@@ -29,9 +29,7 @@
   <rect x="20" y="20" width="816" height="500" rx="30" fill="none" stroke="#e2bc62" stroke-opacity="0.32" stroke-width="2"/>
   <rect y="383" width="856" height="3" fill="url(#foil)"/>
   <text x="60" y="122" font-family="Funnel Display, Helvetica, Arial, sans-serif" font-size="66" font-weight="600" letter-spacing="-3" fill="url(#goldtext)">gwen</text>
-  <text x="796" y="110" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="7" fill="url(#goldtext)">RESERVE</text>
   <rect x="60" y="282" width="124" height="94" rx="17" fill="url(#chip)"/>
   <text x="60" y="482" font-family="Helvetica, Arial, sans-serif" font-size="29" letter-spacing="3.5" fill="#ffffff" fill-opacity="0.8">ALEX MORGAN</text>
-  <text x="796" y="468" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="60" font-weight="800" font-style="italic" fill="#ffffff">VISA</text>
-  <text x="796" y="498" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="url(#goldtext)">Infinite</text>
+  <text x="796" y="492" text-anchor="end" font-family="Instrument Serif, Georgia, serif" font-style="italic" font-size="70" fill="url(#goldtext)">Reserve</text>
 </svg>
