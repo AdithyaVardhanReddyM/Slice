@@ -29,6 +29,8 @@ export interface BrandFont {
 
 export interface BrandKit {
   logo?: { src: string; alt: string; /** Dark or light background behind the mark. */ onDark?: boolean };
+  /** Square app icon or favicon, for tiles too small for a wide logo. */
+  icon?: string;
   /** Text wordmark when no logo image was found. */
   wordmark?: string;
   colors: BrandColors;

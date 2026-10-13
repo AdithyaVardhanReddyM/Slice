@@ -1,13 +1,13 @@
 """Fetching a brand's site for intake and for reference lookups.
 
 Two paths produce the same `Page` shape: Firecrawl v2 (`/v2/scrape` with
-markdown, html, links, screenshot and branding; `/v2/map` for the site map) for
+markdown, rawHtml, links, screenshot and branding; `/v2/map` for the site map) for
 public URLs when FIRECRAWL_API_KEY is set, and a direct httpx fetch with a light
 HTML-to-text pass for localhost URLs or when the key is missing.
 
 Field names verified against https://docs.firecrawl.dev/api-reference (2026-10-11):
-request `{url, formats: ["markdown", "html", "links", {type: "screenshot", fullPage},
-{type: "branding"}], onlyMainContent}`; response `{success, data: {markdown, html,
+request `{url, formats: ["markdown", "rawHtml", "links", {type: "screenshot", fullPage},
+{type: "branding"}], onlyMainContent}`; response `{success, data: {markdown, rawHtml,
 links: string[], screenshot: url, branding: {...}, metadata: {title, description,
 sourceURL, url, statusCode}}}`. Map: `{url, limit, includeSubdomains}` ->
 `{success, links: [{url, title?, description?}]}`.
@@ -217,7 +217,9 @@ async def fetch_bytes(url: str, limit: int = 8_000_000) -> tuple[bytes, str]:
 
 
 async def firecrawl_scrape(url: str, *, first: bool) -> Page:
-    formats: list[Any] = ["markdown", "html", "links"]
+    # rawHtml, not html: the cleaned html drops <link> stylesheets and icons and the
+    # JSON-LD scripts, which is most of what extraction reads.
+    formats: list[Any] = ["markdown", "rawHtml", "links"]
     if first:
         formats += [{"type": "screenshot", "fullPage": True}, {"type": "branding"}]
     res = await http().post(
@@ -232,7 +234,7 @@ async def firecrawl_scrape(url: str, *, first: bool) -> Page:
     if not body.get("success", True):
         raise RuntimeError(f"Firecrawl scrape failed: {body.get('error') or body}")
     data = body.get("data") or {}
-    html = data.get("html") or data.get("rawHtml") or ""
+    html = data.get("rawHtml") or data.get("html") or ""
     meta = data.get("metadata") or {}
     final_url = meta.get("url") or meta.get("sourceURL") or url
     page = html_to_page(final_url, html) if html else Page(url=final_url)

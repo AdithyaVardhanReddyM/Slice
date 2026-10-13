@@ -19,6 +19,7 @@ from slice_agent import convex_client as convex
 from slice_agent.trace import record
 
 from . import browser, crawl, images
+from .extract import pick_icon
 from .llm import clip, generate_text
 from .timing import timer
 
@@ -120,6 +121,38 @@ async def capture_site(brand_id: str, url: str, *, home: crawl.Page | None = Non
     _bytes_cache[fold_up["url"]] = shot.fold
     _bytes_cache[full_up["url"]] = shot.full
     return site
+
+
+async def probe_brand(brand_id: str, url: str) -> dict[str, Any]:
+    """The rendered homepage's styles, its logo stored as a transparent PNG (or the
+    logo image's own URL when the header link is one plain <img>), and its icon.
+    Shape: {styles, logo?: {src, alt, onDark}, icon?}, for extract.apply_probe."""
+    with timer() as t:
+        p = await browser.probe(url)
+    s = p.styles
+    box = s.get("logo") or {}
+    alt = box.get("alt") or box.get("text") or ""
+    logo = None
+    if p.logo_png:
+        on_dark = (p.logo_ink or {}).get("lightness", 0) > 0.72
+        if box.get("src") and not box["src"].startswith("data:"):
+            logo = {"src": box["src"], "alt": alt or "Logo", "onDark": on_dark}
+        else:
+            up = await images.upload_image(brand_id, p.logo_png, "image/png")
+            logo = {"src": up["url"], "alt": alt or "Logo", "onDark": on_dark}
+    icon = pick_icon(s.get("icons") or [])
+    shapes = sorted({b["radius"] for b in s.get("buttons") or []})[:4]
+    record(
+        "slice",
+        "Measure the rendered homepage",
+        f"logo {'captured' if logo else 'not found'}{' (light)' if logo and logo['onDark'] else ''}, "
+        f"{len(s.get('buttons') or [])} buttons (radius {', '.join(str(r) for r in shapes) or 'none'}px), "
+        f"{len(s.get('cards') or [])} cards, fonts {', '.join(s.get('fontsLoaded') or []) or 'none loaded'}",
+        ms=t.ms,
+        started=t.started,
+        params={"url": url},
+    )
+    return {"styles": s, **({"logo": logo} if logo else {}), **({"icon": icon} if icon else {})}
 
 
 async def site_html(url: str) -> str:

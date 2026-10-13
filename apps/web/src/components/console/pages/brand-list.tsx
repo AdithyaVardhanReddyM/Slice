@@ -17,7 +17,7 @@ import { StatusBadge } from "./shared";
 /** The card artwork: the brand's domain in the address bar, its logo on the hero block. */
 function BrandPreview({ brand }: { brand: Brand }) {
   const kit = brand.kit;
-  const logo = kit?.logo?.src ?? faviconOf(brand.url);
+  const logo = kit?.logo?.src ?? kit?.icon ?? faviconOf(brand.url);
   const [broken, setBroken] = useState(false);
   return (
     <BrowserFrame

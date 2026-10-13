@@ -248,6 +248,7 @@ def extract(pages: list[Page], stylesheets: list[str]) -> Extracted:
     heading_fonts = Counter()
     body_fonts = Counter()
     radii = Counter()
+    card_radii = Counter()
     button_radii = Counter()
     uppercase = 0
 
@@ -374,23 +375,32 @@ def extract(pages: list[Page], stylesheets: list[str]) -> Extracted:
                     px = _radius_px(tok)
                     if px is None:
                         continue
+                    # `button { border-radius: 0 }` is a reset (Tailwind preflight), not a style.
+                    if px == 0 and not classes:
+                        continue
                     radii[px] += 1
                     if buttonish:
                         button_radii[px] += 1
+                    else:
+                        card_radii[px] += 1
             elif prop == "text-transform" and "uppercase" in value and (buttonish or linkish or "label" in selector.lower() or "eyebrow" in selector.lower()):
                 uppercase += 1
 
-    # Tailwind-style markup: class names on buttons and links tell us the same things.
+    # Tailwind-style markup: class names on buttons tell us the same things. A link
+    # with no fill, border or padding is a text link, not a square button, and a
+    # button with no rounded-* class may get its corners from a component class.
     for tag in re.findall(r"<(?:a|button)\b[^>]*class=[\"']([^\"']+)[\"'][^>]*>", html_all, re.I):
+        if not re.search(r"(?:^|\s)(?:bg-(?!transparent\b)|border(?:\s|$|-\d)|px-|py-|h-(?:\d|\[))|\bbtn\b|\bbutton\b", tag):
+            continue
         if re.search(r"\buppercase\b", tag):
             uppercase += 1
         if re.search(r"\brounded-full\b", tag):
             button_radii[9999] += 1
         elif re.search(r"\brounded-(xl|2xl|3xl)\b", tag):
             button_radii[16] += 1
-        elif re.search(r"\brounded(-md|-lg)?\b", tag):
+        elif re.search(r"\brounded(-md|-lg)?(\s|$)", tag):
             button_radii[6] += 1
-        elif re.search(r"\brounded-none\b", tag) or not re.search(r"\brounded", tag):
+        elif re.search(r"\brounded-none\b", tag):
             button_radii[0] += 1
 
     theme_color = _meta(html_all, "theme-color")
@@ -410,9 +420,10 @@ def extract(pages: list[Page], stylesheets: list[str]) -> Extracted:
         fonts[g] += 2
     heading, body = _font_roles(fonts, heading_fonts, body_fonts, google)
 
-    radius_px = _mode(button_radii) if button_radii else _mode(radii)
-    radius = _radius_token(radius_px)
-    button_style = "pill" if radius == "full" else "square" if radius == "none" else "rounded"
+    # Corners (cards, images, inputs) and buttons are separate kit settings.
+    radius = _radius_token(_mode(card_radii) if card_radii else _mode(radii))
+    button_token = _radius_token(_mode(button_radii)) if button_radii else radius
+    button_style = "pill" if button_token == "full" else "square" if button_token == "none" else "rounded"
 
     logo, wordmark, favicon, og_image = _logo(home)
 
@@ -850,6 +861,166 @@ def _page_images(pages: list[Page], limit: int = 80) -> list[dict[str, str]]:
     return out
 
 
+def _measured_radius_token(px: float) -> str:
+    """Nearest kit radius for a measured corner (the kit's sm/md/lg/full are 6/12/20/28px)."""
+    if px <= 2:
+        return "none"
+    if px < 9:
+        return "sm"
+    if px < 16:
+        return "md"
+    if px < 25:
+        return "lg"
+    return "full"
+
+
+def _median(values: list[float]) -> float | None:
+    vals = sorted(values)
+    return vals[len(vals) // 2] if vals else None
+
+
+def pick_icon(icons: list[dict[str, str]]) -> str | None:
+    """The best square icon a page declares: app icon, then SVG, then the largest bitmap."""
+
+    def size(i: dict[str, str]) -> int:
+        m = re.match(r"(\d+)x\d+", i.get("sizes") or "")
+        return int(m.group(1)) if m else 0
+
+    usable = [i for i in icons if str(i.get("href") or "").startswith("http")]
+    if not usable:
+        return None
+    apple = sorted((i for i in usable if "apple-touch" in i.get("rel", "")), key=size, reverse=True)
+    if apple:
+        return apple[0]["href"]
+    svg = next((i for i in usable if "svg" in i.get("type", "") or re.search(r"\.svg(\?|$)", i["href"], re.I)), None)
+    if svg:
+        return svg["href"]
+    return max(usable, key=size)["href"]
+
+
+def apply_probe(cands: Extracted, probe: dict[str, Any] | None) -> Extracted:
+    """What the browser rendered beats what the CSS suggests: logo, icon, colour roles,
+    corner radius, button shape, casing and fonts measured on the live homepage.
+    `probe` is {styles, logo?, icon?} from capture.probe_brand."""
+    if not probe or not probe.get("styles"):
+        return cands
+    s = probe["styles"]
+    measured: dict[str, Any] = {}
+    colors = dict(cands.get("colors") or {})
+
+    background = s.get("pageBg")
+    if background:
+        colors["background"] = measured_bg = background
+    else:
+        measured_bg = colors.get("background", "#ffffff")
+
+    texts = [(c, w) for c, w in s.get("text") or [] if contrast(c, measured_bg) >= 2.5]
+    heads = [(c, w) for c, w in s.get("headings") or [] if contrast(c, measured_bg) >= 4.5]
+    fg = heads[0][0] if heads else next((c for c, _ in texts if contrast(c, measured_bg) >= 4.5), None)
+    if fg:
+        colors["foreground"] = fg
+        # Secondary text: the lightest grey that still carries a real share of the copy.
+        total = sum(w for _, w in texts) or 1
+        greys = [c for c, w in texts if c != fg and w >= total * 0.05 and distance(c, fg) > 24 and saturation(c) < 0.3 and contrast(c, measured_bg) >= 3]
+        if greys:
+            colors["muted"] = min(greys, key=lambda c: contrast(c, measured_bg))
+
+    # The main button colour: filled buttons by size, the ones above the fold counting double.
+    votes: Counter = Counter()
+    fgs: dict[str, Counter] = defaultdict(Counter)
+    for b in s.get("buttons") or []:
+        if b.get("filled") and b.get("bg"):
+            w = b["width"] * b["height"] * (2 if b.get("top", 0) < 900 else 1)
+            votes[b["bg"]] += w
+            if b.get("fg"):
+                fgs[b["bg"]][b["fg"]] += w
+    if votes:
+        primary = votes.most_common(1)[0][0]
+        colors["primary"] = primary
+        on = fgs[primary].most_common(1)
+        colors["primaryForeground"] = on[0][0] if on and contrast(on[0][0], primary) >= 3 else (
+            "#ffffff" if contrast(primary, "#ffffff") >= contrast(primary, colors.get("foreground", "#111111")) else colors.get("foreground", "#111111")
+        )
+
+    def accentish(c: str) -> bool:
+        return (
+            saturation(c) > 0.25
+            and 0.04 < luminance(c) < 0.8
+            and distance(c, colors["primary"]) > 60
+            and distance(c, colors["background"]) > 60
+            and distance(c, colors.get("foreground", "#111111")) > 40
+        )
+
+    accent = next((c for c, _ in s.get("colors") or [] if accentish(c)), None)
+    if accent:
+        colors["accent"] = accent
+    elif colors.get("accent") == colors.get("primary"):
+        # A monochrome site: the second filled button colour, else a dark band, else a tint.
+        second = next((c for c, _ in votes.most_common()[1:] if distance(c, colors["primary"]) > 40), None)
+        band = next((c for c, _ in s.get("areas") or [] if distance(c, colors["background"]) > 60 and distance(c, colors["primary"]) > 40), None)
+        colors["accent"] = second or band or _mix(colors["primary"], colors["background"], 0.35)
+
+    light = luminance(colors["background"]) > 0.5
+    surfaces = Counter(
+        c["bg"] for c in s.get("cards") or []
+        if c.get("bg") and 3 < distance(c["bg"], colors["background"]) < 70 and (luminance(c["bg"]) > 0.5) == light
+    )
+    if surfaces:
+        colors["surface"] = surfaces.most_common(1)[0][0]
+    cands["colors"] = colors
+    measured["colors"] = {k: colors[k] for k in ("background", "foreground", "primary", "primaryForeground", "accent", "muted", "surface") if k in colors}
+
+    corners = [c["radius"] for c in s.get("cards") or []] + list(s.get("imageRadii") or [])
+    corner = _median(corners)
+    if corner is not None:
+        cands["radius"] = measured["radius"] = _measured_radius_token(corner)
+        measured["cornerPx"] = round(corner)
+
+    # Button shape by vote: round ends (radius at half the height) are pills.
+    shapes: Counter = Counter()
+    upper = 0
+    buttons = s.get("buttons") or []
+    for b in buttons:
+        half = max(1, b["height"] / 2)
+        shape = "pill" if b["radius"] >= half * 0.85 else "square" if b["radius"] <= 1 else "rounded"
+        shapes[shape] += 2 if b.get("filled") else 1
+        upper += 1 if b.get("upper") else 0
+    if shapes:
+        cands["buttonStyle"] = measured["buttonStyle"] = shapes.most_common(1)[0][0]
+    if buttons or s.get("eyebrows"):
+        cands["uppercaseLabels"] = measured["uppercaseLabels"] = (upper / len(buttons) >= 0.5 if buttons else False) or s.get("eyebrows", 0) >= 4
+
+    # Fonts the page really loaded, by where they are used.
+    loaded = {f.lower() for f in s.get("fontsLoaded") or []}
+    google = cands.get("fonts", {}).get("google") or []
+    for role, key in (("heading", "headingFamilies"), ("body", "bodyFamilies")):
+        fam = next((f for f, _ in s.get(key) or [] if f.lower() in loaded and not f.startswith("__")), None)
+        if fam:
+            fam = re.sub(r"\s+Fallback$", "", fam, flags=re.I)
+            cands["fonts"][role] = {"family": fam, "source": "google" if fam in google or _looks_google(fam) else "system", "fallback": font_fallback(fam)}
+            measured.setdefault("fonts", {})[role] = fam
+
+    if probe.get("logo"):
+        cands["logo"] = probe["logo"]
+        measured["logo"] = True
+        if not cands.get("wordmark") and probe["logo"].get("alt"):
+            cands["wordmark"] = probe["logo"]["alt"]
+    if probe.get("icon"):
+        cands["icon"] = probe["icon"]
+    cands["measured"] = measured
+    cands["measuredView"] = {
+        "buttons": [
+            {k: b.get(k) for k in ("label", "bg", "fg", "radius", "height", "filled", "upper")} for b in buttons[:8]
+        ],
+        "cardCornerPx": round(_median([c["radius"] for c in s.get("cards") or []]) or 0),
+        "imageCornerPx": round(_median(list(s.get("imageRadii") or [])) or 0),
+        "textColours": (s.get("text") or [])[:5],
+        "paintedAreas": (s.get("areas") or [])[:5],
+        "fontsLoaded": s.get("fontsLoaded"),
+    }
+    return cands
+
+
 def apply_branding(cands: Extracted, branding: dict[str, Any] | None) -> Extracted:
     """Firecrawl's branding read wins over the regex guesses where it has values."""
     if not branding:
@@ -881,11 +1052,18 @@ def apply_branding(cands: Extracted, branding: dict[str, Any] | None) -> Extract
     logo = branding.get("logo") or (branding.get("images") or {}).get("logo")
     if isinstance(logo, str) and logo.startswith("http") and not (cands.get("logo") or {}).get("src", "").startswith("http"):
         cands["logo"] = {"src": logo, "alt": cands.get("wordmark") or "Logo"}
+    favicon = (branding.get("images") or {}).get("favicon")
+    if isinstance(favicon, str) and favicon.startswith("http") and not cands.get("favicon"):
+        cands["favicon"] = favicon
+    # The page-wide radius is the most common one, usually 0 from resets; only a real value counts.
     radius = (branding.get("spacing") or {}).get("borderRadius")
-    if radius:
-        px = _radius_px(str(radius))
-        if px is not None:
-            cands["radius"] = _radius_token(px)
-            cands["buttonStyle"] = "pill" if cands["radius"] == "full" else "square" if cands["radius"] == "none" else "rounded"
+    px = _radius_px(str(radius)) if radius else None
+    if px:
+        cands["radius"] = _radius_token(px)
+    # Buttons have their own measured radius.
+    button = (branding.get("components") or {}).get("buttonPrimary") or {}
+    bpx = _radius_px(str(button.get("borderRadius"))) if button.get("borderRadius") else None
+    if bpx is not None:
+        cands["buttonStyle"] = "pill" if bpx >= 20 else "square" if bpx <= 1 else "rounded"
     cands["branding"] = {k: branding.get(k) for k in ("colorScheme", "personality") if branding.get(k)}
     return cands

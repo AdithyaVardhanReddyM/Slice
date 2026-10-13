@@ -77,16 +77,22 @@ const SECTION_LABELS: Record<string, string> = {
 };
 
 /**
- * A square brand tile. Square marks and favicons show as-is; a wide wordmark
+ * A square brand tile: the site's own icon, else the logo when it is square,
+ * else (no kit images at all) Google's favicon for the domain. A wide wordmark
  * is unreadable at this size, so it falls back to a monogram in the brand's
  * primary colour.
  */
 export function BrandGlyph({ brand, size = "md" }: { brand: Brand; size?: "sm" | "md" }) {
-  const logo = brand.kit?.logo?.src ?? faviconOf(brand.url);
-  const [wide, setWide] = useState(false);
-  const [broken, setBroken] = useState(false);
-  const colors = brand.kit?.colors;
-  const showLogo = logo && !wide && !broken;
+  const kit = brand.kit;
+  const sources = (kit?.icon || kit?.logo?.src ? [kit.icon, kit.logo?.src] : [faviconOf(brand.url)]).filter((s): s is string => !!s);
+  // Each source that fails to load (or is too wide) passes to the next; a new brand starts over.
+  const key = sources.join(" ");
+  const [skipped, setSkipped] = useState({ key, n: 0 });
+  const n = skipped.key === key ? skipped.n : 0;
+  const logo = sources[n];
+  const next = () => setSkipped({ key, n: n + 1 });
+  const colors = kit?.colors;
+  const showLogo = !!logo;
   return (
     <span
       className={cn(
@@ -96,15 +102,16 @@ export function BrandGlyph({ brand, size = "md" }: { brand: Brand; size?: "sm" |
       )}
       style={showLogo || !colors ? undefined : { background: colors.primary, color: colors.primaryForeground }}
     >
-      {logo && !wide && !broken && (
+      {logo && (
         // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
         // eslint-disable-next-line @next/next/no-img-element
         <img
+          key={logo}
           src={logo}
           alt=""
           className={cn("object-contain", size === "sm" ? "size-4" : "size-6")}
-          onLoad={(e) => setWide(e.currentTarget.naturalWidth > e.currentTarget.naturalHeight * 1.5)}
-          onError={() => setBroken(true)}
+          onLoad={(e) => e.currentTarget.naturalWidth > e.currentTarget.naturalHeight * 1.5 && next()}
+          onError={next}
         />
       )}
       {!showLogo &&

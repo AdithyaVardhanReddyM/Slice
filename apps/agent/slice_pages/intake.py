@@ -2,7 +2,9 @@
 
 Steps (each written to Convex via POST /pages/brand so the console follows along):
 1. fetch the homepage, then up to 7 linked pages (Firecrawl or direct);
-2. deterministic extraction of design tokens from HTML + same-host CSS;
+2. deterministic extraction of design tokens from HTML + same-host CSS, then the
+   rendered homepage measured in a headless browser (logo cut-out, icon, button
+   shape, corner radius, colour roles), which wins where it has a reading;
 3. one Gemini call with a JSON schema producing the kit and the brief;
 4. write kit + brief + screenshot + crawled, status "review", then ask Convex to
    run `pagesBrands:qlooLookup`.
@@ -26,7 +28,7 @@ from slice_agent.trace import Span, record, start_turn
 from .timing import timer
 
 from . import capture, crawl
-from .extract import Extracted, apply_branding, extract, font_fallback, parse_color
+from .extract import Extracted, apply_branding, apply_probe, extract, font_fallback, parse_color
 from .llm import clip, generate_json
 
 MAX_LINKED_PAGES = 7
@@ -141,18 +143,26 @@ def _prompt(url: str, pages: list[crawl.Page], cands: Extracted) -> str:
         "radius": cands.get("radius"),
         "buttonStyle": cands.get("buttonStyle"),
         "uppercaseLabels": cands.get("uppercaseLabels"),
+        "measured": sorted((cands.get("measured") or {}).keys()),
         "meta": cands.get("meta"),
         "firecrawlBranding": cands.get("branding"),
     }
     jsonld = cands.get("jsonld") or {}
     images = [{"src": im["src"], "alt": im["alt"]} for im in (cands.get("images") or [])[:60]]
+    measured_block = (
+        "\nMEASURED ON THE RENDERED HOMEPAGE (computed styles in a real browser: buttons as drawn, the median corner of cards and of photos in px, text colours as seen):\n"
+        + json.dumps(cands.get("measuredView"), ensure_ascii=False)
+        + "\n"
+        if cands.get("measuredView")
+        else ""
+    )
     return f"""You are writing the brand kit and brand brief for a B2C business from its website, for a tool that builds landing pages in that brand's own look and voice.
 
 SITE: {url}
 
-DESIGN TOKENS READ FROM THE CSS (deterministic candidates; trust them unless the copy or markup contradicts them):
+DESIGN TOKENS (colour roles, radius, button style and casing were measured on the rendered page when "measured" lists them; otherwise read from the CSS. Trust them unless the copy or markup contradicts them):
 {json.dumps(cand_view, ensure_ascii=False, indent=1)}
-
+{measured_block}
 STRUCTURED DATA (JSON-LD found on the pages):
 {json.dumps({"organization": jsonld.get("organization"), "places": jsonld.get("places"), "products": jsonld.get("products")}, ensure_ascii=False, indent=1)}
 
@@ -168,7 +178,7 @@ kit:
 - fonts: heading and body family names. Use the candidates; if a family is proprietary or unknown to Google Fonts, name the closest Google Fonts family and set source "google". A monospace family is for labels, never body.
 - radius, density (how much whitespace the site uses), buttonStyle, uppercaseLabels: from the candidates unless the markup contradicts them.
 - wordmark: the brand name as written in the header.
-- imagery: style ("warm natural light, products in use, lived-in rooms") and treatment ("full-bleed, no borders, slight warm grade") as the site actually does it.
+- imagery: style ("warm natural light, products in use, lived-in rooms") and treatment ("full-bleed, no borders, slight warm grade") as the site actually does it. When imageCornerPx was measured, the treatment's corners must match it (0 is square, 20 and up is clearly rounded).
 - voice: summary (3 lines max: register, sentence length, words they use), do (4 to 6 concrete habits), avoid (3 to 5 things the brand would never say).
 brief:
 - name: the brand name. summary: one paragraph, what they are and sell. categories: product or service categories. positioning: "premium" | "mid" | "accessible" plus one clause of reasoning. audience: who the site appears to sell to. proof: press, numbers, guarantees exactly as written. ctas: button labels used on the site. locations: cities and addresses mentioned.
@@ -203,13 +213,19 @@ def build_kit(raw: dict[str, Any] | None, cands: Extracted, brand_name: str) -> 
     raw = raw or {}
     cc = cands.get("colors") or {}
     rc = raw.get("colors") or {}
-    colors = {k: _color(rc.get(k), cc.get(k, "#ffffff" if k in ("background", "primaryForeground") else "#111111")) for k in _COLOR_KEYS}
+    # A value measured on the rendered page beats the model, which only read text.
+    measured = cands.get("measured") or {}
+    mc = measured.get("colors") or {}
+    colors = {
+        k: mc[k] if _is_hex(mc.get(k)) else _color(rc.get(k), cc.get(k, "#ffffff" if k in ("background", "primaryForeground") else "#111111"))
+        for k in _COLOR_KEYS
+    }
     cf = cands.get("fonts") or {}
     rf = raw.get("fonts") or {}
     kit: dict[str, Any] = {
         "colors": colors,
         "fonts": {"heading": _font(rf.get("heading"), cf.get("heading") or {}), "body": _font(rf.get("body"), cf.get("body") or {})},
-        "radius": raw.get("radius") if raw.get("radius") in RADII else cands.get("radius", "md"),
+        "radius": measured.get("radius") or (raw.get("radius") if raw.get("radius") in RADII else cands.get("radius", "md")),
         "density": raw.get("density") if raw.get("density") in DENSITIES else "regular",
         "imagery": {
             "style": str((raw.get("imagery") or {}).get("style") or "natural light, real settings, people using the products"),
@@ -220,15 +236,20 @@ def build_kit(raw: dict[str, Any] | None, cands: Extracted, brand_name: str) -> 
             "do": [str(x) for x in (raw.get("voice") or {}).get("do") or []][:6],
             "avoid": [str(x) for x in (raw.get("voice") or {}).get("avoid") or []][:5],
         },
-        "buttonStyle": raw.get("buttonStyle") if raw.get("buttonStyle") in BUTTONS else cands.get("buttonStyle", "rounded"),
-        "uppercaseLabels": bool(raw.get("uppercaseLabels", cands.get("uppercaseLabels", False))),
+        "buttonStyle": measured.get("buttonStyle") or (raw.get("buttonStyle") if raw.get("buttonStyle") in BUTTONS else cands.get("buttonStyle", "rounded")),
+        "uppercaseLabels": bool(measured["uppercaseLabels"] if "uppercaseLabels" in measured else raw.get("uppercaseLabels", cands.get("uppercaseLabels", False))),
     }
     logo = cands.get("logo")
     org_logo = ((cands.get("jsonld") or {}).get("organization") or {}).get("logo")
     if not logo and org_logo:
         logo = {"src": org_logo, "alt": brand_name}
     if logo and logo.get("src"):
-        kit["logo"] = {"src": logo["src"], "alt": logo.get("alt") or brand_name, "onDark": bool(raw.get("logoOnDark", False))}
+        on_dark = logo["onDark"] if "onDark" in logo else raw.get("logoOnDark", False)
+        kit["logo"] = {"src": logo["src"], "alt": logo.get("alt") or brand_name, "onDark": bool(on_dark)}
+    # The square app icon / favicon, for small tiles where a wide logo will not fit.
+    icon = cands.get("icon") or cands.get("favicon")
+    if isinstance(icon, str) and icon.startswith("http"):
+        kit["icon"] = icon
     wordmark = str(raw.get("wordmark") or cands.get("wordmark") or brand_name).strip()
     if wordmark:
         kit["wordmark"] = wordmark[:40]
@@ -344,6 +365,8 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
 
     # The look of the homepage (screenshot, markup, photos, anatomy) is captured alongside the rest.
     capture_task = asyncio.create_task(capture.capture_site(brand_id, home.url, home=home))
+    # So is the measuring pass the kit needs (logo, buttons, corners, colours as rendered).
+    probe_task = asyncio.create_task(capture.probe_brand(brand_id, home.url))
 
     # 2. Linked pages.
     candidates = list(home.links)
@@ -376,16 +399,22 @@ async def run_intake(brand_id: str, url: str) -> AsyncIterator[dict[str, Any]]:
 
     # 3. Deterministic extraction.
     yield _event("status", text="Reading colours and type", progress=0.45)
+    probe: dict[str, Any] | None = None
+    try:
+        probe = await asyncio.wait_for(probe_task, timeout=60)
+    except Exception as err:
+        record("slice", "Measure the rendered homepage", f"skipped: {type(err).__name__}: {str(err)[:140]}", ms=0)
     with timer() as t:
         css_urls = crawl.stylesheet_urls(home)
         sheets = [s for s in await asyncio.gather(*(crawl.fetch_text(u) for u in css_urls)) if s]
-        cands = apply_branding(extract(pages, sheets), home.branding)
+        cands = apply_probe(apply_branding(extract(pages, sheets), home.branding), probe)
     c = cands["colors"]
     record(
         "slice",
         "Read colours and type from the CSS",
-        f"primary {c['primary']}, background {c['background']}, heading {cands['fonts']['heading']['family']}, body {cands['fonts']['body']['family']}, radius {cands['radius']}"
-        + (", Firecrawl branding applied" if home.branding else ""),
+        f"primary {c['primary']}, accent {c['accent']}, background {c['background']}, heading {cands['fonts']['heading']['family']}, body {cands['fonts']['body']['family']}, corners {cands['radius']}, buttons {cands['buttonStyle']}"
+        + (", Firecrawl branding applied" if home.branding else "")
+        + (", measured on the rendered page" if cands.get("measured") else ""),
         ms=t.ms,
         started=t.started,
         params={"stylesheets": str(len(sheets)), "jsonld products": str(len((cands.get('jsonld') or {}).get('products') or []))},

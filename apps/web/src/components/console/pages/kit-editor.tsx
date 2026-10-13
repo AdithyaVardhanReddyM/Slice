@@ -166,6 +166,20 @@ function LogoPreview({ kit, brandName }: { kit: BrandKit; brandName: string }) {
   );
 }
 
+function IconPreview({ src }: { src?: string }) {
+  const [broken, setBroken] = useState<string | null>(null);
+  return (
+    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+      {src && broken !== src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="size-6 object-contain" onError={() => setBroken(src)} />
+      ) : (
+        <ImageOff className="size-4 text-muted-foreground" />
+      )}
+    </span>
+  );
+}
+
 type KitProps = { kit: BrandKit; onChange: (kit: BrandKit) => void; brandName: string };
 
 /** Logo, colours, type and shape. Controlled: the parent owns the kit and saves it. */
@@ -185,6 +199,12 @@ export function KitIdentityEditor({ kit, onChange, brandName }: KitProps) {
           </EditorField>
           <EditorField label="Wordmark" aside="Optional" hint="Shown when there is no logo image.">
             <Input value={kit.wordmark ?? ""} placeholder={brandName} onChange={(e) => set("wordmark", e.target.value || undefined)} />
+          </EditorField>
+          <EditorField label="Icon URL" aside="Optional" hint="A square mark for small tiles in Slice, like the brand switcher." className="sm:col-span-2">
+            <div className="flex items-center gap-2">
+              <IconPreview src={kit.icon} />
+              <Input value={kit.icon ?? ""} placeholder="https://…/icon.png" onChange={(e) => set("icon", e.target.value || undefined)} />
+            </div>
           </EditorField>
         </div>
         <EditorRow label="Dark background" hint="The logo is light and needs the text colour behind it.">
