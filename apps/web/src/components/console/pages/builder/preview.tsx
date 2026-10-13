@@ -1,15 +1,18 @@
 "use client";
 
 import { AlertCircle, ExternalLink, Globe, Lock, Monitor, RotateCcw, Smartphone, Users } from "lucide-react";
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { profileOf, type Audience, type Variant } from "@/lib/pages/types";
+import { profileOf, type Audience, type Brand, type Variant } from "@/lib/pages/types";
 import { brandDomain, previewUrl } from "@/lib/pages/urls";
 import { Segmented } from "@/components/console/form";
 import { Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { KIND_ICON, coverTiles } from "../taste-cover";
+import { BuildCanvas, type CanvasMode } from "./build-canvas";
+import { draftSections, sectionLabel, type ToolStep } from "./build-steps";
+import type { LiveTurn } from "./use-builder";
 
 export type Device = "desktop" | "mobile";
 
@@ -17,7 +20,7 @@ export type Device = "desktop" | "mobile";
 export const versionLabel = (v: Variant) => (v.name && v.name !== "Default" ? v.name : "Everyone");
 
 /** An audience's face: its top Qloo pick, else its kind icon. */
-function AudienceFace({ audience, className }: { audience: Audience; className?: string }) {
+export function AudienceFace({ audience, className }: { audience: Audience; className?: string }) {
   const [broken, setBroken] = useState(false);
   const image = coverTiles(profileOf(audience), 1)[0]?.image;
   const Icon = KIND_ICON[audience.kind] || Users;
@@ -156,10 +159,35 @@ export function DeviceToggle({ value, onChange }: { value: Device; onChange: (d:
   );
 }
 
+/**
+ * What the canvas shows for a turn: the sketch before there is anything to
+ * show (or while a rebuild's styles stream), the draft while write_page
+ * streams markup, and presence over a page that exists. The draft stays up
+ * after the page is written until the saved page has loaded behind it.
+ */
+function canvasFor(live: LiveTurn | null | undefined, empty: boolean, pageLoaded: boolean, settled: boolean): { mode: CanvasMode | null; label: string | null; scanning: boolean; settle: boolean } {
+  const working = !!live && live.status !== null && !live.handoff && !live.error;
+  if (!live || !working) return { mode: null, label: null, scanning: false, settle: false };
+  const tools = live.steps.filter((s): s is ToolStep => s.kind === "tool");
+  const write = tools.filter((t) => t.name === "write_page").pop();
+  const wrote = write?.status === "done";
+  const running = tools.filter((t) => t.status === "running").pop();
+  const html = live.draft?.html.trim() ?? "";
+  const sections = draftSections(html);
+  if (html && !(wrote && settled && pageLoaded && !empty)) {
+    const last = sections[sections.length - 1];
+    return { mode: "draft", label: wrote ? "Opening the page" : last ? `Writing the ${sectionLabel(last).toLowerCase()}` : "Writing the page", scanning: false, settle: wrote };
+  }
+  const label = running?.label ?? (live.steps.length ? "Thinking" : live.status);
+  if (live.draft && !html && !wrote) return { mode: "sketch", label: "Choosing colours and type", scanning: false, settle: false };
+  if (empty || (live.kind === "generate" && !wrote)) return { mode: "sketch", label, scanning: false, settle: false };
+  return { mode: "presence", label, scanning: running?.name === "review_page", settle: false };
+}
+
 export const PreviewFrame = forwardRef<
   HTMLIFrameElement,
   {
-    brandSlug: string;
+    brand: Brand;
     pageSlug: string;
     variant: Variant | null;
     device: Device;
@@ -167,20 +195,33 @@ export const PreviewFrame = forwardRef<
     className?: string;
     overlay?: ReactNode;
     onLoad?: () => void;
-    /** What the agent is doing to the page right now, if anything. */
-    building?: string | null;
+    /** The agent's turn on this page, if one is running: drives the build canvas. */
+    live?: LiveTurn | null;
     /** Build (or rebuild) the page; shows the buttons when given. */
     onBuild?: () => void;
     /** Another turn is running, so building is not possible right now. */
     busy?: boolean;
   }
->(function PreviewFrame({ brandSlug, pageSlug, variant, device, reloadKey, className, overlay, onLoad, building, onBuild, busy }, ref) {
+>(function PreviewFrame({ brand, pageSlug, variant, device, reloadKey, className, overlay, onLoad, live, onBuild, busy }, ref) {
+  const brandSlug = brand.slug;
+  const key = variant ? `${variant._id}-${variant.version}-${reloadKey}` : "";
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  // The written page gets a moment to scroll the draft back up before it takes over.
+  const write = live?.steps.filter((s): s is ToolStep => s.kind === "tool" && s.name === "write_page").pop();
+  const wroteAt = write?.status === "done" ? (write.t ?? 0) : null;
+  const [settledAt, setSettledAt] = useState<number | null>(null);
+  useEffect(() => {
+    if (wroteAt === null) return;
+    const id = setTimeout(() => setSettledAt(wroteAt), 1100);
+    return () => clearTimeout(id);
+  }, [wroteAt]);
   if (!variant) {
     return <div className={cn("flex items-center justify-center rounded-xl border bg-background text-sm text-muted-foreground", className)}>Nothing to preview yet.</div>;
   }
   const src = previewUrl(brandSlug, pageSlug, variant._id);
   const empty = !variant.doc;
   const mobile = device === "mobile";
+  const canvas = canvasFor(live, empty, loadedKey === key, wroteAt !== null && settledAt === wroteAt);
   return (
     <div className={cn("relative flex flex-col overflow-hidden rounded-xl border bg-background shadow-xs", className)}>
       <div className="grid h-10 shrink-0 grid-cols-[1fr_minmax(0,28rem)_1fr] items-center gap-2 border-b px-2">
@@ -212,12 +253,7 @@ export const PreviewFrame = forwardRef<
         <div className={cn("relative h-full bg-background transition-[width] duration-300", mobile ? "w-[390px] overflow-hidden rounded-[1.75rem] shadow-sm ring-1 ring-foreground/10" : "w-full")}>
           {empty ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-muted-foreground">
-              {building ? (
-                <>
-                  <Spinner className="size-5" />
-                  <span>{building}</span>
-                </>
-              ) : variant.status === "failed" ? (
+              {canvas.mode ? null : variant.status === "failed" ? (
                 <>
                   <p className="max-w-sm">
                     The page could not be built{variant.error ? `: ${variant.error}` : "."}
@@ -242,11 +278,27 @@ export const PreviewFrame = forwardRef<
           ) : (
             <iframe
               ref={ref}
-              key={`${variant._id}-${variant.version}-${reloadKey}`}
+              key={key}
               src={src}
               title={`${variant.name} preview`}
               className="size-full border-0"
-              onLoad={onLoad}
+              onLoad={() => {
+                setLoadedKey(key);
+                onLoad?.();
+              }}
+            />
+          )}
+          {canvas.mode && live && (
+            <BuildCanvas
+              mode={canvas.mode}
+              brand={brand}
+              steps={live.steps}
+              draft={live.draft}
+              label={canvas.label}
+              startedAt={live.startedAt}
+              scanning={canvas.scanning}
+              settle={canvas.settle}
+              className={cn(mobile && "rounded-[1.75rem]")}
             />
           )}
           {overlay}

@@ -75,6 +75,9 @@ function fontStack(font: BrandFont): string {
   return `${quoted}, ${fallback}`;
 }
 
+/** An extra font with Google's axis syntax, e.g. "Archivo:wdth,wght@125,800;125,900" (an expanded cut of a kit font). */
+const AXIS_SPEC = /^([A-Za-z0-9 +]{2,40}):((?:ital|wdth|wght|opsz)(?:,(?:ital|wdth|wght|opsz))*)@([0-9.,;]{1,80})$/;
+
 /** `https://fonts.googleapis.com/css2?...` for the kit's Google fonts (plus `extra` families a page asks for), or null when none. */
 export function googleFontsHref(kit: BrandKit, extra?: string[]): string | null {
   const fams = new Map<string, Set<number>>();
@@ -86,18 +89,25 @@ export function googleFontsHref(kit: BrandKit, extra?: string[]): string | null 
   };
   add(kit.fonts.heading, [400, 500, 600, 700]);
   add(kit.fonts.body, [400, 500, 600]);
+  // Axis specs are passed through as their own family entry; Google merges them with the plain one.
+  const axes: string[] = [];
   for (const family of extra ?? []) {
     const name = String(family).trim();
+    const spec = AXIS_SPEC.exec(name);
+    if (spec) {
+      axes.push(`family=${spec[1].trim().replace(/\s+/g, "+")}:${spec[2]}@${spec[3]}`);
+      continue;
+    }
     if (!/^[A-Za-z0-9 +]{2,40}$/.test(name) || fams.has(name)) continue;
     fams.set(name, new Set([400, 500, 600, 700]));
   }
-  if (fams.size === 0) return null;
+  if (fams.size === 0 && axes.length === 0) return null;
   const parts = [...fams.entries()].map(([family, weights]) => {
     const name = family.trim().replace(/\s+/g, "+");
     const ws = [...weights].sort((a, b) => a - b).join(";");
     return `family=${name}:wght@${ws}`;
   });
-  return `https://fonts.googleapis.com/css2?${parts.join("&")}&display=swap`;
+  return `https://fonts.googleapis.com/css2?${[...parts, ...axes].join("&")}&display=swap`;
 }
 
 /* Variables --------------------------------------------------------------- */

@@ -137,6 +137,15 @@
     background-position: -200% 0;
   }
 }
+/* Build canvas: a line passing down the page while the builder reviews it. */
+@keyframes pg-scan {
+  from {
+    top: -6rem;
+  }
+  to {
+    top: 100%;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .pg-shimmer {
     animation: none;

@@ -2,19 +2,31 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
-import { TOOL_LABEL, postStream, type BuildStep } from "@/lib/pages/stream";
+import { TOOL_LABEL, postStream, type BuildStep, type PagesAgentEvent } from "@/lib/pages/stream";
 import type { Build, PageDoc, Span } from "@/lib/pages/types";
 import type { Attachment } from "./attachments";
 
+/** write_page's arguments as the model writes them: the page appears in the canvas while it streams. */
+export interface Draft {
+  css: string;
+  html: string;
+  fonts: string[];
+}
+
 export interface LiveTurn {
   variantId: string;
-  kind: "generate" | "edit";
+  /** "plan" is the new-page planner (questions, then the setup), before a page exists. */
+  kind: "generate" | "edit" | "plan";
   status: string | null;
   spans: Span[];
   /** The turn so far: thoughts, tool steps and text, in order. */
   steps: BuildStep[];
   text: string;
   error: string | null;
+  /** When the turn began (Date.now()); steps' `t` count from here. */
+  startedAt: number;
+  /** The page being written right now, if write_page is streaming. */
+  draft?: Draft | null;
   /** The merchant message that started it (edit turns). */
   prompt?: string;
   attachments?: Attachment[];
@@ -22,40 +34,51 @@ export interface LiveTurn {
   handoff?: string;
 }
 
-/** Append to the live turn's timeline, merging consecutive thought and text deltas. */
-function withStep(steps: BuildStep[], ev: { type: string } & Record<string, unknown>): BuildStep[] {
+export const newTurn = (fields: Pick<LiveTurn, "variantId" | "kind" | "status"> & Partial<LiveTurn>): LiveTurn => ({
+  spans: [],
+  steps: [],
+  text: "",
+  error: null,
+  startedAt: Date.now(),
+  ...fields,
+});
+
+/** A thought or reply that is still open ends where the next step begins. */
+function closeLast(steps: BuildStep[], t: number): BuildStep[] {
   const last = steps[steps.length - 1];
-  const now = Date.now();
+  if (!last || (last.kind !== "thought" && last.kind !== "text") || last.ms !== undefined) return steps;
+  return [...steps.slice(0, -1), { ...last, ms: Math.max(0, t - (last.t ?? t)) }];
+}
+
+/** Append to the live turn's timeline, merging consecutive thought and text deltas. */
+function withStep(steps: BuildStep[], ev: PagesAgentEvent, startedAt: number): BuildStep[] {
+  const last = steps[steps.length - 1];
+  const t = Date.now() - startedAt;
   if (ev.type === "thought") {
-    const delta = String(ev.delta ?? "");
-    if (last?.kind === "thought") return [...steps.slice(0, -1), { ...last, text: last.text + delta }];
-    return [...steps, { kind: "thought", text: delta, ms: now }];
+    if (last?.kind === "thought") return [...steps.slice(0, -1), { ...last, text: last.text + ev.delta }];
+    return [...closeLast(steps, t), { kind: "thought", text: ev.delta, t }];
   }
   if (ev.type === "text") {
-    const delta = String(ev.delta ?? "");
-    if (last?.kind === "text") return [...steps.slice(0, -1), { ...last, text: last.text + delta }];
-    return [...steps, { kind: "text", text: delta }];
+    if (last?.kind === "text") return [...steps.slice(0, -1), { ...last, text: last.text + ev.delta }];
+    return [...closeLast(steps, t), { kind: "text", text: ev.delta, t }];
   }
   if (ev.type === "text_done") {
-    const text = String(ev.text ?? "");
-    if (last?.kind === "text") return [...steps.slice(0, -1), { ...last, text }];
-    return [...steps, { kind: "text", text }];
+    if (last?.kind === "text") return [...steps.slice(0, -1), { ...last, text: ev.text }];
+    return [...closeLast(steps, t), { kind: "text", text: ev.text, t }];
   }
   if (ev.type === "tool_call") {
-    const name = String(ev.name ?? "");
-    const closed = last?.kind === "thought" && last.ms ? [...steps.slice(0, -1), { ...last, ms: now - last.ms }] : steps;
-    return [...closed, { kind: "tool", name, label: String(ev.label ?? TOOL_LABEL[name] ?? name.replace(/_/g, " ")), status: "running", ms: now }];
+    const label = ev.label ?? TOOL_LABEL[ev.name] ?? ev.name.replace(/_/g, " ");
+    return [...closeLast(steps, t), { kind: "tool", name: ev.name, label, status: "running", t }];
   }
   if (ev.type === "tool_result") {
-    const name = String(ev.name ?? "");
-    const i = steps.map((s) => s.kind === "tool" && s.name === name && s.status === "running").lastIndexOf(true);
+    const i = steps.map((s) => s.kind === "tool" && s.name === ev.name && s.status === "running").lastIndexOf(true);
     if (i < 0) return steps;
     const step = steps[i] as Extract<BuildStep, { kind: "tool" }>;
-    const problems = Array.isArray(ev.problems) ? (ev.problems as string[]) : [];
-    const summary = typeof ev.summary === "string" && ev.summary ? ev.summary : problems.length ? problems[0] : undefined;
-    const next: BuildStep = { ...step, status: ev.ok === false ? "failed" : "done", summary, ms: step.ms ? now - step.ms : undefined };
+    const summary = ev.summary || (ev.problems?.length ? ev.problems[0] : undefined);
+    const next: BuildStep = { ...step, status: ev.ok === false ? "failed" : "done", summary, preview: ev.preview, ms: Math.max(0, t - (step.t ?? t)) };
     return [...steps.slice(0, i), next, ...steps.slice(i + 1)];
   }
+  if (ev.type === "question") return [...closeLast(steps, t), { kind: "question", question: ev.question, t }];
   return steps;
 }
 
@@ -118,7 +141,7 @@ export function useBuilder({
       abort.current = ctrl;
       onStart?.(variantId);
       let newPage: { request: string; audienceIds: string[] } | null = null;
-      setLive({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", spans: [], steps: [], text: "", error: null, prompt: message, attachments });
+      setLive(newTurn({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", prompt: message, attachments }));
       for await (const ev of postStream(
         "/api/pages/build",
         { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current), model, attachments: attachments ?? [], mentions: mentions ?? [] },
@@ -127,10 +150,17 @@ export function useBuilder({
         if (ev.type === "new_page") newPage = { request: ev.request, audienceIds: ev.audienceIds ?? [] };
         if (ev.type === "status") setLive((l) => (l ? { ...l, status: ev.text } : l));
         else if (ev.type === "span") setLive((l) => (l ? { ...l, spans: [...l.spans, ev.span] } : l));
-        else if (ev.type === "thought" || ev.type === "tool_call" || ev.type === "tool_result") setLive((l) => (l ? { ...l, steps: withStep(l.steps, ev) } : l));
-        else if (ev.type === "text") setLive((l) => (l ? { ...l, text: l.text + ev.delta, steps: withStep(l.steps, ev) } : l));
-        else if (ev.type === "text_done") setLive((l) => (l ? { ...l, text: ev.text, steps: withStep(l.steps, ev) } : l));
-        else if (ev.type === "doc") {
+        else if (ev.type === "thought" || ev.type === "tool_call" || ev.type === "tool_result" || ev.type === "question") setLive((l) => (l ? { ...l, steps: withStep(l.steps, ev, l.startedAt) } : l));
+        else if (ev.type === "text") setLive((l) => (l ? { ...l, text: l.text + ev.delta, steps: withStep(l.steps, ev, l.startedAt) } : l));
+        else if (ev.type === "text_done") setLive((l) => (l ? { ...l, text: ev.text, steps: withStep(l.steps, ev, l.startedAt) } : l));
+        else if (ev.type === "draft_start") setLive((l) => (l ? { ...l, draft: { css: "", html: "", fonts: [] } } : l));
+        else if (ev.type === "draft") {
+          setLive((l) => {
+            if (!l) return l;
+            const d = l.draft ?? { css: "", html: "", fonts: [] };
+            return { ...l, draft: { css: d.css + (ev.css ?? ""), html: d.html + (ev.html ?? ""), fonts: ev.fonts ?? d.fonts } };
+          });
+        } else if (ev.type === "doc") {
           setLastDoc({ variantId, doc: ev.doc });
           setDocVersion((v) => v + 1);
         } else if (ev.type === "error") setLive((l) => (l ? { ...l, error: ev.message, status: null } : l));
@@ -167,7 +197,7 @@ export function useBuilder({
         setQueue((q) => q.filter((x) => x !== id));
         if (kind === "generate" && waitFor) {
           onStart?.(id);
-          setLive({ variantId: id, kind, status: "Waiting for the audience", spans: [], steps: [], text: "", error: null, prompt: message, attachments });
+          setLive(newTurn({ variantId: id, kind, status: "Waiting for the audience", prompt: message, attachments }));
           let ok = false;
           try {
             ok = await waitFor(id, (text) => setLive((l) => (l && l.variantId === id ? { ...l, status: text } : l)), () => run.current !== mine);

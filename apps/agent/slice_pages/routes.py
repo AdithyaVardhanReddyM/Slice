@@ -152,6 +152,11 @@ async def name_clusters_route(req: NameClustersRequest) -> dict[str, Any]:
 # --- page plan (the builder's first prompt) ----------------------------------------------------
 
 
+class PlanTurn(BaseModel):
+    role: str  # "merchant" | "agent"
+    text: str = ""
+
+
 class PlanRequest(BaseModel):
     brand_id: str
     prompt: str
@@ -159,15 +164,29 @@ class PlanRequest(BaseModel):
     model: str | None = None
     # The page the merchant was editing when they asked for this one (start_new_page).
     source_page_id: str | None = None
+    # Questions asked so far and the merchant's answers, after the first prompt.
+    conversation: list[PlanTurn] = []
+    # False when nobody is there to answer (the builder's hand-off): always plan.
+    ask: bool = True
 
 
 @router.post("/plan")
 async def plan(req: PlanRequest) -> dict[str, Any]:
     spans = start_turn()
     try:
-        result = await plan_page(req.brand_id, req.prompt, req.audience_ids, model=req.model if req.model in B.MODELS else B.MODEL, source_page_id=req.source_page_id)
+        result = await plan_page(
+            req.brand_id,
+            req.prompt,
+            req.audience_ids,
+            model=req.model if req.model in B.MODELS else B.MODEL,
+            source_page_id=req.source_page_id,
+            conversation=[t.model_dump() for t in req.conversation],
+            ask=req.ask and not req.source_page_id,
+        )
     except Exception as err:
         return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
+    if result.get("question"):
+        return {"ok": True, "question": result["question"], "trace": spans}
     return {"ok": True, "plan": result, "trace": spans}
 
 
@@ -330,6 +349,50 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
     return ""
 
 
+def _urls(values: Any, limit: int = 8) -> list[str]:
+    out: list[str] = []
+    for u in values:
+        if isinstance(u, str) and u.startswith(("http://", "https://")) and u not in out:
+            out.append(u)
+    return out[:limit]
+
+
+def _faces(entities: Any, limit: int = 8) -> list[dict[str, str]]:
+    return [{"name": str(e.get("name") or ""), "image": e["image"]} for e in entities if isinstance(e, dict) and isinstance(e.get("image"), str) and e["image"].startswith("http")][:limit]
+
+
+def _preview(name: str, resp: Any) -> dict[str, Any] | None:
+    """What a tool brought back, small enough for the chat step and the build canvas: photos, faces, words."""
+    if not isinstance(resp, dict) or resp.get("ok") is False:
+        return None
+    out: dict[str, Any] = {}
+    if name == "get_audience_detail":
+        tags = [t for v in (resp.get("tags") or {}).values() for t in v if isinstance(t, dict) and t.get("name")]
+        out["chips"] = [t["name"] for t in sorted(tags, key=lambda t: -(t.get("affinity") or 0))[:8]]
+        out["faces"] = _faces([e for v in (resp.get("culture") or {}).values() for e in v] + list(resp.get("brands") or []))
+    elif name == "get_brand_site":
+        out["images"] = _urls(i.get("src") for i in resp.get("images") or [] if isinstance(i, dict))
+    elif name == "pick_items":
+        items = [i for i in resp.get("items") or [] if isinstance(i, dict)]
+        out["images"] = _urls(i.get("image") for i in items)
+        out["chips"] = [str(i["name"]) for i in items[:6] if i.get("name")]
+    elif name == "search_images":
+        out["images"] = _urls(i.get("src") for i in resp.get("images") or [] if isinstance(i, dict))
+    elif name == "generate_image":
+        out["images"] = _urls([(resp.get("image") or {}).get("src")])
+    elif name in ("qloo_places", "qloo_culture", "qloo_search", "qloo_insights"):
+        ents = resp.get("places") or resp.get("items") or resp.get("results") or []
+        out["faces"] = _faces(ents)
+        if not out["faces"]:
+            out["chips"] = [str(e.get("name")) for e in ents if isinstance(e, dict) and e.get("name")][:8]
+    elif name == "review_page":
+        out["notes"] = [str(i.get("what"))[:160] for i in (resp.get("issues") or []) if isinstance(i, dict) and i.get("what")][:3]
+        out["images"] = _urls([resp.get("screenshot")])
+    elif name in ("write_page", "edit_page"):
+        out["chips"] = [str(x) for x in resp.get("sections") or []][:12]
+    return {k: v for k, v in out.items() if v} or None
+
+
 async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     t_start = time.perf_counter()
     spans: list[Span] = start_turn()
@@ -353,6 +416,11 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
 
     sid = f"{req.page_id}:{req.variant_id}"
     session = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=sid)
+    # The page changed outside this conversation (replaced, or saved from the console): its memory
+    # of writing the old markup would contradict the page, so start over from the saved chat.
+    if session is not None and int(session.state.get(B.DOC_VERSION) or 0) != int(state.get(B.DOC_VERSION) or 0):
+        await sessions.delete_session(app_name=APP_NAME, user_id=sid, session_id=sid)
+        session = None
     fresh_session = session is None
     # The brand's homepage, captured once, is what every version must look like.
     brand = state[B.BRAND]
@@ -411,16 +479,30 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     streamed = ""
     seen_calls: set[str] = set()
     last_doc: Any = state.get(B.DOC)
-    # The turn as the chat shows it, persisted with the reply.
+    # The turn as the chat shows it, persisted with the reply. Each step has `t` (ms into the
+    # turn) and, once it is over, `ms`.
     steps: list[dict[str, Any]] = []
     thought_streamed = 0
     call_args: dict[str, Any] = {}
+    question: dict[str, Any] | None = None
+    # write_page's arguments stream in as the model writes them (stream_function_call_arguments).
+    drafting: str | None = None
+    draft_fonts: dict[str, str] = {}
+
+    def at() -> int:
+        return int((time.perf_counter() - t_start) * 1000)
+
+    def push(step: dict[str, Any]) -> None:
+        # A thought or reply ends where the next step begins.
+        if steps and steps[-1].get("kind") in ("thought", "text") and "ms" not in steps[-1]:
+            steps[-1]["ms"] = max(0, at() - steps[-1].get("t", at()))
+        steps.append({**step, "t": at()})
 
     def add_text(delta: str, kind: str) -> None:
         if steps and steps[-1].get("kind") == kind:
             steps[-1]["text"] += delta
         else:
-            steps.append({"kind": kind, "text": delta})
+            push({"kind": kind, "text": delta})
     try:
         runner = runners.get(req.model or "") or runners[B.MODEL]
         async for ev in runner.run_async(
@@ -436,6 +518,32 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             if not ev.content or not ev.content.parts:
                 continue
             for part in ev.content.parts:
+                if part.function_call and ev.partial:
+                    # A call being written. write_page is announced now and its markup forwarded
+                    # as it arrives; the complete call that follows is not announced again.
+                    fc = part.function_call
+                    if fc.name:
+                        drafting = fc.name
+                        if fc.name == "write_page":
+                            label = B.STATUS_FOR_TOOL["write_page"]
+                            draft_fonts = {}
+                            push({"kind": "tool", "name": "write_page", "label": label, "status": "running", "draft": True})
+                            yield _ndjson({"type": "status", "text": label})
+                            yield _ndjson({"type": "tool_call", "name": "write_page", "label": label, "args": {}})
+                            yield _ndjson({"type": "draft_start"})
+                    if drafting != "write_page":
+                        continue
+                    for pa in fc.partial_args or []:
+                        path = pa.json_path or ""
+                        chunk = pa.string_value or ""
+                        if not chunk:
+                            continue
+                        if path in ("$.css", "$.html"):
+                            yield _ndjson({"type": "draft", path[2:]: chunk})
+                        elif path.startswith("$.meta.fonts"):
+                            draft_fonts[path] = draft_fonts.get(path, "") + chunk
+                            yield _ndjson({"type": "draft", "fonts": list(draft_fonts.values())})
+                    continue
                 if part.function_call:
                     name = part.function_call.name or ""
                     key = part.function_call.id or f"{name}:{json.dumps(_safe(part.function_call.args), sort_keys=True)}"
@@ -443,12 +551,17 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                         continue
                     seen_calls.add(key)
                     label = B.STATUS_FOR_TOOL.get(name, "Working")
+                    call_args[name] = part.function_call.args
+                    drafting = None
+                    if name == "write_page" and any(st.get("kind") == "tool" and st.get("name") == name and st.get("status") == "running" and st.get("draft") for st in steps):
+                        continue  # announced when its arguments started streaming
+                    if name == "ask_merchant":
+                        continue  # shown as the question once it returns
                     yield _ndjson({"type": "status", "text": label})
                     args = _safe(part.function_call.args)
                     if isinstance(args, dict):
                         args = {k: (f"<{len(str(v))} chars>" if k in ("doc", "html", "css", "edits", "sections", "strategy") else v) for k, v in args.items()}
-                    call_args[name] = part.function_call.args
-                    steps.append({"kind": "tool", "name": name, "label": label, "status": "running"})
+                    push({"kind": "tool", "name": name, "label": label, "status": "running"})
                     yield _ndjson({"type": "tool_call", "name": name, "label": label, "args": args})
                     if name == "start_new_page":
                         a = part.function_call.args or {}
@@ -460,14 +573,25 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                     name = part.function_response.name or ""
                     resp = part.function_response.response or {}
                     ok = bool(resp.get("ok", True))
+                    if name == "ask_merchant":
+                        if ok:
+                            question = {"text": resp.get("question"), "options": resp.get("options") or [], "other": resp.get("other") or ""}
+                            push({"kind": "question", "question": question})
+                            yield _ndjson({"type": "question", "question": question})
+                        continue
                     summary = _summarise(name, call_args.get(name), resp)
+                    preview = _preview(name, resp)
                     for st in reversed(steps):
                         if st.get("kind") == "tool" and st.get("name") == name and st.get("status") == "running":
                             st["status"] = "done" if ok else "failed"
+                            st["ms"] = max(0, at() - st.get("t", at()))
+                            st.pop("draft", None)
                             if summary:
                                 st["summary"] = summary
+                            if preview:
+                                st["preview"] = preview
                             break
-                    yield _ndjson({"type": "tool_result", "name": name, "ok": ok, "summary": summary, "problems": resp.get("problems")})
+                    yield _ndjson({"type": "tool_result", "name": name, "ok": ok, "summary": summary, "problems": resp.get("problems"), **({"preview": preview} if preview else {})})
                     fresh = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=session.id)
                     st = fresh.state if fresh else {}
                     v = int(st.get(B.DOC_VERSION) or 0)
@@ -512,6 +636,9 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         emitted += 1
     spans.sort(key=lambda sp: sp.get("started", 0))
     full_text = "\n\n".join(t.strip() for t in text_parts if t.strip())
+    # A turn that ends on a question: the question is the reply (and what the history replays).
+    if question and not full_text:
+        full_text = str(question.get("text") or "")
     total_ms = int((time.perf_counter() - t_start) * 1000)
     if kind == "generate" and last_doc is None:
         yield _ndjson({"type": "error", "message": "The builder finished without writing a page"})
@@ -522,6 +649,9 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     for st in steps:
         if st.get("kind") == "tool" and st.get("status") == "running":
             st["status"] = "failed"
+        st.pop("draft", None)
+        if "ms" not in st:
+            st["ms"] = max(0, total_ms - st.get("t", total_ms))
     yield _ndjson({"type": "done", "messageId": message_id, "variantId": req.variant_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": doc_version})
     asyncio.create_task(_persist_build(req, message_id, merchant_text, full_text, spans, steps))
     # The builder explains its own work (explain_page); if this turn changed the page without it, reconstruct the explanation.

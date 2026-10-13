@@ -7,7 +7,7 @@ import { Globe, Image as ImageIcon, Lightbulb, Settings2, X } from "lucide-react
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import type { Audience, Build, Page, Variant } from "@/lib/pages/types";
+import { briefOf, type Audience, type Build, type BrandItem, type Page, type Variant } from "@/lib/pages/types";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { PageSkeleton } from "@/components/console/primitives";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -104,6 +104,7 @@ function PageEditor() {
   }, []);
 
   const [model, setModel] = usePagesModel();
+  const items = useMemo(() => ((briefOf(brand)?.items ?? []) as BrandItem[]), [brand]);
 
   /** The agent asked for a page for another audience: plan it, create it, open it (it builds there). */
   const onNewPage = useCallback(
@@ -191,6 +192,8 @@ function PageEditor() {
           build={build}
           live={builder.live}
           audiences={brandAudiences}
+          items={items}
+          onAnswer={({ text }) => version && void builder.send(version._id, text)}
           empty={<ChatWelcome brand={brand} audiences={brandAudiences} onPick={(parts) => composer.current?.set(parts)} />}
           composer={
             <PromptComposer
@@ -228,13 +231,13 @@ function PageEditor() {
             <div className={cn("grid min-h-0 flex-1 gap-3", side && "xl:grid-cols-[minmax(0,1fr)_22rem]")}>
               <PreviewFrame
                 ref={frame}
-                brandSlug={brand.slug}
+                brand={brand}
                 pageSlug={page.slug}
                 variant={version}
                 device={device}
                 reloadKey={builder.docVersion}
                 className="min-h-0"
-                building={builder.live && !builder.live.handoff ? builder.live.status : null}
+                live={builder.live && !builder.live.handoff ? builder.live : null}
                 onBuild={() => version && void builder.generate(version._id)}
                 busy={builder.busy}
               />

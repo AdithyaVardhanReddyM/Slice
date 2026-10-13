@@ -389,6 +389,19 @@ export const appendBuild = internalMutation({
   },
 });
 
+/** Replaces the page's whole chat (demo tooling: a page rewritten outside the builder gets a chat that matches it). */
+export const setBuildMessages = internalMutation({
+  args: { pageId: v.id("pages"), messages: v.array(buildMessageValidator) },
+  returns: v.null(),
+  handler: async (ctx, { pageId, messages }) => {
+    const now = Date.now();
+    const existing = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique();
+    if (existing) await ctx.db.patch(existing._id, { messages, updatedAt: now });
+    else await ctx.db.insert("pagesBuilds", { pageId, messages, createdAt: now, updatedAt: now });
+    return null;
+  },
+});
+
 /* Delete ------------------------------------------------------------------- */
 
 /** Removes the page, its variants and chat now; events/stats/forms/sessions are purged in scheduled batches. */

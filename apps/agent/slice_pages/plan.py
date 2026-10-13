@@ -8,6 +8,11 @@ prompt names a group in plain words ("for people under 25", "for Berlin").
 A page is one version: for everyone, for one audience, or for several
 audiences combined into one group. The builder's start_new_page passes the
 page it came from (`source_page_id`), whose settings carry over.
+
+When the prompt leaves something out that would change the page a lot (what
+it is about, the offer, who it is for when it hints at targeting), the planner
+asks one question with options instead of planning, up to MAX_QUESTIONS per
+conversation; the console sends the answers back as `conversation`.
 """
 
 from __future__ import annotations
@@ -20,10 +25,36 @@ from .llm import generate_json
 
 AGES = ["24_and_younger", "25_to_29", "30_to_34", "35_to_44", "45_to_54", "55_and_older"]
 GOALS = ["launch", "sale", "subscription", "waitlist", "booking", "other"]
+MAX_QUESTIONS = 3
+# Icons the console can draw next to an option (lucide, mapped in the console).
+OPTION_ICONS = ["users", "globe", "tag", "ticket", "calendar", "mail", "cart", "gift", "map-pin", "music", "heart", "percent", "clock", "star", "megaphone", "pencil", "layout"]
 
 PLAN_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
+        "action": {"type": "string", "enum": ["ask", "plan"]},
+        "question": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string"},
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "label": {"type": "string"},
+                            "detail": {"type": "string"},
+                            "icon": {"type": "string", "enum": OPTION_ICONS},
+                            "audienceId": {"type": "string"},
+                            "itemId": {"type": "string"},
+                        },
+                        "required": ["label", "icon"],
+                    },
+                },
+                "other": {"type": "string"},
+            },
+            "required": ["text", "options", "other"],
+        },
         "title": {"type": "string"},
         "slug": {"type": "string"},
         "goal": {"type": "string", "enum": GOALS},
@@ -50,7 +81,7 @@ PLAN_SCHEMA: dict[str, Any] = {
         },
         "reply": {"type": "string"},
     },
-    "required": ["title", "slug", "goal", "ctaLabel", "ctaHref", "itemIds", "existingAudienceIds", "newAudiences", "reply"],
+    "required": ["action"],
 }
 
 
@@ -67,7 +98,43 @@ def _audience_line(a: dict[str, Any]) -> str:
     return f"  - {a['_id']}: {a.get('name')} [{a.get('kind')}{'; ' + '; '.join(bits) if bits else ''}]"
 
 
-async def plan_page(brand_id: str, prompt: str, mentioned: list[str], *, model: str = "gemini-3.8-flash", source_page_id: str | None = None) -> dict[str, Any]:
+def _transcript(prompt: str, conversation: list[dict[str, Any]]) -> str:
+    lines = [f"Merchant: {prompt.strip()}"]
+    for t in conversation:
+        text = str(t.get("text") or "").strip()
+        if text:
+            lines.append(f"{'Merchant' if t.get('role') == 'merchant' else 'You'}: {text}")
+    return "\n".join(lines)
+
+
+def _question(q: dict[str, Any], items: set[str], audiences: set[str]) -> dict[str, Any] | None:
+    options = []
+    for o in q.get("options") or []:
+        label = str(o.get("label") or "").strip()
+        if not label:
+            continue
+        opt: dict[str, Any] = {"label": label[:60], "detail": str(o.get("detail") or "").strip()[:120], "icon": o.get("icon") if o.get("icon") in OPTION_ICONS else "layout"}
+        if o.get("audienceId") in audiences:
+            opt["audienceId"] = o["audienceId"]
+        if o.get("itemId") in items:
+            opt["itemId"] = o["itemId"]
+        options.append(opt)
+    text = str(q.get("text") or "").strip()
+    if not text or len(options) < 2:
+        return None
+    return {"text": text, "options": options[:4], "other": str(q.get("other") or "").strip()[:80] or "Type your own answer"}
+
+
+async def plan_page(
+    brand_id: str,
+    prompt: str,
+    mentioned: list[str],
+    *,
+    model: str = "gemini-3.8-flash",
+    source_page_id: str | None = None,
+    conversation: list[dict[str, Any]] | None = None,
+    ask: bool = True,
+) -> dict[str, Any]:
     brand = await convex.query("pagesBrands:get", {"id": brand_id})
     if not brand:
         raise ValueError(f"brand {brand_id} not found")
@@ -94,6 +161,20 @@ Its brief: {sb.get('prompt', '')}
 Keep its goal, offer, CTA and items unless the request changes them. The title names the new audience ("Camping pass for under 25s"); the slug is new.
 """
 
+    conversation = conversation or []
+    asked = sum(1 for t in conversation if t.get("role") != "merchant")
+    may_ask = ask and asked < MAX_QUESTIONS
+    if may_ask:
+        ask_block = f"""ASK OR PLAN (action)
+- plan when you can set the page up well from the conversation: it says what the page is about (a product, an event, a season, an offer) and the goal is clear or obvious. Who it is for may go unsaid: a page with no audiences is for everyone, a fine default. If the merchant leaves a choice to you ("whatever", "you decide"), decide and plan.
+- ask only when a missing answer would change the page a lot and the request, the brand and its items cannot tell you: what the page is about when the request is vague ("a landing page", "something for summer"); the offer when they want a sale or promotion but name none; who it is for when they hint at targeting without saying who ("a personalised page", "for our fans", "for a specific crowd"). Never ask what the conversation already answers, and never about the title, slug or wording. One question per turn; {asked} of at most {MAX_QUESTIONS} asked so far.
+- question.text: one short question in plain words, ending with a question mark. After an answer, open with a few words that show you got it ("Got it, a summer sale. What is the offer?").
+- question.options: 2 to 4 concrete choices drawn from this brand: its items (set itemId), its saved audiences (set audienceId; add "Everyone" with icon globe when asking who the page is for), its site CTAs, offers that suit it. label 2 to 5 words in sentence case; detail one short line; icon from the list.
+- question.other: a placeholder for typing their own answer ("Describe the offer").
+- When you ask, leave the plan fields out."""
+    else:
+        ask_block = "PLAN NOW (action \"plan\"): decide anything the conversation leaves open yourself."
+
     text = f"""You set up a targeted landing page for {brand.get('name')} ({brand.get('url')}) from the merchant's request. A page is built for one audience, or for several audiences combined into one group, or for everyone when it names none; a builder agent then writes it from Qloo taste data. Decide the page settings and the audiences.
 
 BRAND: {brief.get('summary', '')}
@@ -107,13 +188,15 @@ OTHER SAVED AUDIENCES (include one only if the request clearly describes it, e.g
 {chr(10).join(_audience_line(a) for a in others[:30]) or '  (none)'}
 
 {source_block}
-MERCHANT'S REQUEST:
-{prompt}
+CONVERSATION (the merchant's request, then any questions you asked and their answers; later answers win):
+{_transcript(prompt, conversation)}
 
-RULES
+{ask_block}
+
+RULES FOR THE PLAN
 - title: short page name in sentence case, 2 to 5 words, the way a marketer would label it internally ("Summer pass launch"). slug: lowercase words joined by hyphens, 1 to 4 words.
 - goal: launch (new product, event, opening), sale (discount or offer), subscription, waitlist (sign ups before availability), booking (rooms, tables, appointments), else other.
-- offer: only if the request states one (a discount, a perk, a bundle price); otherwise an empty string. Never invent one.
+- offer: only if the conversation states one (a discount, a perk, a bundle price); otherwise an empty string. Never invent one.
 - ctaLabel: 1 to 3 words in sentence case, matching the goal and the brand's site CTAs ("Get tickets", "Book a room", "Join the waitlist"). ctaHref: the URL of the item the page is about when there is exactly one, else the brand URL {brand.get('url')}.
 - itemIds: the items the request is about or clearly implies, by id, at most 6. Empty when the request is general; the builder then ranks items by taste.
 - newAudiences: only when the request asks to target or personalise for a group that no mentioned or saved audience covers. One per group named. Several groups in one request ("for Berlin under 25s", "for London and Paris") all go on this one page, combined. kind demographic for age or gender ("under 20" and "teenagers" map to age 24_and_younger, "students" too; "over 60" to 55_and_older; gender only when stated), location for a city or country (city, country), interests for people defined by what they love (interests: 2 to 6 artists, brands, films, books or places that define them). name: a short audience name in sentence case ("Under 25s", "Berlin", "Indie music fans"). Do not create an audience for "everyone"; a page with no audiences is for everyone.
@@ -125,11 +208,15 @@ RULES
         name="Plan the page from the prompt",
         temperature=0.3,
         model=model,
-        result=lambda p: f"{p.get('title')} ({p.get('goal')}), {len(p.get('existingAudienceIds') or [])} saved + {len(p.get('newAudiences') or [])} new audiences",
+        result=lambda p: f"asks: {(p.get('question') or {}).get('text')}" if p.get("action") == "ask" else f"{p.get('title')} ({p.get('goal')}), {len(p.get('existingAudienceIds') or [])} saved + {len(p.get('newAudiences') or [])} new audiences",
     )
 
     known_items = {it["id"] for it in items}
     known_audiences = {a["_id"] for a in audiences}
+    if may_ask and plan.get("action") == "ask":
+        q = _question(plan.get("question") or {}, known_items, known_audiences)
+        if q:
+            return {"question": q}
     ids = [i for i in (plan.get("existingAudienceIds") or []) if i in known_audiences]
     for i in mentioned:
         if i in known_audiences and i not in ids:

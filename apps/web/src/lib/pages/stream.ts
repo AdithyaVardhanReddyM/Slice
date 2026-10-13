@@ -10,20 +10,67 @@ export type PagesAgentEvent =
   | { type: "span"; span: Span }
   | { type: "thought"; delta: string }
   | { type: "tool_call"; name: string; label?: string; args?: unknown }
-  | { type: "tool_result"; name: string; ok: boolean; summary?: string; problems?: string[] | null }
+  | { type: "tool_result"; name: string; ok: boolean; summary?: string; problems?: string[] | null; preview?: StepPreview }
   | { type: "text"; delta: string }
   | { type: "text_done"; text: string }
   | { type: "doc"; doc: PageDoc }
+  /** write_page has started streaming its arguments; `draft` events carry them as they are written. */
+  | { type: "draft_start" }
+  | { type: "draft"; css?: string; html?: string; fonts?: string[] }
+  /** The agent asked the merchant a question (ask_merchant); the turn ends on it. */
+  | { type: "question"; question: Question }
   /** The agent asked for a separate page (another audience); the console plans and opens it. */
   | { type: "new_page"; request: string; audienceIds: string[] }
   | { type: "error"; message: string }
   | { type: "done"; messageId?: string; text?: string; trace?: Span[]; [k: string]: unknown };
 
-/** One entry of an agent turn as the chat shows it; persisted on build messages as `steps`. */
+/** What a tool brought back, small enough to show: photos, faces from Qloo, words, review notes. */
+export interface StepPreview {
+  images?: string[];
+  faces?: { name: string; image: string }[];
+  chips?: string[];
+  notes?: string[];
+}
+
+/** An option the planner or the builder offers; `audienceId` / `itemId` draw that audience's face or item's photo. */
+export interface QuestionOption {
+  label: string;
+  detail?: string;
+  icon?: string;
+  audienceId?: string;
+  itemId?: string;
+}
+
+export interface Question {
+  text: string;
+  options: QuestionOption[];
+  /** Placeholder for a typed answer; empty when only the options make sense. */
+  other?: string;
+}
+
+/** The page the planner set up, as the chat recaps it. */
+export interface PlanRecap {
+  title: string;
+  goal: string;
+  offer?: string;
+  cta: { label: string; href: string };
+  itemIds: string[];
+  audienceIds: string[];
+  /** Audiences the plan creates from plain words (not saved yet when the recap shows). */
+  newAudiences?: string[];
+}
+
+/**
+ * One entry of an agent turn as the chat shows it; persisted on build messages
+ * as `steps`. `t` is when it began (ms into the turn), `ms` how long it took.
+ */
 export type BuildStep =
-  | { kind: "thought"; text: string; ms?: number }
-  | { kind: "tool"; name: string; label: string; status: "running" | "done" | "failed"; summary?: string; ms?: number }
-  | { kind: "text"; text: string };
+  | { kind: "thought"; text: string; t?: number; ms?: number }
+  | { kind: "tool"; name: string; label: string; status: "running" | "done" | "failed"; summary?: string; preview?: StepPreview; t?: number; ms?: number }
+  | { kind: "text"; text: string; t?: number; ms?: number }
+  | { kind: "question"; question: Question; t?: number }
+  /** The planner's setup of a new page; `confirm` while it waits for the merchant's go-ahead. */
+  | { kind: "plan"; plan: PlanRecap; confirm?: boolean; t?: number };
 
 /** What a tool is doing, in the merchant's words, when the agent did not say. */
 export const TOOL_LABEL: Record<string, string> = {
@@ -45,6 +92,7 @@ export const TOOL_LABEL: Record<string, string> = {
   review_page: "Reviewing the page against the brand's homepage",
   start_new_page: "Starting a new page",
   explain_page: "Writing up why the page is built this way",
+  ask_merchant: "Asking you a question",
 };
 
 export async function* postStream(

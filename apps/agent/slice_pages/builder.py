@@ -37,6 +37,7 @@ from .audience_brief import profile_summary
 from .insights import catalogue, quote_on_page, remember_entities, resolve_name, section_text
 from .llm import clip, generate_json, generate_text
 from .pagedoc import section_ids, validate_html_doc
+from .plan import OPTION_ICONS
 from .skills import load_skills
 
 MODEL = "gemini-3.8-flash"
@@ -254,7 +255,7 @@ HTML_CONTRACT = """PAGE CONTRACT
 - Calls to action: every primary link or button carries data-cta="<label>"; the main one uses the page's CTA href. In-page links use "#<section id>". Item links use the item's url from the brief.
 - Forms (waitlist, booking, enquiry): <form data-pg-form="<name>" data-success="<message shown after sending">, labels above inputs with name attributes, a required email, and a submit button. The page's tracker posts it; write no action attribute and no script.
 - Images: only URLs returned by tools or listed under SITE PHOTOS / ITEMS. Never invent a URL. Every img has alt text, width and height or a CSS aspect ratio, loading="lazy" below the fold.
-- CSS: modern vanilla CSS; use the kit tokens for brand colours and fonts; clamp() for type and spacing; grid and flex; mobile first with min-width media queries; class names prefixed "p-" so they never collide; no @import (extra Google fonts go in meta.fonts), no url() except https images, no !important.
+- CSS: modern vanilla CSS; use the kit tokens for brand colours and fonts; clamp() for type and spacing; grid and flex; mobile first with min-width media queries; class names prefixed "p-" so they never collide; no @import (extra Google fonts go in meta.fonts by family name, e.g. "Manrope"; a heavier or expanded cut of a kit font uses Google's axis syntax there, e.g. "Archivo:wdth,wght@125,900" with font-stretch: 125% in the css), no url() except https images, no !important.
 - Inline SVG icons are fine (small, currentColor). No external scripts, no embeds, no iframes.
 - Keep the whole page under 60,000 characters of html and 20,000 of css."""
 
@@ -302,7 +303,8 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
 6. Reply to the merchant in 2 to 4 sentences: what the page leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
 
     edit_rules = f"""HOW TO EDIT (kind = edit)
-Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Then explain_page for the sections whose words, pictures or purpose changed (only those; add strategy only if the page's angle changed; after a write_page, explain the whole page). Reply in one or two sentences saying what changed."""
+Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Then explain_page for the sections whose words, pictures or purpose changed (only those; add strategy only if the page's angle changed; after a write_page, explain the whole page). Reply in one or two sentences saying what changed.
+ASKING: when the message could mean quite different changes and a wrong guess would waste the merchant's time (which of two sections, which of two directions, "make it pop"), call ask_merchant instead of guessing: one short question, 2 to 4 concrete options drawn from this page (name its sections, items or phrases), and other set so they can type their own. Never ask about what you can decide yourself (wording, spacing, which photo), never twice in a row, and never in a generate turn."""
 
     return f"""You are the Slice page builder. You write a landing page for {brand.get('name', 'this brand')} aimed at its audience, as complete HTML and CSS, so that it looks like a page the brand's own designers made: an extension of their site, not a template. Taste comes from Qloo, the cultural taste graph: an audience is defined by what its people love (artists, films, places, brands) and by Qloo's tags for them. You can see your own work: review_page screenshots the page and compares it with the brand's homepage.
 
@@ -948,14 +950,15 @@ def _coerce(value: Any, what: str) -> Any:
     return value
 
 
-async def write_page(html: str, css: str, meta: dict, sections: list, tool_context: ToolContext) -> dict:
+async def write_page(meta: dict, css: str, html: str, sections: list, tool_context: ToolContext) -> dict:
     """Write the whole page (replaces the current one). Validated against the page contract;
-    when problems come back, fix them and call again.
+    when problems come back, fix them and call again. The merchant watches the page appear as
+    you write it, so give the arguments in this order: meta, css, html (top to bottom), sections.
 
     Args:
-        html: The body markup: header, sections and footer, each with data-section="<id>".
-        css: The page stylesheet (vanilla CSS, kit tokens, "p-" class prefix, mobile first).
         meta: {title, description, image?, fonts?}: the page title and description for search; image is the og image URL; fonts lists extra Google font families the css uses.
+        css: The page stylesheet (vanilla CSS, kit tokens, "p-" class prefix, mobile first).
+        html: The body markup: header, sections and footer, each with data-section="<id>".
         sections: One {id, label, evidence} per data-section, in page order; evidence names the Qloo tags, brands or entities behind it.
     """
     try:
@@ -1353,6 +1356,37 @@ async def start_new_page(request: str, audience_ids: list[str], tool_context: To
     return {"ok": True, "note": "The console is creating the new page and will open it; nothing to do on this page."}
 
 
+async def ask_merchant(question: str, options: list, tool_context: ToolContext, other: str = "") -> dict:
+    """Ask the merchant one question with options to pick from, when their message could mean
+    quite different changes and a wrong guess would waste their time. The question shows in the
+    chat as your reply and the turn ends; their answer arrives as the next message. Call it alone,
+    and write nothing after it.
+
+    Args:
+        question: One short question in plain words, ending with a question mark.
+        options: 2 to 4 options, each {label, detail, icon}: label 2 to 6 words naming a concrete choice
+            (a section, an item, a direction), detail one short line on what it means, icon one of
+            users, globe, tag, ticket, calendar, mail, cart, gift, map-pin, music, heart, percent,
+            clock, star, megaphone, pencil, layout.
+        other: Placeholder for a typed answer ("Describe the change"), or "" for none.
+    """
+    try:
+        raw = _coerce(options, "options")
+    except ValueError as err:
+        return {"ok": False, "error": str(err)}
+    opts = [
+        {"label": str(o.get("label") or "").strip()[:60], "detail": str(o.get("detail") or "").strip()[:120], "icon": o.get("icon") if o.get("icon") in OPTION_ICONS else "layout"}
+        for o in (raw or [])
+        if isinstance(o, dict) and str(o.get("label") or "").strip()
+    ][:4]
+    if not (question or "").strip() or len(opts) < 2:
+        return {"ok": False, "error": "ask one question with at least 2 options"}
+    # The answer is the merchant's next message: end the turn here, with the question as the reply.
+    tool_context.actions.skip_summarization = True
+    record("slice", "Ask the merchant", question.strip()[:140], ms=0)
+    return {"ok": True, "question": question.strip(), "options": opts, "other": (other or "").strip()[:80]}
+
+
 search_agent = LlmAgent(
     name="google_search",
     model=MODEL,
@@ -1382,6 +1416,7 @@ TOOLS = [
     review_page,
     explain_page,
     start_new_page,
+    ask_merchant,
 ]
 
 STATUS_FOR_TOOL = {
@@ -1403,6 +1438,7 @@ STATUS_FOR_TOOL = {
     "review_page": "Reviewing the page against the brand's homepage",
     "start_new_page": "Starting a new page",
     "explain_page": "Writing up why the page is built this way",
+    "ask_merchant": "Asking you a question",
 }
 
 
@@ -1416,6 +1452,8 @@ def _make_agent(model: str) -> LlmAgent:
         generate_content_config=types.GenerateContentConfig(
             thinking_config=types.ThinkingConfig(thinking_level="MEDIUM", include_thoughts=True),
             temperature=0.6,
+            # Arguments stream as they are written (Vertex), so the console can render write_page live.
+            tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(stream_function_call_arguments=True)),
         ),
         tools=TOOLS,
         after_tool_callback=_remember,
