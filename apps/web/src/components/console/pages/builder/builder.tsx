@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { Globe, Image as ImageIcon, Lightbulb, Settings2, X } from "lucide-react";
+import { Globe, Image as ImageIcon, Lightbulb, Settings2, SquareDashedMousePointer, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,10 @@ import { PublishDialog } from "./publish-dialog";
 import { PageSettingsSheet, type PageSettings } from "./settings-sheet";
 import { useStartPage } from "./start-page";
 import { usePagesModel } from "@/lib/pages/models";
+import { isHtmlDoc } from "@slice/backend/convex/pagesTypes";
 import { useBuilder } from "./use-builder";
+import { ModeSwitch, VisualEditor, type EditorMode } from "./visual/visual-editor";
+import { flash, useElementPicker } from "./visual/picker";
 
 interface PageBundle {
   page: Page;
@@ -77,6 +80,9 @@ function PageEditor() {
   const [side, setSide] = useState<"images" | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mode, setMode] = useState<EditorMode>("chat");
+  // "Select an element": the preview picks an element for the composer instead of being a page.
+  const [picking, setPicking] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const composer = useRef<ComposerHandle>(null);
 
@@ -126,6 +132,22 @@ function PageEditor() {
 
   const builder = useBuilder({ pageId: (page?._id ?? "") as Page["_id"], build, waitFor, model, onNewPage });
 
+  const sectionNames = useMemo(() => new Map(isHtmlDoc(version?.doc) ? version.doc.sections.map((s) => [s.id, s.label] as [string, string]) : []), [version]);
+  // Picking needs the page on screen, not the build canvas.
+  const canPick = !!version?.doc && !builder.busy && mode === "chat";
+  useElementPicker({
+    frame,
+    frameKey: `${version?._id}-${version?.version}-${builder.docVersion}`,
+    active: picking && canPick,
+    names: sectionNames,
+    onPick: (picked, el) => {
+      flash(el);
+      setPicking(false);
+      composer.current?.addElement(picked);
+    },
+    onCancel: () => setPicking(false),
+  });
+
   // A freshly created page lands here with ?generate=1: build it once (after its audiences compile).
   const kicked = useRef(false);
   useEffect(() => {
@@ -148,9 +170,17 @@ function PageEditor() {
   }
 
   /** Every message edits this page; the agent starts a new page when it asks for another audience. */
-  function send({ text, mentions, attachments }: ComposerValue) {
+  function send({ text, mentions, attachments, elements }: ComposerValue) {
     if (!version) return;
-    void builder.send(version._id, text, attachments, mentions.map((a) => ({ id: a._id, name: a.name })));
+    setPicking(false);
+    void builder.send(version._id, text, attachments, mentions.map((a) => ({ id: a._id, name: a.name })), elements);
+  }
+
+  // Hand editing needs a page written as HTML, and no builder turn running on it.
+  const editBlocked = !version?.doc ? "Build the page first" : !isHtmlDoc(version.doc) ? "Rebuild this page to edit it by hand" : builder.busy ? "The builder is working on the page" : null;
+
+  if (mode === "edit" && version && isHtmlDoc(version.doc)) {
+    return <VisualEditor key={version._id} brand={brand} page={page} version={version} onExit={() => setMode("chat")} />;
   }
 
   async function saveSettings(v: Partial<PageSettings>) {
@@ -175,6 +205,7 @@ function PageEditor() {
           brand={brand}
           title={page.title}
           badge={<StatusBadge status={page.status} />}
+          center={<ModeSwitch mode="chat" onChange={setMode} editDisabled={editBlocked} />}
           actions={
             <>
               <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
@@ -207,6 +238,9 @@ function PageEditor() {
               onModelChange={setModel}
               onUpload={upload}
               disabled={!version}
+              onPickElement={() => setPicking((p) => !p)}
+              picking={picking && canPick}
+              pickBlocked={!version?.doc ? "Available once the page is built" : builder.busy ? "Available when the builder is done" : null}
               onSubmit={(v) => void send(v)}
             />
           }
@@ -240,6 +274,19 @@ function PageEditor() {
                 live={builder.live && !builder.live.handoff ? builder.live : null}
                 onBuild={() => version && void builder.generate(version._id)}
                 busy={builder.busy}
+                overlay={
+                  picking && canPick ? (
+                    <div className="pointer-events-none absolute inset-x-0 top-3 z-10 flex justify-center px-3">
+                      <div className="pointer-events-auto flex items-center gap-2 rounded-full border bg-background/95 py-1 pr-1 pl-3 text-xs shadow-md backdrop-blur">
+                        <SquareDashedMousePointer className="size-3.5 text-blue-700" />
+                        <span>Click an element to add it to your message</span>
+                        <Button size="xs" variant="ghost" onClick={() => setPicking(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null
+                }
               />
               {side && (
                 <div className="scrollbar-thin min-h-0 overflow-y-auto overscroll-contain rounded-xl border bg-background p-4 shadow-xs">

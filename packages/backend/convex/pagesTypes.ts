@@ -360,9 +360,95 @@ export interface HtmlDoc {
   css: string;
   /** Why each section says what it says (console Insights); ids match `data-section`. */
   sections: { id: string; label: string; evidence: string }[];
+  /** What the merchant changed by hand in the visual editor (see HandEdits). */
+  hand?: HandEdits;
 }
 
 export type VariantDoc = PageDoc | HtmlDoc;
+
+/* Hand edits (the console's visual editor) ---------------------------------- */
+
+/**
+ * One element the merchant changed by hand. It carries `data-pg-id="<id>"`
+ * in the html; its styles render after the page CSS (so they win), and the
+ * content they set is recorded so the builder keeps it word for word.
+ */
+export interface HandElement {
+  /** How the merchant would name it: "Headline in Hero". */
+  label: string;
+  /** CSS declarations (property: value) on every screen. */
+  style?: Record<string, string>;
+  /** Overrides on phones (below 768px). */
+  phone?: Record<string, string>;
+  /** Declarations while the pointer is over it. */
+  hover?: Record<string, string>;
+  motion?: HandMotion;
+  /** Content set by hand: the text as they left it, the picture, the link. */
+  text?: string;
+  src?: string;
+  href?: string;
+  at: number;
+}
+
+export interface HandMotion {
+  /** Entrance: one of HAND_ENTRANCES. */
+  enter?: string;
+  /** When the entrance plays: once on load, or as the element scrolls into view. */
+  trigger?: "load" | "scroll";
+  /** Milliseconds. */
+  duration?: number;
+  delay?: number;
+  easing?: string;
+  /** One of HAND_HOVER_EFFECTS. */
+  hoverEffect?: string;
+}
+
+export interface HandEdits {
+  /** By `data-pg-id`. */
+  elements: Record<string, HandElement>;
+  /** Structural changes in plain words ("Removed the Reviews section"), oldest first. */
+  changes: { at: number; text: string }[];
+  /** The doc version the visual editor saved last. */
+  version?: number;
+}
+
+export const HAND_ENTRANCES = ["fade", "fade-up", "fade-down", "slide-left", "slide-right", "zoom", "blur"] as const;
+export const HAND_HOVER_EFFECTS = ["lift", "grow", "shrink", "dim", "glow"] as const;
+
+const HAND_ID = /^[a-z0-9-]{2,24}$/;
+const CSS_PROP = /^(--)?[a-z][a-z0-9-]*$/;
+const HAND_BAD_VALUE = /[{};<>]|javascript:|expression\s*\(|url\s*\(\s*["']?\s*(?!https?:|data:image\/)/i;
+
+/** Problems with a hand-edit layer; empty when fine. */
+export function validateHand(hand: unknown): string[] {
+  const problems: string[] = [];
+  const h = hand as Partial<HandEdits> | null;
+  if (!h || typeof h !== "object") return ["hand is not an object"];
+  if (!h.elements || typeof h.elements !== "object") problems.push("hand.elements missing");
+  else {
+    for (const [id, el] of Object.entries(h.elements)) {
+      if (!HAND_ID.test(id)) problems.push(`hand element id ${id} is not valid`);
+      if (!el || typeof el !== "object" || typeof el.label !== "string") {
+        problems.push(`hand element ${id} needs a label`);
+        continue;
+      }
+      for (const key of ["style", "phone", "hover"] as const) {
+        const decls = el[key];
+        if (decls === undefined) continue;
+        if (!decls || typeof decls !== "object") {
+          problems.push(`hand element ${id}.${key} is not an object`);
+          continue;
+        }
+        for (const [prop, value] of Object.entries(decls)) {
+          if (!CSS_PROP.test(prop)) problems.push(`hand element ${id}: ${prop} is not a CSS property`);
+          if (typeof value !== "string" || HAND_BAD_VALUE.test(value)) problems.push(`hand element ${id}: the value of ${prop} is not allowed`);
+        }
+      }
+    }
+  }
+  if (!Array.isArray(h.changes)) problems.push("hand.changes missing");
+  return problems;
+}
 
 export const isHtmlDoc = (doc: unknown): doc is HtmlDoc =>
   !!doc && typeof doc === "object" && (doc as { kind?: unknown }).kind === "html" && typeof (doc as { html?: unknown }).html === "string";
@@ -406,6 +492,7 @@ export function validateHtmlDoc(doc: unknown): string[] {
     }
   }
   if (typeof d.css === "string") for (const [re, msg] of CSS_FORBIDDEN) if (re.test(d.css)) problems.push(msg);
+  if (d.hand !== undefined) problems.push(...validateHand(d.hand));
   return problems;
 }
 

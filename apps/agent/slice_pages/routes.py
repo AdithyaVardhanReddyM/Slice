@@ -5,7 +5,7 @@ POST /pages/capture         {brand_id, url?}                   {ok, site}
 POST /pages/audience-brief  {audience_id}                      {ok, brief, name?}
 POST /pages/name-clusters   {upload_id}                        {ok, names}
 POST /pages/plan            {brand_id, prompt, audience_ids?, source_page_id?}  {ok, plan}
-POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?}   NDJSON stream
+POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?, hand_edits?, elements?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
 POST /pages/insights        {variant_id}                       {ok, insights}
 """
@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import time
 import uuid
 from typing import Any, AsyncIterator
@@ -248,7 +249,7 @@ async def _refresh_insights(variant_id: str) -> None:
 
 
 class HistoryMessage(BaseModel):
-    role: str  # "merchant" | "agent"
+    role: str  # "merchant" | "agent" | "edit" (the merchant's hand edits, one change per line)
     text: str = ""
 
 
@@ -263,6 +264,19 @@ class Mention(BaseModel):
     name: str = ""
 
 
+class PickedElement(BaseModel):
+    """An element the merchant picked on the page; the message refers to it as "[label]"."""
+
+    label: str
+    tag: str = ""
+    section: str = ""
+    text: str = ""
+    # Its markup as rendered in the preview (trimmed).
+    html: str = ""
+    # data-pg-id, when the merchant edited it by hand.
+    id: str | None = None
+
+
 class BuildRequest(BaseModel):
     page_id: str
     variant_id: str
@@ -273,6 +287,9 @@ class BuildRequest(BaseModel):
     attachments: list[Attachment] = []
     # Audiences the merchant @mentioned in the message.
     mentions: list[Mention] = []
+    # The change lines of the hand edits ("edit" messages) since the builder's last reply.
+    hand_edits: list[str] = []
+    elements: list[PickedElement] = []
 
 
 async def _image_part(url: str, mime_hint: str = "") -> types.Part | None:
@@ -290,21 +307,54 @@ async def _image_part(url: str, mime_hint: str = "") -> types.Part | None:
     return types.Part.from_bytes(data=data, mime_type=mime)
 
 
+def _change_lines(texts: list[str]) -> list[str]:
+    """One change per line, without list bullets."""
+    lines = (re.sub(r"^\s*(?:[-•*]\s+)?", "", line).strip() for t in texts for line in str(t or "").splitlines())
+    return [line for line in lines if line]
+
+
+def _elements_note(elements: list[PickedElement]) -> str:
+    """The elements the merchant picked on the page, so the builder works on exactly those."""
+    lines = ["[The merchant picked these elements on the page; the message refers to each by its [label]:"]
+    for i, e in enumerate(elements[:8], 1):
+        where = f" in the {e.section} section" if e.section else ""
+        pid = f' (data-pg-id="{e.id}")' if e.id else ""
+        text = f', text "{e.text[:240]}"' if e.text.strip() else ""
+        lines.append(f"{i}. [{e.label}]: <{e.tag or 'element'}>{where}{pid}{text}. Its markup as rendered:\n{e.html[:1800]}")
+    lines.append("Work on exactly these elements (or answer about them). The rendered markup can differ slightly from the source, so find them with get_page by their text, classes and section before edit_page.]")
+    return "\n".join(lines)
+
+
+def _hand_note(lines: list[str]) -> str:
+    return "[I edited the page by hand in the visual editor:\n" + "\n".join(f"- {line}" for line in lines[:40]) + "]"
+
+
 async def _replay(session: Any, history: list[HistoryMessage]) -> None:
     if not history:
         return
     invocation = f"replay-{uuid.uuid4().hex[:8]}"
     prev: str | None = None
+    # Hand edits ("edit" messages) are never model turns: they become a note on the next
+    # message from the merchant; trailing ones are covered by the current turn's note.
+    pending: list[str] = []
     for m in history:
         text = (m.text or "").strip()
         if not text:
             continue
+        if m.role == "edit":
+            pending += _change_lines([text])
+            continue
         if m.role == "merchant":
+            if pending:
+                text = _hand_note(pending) + "\n\n" + text
+                pending = []
             await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text=text)])))
             prev = "user"
         else:
             if prev != "user":
-                await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text="[Generate this page.]")])))
+                opener = (_hand_note(pending) + "\n\n" if pending else "") + "[Generate this page.]"
+                pending = []
+                await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text=opener)])))
             await sessions.append_event(session, Event(invocation_id=invocation, author=B.root_agent.name, content=types.Content(role="model", parts=[types.Part(text=text)])))
             prev = "model"
 
@@ -421,9 +471,14 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
     session = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=sid)
     # The page changed outside this conversation (replaced, or saved from the console): its memory
     # of writing the old markup would contradict the page, so start over from the saved chat.
-    if session is not None and int(session.state.get(B.DOC_VERSION) or 0) != int(state.get(B.DOC_VERSION) or 0):
-        await sessions.delete_session(app_name=APP_NAME, user_id=sid, session_id=sid)
-        session = None
+    # Unless the latest change was the merchant's hand edits: the conversation goes on (the state
+    # delta below refreshes the doc) and this turn's note tells the builder to re-read the page.
+    version = int(state.get(B.DOC_VERSION) or 0)
+    if session is not None and int(session.state.get(B.DOC_VERSION) or 0) != version:
+        hand_version = ((state.get(B.DOC) or {}).get("hand") or {}).get("version")
+        if not (isinstance(hand_version, (int, float)) and int(hand_version) == version):
+            await sessions.delete_session(app_name=APP_NAME, user_id=sid, session_id=sid)
+            session = None
     fresh_session = session is None
     # The brand's homepage, captured once, is what every version must look like.
     brand = state[B.BRAND]
@@ -452,6 +507,15 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         user_text += "\n[Audiences mentioned: " + "; ".join(
             f"@{m.name} (id {m.id}, {'this page is built for it' if m.id in own else 'not this page: a page for it is a new page'})" for m in req.mentions
         ) + "]"
+    hand_lines = _change_lines(req.hand_edits)
+    if hand_lines:
+        user_text += (
+            "\n\n[Since your last reply the merchant edited the page by hand in the visual editor:\n"
+            + "\n".join(f"- {line}" for line in hand_lines[:40])
+            + "\nThe markup changed, so call get_page before edit_page. These edits are theirs: keep them.]"
+        )
+    if req.elements:
+        user_text += "\n\n" + _elements_note(req.elements)
     parts: list[types.Part] = [types.Part(text=user_text)]
     # The homepage screenshots go with the first turn of a session (and every generate), so the model sees the brand.
     if fresh_session or kind == "generate":
@@ -681,7 +745,17 @@ async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str,
     now = int(time.time() * 1000)
     messages = [
         *(
-            [{"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, "variantId": req.variant_id, **({"attachments": [a.model_dump() for a in req.attachments]} if req.attachments else {})}]
+            [
+                {
+                    "id": f"{message_id}-m",
+                    "role": "merchant",
+                    "at": now,
+                    "text": merchant_text,
+                    "variantId": req.variant_id,
+                    **({"attachments": [a.model_dump() for a in req.attachments]} if req.attachments else {}),
+                    **({"elements": [{"label": e.label, "tag": e.tag, "section": e.section, "text": e.text[:240]} for e in req.elements[:8]]} if req.elements else {}),
+                }
+            ]
             if merchant_text or req.attachments
             else []
         ),

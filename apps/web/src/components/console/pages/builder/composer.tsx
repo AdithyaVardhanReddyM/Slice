@@ -1,21 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUp, AtSign, Check, ChevronDown, Paperclip, Square, Users } from "lucide-react";
+import { ArrowUp, AtSign, Check, ChevronDown, Paperclip, Square, SquareDashed, SquareDashedMousePointer, Users } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { AUDIENCE_KIND_LABEL, profileOf, type Audience } from "@/lib/pages/types";
 import { PAGES_MODELS, type PagesModel } from "@/lib/pages/models";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { StatusDot } from "../shared";
 import { AttachmentStrip, type Attachment } from "./attachments";
 import { KIND_ICON, coverTiles } from "../taste-cover";
+import type { PickedElement } from "./visual/picker";
 
 export interface ComposerValue {
-  /** Plain text; each mention is written as "@Name". */
+  /** Plain text; each mention is written as "@Name", each picked element as "[label]". */
   text: string;
   mentions: Audience[];
+  /** Elements picked on the page, in the order they appear in the text. */
+  elements: PickedElement[];
   /** Images attached to the message, already uploaded. */
   attachments: Attachment[];
 }
@@ -26,6 +30,8 @@ export interface ComposerHandle {
   focus(): void;
   /** Replace the content: strings become text, audiences become pills. */
   set(parts: (string | Audience)[]): void;
+  /** Put a picked element in as a pill, where the caret was. */
+  addElement(element: PickedElement): void;
 }
 
 const PILL =
@@ -59,6 +65,47 @@ function pillNode(a: Audience): HTMLSpanElement {
   return pill;
 }
 
+const ELEMENT_PILL =
+  "mx-px inline-flex max-w-full items-center gap-1 rounded-md bg-blue-600/10 py-px pr-1 pl-1 align-[-0.2em] text-[0.8125rem] leading-5 font-medium text-blue-700 ring-1 ring-blue-600/15 ring-inset select-none dark:text-blue-300";
+const DASHED_SQUARE =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3.5 shrink-0" aria-hidden="true"><path d="M5 3a2 2 0 0 0-2 2"/><path d="M19 3a2 2 0 0 1 2 2"/><path d="M21 19a2 2 0 0 1-2 2"/><path d="M5 21a2 2 0 0 1-2-2"/><path d="M9 3h1"/><path d="M9 21h1"/><path d="M14 3h1"/><path d="M14 21h1"/><path d="M3 9v1"/><path d="M21 9v1"/><path d="M3 14v1"/><path d="M21 14v1"/></svg>';
+
+/** A picked element's pill inside the editable field, with an x to take it out. */
+function elementPillNode(p: PickedElement, onRemove: (pill: HTMLElement) => void): HTMLSpanElement {
+  const pill = document.createElement("span");
+  pill.contentEditable = "false";
+  pill.dataset.elementKey = p.key;
+  pill.className = ELEMENT_PILL;
+  pill.title = p.label;
+  pill.insertAdjacentHTML("afterbegin", DASHED_SQUARE);
+  const label = document.createElement("span");
+  label.className = "max-w-56 truncate";
+  label.textContent = p.label;
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.setAttribute("aria-label", `Remove ${p.label}`);
+  remove.className = "ml-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded text-blue-700/60 hover:bg-blue-600/15 hover:text-blue-800";
+  remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="size-3" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  remove.addEventListener("mousedown", (e) => e.preventDefault());
+  remove.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onRemove(pill);
+  });
+  pill.append(label, remove);
+  return pill;
+}
+
+/** A picked element as sent: the pill without the x. */
+export function ElementPill({ label }: { label: string }) {
+  return (
+    <span className={cn(ELEMENT_PILL, "pr-1.5")} title={label}>
+      <SquareDashed className="size-3.5 shrink-0" />
+      <span className="max-w-56 truncate">{label}</span>
+    </span>
+  );
+}
+
 /** A mention pill rendered by React, for messages already sent. */
 export function AudiencePill({ audience, name }: { audience?: Audience; name: string }) {
   const image = audience ? avatarOf(audience) : undefined;
@@ -76,35 +123,54 @@ export function AudiencePill({ audience, name }: { audience?: Audience; name: st
   );
 }
 
-/** Message text with every "@Audience name" shown as a pill. */
-export function MentionText({ text, audiences }: { text: string; audiences: Audience[] }) {
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Message text with every "@Audience name" and every picked element's "[label]" shown as a pill. */
+export function MentionText({ text, audiences, elements = [] }: { text: string; audiences: Audience[]; elements?: { label: string }[] }) {
   const parts = useMemo(() => {
     const names = [...audiences].sort((a, b) => b.name.length - a.name.length);
-    if (names.length === 0) return [text];
-    const escaped = names.map((a) => a.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    const re = new RegExp(`@(${escaped.join("|")})`, "g");
-    const out: (string | Audience)[] = [];
+    const labels = [...new Set(elements.map((e) => e.label))].sort((a, b) => b.length - a.length);
+    const alternatives = [...names.map((a) => `@${escapeRe(a.name)}`), ...labels.map((l) => `\\[${escapeRe(l)}\\]`)];
+    if (alternatives.length === 0) return [text];
+    const re = new RegExp(alternatives.join("|"), "g");
+    const out: (string | Audience | { label: string })[] = [];
     let last = 0;
     for (const m of text.matchAll(re)) {
       if (m.index > last) out.push(text.slice(last, m.index));
-      out.push(names.find((a) => a.name === m[1])!);
+      out.push(m[0].startsWith("@") ? names.find((a) => `@${a.name}` === m[0])! : { label: m[0].slice(1, -1) });
       last = m.index + m[0].length;
     }
     if (last < text.length) out.push(text.slice(last));
     return out;
-  }, [text, audiences]);
-  return <>{parts.map((p, i) => (typeof p === "string" ? <span key={i}>{p}</span> : <AudiencePill key={i} audience={p} name={p.name} />))}</>;
+  }, [text, audiences, elements]);
+  return (
+    <>
+      {parts.map((p, i) =>
+        typeof p === "string" ? <span key={i}>{p}</span> : "_id" in p ? <AudiencePill key={i} audience={p} name={p.name} /> : <ElementPill key={i} label={p.label} />,
+      )}
+    </>
+  );
 }
 
-function serialize(root: HTMLElement, audiences: Audience[]): Omit<ComposerValue, "attachments"> {
+function serialize(root: HTMLElement, audiences: Audience[], picked: Map<string, PickedElement>): Omit<ComposerValue, "attachments"> {
   let text = "";
   const mentions: Audience[] = [];
+  const elements: PickedElement[] = [];
   const walk = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       text += node.textContent ?? "";
       return;
     }
     if (!(node instanceof HTMLElement)) return;
+    const key = node.dataset.elementKey;
+    if (key) {
+      const p = picked.get(key);
+      if (p) {
+        text += `[${p.label}]`;
+        elements.push(p);
+      }
+      return;
+    }
     const id = node.dataset.audienceId;
     if (id) {
       const a = audiences.find((x) => x._id === id);
@@ -120,7 +186,7 @@ function serialize(root: HTMLElement, audiences: Audience[]): Omit<ComposerValue
     node.childNodes.forEach(walk);
   };
   root.childNodes.forEach(walk);
-  return { text: text.replace(/ /g, " ").trim(), mentions };
+  return { text: text.replace(/ /g, " ").trim(), mentions, elements };
 }
 
 function caretToEnd(root: HTMLElement) {
@@ -194,14 +260,23 @@ export const PromptComposer = forwardRef<
     autoFocus?: boolean;
     /** Left side of the toolbar, after the @ button. */
     hint?: ReactNode;
+    /** Starts (or stops) picking an element on the page; shows the select button when given. */
+    onPickElement?: () => void;
+    /** Picking is on: the select button shows as pressed. */
+    picking?: boolean;
+    /** Why picking is not possible right now (no page yet, the builder is working); the button stays, dimmed. */
+    pickBlocked?: string | null;
     /** The model the agent runs on, picked from the toolbar. */
     model?: PagesModel;
     onModelChange?: (model: PagesModel) => void;
     className?: string;
     brandSlug: string;
   }
->(function PromptComposer({ audiences, placeholder, onSubmit, busy, onStop, disabled, autoFocus, hint, className, brandSlug, model, onModelChange, onUpload }, ref) {
+>(function PromptComposer({ audiences, placeholder, onSubmit, busy, onStop, disabled, autoFocus, hint, className, brandSlug, model, onModelChange, onUpload, onPickElement, picking, pickBlocked }, ref) {
   const field = useRef<HTMLDivElement>(null);
+  // Elements picked on the page, by pill; where the caret was, for the next pill.
+  const picked = useRef(new Map<string, PickedElement>());
+  const caret = useRef<Range | null>(null);
   const [empty, setEmpty] = useState(true);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [files, setFiles] = useState<Pending[]>([]);
@@ -242,8 +317,9 @@ export const PromptComposer = forwardRef<
   const sync = useCallback(() => {
     const el = field.current;
     if (!el) return;
-    setEmpty(!el.textContent?.trim() && !el.querySelector("[data-audience-id]"));
+    setEmpty(!el.textContent?.trim() && !el.querySelector("[data-audience-id],[data-element-key]"));
     const sel = window.getSelection();
+    if (sel?.rangeCount && el.contains(sel.anchorNode)) caret.current = sel.getRangeAt(0).cloneRange();
     const node = sel?.anchorNode;
     if (!sel || !sel.isCollapsed || !node || node.nodeType !== Node.TEXT_NODE || !el.contains(node)) {
       setMenu(null);
@@ -298,11 +374,13 @@ export const PromptComposer = forwardRef<
   const submit = () => {
     const el = field.current;
     if (!el || busy || disabled || uploading) return;
-    const value = serialize(el, audiences);
+    const value = serialize(el, audiences, picked.current);
     const attachments = files.filter((f) => f.url && !f.error).map(({ url, name, type }) => ({ url, name, type }));
     if (!value.text && attachments.length === 0) return;
     onSubmit({ ...value, attachments });
     el.innerHTML = "";
+    picked.current.clear();
+    caret.current = null;
     files.forEach((f) => URL.revokeObjectURL(f.preview));
     setFiles([]);
     setEmpty(true);
@@ -323,6 +401,40 @@ export const PromptComposer = forwardRef<
       for (const p of parts) el.append(typeof p === "string" ? document.createTextNode(p) : pillNode(p));
       el.focus();
       caretToEnd(el);
+      sync();
+    },
+    addElement: (p) => {
+      const el = field.current;
+      if (!el) return;
+      picked.current.set(p.key, p);
+      const pill = elementPillNode(p, (node) => {
+        picked.current.delete(p.key);
+        // The space after the pill goes with it.
+        const next = node.nextSibling;
+        if (next?.nodeType === Node.TEXT_NODE && next.textContent?.startsWith(" ")) next.textContent = next.textContent.slice(1);
+        node.remove();
+        sync();
+      });
+      const space = document.createTextNode(" ");
+      el.focus();
+      const sel = window.getSelection();
+      const at = caret.current && el.contains(caret.current.startContainer) ? caret.current : null;
+      if (sel && at) {
+        at.collapse(false);
+        at.insertNode(space);
+        at.insertNode(pill);
+        // Keep a space between the pill and a word typed right before it.
+        const before = pill.previousSibling;
+        if (before?.nodeType === Node.TEXT_NODE && before.textContent && !/\s$/.test(before.textContent)) before.textContent += " ";
+        const r = document.createRange();
+        r.setStart(space, 1);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      } else {
+        el.append(pill, space);
+        caretToEnd(el);
+      }
       sync();
     },
   }));
@@ -482,6 +594,30 @@ export const PromptComposer = forwardRef<
                     <Paperclip className="size-4" />
                   </button>
                 </>
+              )}
+              {onPickElement && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label="Select an element on the page"
+                        aria-pressed={!!picking}
+                        // aria-disabled, not disabled, so the guide still shows why it is off.
+                        aria-disabled={disabled || !!pickBlocked}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => !disabled && !pickBlocked && onPickElement()}
+                        className={cn(
+                          "inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground aria-disabled:cursor-default aria-disabled:opacity-50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-muted-foreground",
+                          picking && "bg-blue-600/10 text-blue-700 hover:bg-blue-600/15 hover:text-blue-700",
+                        )}
+                      />
+                    }
+                  >
+                    <SquareDashedMousePointer className="size-4" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{picking ? "Click an element on the page · Esc to stop" : (pickBlocked ?? "Select an element to mention it")}</TooltipContent>
+                </Tooltip>
               )}
               {hint && <span className="min-w-0 truncate text-xs text-muted-foreground">{hint}</span>}
             </div>

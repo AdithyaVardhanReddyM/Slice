@@ -15,6 +15,7 @@ stream a `doc` event for the live preview.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import re
@@ -33,7 +34,7 @@ from slice_agent import trace
 from slice_agent.trace import record
 from .timing import timer
 
-from . import browser, capture, crawl, images
+from . import browser, capture, crawl, hand, images
 from .audience_brief import profile_summary
 from .insights import catalogue, quote_on_page, remember_entities, resolve_name, section_text
 from .llm import clip, generate_json, generate_text
@@ -275,9 +276,16 @@ def _doc_block(doc: Any) -> str:
         return "CURRENT PAGE: none yet. This turn writes the first version with write_page."
     secs = doc.get("sections") or []
     outline = "\n".join(f"  {s.get('id')}: {s.get('label')}" for s in secs)
+    n = hand.count_elements(doc)
+    by_hand = (
+        f"{n} element{'s carry' if n != 1 else ' carries'} the merchant's hand edits (data-pg-id); see THE MERCHANT'S HAND EDITS.\n"
+        if n
+        else "The merchant changed the page by hand; see THE MERCHANT'S HAND EDITS.\n" if hand.has_edits(doc) else ""
+    )
     return (
         f"CURRENT PAGE: {len(doc.get('html') or '')} chars of html, {len(doc.get('css') or '')} chars of css, sections:\n{outline}\n"
-        "If the markup is not in your context (a new session), call get_page before editing."
+        + by_hand
+        + "If the markup is not in your context (a new session), call get_page before editing."
     )
 
 
@@ -309,6 +317,9 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
     has_culture = any(culture.get(k) for k in ("artists", "films", "places", "books")) or bool(profile.get("entities"))
 
     memory_block = _memory_block(state.get(MEMORY) or {}, state.get(LAST_REVIEW), int(state.get(DOC_VERSION) or 0))
+    hand_block = hand.hand_block(state.get(DOC))
+    if hand_block:
+        memory_block += "\n\n" + hand_block
 
     audience_block = (
         f"AUDIENCE for this page: \"{audience.get('name')}\" (kind {audience.get('kind')}, size {audience.get('size')}).\n"
@@ -337,7 +348,8 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
 6. Reply to the merchant in 2 to 4 sentences: what the page leads with and why, naming the Qloo evidence (tags, brands, artists, places) and what you took from the brand's homepage. No list of sections."""
 
     edit_rules = f"""HOW TO EDIT (kind = edit)
-Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Then explain_page for the sections whose words, pictures or purpose changed (only those; add strategy only if the page's angle changed; after a write_page, explain the whole page). Reply in one or two sentences saying what changed.
+Read the merchant's message against the CURRENT PAGE (get_page if its markup is not in your context). If the merchant edited the page by hand since your last turn (a bracketed note in their message says so), your earlier copies of the markup are out of date: call get_page before edit_page. Use edit_page with exact find/replace pairs for copy, image, layout or style changes; several pairs in one call are fine. Use write_page only when they ask for a new design or the change touches most of the page. After a visual change, review_page once (at most {MAX_REVIEWS_PER_TURN} per turn) and fix anything it flags. Update the section's evidence when its content changes. Then explain_page for the sections whose words, pictures or purpose changed (only those; add strategy only if the page's angle changed; after a write_page, explain the whole page). Reply in one or two sentences saying what changed.
+PICKED ELEMENTS: when the merchant picked elements on the page (a bracketed note after their message lists them, and the message names each as [label]), the request is about exactly those: change them, or explain them, and leave the rest of the page alone unless they say otherwise.
 ASKING: when the message could mean quite different changes and a wrong guess would waste the merchant's time (which of two sections, which of two directions, "make it pop"), call ask_merchant instead of guessing: one short question, 2 to 4 concrete options drawn from this page (name its sections, items or phrases), and other set so they can type their own. Never ask about what you can decide yourself (wording, spacing, which photo), never twice in a row, and never in a generate turn."""
 
     return f"""You are the Slice page builder. You write a landing page for {brand.get('name', 'this brand')} aimed at its audience, as complete HTML and CSS, so that it looks like a page the brand's own designers made: an extension of their site, not a template. Taste comes from Qloo, the cultural taste graph: an audience is defined by what its people love (artists, films, places, brands) and by Qloo's tags for them. You can see your own work: review_page screenshots the page and compares it with the brand's homepage.
@@ -922,14 +934,32 @@ _EN_RANGE = re.compile(r"(?<=\d)\s*–\s*(?=\d)")
 _EN_DASH = re.compile(r"\s*–\s*")
 
 
-def normalise_copy(html: str) -> tuple[str, bool]:
-    """Dashes in visible text become commas (em) or "to" (en, in ranges); markup is untouched."""
+def _inside(pos: int, ranges: list[tuple[int, int]]) -> bool:
+    return any(a <= pos < b for a, b in ranges)
+
+
+def _cut(html: str, ranges: list[tuple[int, int]]) -> str:
+    """The html without the given spans (the merchant's own words, which the copy rules leave alone)."""
+    if not ranges:
+        return html
+    out, at = [], 0
+    for a, b in sorted(ranges):
+        if a >= at:
+            out.append(html[at:a])
+        at = max(at, b)
+    out.append(html[at:])
+    return "".join(out)
+
+
+def normalise_copy(html: str, keep: list[tuple[int, int]] | None = None) -> tuple[str, bool]:
+    """Dashes in visible text become commas (em) or "to" (en, in ranges); markup is untouched,
+    and so is text inside the `keep` spans (words the merchant set by hand)."""
     changed = False
 
     def fix(m: re.Match[str]) -> str:
         nonlocal changed
         t = m.group(1)
-        if not _DASHES.search(t):
+        if not _DASHES.search(t) or (keep and _inside(m.start(), keep)):
             return m.group(0)
         changed = True
         t = _EM_DASH.sub(", ", t)
@@ -941,18 +971,21 @@ def normalise_copy(html: str) -> tuple[str, bool]:
 
 
 def rule_problems(doc: dict[str, Any]) -> tuple[list[str], list[str]]:
-    """(blocking problems, warnings) beyond the structural check. Dashes are normalised in place."""
+    """(blocking problems, warnings) beyond the structural check. Dashes are normalised in place,
+    except in words the merchant set by hand, which the copy rules do not judge either."""
     problems: list[str] = []
     warnings: list[str] = []
-    doc["html"], dashed = normalise_copy(doc.get("html") or "")
+    keep = hand.protected_ranges(doc)
+    own = _cut(doc.get("html") or "", keep)
+    doc["html"], dashed = normalise_copy(doc.get("html") or "", keep)
     html = doc["html"]
     css = doc.get("css") or ""
-    text = _visible_text(html)
+    text = _visible_text(own)
     if dashed:
         warnings.append("em/en dashes in the copy were replaced with commas or 'to'; write without them")
     if _BANNED.search(text):
         problems.append("bestseller/trending/popular framing in the copy; taste is additive, rewrite")
-    if "!" in re.sub(r"<[^>]+>", "", html):
+    if "!" in re.sub(r"<[^>]+>", "", own):
         warnings.append("exclamation marks in the copy")
     if len(html) > 60_000:
         problems.append(f"html is {len(html)} chars; keep it under 60,000")
@@ -1004,43 +1037,96 @@ def _coerce(value: Any, what: str) -> Any:
     return value
 
 
-async def write_page(meta: dict, css: str, html: str, sections: list, tool_context: ToolContext) -> dict:
+def _problem_key(p: str) -> str:
+    return re.sub(r"\d[\d,]*", "#", p)
+
+
+def _new_problems(new: list[str], old: list[str]) -> list[str]:
+    """Problems the change brings in. Ones the page already had (the merchant may have deleted
+    the h1 or a section by hand) do not block every later change."""
+    had = {_problem_key(p) for p in old}
+    return [p for p in new if _problem_key(p) not in had]
+
+
+def _old_rule_problems(old: Any) -> list[str]:
+    if not isinstance(old, dict) or old.get("kind") != "html":
+        return []
+    return rule_problems(copy.deepcopy(old))[0]
+
+
+def _keep_hand(old: Any, new: dict[str, Any], tool_context: ToolContext, override: bool) -> tuple[list[str], list[str]]:
+    """(problems, released) for the merchant's hand edits when `old` becomes `new`. Blocks a change
+    that would undo them unless the builder overrides on purpose or the merchant asked for a
+    rebuild (a generate turn); then the content it changed is released to it. Updates new["hand"]."""
+    if not isinstance(new.get("hand"), dict):
+        return [], []
+    violations = hand.guard(old, new)
+    generate = tool_context.state.get(KIND) == "generate"
+    if violations and not override and not generate:
+        return [*violations, hand.KEEP_NOTE], []
+    released = hand.release(new, old) if (override or generate) else []
+    hand.prune(new)
+    if released:
+        record("slice", "Release the merchant's hand edits", "; ".join(released)[:200], ms=0)
+    return [], released
+
+
+async def write_page(meta: dict, css: str, html: str, sections: list, tool_context: ToolContext, override_hand_edits: bool = False) -> dict:
     """Write the whole page (replaces the current one). Validated against the page contract;
     when problems come back, fix them and call again. The merchant watches the page appear as
     you write it, so give the arguments in this order: meta, css, html (top to bottom), sections.
+    Elements the merchant edited by hand (data-pg-id) must be carried over with their attribute,
+    words, pictures and links (see THE MERCHANT'S HAND EDITS).
 
     Args:
         meta: {title, description, image?, fonts?}: the page title and description for search; image is the og image URL; fonts lists extra Google font families the css uses.
         css: The page stylesheet (vanilla CSS, kit tokens, "p-" class prefix, mobile first).
         html: The body markup: header, sections and footer, each with data-section="<id>".
         sections: One {id, label, evidence} per data-section, in page order; evidence names the Qloo tags, brands or entities behind it.
+        override_hand_edits: true only when the merchant asked in this turn to change or remove elements they edited by hand; their text, pictures and links you change become yours.
     """
     try:
         meta = _coerce(meta, "meta")
         sections = _coerce(sections, "sections")
     except ValueError as err:
         return {"ok": False, "problems": [str(err)]}
+    old = tool_context.state.get(DOC)
     doc = {"kind": "html", "meta": meta, "html": html or "", "css": css or "", "sections": sections or []}
+    if isinstance(old, dict) and isinstance(old.get("hand"), dict):
+        doc["hand"] = copy.deepcopy(old["hand"])
     problems = validate_html_doc(doc)
     if problems:
         return {"ok": False, "problems": problems}
+    hand_probs, released = _keep_hand(old, doc, tool_context, bool(override_hand_edits))
     rule_probs, warnings = rule_problems(doc)
-    if rule_probs:
-        return {"ok": False, "problems": rule_probs, "warnings": warnings}
+    # A rewrite in an edit turn keeps what the page already had (the merchant's deletions); a rebuild starts clean.
+    if tool_context.state.get(KIND) == "edit":
+        rule_probs = _new_problems(rule_probs, _old_rule_problems(old))
+    if hand_probs or rule_probs:
+        return {"ok": False, "problems": [*hand_probs, *rule_probs], "warnings": warnings}
     out = await _save(tool_context, doc, f"Write the page ({len(section_ids(html))} sections)")
     if warnings:
         out["warnings"] = warnings
+    if released:
+        out["released"] = released
+        out["note"] = "these hand edits of the merchant's are yours now; say in your reply what you changed of theirs"
     out["next"] = "call review_page to see it rendered and judged against the brand's homepage"
     return out
 
 
-async def edit_page(edits: list, tool_context: ToolContext) -> dict:
+async def edit_page(edits: list, tool_context: ToolContext, override_hand_edits: bool = False) -> dict:
     """Change parts of the current page with exact find/replace pairs, applied in order to the
     html or the css. Each `find` must occur exactly once; include enough surrounding text to be
     unique. Section evidence can be updated with an entry {"section": "<id>", "evidence": "..."}.
+    The styles of an element the merchant edited by hand (data-pg-id) are theirs and win over the
+    css; change them only when the merchant asks, with an entry {"hand": "<data-pg-id>", "screen":
+    "all" | "phone" | "hover", "set": {"<css property>": "<value>"}, "unset": ["<css property>"]},
+    or {"hand": "<data-pg-id>", "release": true} to drop their styles and motion and give the
+    element back to your css.
 
     Args:
-        edits: A list of {"in": "html" | "css", "find": "...", "replace": "..."} or {"section": "<id>", "evidence": "..."}.
+        edits: A list of {"in": "html" | "css", "find": "...", "replace": "..."}, {"section": "<id>", "evidence": "..."} or {"hand": "<data-pg-id>", "screen"?, "set"?, "unset"?, "release"?}.
+        override_hand_edits: true only when the merchant asked in this turn to change or remove elements they edited by hand (their text, pictures or links, or the element itself); what you change of theirs becomes yours.
     """
     doc = tool_context.state.get(DOC)
     if not isinstance(doc, dict):
@@ -1050,11 +1136,20 @@ async def edit_page(edits: list, tool_context: ToolContext) -> dict:
     except ValueError as err:
         return {"ok": False, "problems": [str(err)]}
     new = {**doc, "sections": [dict(s) for s in doc.get("sections") or []]}
+    if isinstance(doc.get("hand"), dict):
+        new["hand"] = copy.deepcopy(doc["hand"])
     problems: list[str] = []
     applied = 0
     for i, e in enumerate(edits or []):
         if not isinstance(e, dict):
             problems.append(f"edits[{i}] is not an object")
+            continue
+        if "hand" in e:
+            problem = hand.apply_entry(new, e)
+            if problem:
+                problems.append(f"edits[{i}]: {problem}")
+            else:
+                applied += 1
             continue
         if "section" in e:
             sid = e.get("section")
@@ -1083,28 +1178,37 @@ async def edit_page(edits: list, tool_context: ToolContext) -> dict:
         new[target] = new[target].replace(find, str(e.get("replace") or ""), 1)
         applied += 1
     if problems:
-        return {"ok": False, "problems": problems, "applied": 0, "hint": "nothing was changed; fix the finds and call again"}
+        return {"ok": False, "problems": problems, "applied": 0, "hint": "nothing was changed; fix those entries and call again"}
     # Sections may have been added or removed by the edits; keep the list in step.
     ids = section_ids(new["html"])
     known = {s.get("id"): s for s in new["sections"]}
     new["sections"] = [known.get(i) or {"id": i, "label": i, "evidence": ""} for i in ids]
-    structural = validate_html_doc(new)
+    structural = _new_problems(validate_html_doc(new), validate_html_doc(doc))
+    if structural:
+        return {"ok": False, "problems": structural, "applied": 0, "hint": "the edited page would be invalid; nothing was changed"}
+    hand_probs, released = _keep_hand(doc, new, tool_context, bool(override_hand_edits))
     rule_probs, warnings = rule_problems(new)
-    if structural or rule_probs:
-        return {"ok": False, "problems": structural + rule_probs, "applied": 0, "hint": "the edited page would be invalid; nothing was changed"}
+    rule_probs = _new_problems(rule_probs, _old_rule_problems(doc))
+    if hand_probs or rule_probs:
+        return {"ok": False, "problems": [*hand_probs, *rule_probs], "applied": 0, "hint": "nothing was changed"}
     out = await _save(tool_context, new, f"Edit the page ({applied} change{'s' if applied != 1 else ''})")
     out["applied"] = applied
     if warnings:
         out["warnings"] = warnings
+    if released:
+        out["released"] = released
+        out["note"] = "these hand edits of the merchant's are yours now; say in your reply what you changed of theirs"
     return out
 
 
 async def get_page(tool_context: ToolContext) -> dict:
-    """The current page's html, css, meta and sections, for editing when the markup is not in your context."""
+    """The current page's html, css, meta and sections, for editing when the markup is not in your
+    context, plus a summary of the merchant's hand edits when there are any."""
     doc = tool_context.state.get(DOC)
     if not isinstance(doc, dict):
         return {"ok": False, "error": "no page yet"}
-    return {"ok": True, **doc}
+    summary = hand.hand_block(doc)
+    return {"ok": True, **doc, **({"hand_summary": summary} if summary else {})}
 
 
 # --- review -------------------------------------------------------------------------------

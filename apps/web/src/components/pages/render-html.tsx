@@ -5,6 +5,7 @@
 import type { ReactNode } from "react";
 import type { BrandKit, HtmlDoc } from "@slice/backend/convex/pagesTypes";
 import type { RendererBrand } from "./render-doc";
+import { handCss } from "./hand-css";
 import { sanitizePageCss, sanitizePageHtml } from "./sanitize-page";
 import { googleFontsHref, kitMode, kitToVars } from "./theme";
 import { Tracker } from "./tracker";
@@ -33,6 +34,8 @@ export function HtmlPageRenderer({
   const meta: TrackingMeta = { ...trackingMeta, pageId, variantId };
   const html = sanitizePageHtml(doc.html);
   const css = sanitizePageCss(doc.css);
+  // The merchant's hand edits come after the page CSS and win over it.
+  const hand = sanitizePageCss(handCss(doc.hand));
 
   return (
     <TrackingProvider value={meta}>
@@ -45,6 +48,7 @@ export function HtmlPageRenderer({
           </>
         ) : null}
         {css ? <style dangerouslySetInnerHTML={{ __html: css }} /> : null}
+        {hand ? <style data-pg-hand="" dangerouslySetInnerHTML={{ __html: hand }} /> : null}
         {quiz}
         <div className="pg-page-body" dangerouslySetInnerHTML={{ __html: html }} />
         <Tracker meta={meta} />

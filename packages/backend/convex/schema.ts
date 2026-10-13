@@ -480,6 +480,8 @@ export default defineSchema({
         steps: v.optional(v.array(v.any())),
         /** Images the merchant attached to the message. */
         attachments: v.optional(v.array(v.object({ url: v.string(), name: v.string(), type: v.string() }))),
+        /** Elements the merchant picked on the page; the text refers to each as "[label]". */
+        elements: v.optional(v.array(v.object({ label: v.string(), tag: v.string(), section: v.string(), text: v.string() }))),
       }),
     ),
     createdAt: v.number(),

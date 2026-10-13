@@ -13,8 +13,12 @@ import { KIND_ICON, coverTiles } from "../taste-cover";
 import { BuildCanvas, type CanvasMode } from "./build-canvas";
 import { draftSections, sectionLabel, type ToolStep } from "./build-steps";
 import type { LiveTurn } from "./use-builder";
+import { isHtmlDoc } from "@slice/backend/convex/pagesTypes";
 
 export type Device = "desktop" | "mobile";
+
+/** The page has edits the merchant made by hand in the visual editor. */
+const handEdited = (v: Variant) => isHtmlDoc(v.doc) && Object.keys(v.doc.hand?.elements ?? {}).length > 0;
 
 /** Who a version is for: its audiences' names ("Berlin + Under 25s"), or everyone. */
 export const versionLabel = (v: Variant) => (v.name && v.name !== "Default" ? v.name : "Everyone");
@@ -238,7 +242,7 @@ export const PreviewFrame = forwardRef<
               <TooltipTrigger render={<Button variant="ghost" size="xs" onClick={onBuild} disabled={busy} />}>
                 <RotateCcw data-icon="inline-start" /> Rebuild
               </TooltipTrigger>
-              <TooltipContent>Write the page again from scratch</TooltipContent>
+              <TooltipContent>{handEdited(variant) ? "Write the page again from scratch (your hand edits go with it)" : "Write the page again from scratch"}</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FilePlus2 } from "lucide-react";
+import { ChevronDown, FilePlus2, MousePointer2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { BuildStep } from "@/lib/pages/stream";
@@ -34,13 +34,13 @@ function Steps({ spans, open: openDefault = false, label }: { spans: LiveTurn["s
   );
 }
 
-function MerchantBubble({ text, audiences, attachments, children }: { text: string; audiences: Audience[]; attachments?: Attachment[]; children?: ReactNode }) {
+function MerchantBubble({ text, audiences, attachments, elements, children }: { text: string; audiences: Audience[]; attachments?: Attachment[]; elements?: { label: string }[]; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-end gap-1">
       {attachments && attachments.length > 0 && <AttachmentStrip items={attachments} className="justify-end" />}
       {text && (
         <div className="max-w-[88%] rounded-2xl rounded-br-md bg-muted px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap">
-          <MentionText text={text} audiences={audiences} />
+          <MentionText text={text} audiences={audiences} elements={elements} />
         </div>
       )}
       {children}
@@ -49,6 +49,41 @@ function MerchantBubble({ text, audiences, attachments, children }: { text: stri
 }
 
 type Message = NonNullable<Build>["messages"][number];
+
+/** A save from the visual editor: what the merchant changed by hand, one line each. */
+function HandEditCard({ text, time }: { text: string; time: string }) {
+  const lines = text.split("\n").filter(Boolean);
+  const [open, setOpen] = useState(lines.length <= 3);
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="w-[88%] rounded-2xl rounded-br-md border bg-background text-sm shadow-xs">
+        <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left" aria-expanded={open}>
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <MousePointer2 className="size-3.5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium">You edited the page by hand</span>
+            <span className="block text-xs text-muted-foreground">
+              {lines.length} change{lines.length === 1 ? "" : "s"} · the builder keeps them
+            </span>
+          </span>
+          <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+        </button>
+        {open && (
+          <ul className="space-y-1 border-t px-3.5 py-2.5 text-xs leading-5 text-muted-foreground">
+            {lines.map((l, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground/60" />
+                <span className="min-w-0">{l}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <span className="px-1 text-xs text-muted-foreground">{time}</span>
+    </div>
+  );
+}
 
 /** Keeps a scroller pinned to the bottom while its content grows, unless the reader scrolled up. */
 function useStickToBottom() {
@@ -129,9 +164,10 @@ export function BuilderChat({
           ) : (
             <div className="space-y-5 p-4">
               {messages.map((m, i) => {
+                if (m.role === "edit") return <HandEditCard key={m.id} text={m.text} time={time(m.at)} />;
                 if (m.role === "merchant") {
                   return (
-                    <MerchantBubble key={m.id} text={m.text} audiences={audiences} attachments={m.attachments as Attachment[] | undefined}>
+                    <MerchantBubble key={m.id} text={m.text} audiences={audiences} attachments={m.attachments as Attachment[] | undefined} elements={m.elements}>
                       <span className="px-1 text-xs text-muted-foreground">{time(m.at)}</span>
                     </MerchantBubble>
                   );
@@ -171,7 +207,7 @@ export function BuilderChat({
               })}
               {live && (
                 <>
-                  {(live.prompt || live.attachments?.length) && <MerchantBubble text={live.prompt ?? ""} audiences={audiences} attachments={live.attachments} />}
+                  {(live.prompt || live.attachments?.length) && <MerchantBubble text={live.prompt ?? ""} audiences={audiences} attachments={live.attachments} elements={live.elements} />}
                   <div className="flex flex-col items-start gap-2 text-sm leading-6">
                     {live.error ? (
                       <p className="text-destructive">{live.error}</p>

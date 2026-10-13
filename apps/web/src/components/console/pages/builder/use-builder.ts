@@ -5,6 +5,7 @@ import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { TOOL_LABEL, postStream, type BuildStep, type PagesAgentEvent } from "@/lib/pages/stream";
 import type { Build, PageDoc, Span } from "@/lib/pages/types";
 import type { Attachment } from "./attachments";
+import type { PickedElement } from "./visual/picker";
 
 /** write_page's arguments as the model writes them: the page appears in the canvas while it streams. */
 export interface Draft {
@@ -30,6 +31,8 @@ export interface LiveTurn {
   /** The merchant message that started it (edit turns). */
   prompt?: string;
   attachments?: Attachment[];
+  /** Elements the merchant picked on the page for it. */
+  elements?: PickedElement[];
   /** Set while the console sets up a new page the agent asked for (shown under the reply). */
   handoff?: string;
 }
@@ -90,6 +93,14 @@ function compactHistory(build: Build | null | undefined): HistoryItem[] {
   return (build?.messages ?? []).slice(-12).map((m) => ({ role: m.role, text: m.text, variantId: m.variantId }));
 }
 
+/** What the merchant changed by hand since the builder last replied: one line per change. */
+function handEditsSince(build: Build | null | undefined): string[] {
+  const messages = build?.messages ?? [];
+  let i = messages.length;
+  while (i > 0 && messages[i - 1].role !== "agent") i--;
+  return messages.slice(i).filter((m) => m.role === "edit").flatMap((m) => m.text.split("\n").filter(Boolean));
+}
+
 /**
  * Drives /api/pages/build turns: one live turn at a time, a queue for
  * turns waiting on it, and a counter the preview iframe keys on so it reloads
@@ -135,16 +146,27 @@ export function useBuilder({
   }, [build]);
 
   const runTurn = useCallback(
-    async (variantId: string, kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[]) => {
+    async (variantId: string, kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[], elements?: PickedElement[]) => {
       abort.current?.abort();
       const ctrl = new AbortController();
       abort.current = ctrl;
       onStart?.(variantId);
       let newPage: { request: string; audienceIds: string[] } | null = null;
-      setLive(newTurn({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", prompt: message, attachments }));
+      setLive(newTurn({ variantId, kind, status: kind === "generate" ? "Starting" : "Thinking", prompt: message, attachments, elements }));
       for await (const ev of postStream(
         "/api/pages/build",
-        { page_id: pageId, variant_id: variantId, message: message ?? "", kind, history: compactHistory(buildRef.current), model, attachments: attachments ?? [], mentions: mentions ?? [] },
+        {
+          page_id: pageId,
+          variant_id: variantId,
+          message: message ?? "",
+          kind,
+          history: compactHistory(buildRef.current),
+          model,
+          attachments: attachments ?? [],
+          mentions: mentions ?? [],
+          hand_edits: handEditsSince(buildRef.current),
+          elements: (elements ?? []).map(({ label, tag, section, text, html, id }) => ({ label, tag, section, text, html, ...(id ? { id } : {}) })),
+        },
         ctrl.signal,
       )) {
         if (ev.type === "new_page") newPage = { request: ev.request, audienceIds: ev.audienceIds ?? [] };
@@ -189,7 +211,7 @@ export function useBuilder({
 
   /** Run turns one after another; the queue shows what is still waiting. */
   const runAll = useCallback(
-    async (variantIds: string[], kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[]) => {
+    async (variantIds: string[], kind: "generate" | "edit", message?: string, attachments?: Attachment[], mentions?: Mention[], elements?: PickedElement[]) => {
       const mine = ++run.current;
       setQueue(variantIds);
       for (const id of variantIds) {
@@ -208,7 +230,7 @@ export function useBuilder({
           if (run.current !== mine) return;
           if (!ok) continue;
         }
-        await runTurn(id, kind, message, attachments, mentions);
+        await runTurn(id, kind, message, attachments, mentions, elements);
       }
       if (run.current === mine) setQueue([]);
     },
@@ -217,9 +239,9 @@ export function useBuilder({
 
   /** Generate the listed variants (a page has one); `note` is the merchant's ask. */
   const generateAll = useCallback((variantIds: string[], note?: string, attachments?: Attachment[]) => runAll(variantIds, "generate", note, attachments), [runAll]);
-  /** An edit to the page's version; `mentions` are the audiences the merchant @mentioned. */
+  /** An edit to the page's version; `mentions` are the audiences the merchant @mentioned, `elements` what they picked on the page. */
   const send = useCallback(
-    (variantId: string, message: string, attachments?: Attachment[], mentions?: Mention[]) => runAll([variantId], "edit", message, attachments, mentions),
+    (variantId: string, message: string, attachments?: Attachment[], mentions?: Mention[], elements?: PickedElement[]) => runAll([variantId], "edit", message, attachments, mentions, elements),
     [runAll],
   );
 

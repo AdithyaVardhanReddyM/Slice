@@ -1,9 +1,9 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { spanValidator } from "./schema";
-import { DEFAULT_ROUTING, validateDoc, type RoutingRules } from "./pagesTypes";
+import { DEFAULT_ROUTING, isHtmlDoc, validateDoc, type HandEdits, type HtmlDoc, type RoutingRules } from "./pagesTypes";
 import { audienceLabel, slugify } from "./pagesUtil";
 
 // Pages and the builder chat. A page is one version built for its audiences:
@@ -36,6 +36,7 @@ const buildMessageValidator = v.object({
   trace: v.optional(v.array(spanValidator)),
   steps: v.optional(v.array(v.any())),
   attachments: v.optional(v.array(v.object({ url: v.string(), name: v.string(), type: v.string() }))),
+  elements: v.optional(v.array(v.object({ label: v.string(), tag: v.string(), section: v.string(), text: v.string() }))),
 });
 
 /* Attachments (images the merchant drops into the builder chat) -------------- */
@@ -359,6 +360,57 @@ export const patchVariant = internalMutation({
       trace: patch.spans,
       appendTrace: !patch.replaceTrace,
     }),
+});
+
+/**
+ * The visual editor's save: the page's markup and hand-edit layer as the
+ * merchant left them, plus a chat entry listing what they changed, which is
+ * how the builder learns about it on its next turn. Rejects when the page
+ * moved on since the editor opened it (`baseVersion`).
+ */
+export const saveHandEdits = mutation({
+  args: {
+    variantId: v.id("pagesVariants"),
+    baseVersion: v.number(),
+    html: v.string(),
+    hand: v.any(),
+    /** One line per change, in plain words, for the chat and the builder. */
+    changes: v.array(v.string()),
+  },
+  returns: v.object({ version: v.number() }),
+  handler: async (ctx, { variantId, baseVersion, html, hand, changes }) => {
+    const vnt = await ctx.db.get(variantId);
+    if (!vnt) throw new ConvexError("This page no longer exists.");
+    if (vnt.version !== baseVersion) throw new ConvexError("The page changed while you were editing it. Reload the editor to pick up the new version.");
+    const doc = vnt.doc as HtmlDoc | undefined;
+    if (!isHtmlDoc(doc)) throw new ConvexError("Only pages written as HTML can be edited by hand.");
+    // Sections follow the markup: a removed section drops out, a duplicated one gets an entry.
+    const ids = [...html.matchAll(/data-section\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
+    const known = new Map(doc.sections.map((s) => [s.id, s]));
+    const sections = ids.map((id) => known.get(id) ?? { id, label: id.replace(/[-_]+/g, " "), evidence: "Added by the merchant in the visual editor." });
+    const version = vnt.version + 1;
+    const next: HtmlDoc = { ...doc, html, sections, hand: { ...(hand as HandEdits), version } };
+    const problems = validateDoc(next);
+    if (problems.length) throw new ConvexError(`The page would not be valid: ${problems.join("; ")}`);
+    // The explanation still describes this page; carry it to the new revision.
+    const insights = vnt.insights as { version?: number } | undefined;
+    await ctx.db.patch(variantId, {
+      doc: next,
+      version,
+      error: undefined,
+      status: "ready",
+      updatedAt: Date.now(),
+      ...(insights && insights.version === vnt.version ? { insights: { ...insights, version } } : {}),
+    });
+    if (changes.length) {
+      const now = Date.now();
+      const message = { id: `edit-${now.toString(36)}`, role: "edit", at: now, text: changes.join("\n"), variantId };
+      const build = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", vnt.pageId)).unique();
+      if (build) await ctx.db.patch(build._id, { messages: [...build.messages, message], updatedAt: now });
+      else await ctx.db.insert("pagesBuilds", { pageId: vnt.pageId, messages: [message], createdAt: now, updatedAt: now });
+    }
+    return { version };
+  },
 });
 
 export const resetVariant = mutation({
