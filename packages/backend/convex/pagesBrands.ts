@@ -188,40 +188,46 @@ export const patch = internalMutation({
 
 /* Cascade delete ---------------------------------------------------------- */
 
-const PURGE_BATCH = 400;
+const PURGE_BATCH = 1000;
+
+type Row = { _id: Id<any> };
 
 /**
- * Deletes a slice of everything under a brand. Small tables go in one pass;
- * events/stats/sessions/forms/members can be thousands of rows, so the
- * mutation deletes up to PURGE_BATCH per table and reports whether more remain.
+ * Deletes a slice of everything under a brand and reports whether more remain.
+ * PURGE_BATCH is one budget for the whole call, not per table: Convex caps a
+ * mutation at 4096 reads, and a brand with a few trafficked pages has more
+ * event rows than that. The pages and the brand go last, once nothing is left.
  * `remove` schedules it until done; `pagesSeed.reset` loops it synchronously.
  */
 export const purgeChunk = internalMutation({
   args: { brandId: v.id("pagesBrands"), pageIds: v.array(v.id("pages")), reschedule: v.boolean() },
   returns: v.object({ deleted: v.number(), more: v.boolean() }),
   handler: async (ctx, { brandId, pageIds, reschedule }) => {
-    let deleted = 0;
-    let more = false;
-    const wipe = async (docs: { _id: Id<any> }[]) => {
-      for (const d of docs) {
-        await ctx.db.delete(d._id);
-        deleted++;
-      }
-      if (docs.length >= PURGE_BATCH) more = true;
-    };
-    for (const pageId of pageIds) {
-      await wipe(await ctx.db.query("pagesEvents").withIndex("by_page_at", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesStats").withIndex("by_page_day", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
+    const sources: ((n: number) => Promise<Row[]>)[] = [
+      ...pageIds.flatMap((pageId) => [
+        (n: number) => ctx.db.query("pagesEvents").withIndex("by_page_at", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesStats").withIndex("by_page_day", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesForms").withIndex("by_page_at", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(n),
+        (n: number) => ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(n),
+      ]),
+      (n) => ctx.db.query("pagesMembers").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(n),
+      (n) => ctx.db.query("pagesUploads").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(n),
+      (n) => ctx.db.query("pagesAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(n),
+    ];
+    let budget = PURGE_BATCH;
+    for (const source of sources) {
+      const docs = await source(budget);
+      for (const d of docs) await ctx.db.delete(d._id);
+      budget -= docs.length;
+      if (budget <= 0) break;
     }
-    await wipe(await ctx.db.query("pagesMembers").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(PURGE_BATCH));
+    const deleted = PURGE_BATCH - budget;
+    // A source that filled the budget may still have rows; the next call checks.
+    const more = budget <= 0;
     if (!more) {
-      await wipe(await ctx.db.query("pagesUploads").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(PURGE_BATCH));
-      await wipe(await ctx.db.query("pagesAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(PURGE_BATCH));
       for (const pageId of pageIds) if (await ctx.db.get(pageId)) await ctx.db.delete(pageId);
       if (await ctx.db.get(brandId)) await ctx.db.delete(brandId);
     }

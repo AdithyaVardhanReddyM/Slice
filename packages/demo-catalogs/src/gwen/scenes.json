@@ -1,0 +1,296 @@
+[
+  {
+    "id": "gw-scn-01",
+    "slug": "scene-sky",
+    "name": "Sky",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Soft pastel clouds at dawn, used behind the hero.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "travel"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-01-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "pastel pink clouds sky dawn",
+    "images": [
+      "/gwen/gw-scn-01.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-scn-02",
+    "slug": "scene-above-clouds",
+    "name": "Above the clouds",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Sea of clouds at sunrise seen from above.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "travel"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-02-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "above the clouds golden sunrise bright airplane",
+    "images": [
+      "/gwen/gw-scn-02.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-scn-03",
+    "slug": "scene-tap",
+    "name": "Paying with a phone",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "A hand paying with a phone at a café counter.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "dining"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-03-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "paying contactless phone cafe counter",
+    "images": [
+      "/gwen/gw-scn-03.jpg"
+    ],
+    "imageOrientation": "portrait"
+  },
+  {
+    "id": "gw-scn-04",
+    "slug": "member-1",
+    "name": "Member portrait 1",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Portrait of a member, a woman in her thirties, natural light.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "dining"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-04-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "portrait young woman smiling sunlight outdoors",
+    "images": [
+      "/gwen/gw-scn-04.jpg"
+    ],
+    "imageOrientation": "portrait"
+  },
+  {
+    "id": "gw-scn-05",
+    "slug": "member-2",
+    "name": "Member portrait 2",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Portrait of a member, a man in his forties, outdoors.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "travel"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-05-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "portrait man smiling warm light city",
+    "images": [
+      "/gwen/gw-scn-05.jpg"
+    ],
+    "imageOrientation": "portrait"
+  },
+  {
+    "id": "gw-scn-06",
+    "slug": "member-3",
+    "name": "Member portrait 3",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Portrait of a member, a woman in her sixties.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "stays"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-06-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "portrait smiling older woman",
+    "images": [
+      "/gwen/gw-scn-06.jpg"
+    ],
+    "imageOrientation": "portrait"
+  },
+  {
+    "id": "gw-scn-07",
+    "slug": "scene-window-seat",
+    "name": "Window seat",
+    "category": "Scenes",
+    "subcategory": "Scenes",
+    "price": 1,
+    "description": "Looking out of a plane window over the clouds.",
+    "details": [
+      "Editorial photograph used on the Gwen website",
+      "Not for sale"
+    ],
+    "attributes": {
+      "style": [
+        "travel"
+      ],
+      "material": [
+        "photograph"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "scene"
+    ],
+    "variants": [
+      {
+        "id": "gw-scn-07-1",
+        "label": "Photo",
+        "inStock": false
+      }
+    ],
+    "imageQuery": "woman airplane window seat looking out",
+    "images": [
+      "/gwen/gw-scn-07.jpg"
+    ],
+    "imageOrientation": "portrait"
+  }
+]

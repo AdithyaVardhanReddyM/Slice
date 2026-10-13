@@ -1,0 +1,331 @@
+[
+  {
+    "id": "gw-prk-01",
+    "slug": "tables",
+    "name": "Tables",
+    "category": "Perks",
+    "subcategory": "Dining",
+    "price": 300,
+    "description": "$300 a year back at 1,400 partner restaurants in 14 US cities, paid as $150 each half of the year. Book through Gwen or straight with the restaurant, and the credit lands on your statement within a few days.",
+    "details": [
+      "$150 statement credit January to June, $150 July to December",
+      "1,400 restaurants in New York, Chicago, Los Angeles, San Francisco, Austin, Miami, Seattle, Denver, Boston, Washington DC, Nashville, New Orleans, Philadelphia and Portland",
+      "Members-only tables released every Thursday at noon",
+      "3x points on dining everywhere"
+    ],
+    "attributes": {
+      "style": [
+        "dining"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "dinner",
+        "date night"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "dining credit",
+      "restaurants"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-01-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "friends dinner restaurant table candlelight wine",
+    "images": [
+      "/gwen/gw-prk-01.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-02",
+    "slug": "front-row",
+    "name": "Front Row",
+    "category": "Perks",
+    "subcategory": "Live events",
+    "price": 300,
+    "description": "$300 a year toward concerts, comedy, theatre and games, plus member presales at 60 partner venues. Use it on any ticket bought through Gwen Tickets.",
+    "details": [
+      "$150 credit each half of the year",
+      "Presale access 48 hours before general sale",
+      "Member entrance and bar line at partner venues",
+      "3x points on tickets"
+    ],
+    "attributes": {
+      "style": [
+        "live"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "concerts",
+        "nights out"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "tickets",
+      "presale"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-02-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "concert crowd silhouettes warm stage light confetti",
+    "images": [
+      "/gwen/gw-prk-02.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-03",
+    "slug": "screen",
+    "name": "Screen",
+    "category": "Perks",
+    "subcategory": "Streaming",
+    "price": 240,
+    "description": "$20 a month back on one streaming service of your choice: MUBI, Criterion Channel, Crunchyroll, Max, Hulu, Apple TV+, Paramount+ or Peacock. Switch services any month.",
+    "details": [
+      "$20 statement credit every month",
+      "Eligible: MUBI, Criterion Channel, Crunchyroll, Max, Hulu, Apple TV+, Paramount+, Peacock",
+      "Change your pick any time in the app",
+      "3x points on streaming"
+    ],
+    "attributes": {
+      "style": [
+        "screen"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "nights in"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "streaming credit"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-03-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "friends watching movie at home popcorn sofa evening",
+    "images": [
+      "/gwen/gw-prk-03.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-04",
+    "slug": "stays",
+    "name": "Stays",
+    "category": "Perks",
+    "subcategory": "Hotels",
+    "price": 500,
+    "description": "$500 a year at the Gwen Stays collection, more than 900 hotels from Ace Hotel and The Hoxton to Rosewood, Aman and Six Senses. Every stay comes with breakfast for two, a room upgrade when one is free and 4pm checkout.",
+    "details": [
+      "$250 credit each half of the year on prepaid stays of two nights or more",
+      "Brands include Ace Hotel, The Hoxton, Kimpton, EDITION, Soho House, Rosewood, Aman, Six Senses, Park Hyatt, Four Seasons, The Ritz-Carlton and The Luxury Collection",
+      "Daily breakfast for two",
+      "Room upgrade on arrival, when available",
+      "Guaranteed 4pm checkout",
+      "5x points on hotels booked through Gwen Travel"
+    ],
+    "attributes": {
+      "style": [
+        "stays"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "weekends away"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "hotel credit"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-04-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "bright hotel room white linen bed sunlight",
+    "images": [
+      "/gwen/gw-prk-04.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-05",
+    "slug": "away",
+    "name": "Away",
+    "category": "Perks",
+    "subcategory": "Travel",
+    "price": 300,
+    "description": "A $300 travel credit, 1,600 airport lounges and the small things that make airports easier: Gwen Rooms at six US airports and Global Entry or TSA PreCheck paid for.",
+    "details": [
+      "$300 annual travel credit on flights, trains, car hire and rideshare",
+      "Lounge access for you and two guests at 1,600+ lounges",
+      "Gwen Rooms at JFK, LAX, ORD, SFO, MIA and AUS",
+      "Up to $120 for Global Entry or TSA PreCheck every four years",
+      "No foreign transaction fees",
+      "5x points on flights booked through Gwen Travel"
+    ],
+    "attributes": {
+      "style": [
+        "travel"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "travel"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "travel credit",
+      "lounges"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-05-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "bright airport lounge armchairs large windows daylight",
+    "images": [
+      "/gwen/gw-prk-05.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-06",
+    "slug": "shop",
+    "name": "Shop",
+    "category": "Perks",
+    "subcategory": "Shopping",
+    "price": 200,
+    "description": "$200 a year at one partner store you pick each January: REI, Saks Fifth Avenue, Le Labo, Aesop, Apple, lululemon, Nordstrom, Williams-Sonoma, Barnes & Noble, Uniqlo, Sephora or Nike.",
+    "details": [
+      "$200 statement credit, once a year",
+      "Pick your store in the app each January",
+      "12 partner stores, in store and online"
+    ],
+    "attributes": {
+      "style": [
+        "shop"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "shopping"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "shopping credit"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-06-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "woman carrying shopping bags street sunny",
+    "images": [
+      "/gwen/gw-prk-06.jpg"
+    ],
+    "imageOrientation": "landscape"
+  },
+  {
+    "id": "gw-prk-07",
+    "slug": "move",
+    "name": "Move",
+    "category": "Perks",
+    "subcategory": "Wellness",
+    "price": 300,
+    "description": "$25 a month toward the way you stay well: Equinox, ClassPass, Peloton, Barry's, Strava or an Oura membership.",
+    "details": [
+      "$25 statement credit every month",
+      "Eligible: Equinox, ClassPass, Peloton, Barry's, Strava, Oura",
+      "Use it on one membership or split it"
+    ],
+    "attributes": {
+      "style": [
+        "wellness"
+      ],
+      "material": [
+        "credit"
+      ],
+      "colorFamily": [
+        "warm"
+      ],
+      "colors": [],
+      "useCase": [
+        "fitness"
+      ],
+      "priceTier": "premium"
+    },
+    "tags": [
+      "wellness credit"
+    ],
+    "variants": [
+      {
+        "id": "gw-prk-07-1",
+        "label": "Included",
+        "inStock": true
+      }
+    ],
+    "imageQuery": "pilates studio class morning light",
+    "images": [
+      "/gwen/gw-prk-07.jpg"
+    ],
+    "imageOrientation": "landscape"
+  }
+]

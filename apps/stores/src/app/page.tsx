@@ -33,6 +33,12 @@ const stores = [
     kind: "Music festival · Lisbon, 11–13 June 2027",
     note: "Brand site for the Pages service: 57 real acts on 4 stages, passes, day tickets and travel packages per origin city. The lineup is what Qloo re-ranks per audience.",
   },
+  {
+    href: "/gwen",
+    name: "Gwen",
+    kind: "Premium credit card · $695, seven credits worth $2,140",
+    note: "Brand site for the Pages service: one metal card whose perks span dining, tickets, streaming, hotels, travel, shopping and wellness. Each audience's page leads with the perks that fit its taste.",
+  },
 ];
 
 export default function Index() {

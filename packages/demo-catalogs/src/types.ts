@@ -66,6 +66,8 @@ export interface Product {
   variants: Variant[];
   /** Stock-photo search query used to fetch a representative image. */
   imageQuery: string;
+  /** Pexels search orientation; portrait unless a wide editorial photo is needed. */
+  imageOrientation?: "portrait" | "landscape" | "square";
   /** Paths or URLs. Empty until images are fetched; the store renders a placeholder. */
   images: string[];
   rating?: number;

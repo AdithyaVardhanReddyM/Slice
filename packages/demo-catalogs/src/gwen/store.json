@@ -1,0 +1,60 @@
+{
+ "id": "gwen",
+ "name": "Gwen",
+ "logo": "/gwen/logo.svg",
+ "tagline": "Gwen Reserve: $2,140 a year back at the restaurants, venues, hotels and services you already love.",
+ "description": "Gwen is a card company. Its one card, Gwen Reserve, is a metal Visa Infinite card with a $695 annual fee and seven credits worth $2,140 a year: dining at 1,400 partner restaurants, concert and game tickets, streaming, a 900-hotel collection, travel, a partner store you pick, and wellness. Members earn 5x points on travel booked through Gwen, 3x on dining, tickets and streaming, and 1x on everything else.",
+ "currency": "USD",
+ "styles": [
+  {
+   "id": "dining",
+   "label": "Dining",
+   "description": "Restaurants, bars and the table."
+  },
+  {
+   "id": "live",
+   "label": "Live",
+   "description": "Concerts, comedy, theatre and games."
+  },
+  {
+   "id": "screen",
+   "label": "Screen",
+   "description": "Streaming at home."
+  },
+  {
+   "id": "stays",
+   "label": "Stays",
+   "description": "Hotels and weekends away."
+  },
+  {
+   "id": "travel",
+   "label": "Travel",
+   "description": "Flights, lounges and airports."
+  },
+  {
+   "id": "shop",
+   "label": "Shop",
+   "description": "Partner stores."
+  },
+  {
+   "id": "wellness",
+   "label": "Wellness",
+   "description": "Gyms, studios and recovery."
+  }
+ ],
+ "nav": [
+  {
+   "label": "Perks",
+   "category": "Perks",
+   "subcategories": [
+    "Dining",
+    "Live events",
+    "Streaming",
+    "Hotels",
+    "Travel",
+    "Shopping",
+    "Wellness"
+   ]
+  }
+ ]
+}

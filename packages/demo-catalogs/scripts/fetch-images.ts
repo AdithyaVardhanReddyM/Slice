@@ -75,11 +75,11 @@ async function pexels<T>(url: URL): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function search(query: string, exclude: Set<number>): Promise<PexelsPhoto | undefined> {
+async function search(query: string, exclude: Set<number>, orientation = "portrait"): Promise<PexelsPhoto | undefined> {
   const url = new URL("https://api.pexels.com/v1/search");
   url.searchParams.set("query", query);
   url.searchParams.set("per_page", "10");
-  url.searchParams.set("orientation", "portrait");
+  url.searchParams.set("orientation", orientation);
   const body = await pexels<{ photos: PexelsPhoto[] }>(url);
   return body.photos.find((p) => !exclude.has(p.id));
 }
@@ -114,7 +114,7 @@ async function main() {
       const previous = credits[p.id]?.pexelsId;
       if (pinned && previous !== undefined) used.delete(previous);
 
-      const found = pinned ? await photo(pinned) : await search(p.imageQuery, used);
+      const found = pinned ? await photo(pinned) : await search(p.imageQuery, used, p.imageOrientation);
       if (!found) {
         console.log("no result");
         continue;
