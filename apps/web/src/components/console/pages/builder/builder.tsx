@@ -266,6 +266,7 @@ function PageEditor() {
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
             brandSlug={brand.slug}
+            pageId={page._id}
             initial={{
               title: page.title,
               slug: page.slug,

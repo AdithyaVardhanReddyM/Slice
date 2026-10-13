@@ -1,6 +1,10 @@
 "use client";
 
+import { useMutation, useQuery } from "convex/react";
+import { X } from "lucide-react";
 import { useState } from "react";
+import { api } from "@slice/backend/convex/_generated/api";
+import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { GOALS, IMAGE_MODES, slugify } from "@/lib/pages/types";
 import { brandDomain } from "@/lib/pages/urls";
 import { Field, Input, Select } from "@/components/console/form";
@@ -30,6 +34,7 @@ export function PageSettingsSheet({
   initial,
   brandSlug,
   draft,
+  pageId,
   onSave,
 }: {
   open: boolean;
@@ -38,15 +43,45 @@ export function PageSettingsSheet({
   brandSlug: string;
   /** The page does not exist yet: empty fields mean "decide from the prompt". */
   draft?: boolean;
+  /** An existing page: also lists what the builder remembers about it. */
+  pageId?: Id<"pages">;
   onSave: (values: Partial<PageSettings>) => Promise<void> | void;
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 data-[side=right]:sm:max-w-md">
         {/* Remount per open so the fields start from the saved values. */}
-        {open && <SettingsForm initial={initial} brandSlug={brandSlug} draft={draft} onSave={onSave} onClose={() => onOpenChange(false)} />}
+        {open && <SettingsForm initial={initial} brandSlug={brandSlug} draft={draft} pageId={pageId} onSave={onSave} onClose={() => onOpenChange(false)} />}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** The merchant's standing instructions the builder keeps for this page, each removable. */
+function Remembered({ pageId }: { pageId: Id<"pages"> }) {
+  const rules = useQuery(api.pages.rules, { pageId });
+  const forget = useMutation(api.pages.forgetRule);
+  return (
+    <section className="space-y-2.5 border-t pt-5">
+      <div>
+        <h3 className="text-sm font-medium">What the builder remembers</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">Instructions it follows in every change to this page. Ask in the chat to add one.</p>
+      </div>
+      {rules === undefined ? null : rules.length ? (
+        <ul className="divide-y rounded-lg border">
+          {rules.map((r) => (
+            <li key={r.id} className="flex items-start gap-2 py-2 pr-1.5 pl-3 text-sm">
+              <span className="min-w-0 flex-1 leading-6">{r.text}</span>
+              <Button variant="ghost" size="icon-xs" aria-label={`Forget "${r.text}"`} onClick={() => void forget({ pageId, id: r.id })}>
+                <X />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="rounded-lg border border-dashed px-3 py-2.5 text-xs text-muted-foreground">Nothing yet. Say something like “always keep the hero orange” and it will remember.</p>
+      )}
+    </section>
   );
 }
 
@@ -54,12 +89,14 @@ function SettingsForm({
   initial,
   brandSlug,
   draft,
+  pageId,
   onSave,
   onClose,
 }: {
   initial: Partial<PageSettings>;
   brandSlug: string;
   draft?: boolean;
+  pageId?: Id<"pages">;
   onSave: (values: Partial<PageSettings>) => Promise<void> | void;
   onClose: () => void;
 }) {
@@ -133,6 +170,7 @@ function SettingsForm({
             <Input value={v.ctaHref ?? ""} onChange={(e) => set("ctaHref")(e.target.value)} placeholder={decide ? "From the prompt" : "https://"} aria-invalid={!!hrefProblem} />
           </Field>
         </div>
+        {pageId && <Remembered pageId={pageId} />}
       </div>
       <SheetFooter className="flex-row justify-end gap-2 border-t p-4">
         {error && <p className="mr-auto self-center text-sm text-destructive">{error}</p>}

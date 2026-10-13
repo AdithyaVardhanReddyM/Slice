@@ -173,6 +173,19 @@ http.route({
   }),
 });
 
+/** The builder's memory of a page: standing instructions, last review, Qloo names seen. */
+http.route({
+  path: "/pages/memory",
+  method: "POST",
+  handler: withErrors(async (ctx, req) => {
+    const { pageId, patch } = await req.json();
+    const id = asId<"pages">(pageId);
+    if (!id || !patch) return json({ error: "expected { pageId, patch }" }, 400);
+    await ctx.runMutation(internal.pages.patchMemory, { pageId: id, patch });
+    return json({ ok: true });
+  }),
+});
+
 /** Raw file upload (generated images, site captures, screenshots, markup) → a public storage URL. */
 http.route({
   path: "/pages/file",

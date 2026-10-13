@@ -216,6 +216,7 @@ export const purgeChunk = internalMutation({
       await wipe(await ctx.db.query("pagesSessions").withIndex("by_page_visitor", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
       await wipe(await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
       await wipe(await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
+      await wipe(await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).take(PURGE_BATCH));
     }
     await wipe(await ctx.db.query("pagesMembers").withIndex("by_brand", (q) => q.eq("brandId", brandId)).take(PURGE_BATCH));
     if (!more) {

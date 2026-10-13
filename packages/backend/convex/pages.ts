@@ -402,6 +402,47 @@ export const setBuildMessages = internalMutation({
   },
 });
 
+/* Memory (what the builder keeps across sessions) ---------------------------- */
+
+const ruleValidator = v.object({ id: v.string(), text: v.string(), at: v.number() });
+
+/** Everything the builder remembers about a page (the agent reads this at the start of a turn). */
+export const memory = query({
+  args: { pageId: v.id("pages") },
+  handler: async (ctx, { pageId }) => ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique(),
+});
+
+/** Just the merchant's standing instructions, for the console. */
+export const rules = query({
+  args: { pageId: v.id("pages") },
+  returns: v.array(ruleValidator),
+  handler: async (ctx, { pageId }) => (await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique())?.rules ?? [],
+});
+
+/** The agent's upsert: any of rules, review, seen. */
+export const patchMemory = internalMutation({
+  args: { pageId: v.id("pages"), patch: v.object({ rules: v.optional(v.array(ruleValidator)), review: v.optional(v.any()), seen: v.optional(v.array(v.any())) }) },
+  returns: v.null(),
+  handler: async (ctx, { pageId, patch }) => {
+    const now = Date.now();
+    const existing = await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique();
+    if (existing) await ctx.db.patch(existing._id, { ...patch, updatedAt: now });
+    else await ctx.db.insert("pagesMemory", { pageId, rules: [], ...patch, updatedAt: now });
+    return null;
+  },
+});
+
+/** The merchant drops a standing instruction from the console. */
+export const forgetRule = mutation({
+  args: { pageId: v.id("pages"), id: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { pageId, id }) => {
+    const existing = await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique();
+    if (existing) await ctx.db.patch(existing._id, { rules: existing.rules.filter((r) => r.id !== id), updatedAt: Date.now() });
+    return null;
+  },
+});
+
 /* Delete ------------------------------------------------------------------- */
 
 /** Removes the page, its variants and chat now; events/stats/forms/sessions are purged in scheduled batches. */
@@ -414,6 +455,8 @@ export const remove = mutation({
     for (const vnt of await variantsOf(ctx, id)) await ctx.db.delete(vnt._id);
     const build = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", id)).unique();
     if (build) await ctx.db.delete(build._id);
+    const memory = await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", id)).unique();
+    if (memory) await ctx.db.delete(memory._id);
     await ctx.db.delete(id);
     await ctx.scheduler.runAfter(0, internal.pages.purgePageData, { pageId: id });
     return null;

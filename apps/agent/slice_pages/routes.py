@@ -346,6 +346,9 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
     if name == "start_new_page":
         req = (args or {}).get("request") if isinstance(args, dict) else ""
         return str(req or "")[:140]
+    if name == "remember":
+        added, removed = resp.get("added") or [], resp.get("removed") or []
+        return "; ".join([*added, *(f"no longer: {r}" for r in removed)])[:160]
     return ""
 
 
@@ -431,7 +434,8 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             yield _ndjson({"type": "span", "span": spans[emitted]})
             emitted += 1
     if session is None:
-        session = await sessions.create_session(app_name=APP_NAME, user_id=sid, session_id=sid, state=state)
+        # A new session (first turn, or the agent restarted): pick up what was remembered.
+        session = await sessions.create_session(app_name=APP_NAME, user_id=sid, session_id=sid, state={**state, **B.recall(state)})
         await _replay(session, req.history)
         delta: dict[str, Any] = {}
     else:
@@ -654,12 +658,23 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             st["ms"] = max(0, total_ms - st.get("t", total_ms))
     yield _ndjson({"type": "done", "messageId": message_id, "variantId": req.variant_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": doc_version})
     asyncio.create_task(_persist_build(req, message_id, merchant_text, full_text, spans, steps))
+    # The review and the Qloo names seen outlive this process (rules are saved by the remember tool).
+    ended = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=session.id)
+    if ended is not None:
+        asyncio.create_task(_persist_memory(req.page_id, B.keepsake(ended.state)))
     # The builder explains its own work (explain_page); if this turn changed the page without it, reconstruct the explanation.
     if last_doc is not None and doc_version != int(state.get(B.DOC_VERSION) or 0):
         fresh = await sessions.get_session(app_name=APP_NAME, user_id=sid, session_id=session.id)
         explained = ((fresh.state if fresh else {}).get(B.INSIGHTS) or {}).get("version")
         if explained != doc_version:
             asyncio.create_task(_refresh_insights(req.variant_id))
+
+
+async def _persist_memory(page_id: str, patch: dict[str, Any]) -> None:
+    try:
+        await convex.site("/pages/memory", {"pageId": page_id, "patch": patch})
+    except Exception as err:
+        print(f"[slice-pages] could not save the page memory: {err}")
 
 
 async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span], steps: list[dict[str, Any]]) -> None:

@@ -93,6 +93,7 @@ export const TOOL_LABEL: Record<string, string> = {
   start_new_page: "Starting a new page",
   explain_page: "Writing up why the page is built this way",
   ask_merchant: "Asking you a question",
+  remember: "Remembering that",
 };
 
 export async function* postStream(

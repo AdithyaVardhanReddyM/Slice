@@ -486,6 +486,22 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_page", ["pageId"]),
 
+  /**
+   * What the builder agent keeps about a page across sessions (its working
+   * memory lives in the agent process and is lost on restart): the merchant's
+   * standing instructions, the last review, and the Qloo names it has seen.
+   */
+  pagesMemory: defineTable({
+    pageId: v.id("pages"),
+    /** Standing instructions ("keep the hero orange"), in the merchant's words. */
+    rules: v.array(v.object({ id: v.string(), text: v.string(), at: v.number() })),
+    /** The last review_page result: { version, brandMatch, quality, issues, keep }. */
+    review: v.optional(v.any()),
+    /** Named things with pictures from tool results ({ name, kind, image? }[]), for explain_page. */
+    seen: v.optional(v.array(v.any())),
+    updatedAt: v.number(),
+  }).index("by_page", ["pageId"]),
+
   /** Raw tracker events from published pages. */
   pagesEvents: defineTable({
     brandId: v.id("pagesBrands"),
