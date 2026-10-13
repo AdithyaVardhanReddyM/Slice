@@ -1,82 +1,26 @@
 "use client";
 
 import { useAction, useMutation } from "convex/react";
-import { ArrowLeft, Check, ChevronRight, FileSpreadsheet, Heart, MapPin, Plug, Upload as UploadIcon, Users, type LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Cake, Check, ChevronRight, Compass, FileSpreadsheet, Heart, ListFilter, MapPin, Music, Plug, ShoppingBag, Upload as UploadIcon, Users, X, type LucideIcon } from "lucide-react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
 import { parseCsv, suggestMapping, type CsvMapping, type ParsedCsv } from "@/lib/pages/csv";
 import { postJson } from "@/lib/pages/stream";
-import { AGE_LABEL } from "@/lib/pages/types";
-import { Field, Input, Select } from "@/components/console/form";
+import type { Audience } from "@/lib/pages/types";
+import { Field, Select } from "@/components/console/form";
 import { FieldGroup, Spinner } from "@/components/console/setup/atoms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useBrand } from "./brand-context";
-import { CityAutocomplete, CityMap, searchCities, type City } from "./city-picker";
-import { EditorField } from "./editor-layout";
-import { InterestPicker, type PickedEntity } from "./interest-picker";
+import { AudienceBuilder, PRESET_ROWS } from "./audience-builder";
 import { CRMS, type CrmId } from "./crm-logos";
 
 const CHUNK = 200;
-
-/**
- * Compile, then ask the agent for a brief. A failed compile is recorded on the
- * audience itself (status "failed" with the reason, shown on its card), so it
- * is not rethrown here; brief errors are swallowed too.
- */
-export function useCompileAudience() {
-  const compile = useAction(api.pagesAudiences.compile);
-  return useCallback(
-    async (id: Id<"pagesAudiences">) => {
-      try {
-        await compile({ id });
-      } catch {
-        return;
-      }
-      postJson("/api/pages/audience-brief", { audience_id: id }).catch(() => undefined);
-    },
-    [compile],
-  );
-}
-
-function DemographicFields({
-  age,
-  gender,
-  onAge,
-  onGender,
-}: {
-  age: string;
-  gender: string;
-  onAge: (v: string) => void;
-  onGender: (v: string) => void;
-}) {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Field label="Age" optional>
-        <Select value={age} onChange={(e) => onAge(e.target.value)}>
-          <option value="">Any age</option>
-          {Object.entries(AGE_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </Select>
-      </Field>
-      <Field label="Gender" optional>
-        <Select value={gender} onChange={(e) => onGender(e.target.value)}>
-          <option value="">Any</option>
-          <option value="female">Women</option>
-          <option value="male">Men</option>
-        </Select>
-      </Field>
-    </div>
-  );
-}
 
 function Footer({ busy, disabled, label, error, onSubmit }: { busy: boolean; disabled: boolean; label: string; error: string | null; onSubmit: () => void }) {
   return (
@@ -88,182 +32,6 @@ function Footer({ busy, disabled, label, error, onSubmit }: { busy: boolean; dis
         {busy && <Spinner data-icon="inline-start" />}
         {label}
       </Button>
-    </div>
-  );
-}
-
-/* Location --------------------------------------------------------------------- */
-
-function LocationTab({ onDone }: { onDone: () => void }) {
-  const brand = useBrand();
-  const create = useMutation(api.pagesAudiences.create);
-  const run = useCompileAudience();
-  const [city, setCity] = useState(cityOf(brand.brief?.locations?.[0]));
-  const [country, setCountry] = useState("");
-  const [picked, setPicked] = useState<City | null>(null);
-
-  // The city prefilled from the brand's own locations gets its pin and country too.
-  const prefilled = useRef(city);
-  useEffect(() => {
-    if (!prefilled.current) return;
-    const ctrl = new AbortController();
-    searchCities(prefilled.current, ctrl.signal)
-      .then(([first]) => {
-        if (!first) return;
-        setPicked(first);
-        setCountry((c) => c || first.country);
-      })
-      .catch(() => undefined);
-    return () => ctrl.abort();
-  }, []);
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("");
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const autoName = [city.trim(), age ? AGE_LABEL[age].toLowerCase() : "", gender === "female" ? "women" : gender === "male" ? "men" : ""].filter(Boolean).join(", ");
-
-  async function submit() {
-    setBusy(true);
-    setError(null);
-    try {
-      const { id } = await create({
-        brandId: brand._id,
-        name: name.trim() || autoName,
-        kind: "location",
-        sources: {
-          location: { city: city.trim(), country: country.trim() || undefined },
-          ...(age || gender ? { demographics: { age: age || undefined, gender: gender || undefined } } : {}),
-        },
-      });
-      onDone();
-      void run(id);
-    } catch (err) {
-      setError(String((err as Error).message ?? err));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-1 flex-col gap-5">
-      <div className="space-y-3">
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <EditorField label="City">
-            <CityAutocomplete
-              value={city}
-              autoFocus
-              onChange={(text) => {
-                setCity(text);
-                setPicked(null);
-              }}
-              onSelect={(c) => {
-                setCity(c.name);
-                setCountry(c.country);
-                setPicked(c);
-              }}
-            />
-          </EditorField>
-          <Field label="Country" optional>
-            <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Filled in from the city" />
-          </Field>
-        </div>
-        <CityMap city={picked} />
-      </div>
-      <DemographicFields age={age} gender={gender} onAge={setAge} onGender={setGender} />
-      <Field label="Name" optional hint={`Shown on the audience card. Defaults to “${autoName || "the city"}”.`}>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName} />
-      </Field>
-      <Footer busy={busy} disabled={!city.trim()} label="Create audience" error={error} onSubmit={submit} />
-    </div>
-  );
-}
-
-/* Demographics --------------------------------------------------------------------- */
-
-function DemographicTab({ onDone }: { onDone: () => void }) {
-  const brand = useBrand();
-  const create = useMutation(api.pagesAudiences.create);
-  const run = useCompileAudience();
-  const [age, setAge] = useState("25_to_29");
-  const [gender, setGender] = useState("");
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const autoName = [age ? AGE_LABEL[age] : "All ages", gender === "female" ? "women" : gender === "male" ? "men" : ""].filter(Boolean).join(", ");
-
-  async function submit() {
-    setBusy(true);
-    setError(null);
-    try {
-      const { id } = await create({
-        brandId: brand._id,
-        name: name.trim() || autoName,
-        kind: "demographic",
-        sources: { demographics: { age: age || undefined, gender: gender || undefined } },
-      });
-      onDone();
-      void run(id);
-    } catch (err) {
-      setError(String((err as Error).message ?? err));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-1 flex-col gap-5">
-      <DemographicFields age={age} gender={gender} onAge={setAge} onGender={setGender} />
-      <Field label="Name" optional hint={`Defaults to “${autoName}”.`}>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName} />
-      </Field>
-      <Footer busy={busy} disabled={!age && !gender} label="Create audience" error={error} onSubmit={submit} />
-    </div>
-  );
-}
-
-/* Interests ---------------------------------------------------------------------- */
-
-function InterestsTab({ onDone }: { onDone: () => void }) {
-  const brand = useBrand();
-  const create = useMutation(api.pagesAudiences.create);
-  const run = useCompileAudience();
-  const [picked, setPicked] = useState<PickedEntity[]>([]);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const names = picked.map((p) => p.name);
-  const autoName = names.slice(0, 3).join(", ") + (names.length > 3 ? ` +${names.length - 3}` : "");
-
-  async function submit() {
-    setBusy(true);
-    setError(null);
-    try {
-      const { id } = await create({
-        brandId: brand._id,
-        name: name.trim() || autoName,
-        kind: "interests",
-        sources: { interests: names, interestEntities: picked },
-      });
-      onDone();
-      void run(id);
-    } catch (err) {
-      setError(String((err as Error).message ?? err));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-1 flex-col gap-5">
-      <FieldGroup
-        label="Interests"
-        aside={`${picked.length} added`}
-        hint="Pick from Qloo's suggestions. A single well-known brand is enough: Qloo reads its customers' taste."
-      >
-        <InterestPicker value={picked} onChange={setPicked} />
-      </FieldGroup>
-      <Field label="Name" optional>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={autoName || "People who love…"} />
-      </Field>
-      <Footer busy={busy} disabled={picked.length < 1} label="Create audience" error={error} onSubmit={submit} />
     </div>
   );
 }
@@ -520,29 +288,31 @@ function CrmTab({ crm, onCrm }: { crm: CrmId | null; onCrm: (id: CrmId) => void 
 
 /* Sheet ---------------------------------------------------------------------- */
 
-/** "2211 NE Alberta St, Portland, OR 97211" → "Portland"; "Lisbon, Portugal" → "Lisbon". */
-function cityOf(location: string | undefined): string {
-  if (!location) return "";
-  const parts = location.split(",").map((p) => p.trim()).filter(Boolean);
-  const pick = parts.length >= 3 ? parts[parts.length - 2] : parts[0] ?? "";
-  return /\d/.test(pick) ? "" : pick;
-}
+export type AudienceSourceKind = "custom" | "location" | "demographic" | "interests" | "csv" | "crm";
 
-export type AudienceSourceKind = "location" | "demographic" | "interests" | "csv" | "crm";
+/** Sources the audience builder handles: "custom" opens it empty, the others with that condition added. */
+const BUILDER_KINDS = new Set<AudienceSourceKind>(["custom", "location", "demographic", "interests"]);
 
 export const AUDIENCE_SOURCES: { kind: AudienceSourceKind; icon: LucideIcon; title: string; body: string; example?: string; soon?: boolean }[] = [
+  {
+    kind: "custom",
+    icon: ListFilter,
+    title: "Build an audience",
+    body: "Combine a place, ages, gender, the brands, music and films they love, their lifestyle and genres. Qloo reads them together.",
+    example: "Under 25s in Austin, into Nike and Tyler, the Creator",
+  },
   {
     kind: "location",
     icon: MapPin,
     title: "A city",
-    body: "What a city listens to, watches, reads and books. Narrow it by age or gender.",
+    body: "What a city listens to, watches, reads and books. Narrow it by age, gender or taste.",
     example: "Austin, 25 to 29",
   },
   {
     kind: "demographic",
     icon: Users,
-    title: "A demographic",
-    body: "An age band and gender across every market, from Qloo's demographic signals.",
+    title: "An age group",
+    body: "Age bands and gender, from Qloo's demographic signals. Add a place or an interest to sharpen it.",
     example: "Women, 30 to 34",
   },
   {
@@ -570,27 +340,88 @@ export function SourceIcon({ icon: Icon, className }: { icon: LucideIcon; classN
   );
 }
 
+// The example chain on the builder card: what "combine" means, at a glance.
+const EXAMPLE_CHAIN: { icon: LucideIcon; text: string }[] = [
+  { icon: Cake, text: "Under 25" },
+  { icon: MapPin, text: "Austin" },
+  { icon: ShoppingBag, text: "Nike" },
+  { icon: Music, text: "Tyler, the Creator" },
+  { icon: Compass, text: "Sneakerheads" },
+];
+
+/** The builder as the first, featured source. */
+export function BuilderCard({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "group flex w-full flex-col overflow-hidden rounded-xl bg-card text-left ring-1 ring-foreground/10 transition-shadow outline-none hover:shadow-lg focus-visible:ring-3 focus-visible:ring-ring/50",
+        className,
+      )}
+    >
+      <div className="flex flex-1 flex-wrap content-center items-center justify-center gap-x-1.5 gap-y-2 bg-neutral-950 px-5 py-6">
+        {EXAMPLE_CHAIN.map(({ icon: Icon, text }, i) => (
+          <span key={text} className="flex items-center gap-1.5">
+            {i > 0 && <span className="px-0.5 text-xs text-white/45">and</span>}
+            <span className="flex items-center gap-1.5 rounded-full bg-white/10 py-1 pr-3 pl-2 text-sm font-medium text-white ring-1 ring-white/15 transition-colors group-hover:bg-white/15">
+              <Icon className="size-3.5 text-white/70" />
+              {text}
+            </span>
+          </span>
+        ))}
+      </div>
+      <div className="flex items-center gap-4 p-4">
+        <SourceIcon icon={ListFilter} className="bg-primary text-primary-foreground" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">Build an audience</span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">
+            Combine a place, ages, gender, the brands, music and films they love, their lifestyle and genres. Qloo reads them together.
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </button>
+  );
+}
+
+function SourceRow({ src, onClick }: { src: (typeof AUDIENCE_SOURCES)[number]; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      <SourceIcon icon={src.icon} />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium">{src.title}</span>
+        <span className="mt-0.5 block text-sm text-muted-foreground">{src.body}</span>
+      </span>
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+}
+
 function SourcePicker({ onPick, onCrm }: { onPick: (k: AudienceSourceKind) => void; onCrm: (id: CrmId) => void }) {
+  const starters = AUDIENCE_SOURCES.filter((src) => src.kind === "location" || src.kind === "demographic" || src.kind === "interests");
+  const customers = AUDIENCE_SOURCES.find((src) => src.kind === "csv")!;
   return (
     <div className="space-y-8">
-      <ul className="space-y-2">
-        {AUDIENCE_SOURCES.filter((src) => src.kind !== "crm").map((src) => (
-          <li key={src.kind}>
-            <button
-              type="button"
-              onClick={() => onPick(src.kind)}
-              className="group flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-colors outline-none hover:bg-muted/50 focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <SourceIcon icon={src.icon} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{src.title}</span>
-                <span className="mt-0.5 block text-sm text-muted-foreground">{src.body}</span>
-              </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-          </li>
-        ))}
-      </ul>
+      <BuilderCard onClick={() => onPick("custom")} />
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium">Or start from one condition</h3>
+        <ul className="space-y-2">
+          {starters.map((src) => (
+            <li key={src.kind}>
+              <SourceRow src={src} onClick={() => onPick(src.kind)} />
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium">From your own data</h3>
+        <SourceRow src={customers} onClick={() => onPick("csv")} />
+      </section>
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-medium">Or connect a CRM</h3>
@@ -609,6 +440,7 @@ function SourcePicker({ onPick, onCrm }: { onPick: (k: AudienceSourceKind) => vo
 /**
  * Two steps in one sheet: pick where the audience comes from, then define it.
  * `kind` preselects a source (the empty state's cards open straight into one).
+ * The builder sources share one wide form; the sheet widens for it.
  */
 export function NewAudienceSheet({
   open,
@@ -623,6 +455,7 @@ export function NewAudienceSheet({
 }) {
   const close = () => onOpenChange(false);
   const source = AUDIENCE_SOURCES.find((s) => s.kind === kind) ?? null;
+  const builder = !!source && BUILDER_KINDS.has(source.kind);
   const [crm, setCrm] = useState<CrmId | null>(null);
   const pickCrm = (id: CrmId) => {
     setCrm(id);
@@ -630,43 +463,77 @@ export function NewAudienceSheet({
   };
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full gap-0 overflow-x-hidden overflow-y-auto data-[side=right]:sm:max-w-xl">
-        <SheetHeader className="gap-3 border-b p-6">
-          {source ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="-ml-2 w-fit text-muted-foreground"
-                onClick={() => {
-                  setCrm(null);
-                  onKindChange(null);
-                }}
-              >
-                <ArrowLeft data-icon="inline-start" /> All sources
-              </Button>
-              <div className="flex items-start gap-3">
-                <SourceIcon icon={source.icon} />
-                <div className="min-w-0 space-y-0.5">
-                  <SheetTitle>{source.title}</SheetTitle>
-                  <SheetDescription>{source.body}</SheetDescription>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <SheetTitle>New audience</SheetTitle>
-              <SheetDescription>Who is the page for? Pick where the audience comes from; Qloo turns it into a taste profile the builder writes against.</SheetDescription>
-            </>
-          )}
-        </SheetHeader>
+      <SheetContent
+        showCloseButton={!source}
+        className={cn(
+          "w-full gap-0 overflow-x-hidden overflow-y-auto",
+          builder ? "bg-neutral-50 data-[side=right]:sm:max-w-5xl" : "data-[side=right]:sm:max-w-xl",
+        )}
+      >
+        {source ? (
+          <SheetBar
+            onBack={() => {
+              setCrm(null);
+              onKindChange(null);
+            }}
+            title={builder ? "Build an audience" : source.title}
+            description={builder ? "Combine conditions. Qloo reads them together and the preview shows who that makes." : source.body}
+          />
+        ) : (
+          <SheetHeader className="gap-3 border-b bg-popover p-6">
+            <SheetTitle>New audience</SheetTitle>
+            <SheetDescription>Who is the page for? Pick where the audience comes from; Qloo turns it into a taste profile the builder writes against.</SheetDescription>
+          </SheetHeader>
+        )}
         <div className="flex flex-1 flex-col px-6 pt-6 pb-6 has-[.sticky]:pb-0">
           {!source && <SourcePicker onPick={onKindChange} onCrm={pickCrm} />}
-          {source?.kind === "location" && <LocationTab onDone={close} />}
-          {source?.kind === "demographic" && <DemographicTab onDone={close} />}
-          {source?.kind === "interests" && <InterestsTab onDone={close} />}
+          {builder && <AudienceBuilder key={source.kind} initialRows={PRESET_ROWS[source.kind]} onDone={close} onCancel={close} />}
           {source?.kind === "csv" && <CsvTab onDone={close} />}
           {source?.kind === "crm" && <CrmTab crm={crm} onCrm={setCrm} />}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/**
+ * The sheet's top bar once a source is picked: a back button to the sources,
+ * the title, and close. Sticky, so both stay in reach on a long form.
+ */
+function SheetBar({ onBack, title, description }: { onBack?: () => void; title: ReactNode; description?: ReactNode }) {
+  return (
+    <SheetHeader className="sticky top-0 z-20 flex-row items-center gap-3 border-b bg-popover px-4 py-3">
+      {onBack && (
+        <>
+          <Button variant="outline" onClick={onBack} className="shrink-0">
+            <ArrowLeft data-icon="inline-start" /> All sources
+          </Button>
+          <span aria-hidden className="h-8 w-px shrink-0 bg-border" />
+        </>
+      )}
+      <div className={cn("min-w-0 flex-1", !onBack && "pl-2")}>
+        <SheetTitle className="truncate">{title}</SheetTitle>
+        {description && <SheetDescription className="line-clamp-1">{description}</SheetDescription>}
+      </div>
+      <SheetClose render={<Button variant="ghost" size="icon-sm" className="shrink-0" />}>
+        <X />
+        <span className="sr-only">Close</span>
+      </SheetClose>
+    </SheetHeader>
+  );
+}
+
+/** The builder in its own sheet, for changing an audience's conditions. */
+export function EditAudienceSheet({ audience, onClose, onSaved }: { audience: Audience | null; onClose: () => void; onSaved: (id: Id<"pagesAudiences">) => void }) {
+  return (
+    <Sheet open={!!audience} onOpenChange={(o) => !o && onClose()}>
+      <SheetContent showCloseButton={false} className="w-full gap-0 overflow-x-hidden overflow-y-auto bg-neutral-50 data-[side=right]:sm:max-w-5xl">
+        <SheetBar
+          title="Edit conditions"
+          description={audience ? `${audience.name}. Saving recompiles its taste profile and rewrites the brief.` : undefined}
+        />
+        <div className="flex flex-1 flex-col px-6 pt-6 pb-0">
+          {audience && <AudienceBuilder key={audience._id} audience={audience} onDone={onSaved} onCancel={onClose} />}
         </div>
       </SheetContent>
     </Sheet>

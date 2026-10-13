@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
+import { agesPhrase } from "@/lib/pages/definition";
 import { AGE_LABEL, AUDIENCE_KIND_LABEL, type Audience, type Span } from "@/lib/pages/types";
 import { Badge, spanMeta } from "@/components/console/primitives";
 import { Progress } from "@/components/ui/progress";
@@ -251,18 +252,24 @@ export function audienceSubtitle(a: Audience) {
 
 /**
  * What an audience was built from, for subtitles: "Berlin, Germany",
- * "Under 25, women", "Patagonia, The Bear", "86 customers". Real counts only;
- * reach estimates are never shown.
+ * "Under 25, women", "Patagonia, The Bear", "86 customers",
+ * "Austin · Under 30 · Nike +2". Real counts only; reach estimates are never shown.
  */
 export function audienceSizeLabel(a: Audience) {
   if (a.kind === "lead") return "1 person";
   if (a.kind === "csv") return `${fmt.int(a.size)} customers`;
   if (a.kind === "default") return "Everyone";
-  const { location, demographics, interests } = a.sources;
+  const { location, demographics, interests, segments, tags } = a.sources;
+  const ages = demographics?.ages?.length ? agesPhrase(demographics.ages) : demographics?.age ? AGE_LABEL[demographics.age] ?? demographics.age : "";
   const who = [
-    demographics?.age ? AGE_LABEL[demographics.age] ?? demographics.age : "",
+    ages ? ages.charAt(0).toUpperCase() + ages.slice(1) : "",
     demographics?.gender === "female" ? "women" : demographics?.gender === "male" ? "men" : "",
   ].filter(Boolean);
+  if (a.kind === "custom") {
+    const picks = [...(interests ?? []), ...(segments ?? []).map((s) => s.name), ...(tags ?? []).map((t) => t.name)];
+    const loves = picks.length ? picks[0] + (picks.length > 1 ? ` +${picks.length - 1}` : "") : "";
+    return [location?.city, who.join(", "), loves].filter(Boolean).join(" · ");
+  }
   if (location) return [location.city, location.country, ...who].filter(Boolean).join(", ");
   if (interests?.length) return interests.slice(0, 3).join(", ") + (interests.length > 3 ? ` +${interests.length - 3}` : "");
   return who.join(", ") || (AUDIENCE_KIND_LABEL[a.kind] ?? a.kind);

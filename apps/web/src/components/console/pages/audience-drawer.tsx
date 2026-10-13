@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { Hourglass, Link2, MapPinOff, PenLine, RefreshCw, Trash2, Users, type LucideIcon } from "lucide-react";
+import { Hourglass, Link2, ListFilter, MapPinOff, PenLine, RefreshCw, Trash2, Users, type LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { fmt } from "@/lib/format";
 import { postJson } from "@/lib/pages/stream";
+import { EDITABLE_KINDS } from "@/lib/pages/definition";
 import { AUDIENCE_KIND_LABEL, audienceBriefOf, profileOf, type Audience, type Member, type Page } from "@/lib/pages/types";
 import { publicPageUrl } from "@/lib/pages/urls";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
@@ -17,8 +18,9 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DefinitionChips } from "./audience-builder";
 import { useBrand } from "./brand-context";
-import { useCompileAudience } from "./new-audience-sheet";
+import { useCompileAudience } from "./use-compile-audience";
 import { AudienceBriefView, BrandsList, CultureLists, DemographicsBars, GeoList, TagTable } from "./profile-view";
 import { CityMap } from "./city-picker";
 import { EntityStrip, Hint, ProgressLine, StatusBadge, TraceList, audienceSizeLabel, audienceSubtitle } from "./shared";
@@ -138,7 +140,7 @@ function MembersTable({ audience }: { audience: Audience }) {
 
 /* Drawer ------------------------------------------------------------------------ */
 
-export function AudienceDrawer({ audience, onClose }: { audience: Audience | null; onClose: () => void }) {
+export function AudienceDrawer({ audience, onClose, onEdit }: { audience: Audience | null; onClose: () => void; onEdit?: (id: Id<"pagesAudiences">) => void }) {
   const remove = useMutation(api.pagesAudiences.remove);
   const run = useCompileAudience();
   const [briefBusy, setBriefBusy] = useState(false);
@@ -170,7 +172,7 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
               kindLabel={AUDIENCE_KIND_LABEL[audience.kind] ?? audience.kind}
               title={audience.name}
               subtitle={audienceSubtitle(audience)}
-              corner={audience.status !== "ready" ? <StatusBadge status={audience.status} /> : undefined}
+              corner={audience.status !== "ready" ? <StatusBadge status={audience.status} className="mr-10" /> : undefined}
               className="aspect-[21/8] shrink-0"
             />
             <SheetHeader className="sr-only">
@@ -184,8 +186,14 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
               ) : (
                 <p className="text-sm text-muted-foreground">No brief yet. Write one to get a summary of who these people are.</p>
               )}
+              {EDITABLE_KINDS.has(audience.kind) && <DefinitionChips audience={audience} />}
               {audience.status !== "ready" && <ProgressLine progress={audience.progress} status={audience.status} error={audience.error} />}
               <div className="flex flex-wrap items-center gap-2">
+                {onEdit && EDITABLE_KINDS.has(audience.kind) && (
+                  <Button variant="outline" size="sm" onClick={() => onEdit(audience._id)}>
+                    <ListFilter data-icon="inline-start" /> Edit conditions
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => void run(audience._id)} disabled={audience.status === "compiling"}>
                   <RefreshCw data-icon="inline-start" /> Recompile
                 </Button>
@@ -266,7 +274,7 @@ export function AudienceDrawer({ audience, onClose }: { audience: Audience | nul
                     </Panel>
                   ) : (
                     <EmptyPanel icon={MapPinOff} title="Not tied to a place">
-                      {audience.kind === "interests" || audience.kind === "demographic"
+                      {audience.kind === "interests" || audience.kind === "demographic" || audience.kind === "custom"
                         ? "This audience is defined by taste, not location, so it reaches people wherever they are. City audiences and customer clusters show where their people live."
                         : "No location data yet. It appears once the audience compiles."}
                     </EmptyPanel>

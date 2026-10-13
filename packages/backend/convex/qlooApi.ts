@@ -425,6 +425,61 @@ export async function entitiesFromSignals(
   return (body.results?.entities ?? []).map((e) => entityFromInsights(e, "qloo"));
 }
 
+/**
+ * Entities of `kind` for any mix of signals: picked entities, genre tags, a
+ * city, demographics, audience segments (a custom audience). With only a city
+ * or demographics behind it, results keep to well-known names, as
+ * `entitiesForCity` does. Places stay inside the city (`filter.location.query`;
+ * Qloo returns nothing when it is paired with `signal.location.query`).
+ */
+export async function entitiesForSignals(
+  ctx: ActionCtx,
+  trace: Span[],
+  kind: EntityKind,
+  signals: QlooParams,
+  take = 10,
+  label = `${kind.replace("_", " ")}s for these signals`,
+): Promise<EntityRef[]> {
+  const taste = Boolean(signals["signal.interests.entities"] || signals["signal.interests.tags"]);
+  const params: QlooParams = { "filter.type": ENTITY[kind], take: Math.max(take * 3, 20), ...signals };
+  if (kind === "place") {
+    const city = params["signal.location.query"];
+    delete params["signal.location.query"];
+    if (city) {
+      params["filter.location.query"] = city;
+      params["filter.tags"] = "urn:tag:genre:place:restaurant";
+      params["filter.popularity.min"] = 0.9;
+      params.take = take;
+    }
+  } else if (!taste) {
+    params["filter.popularity.min"] = 0.97;
+    if (kind === "artist") params["bias.trends"] = "low";
+  }
+  const body = await traced<{ results?: { entities?: Json[] } }>(
+    ctx,
+    trace,
+    label,
+    "/v2/insights",
+    params,
+    (b) =>
+      (b.results?.entities ?? [])
+        .slice(0, 4)
+        .map((e) => String(e.name))
+        .join(", ") || "no results",
+  );
+  const all = body.results?.entities ?? [];
+  const picked = kind === "place" ? all.slice(0, take) : diversify(all, take);
+  return picked.map((e) => {
+    const ref = entityFromInsights(e, "qloo");
+    if (kind === "place") {
+      const props = (e.properties ?? {}) as Json;
+      const images = props.images as Json[] | undefined;
+      if (!ref.image && images?.[0]) ref.image = str(images[0].url);
+    }
+    return ref;
+  });
+}
+
 export async function tagInsights(
   ctx: ActionCtx,
   trace: Span[],

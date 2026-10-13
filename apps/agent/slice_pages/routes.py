@@ -4,6 +4,7 @@ POST /pages/intake          {brand_id, url}                    NDJSON stream
 POST /pages/capture         {brand_id, url?}                   {ok, site}
 POST /pages/audience-brief  {audience_id}                      {ok, brief, name?}
 POST /pages/name-clusters   {upload_id}                        {ok, names}
+POST /pages/audience-parse  {brand_id, text}                   {ok, definition, unresolved}
 POST /pages/plan            {brand_id, prompt, audience_ids?, source_page_id?}  {ok, plan}
 POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?, hand_edits?, elements?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
@@ -34,6 +35,7 @@ from slice_agent.trace import Span, record, start_turn
 from . import builder as B
 from . import capture, images
 from .audience_brief import name_clusters, write_audience_brief
+from .audience_parse import parse_audience
 from .insights import write_insights
 from .intake import run_intake
 from .plan import plan_page
@@ -147,6 +149,23 @@ async def name_clusters_route(req: NameClustersRequest) -> dict[str, Any]:
             await convex.site("/pages/upload", {"uploadId": req.upload_id, "patch": {"spans": spans}})
         except Exception:
             pass
+    return result
+
+
+class AudienceParseRequest(BaseModel):
+    brand_id: str
+    text: str
+
+
+@router.post("/audience-parse")
+async def audience_parse(req: AudienceParseRequest) -> dict[str, Any]:
+    """The audience builder's "describe them" box: a sentence in, conditions out."""
+    spans = start_turn()
+    try:
+        result = await parse_audience(req.brand_id, req.text)
+    except Exception as err:
+        return {"ok": False, "error": f"{type(err).__name__}: {str(err)[:300]}", "trace": spans}
+    result["trace"] = spans
     return result
 
 

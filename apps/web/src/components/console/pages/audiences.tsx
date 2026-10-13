@@ -2,10 +2,11 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { FileSpreadsheet, LayoutGrid, MoreHorizontal, Plus, RefreshCw, Trash2, Users } from "lucide-react";
+import { FileSpreadsheet, LayoutGrid, ListFilter, MoreHorizontal, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { fmt } from "@/lib/format";
+import { EDITABLE_KINDS } from "@/lib/pages/definition";
 import { AGE_LABEL, AUDIENCE_KIND_LABEL, audienceBriefOf, profileOf, type Audience, type AudienceProfile, type Upload } from "@/lib/pages/types";
 import { Segmented } from "@/components/console/form";
 import { PageHeader, Skeleton } from "@/components/console/primitives";
@@ -14,7 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { ConfirmDialog } from "@/components/console/settings/confirm-dialog";
 import { AudienceDrawer } from "./audience-drawer";
 import { useBrand } from "./brand-context";
-import { AUDIENCE_SOURCES, NewAudienceSheet, SourceIcon, useCompileAudience, type AudienceSourceKind } from "./new-audience-sheet";
+import { AUDIENCE_SOURCES, BuilderCard, EditAudienceSheet, NewAudienceSheet, SourceIcon, type AudienceSourceKind } from "./new-audience-sheet";
+import { useCompileAudience } from "./use-compile-audience";
 import { KIND_ICON, TasteCover, coverTiles } from "./taste-cover";
 import { TagChips } from "./profile-view";
 import { ProgressLine, StatusBadge, audienceSubtitle } from "./shared";
@@ -33,7 +35,7 @@ function skewLabel(d: AudienceProfile["demographics"] | undefined) {
 }
 
 
-export function AudienceCard({ audience, onOpen }: { audience: Audience; onOpen: () => void }) {
+export function AudienceCard({ audience, onOpen, onEdit }: { audience: Audience; onOpen: () => void; onEdit?: () => void }) {
   const profile = profileOf(audience);
   const brief = audienceBriefOf(audience);
   const ready = audience.status === "ready";
@@ -72,13 +74,13 @@ export function AudienceCard({ audience, onOpen }: { audience: Audience; onOpen:
           {profile && <p className="mt-auto text-xs text-muted-foreground">{skew ?? "No demographic read"}</p>}
         </div>
       </button>
-      <CardMenu audience={audience} />
+      <CardMenu audience={audience} onEdit={onEdit} />
     </div>
   );
 }
 
-/** "⋯" on the card cover: recompile or delete without opening the audience. */
-function CardMenu({ audience }: { audience: Audience }) {
+/** "⋯" on the card cover: edit, recompile or delete without opening the audience. */
+function CardMenu({ audience, onEdit }: { audience: Audience; onEdit?: () => void }) {
   const remove = useMutation(api.pagesAudiences.remove);
   const run = useCompileAudience();
   const [confirm, setConfirm] = useState(false);
@@ -96,7 +98,12 @@ function CardMenu({ audience }: { audience: Audience }) {
         >
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
+          {onEdit && EDITABLE_KINDS.has(audience.kind) && (
+            <DropdownMenuItem onClick={onEdit}>
+              <ListFilter /> Edit conditions
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => void run(audience._id)} disabled={audience.status === "compiling"}>
             <RefreshCw /> Recompile
           </DropdownMenuItem>
@@ -132,15 +139,16 @@ function NoAudiences({ onPick }: { onPick: (k: AudienceSourceKind | null) => voi
         <div className="space-y-1">
           <h2 className="font-semibold">Build the first audience</h2>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Pick where it comes from. Qloo fills the cover with the artists, places and brands these people love, and the builder can write pages for them.
+            Combine conditions or start from one. Qloo fills the cover with the artists, places and brands these people love, and the builder can write pages for them.
           </p>
         </div>
         <Button variant="outline" onClick={() => onPick(null)}>
           <LayoutGrid data-icon="inline-start" /> All sources
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {AUDIENCE_SOURCES.filter((src) => !src.soon).map((src) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <BuilderCard onClick={() => onPick("custom")} className="sm:col-span-2" />
+        {AUDIENCE_SOURCES.filter((src) => !src.soon && src.kind !== "custom").map((src) => (
           <button
             key={src.kind}
             type="button"
@@ -182,15 +190,16 @@ function NewAudienceTile({ onOpen }: { onOpen: () => void }) {
       </span>
       <span className="space-y-0.5">
         <span className="block text-sm font-medium">New audience</span>
-        <span className="block text-sm text-muted-foreground">A city, a demographic, shared interests or your customers</span>
+        <span className="block text-sm text-muted-foreground">Combine a place, ages, interests and lifestyle, or cluster your customers</span>
       </span>
     </button>
   );
 }
 
-const FILTERS = ["csv", "location", "demographic", "interests", "lead", "default"] as const;
+const FILTERS = ["custom", "csv", "location", "demographic", "interests", "lead", "default"] as const;
 
 const FILTER_LABEL: Record<string, string> = {
+  custom: "Custom",
   csv: "Customer clusters",
   location: "Locations",
   demographic: "Demographics",
@@ -216,6 +225,7 @@ export function AudiencesScreen() {
   const uploads = useQuery(api.pagesUploads.list, { brandId: brand._id }) as Upload[] | undefined;
   // ?open=<id> (from the overview) opens that audience's drawer.
   const [open, setOpen] = useState<string | null>(() => params.get("open"));
+  const [editing, setEditing] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
   // ?new=1 opens the source picker; ?new=<kind> opens straight into that form.
@@ -228,6 +238,7 @@ export function AudiencesScreen() {
 
   const busyUploads = (uploads ?? []).filter((u) => u.status !== "ready" && u.status !== "failed");
   const selected = (audiences ?? []).find((a) => a._id === open) ?? null;
+  const edited = (audiences ?? []).find((a) => a._id === editing) ?? null;
   const kinds = FILTERS.filter((k) => (audiences ?? []).some((a) => a.kind === k));
   const shown = (audiences ?? []).filter((a) => filter === "all" || a.kind === filter);
 
@@ -235,7 +246,7 @@ export function AudiencesScreen() {
     <div className="mx-auto w-full max-w-7xl px-6 py-6">
       <PageHeader
         title="Audiences"
-        description="Who the pages are written for. Each audience is a taste profile Qloo built from a city, a demographic, shared interests or your own customers; a page is built for one of them, a few combined, or everyone."
+        description="Who the pages are written for. Each audience is a taste profile Qloo built from the conditions you combine (a place, ages, the brands, music and films they love, their lifestyle) or from your own customers; a page is built for one of them, a few combined, or everyone."
         actions={
           audiences && audiences.length > 0 ? (
             <Button onClick={() => openSheet(null)}>
@@ -287,7 +298,7 @@ export function AudiencesScreen() {
           )}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map((a) => (
-              <AudienceCard key={a._id} audience={a} onOpen={() => setOpen(a._id)} />
+              <AudienceCard key={a._id} audience={a} onOpen={() => setOpen(a._id)} onEdit={() => setEditing(a._id)} />
             ))}
             <NewAudienceTile onOpen={() => openSheet(null)} />
           </div>
@@ -295,7 +306,23 @@ export function AudiencesScreen() {
       )}
 
       <NewAudienceSheet open={sheetOpen} kind={sheetKind} onOpenChange={(o) => (o ? openSheet(sheetKind) : closeSheet())} onKindChange={openSheet} />
-      <AudienceDrawer audience={selected} onClose={() => setOpen(null)} />
+      <AudienceDrawer
+        audience={selected}
+        onClose={() => setOpen(null)}
+        onEdit={(id) => {
+          setOpen(null);
+          setEditing(id);
+        }}
+      />
+      <EditAudienceSheet
+        audience={edited}
+        onClose={() => setEditing(null)}
+        onSaved={(id) => {
+          // Back to the audience, to watch it recompile.
+          setEditing(null);
+          setOpen(id);
+        }}
+      />
     </div>
   );
 }

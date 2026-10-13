@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { FileSpreadsheet, Globe, Heart, MapPin, UserRound, Users, type LucideIcon } from "lucide-react";
+import { FileSpreadsheet, Globe, Heart, ListFilter, MapPin, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AudienceProfile } from "@/lib/pages/types";
 
@@ -12,6 +12,7 @@ export const KIND_ICON: Record<string, LucideIcon> = {
   location: MapPin,
   demographic: Users,
   interests: Heart,
+  custom: ListFilter,
   csv: FileSpreadsheet,
   lead: UserRound,
 };

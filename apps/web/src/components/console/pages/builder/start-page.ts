@@ -5,8 +5,8 @@ import { useCallback } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { postJson, type BuildStep, type PlanRecap, type Question } from "@/lib/pages/stream";
-import type { Brand, Build, Span } from "@/lib/pages/types";
-import { useCompileAudience } from "../new-audience-sheet";
+import type { Audience, Brand, Build, Span } from "@/lib/pages/types";
+import { useCompileAudience } from "../use-compile-audience";
 import type { Attachment } from "./attachments";
 import type { PageSettings } from "./settings-sheet";
 
@@ -18,7 +18,8 @@ export interface Plan {
   cta: { label: string; href: string };
   itemIds: string[];
   audienceIds: string[];
-  newAudiences: { name: string; kind: string; sources: { demographics?: { age?: string; gender?: string }; location?: { city: string; country?: string }; interests?: string[] } }[];
+  /** Simple audiences, or "custom" ones combining a city, age bands, gender, interests and lifestyle segments. */
+  newAudiences: { name: string; kind: string; sources: Audience["sources"] }[];
   reply: string;
 }
 

@@ -21,6 +21,7 @@ from typing import Any
 
 from slice_agent import convex_client as convex
 
+from .audience_parse import parse_audience, to_sources
 from .llm import generate_json
 
 AGES = ["24_and_younger", "25_to_29", "30_to_34", "35_to_44", "45_to_54", "55_and_older"]
@@ -69,12 +70,21 @@ PLAN_SCHEMA: dict[str, Any] = {
                 "type": "object",
                 "properties": {
                     "name": {"type": "string"},
-                    "kind": {"type": "string", "enum": ["demographic", "location", "interests"]},
-                    "age": {"type": "string", "enum": AGES},
+                    "kind": {"type": "string", "enum": ["demographic", "location", "interests", "custom"]},
+                    "ages": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "every age band the group's description names (under 25s → 24_and_younger); empty only when no age is named",
+                    },
                     "gender": {"type": "string", "enum": ["male", "female"]},
                     "city": {"type": "string"},
                     "country": {"type": "string"},
                     "interests": {"type": "array", "items": {"type": "string"}},
+                    "lifestyle": {"type": "array", "items": {"type": "string"}, "description": "custom audiences: segment slugs the request names outright"},
+                    "description": {
+                        "type": "string",
+                        "description": "custom audiences: the group in the request's own words with every condition it states, ages and gender included ('under 25s in Porto who love Nike and listen to Tyler, the Creator')",
+                    },
                 },
                 "required": ["name", "kind"],
             },
@@ -91,10 +101,15 @@ def _audience_line(a: dict[str, Any]) -> str:
     if src.get("location"):
         bits.append(f"city {src['location'].get('city')}")
     d = src.get("demographics") or {}
-    if d.get("age") or d.get("gender"):
-        bits.append(f"age {d.get('age') or 'any'}, gender {d.get('gender') or 'any'}")
+    ages = d.get("ages") or ([d["age"]] if d.get("age") else [])
+    if ages or d.get("gender"):
+        bits.append(f"age {' or '.join(ages) or 'any'}, gender {d.get('gender') or 'any'}")
     if src.get("interests"):
         bits.append("likes " + ", ".join(src["interests"][:5]))
+    if src.get("segments"):
+        bits.append("lifestyle " + ", ".join(x.get("name", "") for x in src["segments"][:4]))
+    if src.get("tags"):
+        bits.append("genres " + ", ".join(t.get("name", "") for t in src["tags"][:4]))
     return f"  - {a['_id']}: {a.get('name')} [{a.get('kind')}{'; ' + '; '.join(bits) if bits else ''}]"
 
 
@@ -125,6 +140,35 @@ def _question(q: dict[str, Any], items: set[str], audiences: set[str]) -> dict[s
     return {"text": text, "options": options[:4], "other": str(q.get("other") or "").strip()[:80] or "Type your own answer"}
 
 
+def _custom_sources(a: dict[str, Any], segment_names: dict[str, str]) -> dict[str, Any] | None:
+    """A custom audience's sources from the plan; None when it names no condition."""
+    src: dict[str, Any] = {}
+    parts = 0
+    city = (a.get("city") or "").strip()
+    if city:
+        src["location"] = {"city": city, **({"country": a["country"].strip()} if (a.get("country") or "").strip() else {})}
+        parts += 1
+    ages = [x for x in AGES if x in (a.get("ages") or []) or x == a.get("age")]
+    gender = a.get("gender") if a.get("gender") in ("male", "female") else None
+    if ages or gender:
+        src["demographics"] = {**({"age": ages[0]} if len(ages) == 1 else {"ages": ages} if ages else {}), **({"gender": gender} if gender else {})}
+        parts += bool(ages) + bool(gender)
+    interests = [x.strip() for x in a.get("interests") or [] if isinstance(x, str) and x.strip()][:6]
+    if interests:
+        src["interests"] = interests
+        parts += 1
+    by_slug = {k.split(":")[-1]: k for k in segment_names}
+    segments = []
+    for x in a.get("lifestyle") or []:
+        sid = x if x in segment_names else by_slug.get(str(x).strip().lower().replace(" ", "_"))
+        if sid and all(s["id"] != sid for s in segments):
+            segments.append({"id": sid, "name": segment_names[sid]})
+    if segments:
+        src["segments"] = segments[:4]
+        parts += 1
+    return src if parts >= 1 else None
+
+
 async def plan_page(
     brand_id: str,
     prompt: str,
@@ -139,6 +183,12 @@ async def plan_page(
     if not brand:
         raise ValueError(f"brand {brand_id} not found")
     audiences = await convex.query("pagesAudiences:list", {"brandId": brand_id}) or []
+    try:
+        segments = await convex.query("pagesAudiences:segments", {}) or []
+    except Exception:
+        segments = []
+    segment_names = {x["id"]: x["name"] for x in segments}
+    segment_lines = "; ".join(f"{x['id'].split(':')[-1]} ({x['name']})" for x in segments) or "(none)"
     brief = brand.get("brief") or {}
     items = brief.get("items") or []
     item_lines = "\n".join(
@@ -199,7 +249,9 @@ RULES FOR THE PLAN
 - offer: only if the conversation states one (a discount, a perk, a bundle price); otherwise an empty string. Never invent one.
 - ctaLabel: 1 to 3 words in sentence case, matching the goal and the brand's site CTAs ("Get tickets", "Book a room", "Join the waitlist"). ctaHref: the URL of the item the page is about when there is exactly one, else the brand URL {brand.get('url')}.
 - itemIds: the items the request is about or clearly implies, by id, at most 6. Empty when the request is general; the builder then ranks items by taste.
-- newAudiences: only when the request asks to target or personalise for a group that no mentioned or saved audience covers. One per group named. Several groups in one request ("for Berlin under 25s", "for London and Paris") all go on this one page, combined. kind demographic for age or gender ("under 20" and "teenagers" map to age 24_and_younger, "students" too; "over 60" to 55_and_older; gender only when stated), location for a city or country (city, country), interests for people defined by what they love (interests: 2 to 6 artists, brands, films, books or places that define them). name: a short audience name in sentence case ("Under 25s", "Berlin", "Indie music fans"). Do not create an audience for "everyone"; a page with no audiences is for everyone.
+- newAudiences: only when the request asks to target or personalise for a group that no mentioned or saved audience covers. One per group named. A group described by one thing is one simple audience: kind demographic for age or gender (ages: "under 20" and "teenagers" map to 24_and_younger, "students" too; "over 60" to 55_and_older; gender only when stated), location for a city or country (city, country), interests for people defined by what they love (interests: 2 to 6 artists, brands, films, books or places that define them).
+- A group described by several things at once is ONE audience of kind custom carrying all of them, never several audiences: "under 25s in Lisbon who love Nike" is one custom audience (city Lisbon, ages [24_and_younger], interests [Nike]); "women in Austin into running" is one (city, gender, lifestyle [running]). Custom fields: city and country; ages whenever the request names an age, as one or more bands ("under 25s" is [24_and_younger], "18 to 30" is [24_and_younger, 25_to_29]); gender; interests (names of artists, brands, films, books, places they love, as written); lifestyle (segment slugs from this list, only when the request itself names that hobby, life stage or habit, never inferred from a brand or artist: {segment_lines}). Every condition the request states goes in; nothing it does not state. Separate groups ("for London and for Paris") are separate audiences, all on this one page, combined.
+- name: a short audience name in sentence case ("Under 25s", "Berlin", "Indie music fans", "Lisbon under 25s into Nike"). Do not create an audience for "everyone"; a page with no audiences is for everyone.
 - reply: one or two plain sentences to the merchant saying what you set up: the page and who it is for (everyone, or the audiences by name, combined when there are several). No markdown, no em dashes, no exclamation marks.
 """
     plan = await generate_json(
@@ -227,14 +279,29 @@ RULES FOR THE PLAN
         name = (a.get("name") or "").strip()
         if not name:
             continue
-        if kind == "demographic" and (a.get("age") in AGES or a.get("gender") in ("male", "female")):
-            demo = {k: a[k] for k in ("age", "gender") if a.get(k)}
-            new.append({"name": name, "kind": kind, "sources": {"demographics": demo}})
+        ages = [x for x in AGES if x in (a.get("ages") or []) or x == a.get("age")]
+        if kind == "demographic" and (ages or a.get("gender") in ("male", "female")):
+            demo = {**({"age": ages[0]} if len(ages) == 1 else {"ages": ages} if ages else {}), **({"gender": a["gender"]} if a.get("gender") in ("male", "female") else {})}
+            new.append({"name": name, "kind": kind if len(ages) <= 1 else "custom", "sources": {"demographics": demo}})
         elif kind == "location" and (a.get("city") or "").strip():
             loc = {"city": a["city"].strip(), **({"country": a["country"].strip()} if (a.get("country") or "").strip() else {})}
             new.append({"name": name, "kind": kind, "sources": {"location": loc}})
         elif kind == "interests" and a.get("interests"):
             new.append({"name": name, "kind": kind, "sources": {"interests": [s for s in a["interests"] if s.strip()][:6]}})
+        elif kind == "custom":
+            # The describe-box reader turns the group's words into conditions with every name
+            # resolved in Qloo; it keeps ages and gender that this plan's nested list tends to drop.
+            src = None
+            desc = (a.get("description") or "").strip()
+            if desc:
+                try:
+                    parsed = await parse_audience(brand_id, desc)
+                    src = to_sources(parsed["definition"], parsed.get("unresolved")) or None
+                except Exception:
+                    src = None
+            src = src or _custom_sources(a, segment_names)
+            if src:
+                new.append({"name": name, "kind": kind, "sources": src})
 
     href = (plan.get("ctaHref") or "").strip()
     return {

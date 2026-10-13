@@ -71,6 +71,7 @@ export const AUDIENCE_KIND_LABEL: Record<string, string> = {
   location: "Location",
   demographic: "Demographic",
   interests: "Interests",
+  custom: "Custom",
   csv: "Customer cluster",
   lead: "Personal",
 };

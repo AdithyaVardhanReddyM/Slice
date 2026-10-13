@@ -320,16 +320,21 @@ export default defineSchema({
     brandId: v.id("pagesBrands"),
     name: v.string(),
     slug: v.string(),
-    /** "default" | "location" | "demographic" | "interests" | "csv" | "lead" */
+    /** "default" | "location" | "demographic" | "interests" | "custom" | "csv" | "lead" */
     kind: v.string(),
-    /** How it was defined; the compiler reads this. */
+    /** How it was defined; the compiler reads this. A custom audience combines any of these. */
     sources: v.object({
       location: v.optional(v.object({ city: v.string(), country: v.optional(v.string()) })),
-      demographics: v.optional(v.object({ age: v.optional(v.string()), gender: v.optional(v.string()) })),
+      /** One age band in `age`, or several in `ages`. */
+      demographics: v.optional(v.object({ age: v.optional(v.string()), ages: v.optional(v.array(v.string())), gender: v.optional(v.string()) })),
       /** Free text or names the merchant typed. */
       interests: v.optional(v.array(v.string())),
       /** Qloo entities the merchant picked from suggestions; compiled as-is, no name search. */
       interestEntities: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) }))),
+      /** Qloo audience segments (`urn:audience:…`): lifestyle, life stage, hobbies. See pagesSegments.ts. */
+      segments: v.optional(v.array(v.object({ id: v.string(), name: v.string() }))),
+      /** Qloo genre tags (`urn:tag:genre:…`). */
+      tags: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.optional(v.string()) }))),
       uploadId: v.optional(v.id("pagesUploads")),
       cluster: v.optional(v.number()),
       memberId: v.optional(v.id("pagesMembers")),

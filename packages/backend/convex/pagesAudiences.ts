@@ -17,6 +17,7 @@ import {
   CULTURAL_TAG_TYPES,
   demographicInsights,
   entitiesForCity,
+  entitiesForSignals,
   entitiesFromSignals,
   locateCity,
   placesInCity,
@@ -27,6 +28,7 @@ import {
   type Span,
 } from "./qlooApi";
 import { cachedQlooGet } from "./qloo";
+import { SEGMENT_FAMILIES, SEGMENTS } from "./pagesSegments";
 import { spanValidator } from "./schema";
 import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity } from "./pagesTypes";
 import {
@@ -43,19 +45,27 @@ import {
 } from "./pagesUtil";
 
 // An audience is a named group with a Qloo taste profile. `compile` turns the
-// merchant's definition (a city, a demographic, names, a CSV cluster, one
-// customer) into the same AudienceProfile shape, so a page variant is always
-// page × audience whatever the source.
+// merchant's definition (a city, a demographic, names, a mix of those with
+// lifestyle segments and genres, a CSV cluster, one customer) into the same
+// AudienceProfile shape, so a page variant is always page × audience whatever
+// the source.
 
 export const sourcesValidator = v.object({
   location: v.optional(v.object({ city: v.string(), country: v.optional(v.string()) })),
-  demographics: v.optional(v.object({ age: v.optional(v.string()), gender: v.optional(v.string()) })),
+  demographics: v.optional(v.object({ age: v.optional(v.string()), ages: v.optional(v.array(v.string())), gender: v.optional(v.string()) })),
   interests: v.optional(v.array(v.string())),
   interestEntities: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) }))),
+  segments: v.optional(v.array(v.object({ id: v.string(), name: v.string() }))),
+  tags: v.optional(v.array(v.object({ id: v.string(), name: v.string(), type: v.optional(v.string()) }))),
   uploadId: v.optional(v.id("pagesUploads")),
   cluster: v.optional(v.number()),
   memberId: v.optional(v.id("pagesMembers")),
 });
+
+type Sources = Doc<"pagesAudiences">["sources"];
+
+/** The age bands a definition names: `ages`, or the single `age`. */
+const agesOf = (d?: Sources["demographics"]): string[] => d?.ages?.length ? d.ages : d?.age ? [d.age] : [];
 
 const progressValidator = v.object({ value: v.number(), label: v.string() });
 
@@ -67,6 +77,13 @@ export const list = query({
       .withIndex("by_brand", (q) => q.eq("brandId", brandId))
       .order("desc")
       .collect(),
+});
+
+/** Qloo's lifestyle segments a custom audience can use (the agent's planner reads these). */
+export const segments = query({
+  args: {},
+  returns: v.array(v.object({ id: v.string(), name: v.string(), family: v.string() })),
+  handler: async () => SEGMENTS.map((s) => ({ ...s, family: SEGMENT_FAMILIES.find((f) => f.key === s.family)?.label ?? s.family })),
 });
 
 export const get = query({
@@ -116,6 +133,41 @@ export const create = mutation({
       updatedAt: now,
     });
     return { id };
+  },
+});
+
+/**
+ * A new definition (and name) for an audience; the console recompiles it next.
+ * The old brief described the old definition, so it goes; pages already built
+ * for the audience keep what they say.
+ */
+export const update = mutation({
+  args: {
+    id: v.id("pagesAudiences"),
+    name: v.string(),
+    kind: v.string(),
+    sources: sourcesValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, { id, name, kind, sources }) => {
+    const audience = await ctx.db.get(id);
+    if (!audience) throw new Error("Unknown audience");
+    if (["default", "csv", "lead"].includes(audience.kind)) throw new Error("This audience is not defined by conditions");
+    const trimmed = name.trim() || audience.name;
+    const renamed = trimmed !== audience.name;
+    await ctx.db.patch(id, {
+      name: trimmed,
+      ...(renamed ? { slug: await uniqueAudienceSlug(ctx, audience.brandId, slugify(trimmed)) } : {}),
+      kind,
+      sources,
+      status: "compiling",
+      progress: { value: 0, label: "Starting" },
+      brief: undefined,
+      error: undefined,
+      updatedAt: Date.now(),
+    });
+    if (renamed) await relabelPages(ctx, audience.brandId, id, false);
+    return null;
   },
 });
 
@@ -247,10 +299,15 @@ type Progress = (value: number, label: string) => Promise<unknown>;
 
 const emptyCulture = (): AudienceProfile["culture"] => ({ artists: [], films: [], places: [], books: [] });
 
-/** `signal.demographics.*` params. Qloo ignores them as the only signal; pair with a city or entities. */
-function demographicSignal(d?: { age?: string; gender?: string }): QlooParams {
+/**
+ * `signal.demographics.*` params. Qloo ignores them as the only signal; pair
+ * with a city or entities. Several age bands go comma-separated (verified
+ * 2026-10-14: "24_and_younger,25_to_29" reads between the two single bands).
+ */
+function demographicSignal(d?: Sources["demographics"]): QlooParams {
   const extra: QlooParams = {};
-  if (d?.age) extra["signal.demographics.age"] = d.age;
+  const ages = agesOf(d);
+  if (ages.length) extra["signal.demographics.age"] = ages.join(",");
   if (d?.gender) extra["signal.demographics.gender"] = d.gender;
   return extra;
 }
@@ -268,7 +325,10 @@ async function enrich(
   if (ids.length === 0) return { tags: [], brands: [], demographics: null };
   await progress(from, "Reading aesthetic and lifestyle tags");
   const aesthetic = await soft(trace, "Aesthetic tags", () => tagInsightsByGroup(ctx, trace, ids, AESTHETIC_TAG_GROUPS, extra), []);
-  const cultural = await soft(trace, "Cultural tags", () => tagInsights(ctx, trace, ids, CULTURAL_TAG_TYPES, "Cultural tags for these signals", 20, extra), []);
+  // Age and gender turn media keyword tags into noise ("antacid", "power ranger" for under 25s,
+  // verified 2026-10-14), so the cultural read stays on the taste signals.
+  const { "signal.demographics.age": _age, "signal.demographics.gender": _gender, ...culturalExtra } = extra;
+  const cultural = await soft(trace, "Cultural tags", () => tagInsights(ctx, trace, ids, CULTURAL_TAG_TYPES, "Cultural tags for these signals", 20, culturalExtra), []);
   await progress(from + 0.25, "Reading brand affinities");
   const brands = await soft(trace, "Brand affinities", () => brandInsights(ctx, trace, ids, city, new Set(), "retail", 14, extra), []);
   await progress(from + 0.4, "Reading the demographic skew");
@@ -331,7 +391,7 @@ async function compileLocation(ctx: ActionCtx, trace: Span[], audience: Doc<"pag
     culture,
   };
   const d = audience.sources.demographics;
-  return { profile, size: estimateReach(`${city}|${d?.age ?? ""}|${d?.gender ?? ""}`) };
+  return { profile, size: estimateReach(`${city}|${agesOf(d).join(",")}|${d?.gender ?? ""}`) };
 }
 
 /**
@@ -412,7 +472,7 @@ async function compileDemographic(ctx: ActionCtx, trace: Span[], audience: Doc<"
   const enriched = await enrich(ctx, trace, signalIds, undefined, extra, progress, 0.45);
   const d = audience.sources.demographics;
   const profile: AudienceProfile = { entities, ...enriched, geo: [], culture };
-  return { profile, size: estimateReach(`${brand.slug}|${d?.age ?? ""}|${d?.gender ?? ""}`) };
+  return { profile, size: estimateReach(`${brand.slug}|${agesOf(d).join(",")}|${d?.gender ?? ""}`) };
 }
 
 /** Culture lists from known entities, topped up from Qloo where a kind is thin. */
@@ -475,6 +535,170 @@ async function compileInterests(ctx: ActionCtx, trace: Span[], audience: Doc<"pa
   const profile: AudienceProfile = { entities, ...enriched, geo: [], culture };
   return { profile, size: estimateReach(names.join("|")) };
 }
+
+/**
+ * The Qloo signals for a custom audience. Picked entities (and names the
+ * planner typed, resolved here) plus genre tags are the taste signal; the
+ * city, age bands, gender and lifestyle segments reshape what it returns.
+ * Qloo ignores age and gender on their own and reads segments noisily without
+ * anchors (verified 2026-10-11 and 2026-10-14), so a definition with no
+ * taste signal and no city is read around the brand's own Qloo entity, or
+ * failing that around the brand's first city.
+ */
+async function customSignals(
+  ctx: ActionCtx,
+  trace: Span[],
+  sources: Sources,
+  brand: Doc<"pagesBrands">,
+  resolve: boolean,
+): Promise<{ signals: QlooParams; artistFilter: QlooParams; picked: ProfileEntity[]; anchorIds: string[]; city?: string; anchoredOn?: string }> {
+  const picked = (sources.interestEntities ?? []).map((e) => toProfileEntity({ ...e, source: "interest" }, "interest"));
+  const pickedNames = new Set(picked.map((e) => e.name.toLowerCase()));
+  const names = (sources.interests ?? []).map((s) => s.trim()).filter((s) => s && !pickedNames.has(s.toLowerCase()));
+  if (resolve && names.length) {
+    const found = await resolveNames(ctx, trace, names, undefined, "interest", { strict: false, label: "Find the interests in Qloo" });
+    picked.push(...[...found.values()].map((e) => toProfileEntity(e, "interest")));
+  }
+  const anchors = dedupeById(picked);
+  let city = sources.location?.city?.trim() || undefined;
+  const tagIds = (sources.tags ?? []).map((t) => t.id);
+  const segmentIds = (sources.segments ?? []).map((s) => s.id);
+  let anchorIds = anchors.slice(0, 12).map((e) => e.id);
+  let anchoredOn: string | undefined;
+  if (!anchorIds.length && !tagIds.length && !city) {
+    const q = brand.qloo;
+    const brandIds = q?.entityId ? [q.entityId] : (q?.proxies ?? []).map((p) => p.id);
+    if (brandIds.length) {
+      anchorIds = brandIds.slice(0, 5);
+      anchoredOn = `people around brands like ${brand.name}`;
+    } else {
+      const brief = brand.brief as BrandBrief | undefined;
+      city = (brief?.locations ?? []).map(cityOfAddress).find(Boolean) ?? "New York City";
+      anchoredOn = `people in ${city}`;
+    }
+    trace.push({
+      kind: "slice",
+      name: "Anchor the read",
+      ms: 0,
+      result: `No interest, genre or place in the definition; read ${anchoredOn} (Qloo ignores age and gender on their own)`,
+    });
+  }
+  const signals: QlooParams = {
+    ...(anchorIds.length ? { "signal.interests.entities": anchorIds.join(",") } : {}),
+    ...(tagIds.length ? { "signal.interests.tags": tagIds.join(",") } : {}),
+    ...(city ? { "signal.location.query": city } : {}),
+    ...demographicSignal(sources.demographics),
+    ...(segmentIds.length ? { "signal.demographics.audiences": segmentIds.join(",") } : {}),
+  };
+  // Next to picked entities Qloo barely weighs a genre signal (verified 2026-10-14: adding
+  // "hip hop tuga" left the artists unchanged), so music genres also filter the artists:
+  // the genre's acts, ranked by the other conditions (Wet Bed Gang, Slow J, Dillaz).
+  const musicIds = tagIds.filter((id) => id.startsWith("urn:tag:genre:music:"));
+  const artistFilter: QlooParams = musicIds.length ? { "filter.tags": musicIds.join(",") } : {};
+  return { signals, artistFilter, picked: anchors, anchorIds, city, anchoredOn };
+}
+
+/** "Austin · 24_and_younger · female · Nike, Tyler, the Creator · Sneakerheads · Hip hop" for the trace. */
+function describeSources(s: Sources): string {
+  return [
+    s.location?.city,
+    agesOf(s.demographics).join(", "),
+    s.demographics?.gender,
+    [...new Set([...(s.interestEntities ?? []).map((e) => e.name), ...(s.interests ?? [])])].slice(0, 6).join(", "),
+    (s.segments ?? []).map((x) => x.name).join(", "),
+    (s.tags ?? []).map((t) => t.name).join(", "),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/**
+ * Every condition the merchant combined, read in one Qloo query per kind, so
+ * each one reshapes the whole profile ("under 25 in Austin, into Nike and
+ * Tyler, the Creator, sneakerheads").
+ */
+async function compileCustom(ctx: ActionCtx, trace: Span[], audience: Doc<"pagesAudiences">, brand: Doc<"pagesBrands">, progress: Progress) {
+  const s = audience.sources;
+  await progress(0.03, "Reading the conditions");
+  const { signals, artistFilter, picked, city } = await customSignals(ctx, trace, s, brand, true);
+  trace.push({ kind: "slice", name: "Combine the conditions into one Qloo signal", ms: 0, result: describeSources(s) || "no conditions" });
+  const fetch = (kind: EntityKind, take: number, label: string, extra: QlooParams = {}) =>
+    soft(trace, label, () => entitiesForSignals(ctx, trace, kind, { ...signals, ...extra }, take, label), []);
+  await progress(0.12, "Finding what they listen to");
+  const artists = await fetch("artist", 8, "Artists for this combination", artistFilter);
+  await progress(0.22, "Finding what they watch");
+  const movies = await fetch("movie", 6, "Films for this combination");
+  const tv = await fetch("tv_show", 4, "Shows for this combination");
+  await progress(0.32, "Finding what they read");
+  const books = await fetch("book", 4, "Books for this combination");
+  await progress(0.4, city ? `Finding where they eat in ${city}` : "Finding where they go");
+  const places = await fetch("place", 8, city ? `Places to eat in ${city} for this combination` : "Places for this combination");
+  const culture = {
+    artists: culturePick(artists, "custom", 8),
+    films: culturePick([...movies, ...tv], "custom", 10),
+    places: culturePick(places, "custom", 8),
+    books: culturePick(books, "custom", 4),
+  };
+  const derived = dedupeById([...culture.artists, ...culture.films, ...culture.books, ...culture.places]);
+  if (!picked.length && !derived.length) throw new Error("Qloo returned nothing for this combination. Try removing a condition.");
+  // The merchant's picks lead the signals; Qloo's picks for the combination follow.
+  const entities = dedupeById([...picked, ...derived]);
+  const ids = dedupeById([...picked, ...interleave([artists, movies, tv, books, places], 12)]).slice(0, 12).map((e) => e.id);
+  const { "signal.interests.entities": _ids, "signal.location.query": _city, ...extra } = signals;
+  const enriched = await enrich(ctx, trace, ids, city, extra, progress, 0.5);
+  let geo: AudienceProfile["geo"] = [];
+  if (city) {
+    await progress(0.94, `Locating ${city}`);
+    const located = await soft(trace, `Locate "${city}"`, () => locateCity(ctx, trace, city), null);
+    geo = [{ name: city, count: 1, lat: located?.lat, lon: located?.lon }];
+  }
+  const profile: AudienceProfile = { entities, ...enriched, geo, culture };
+  return { profile, size: estimateReach(describeSources(s)) };
+}
+
+const previewEntity = v.object({ id: v.string(), name: v.string(), image: v.optional(v.string()), subtitle: v.optional(v.string()) });
+
+/**
+ * A quick read of a definition while the merchant builds it: a few artists,
+ * brands, films and shows for the combination. Four cached Qloo calls; the
+ * console debounces it.
+ */
+export const preview = action({
+  args: { brandId: v.id("pagesBrands"), sources: sourcesValidator },
+  returns: v.object({
+    artists: v.array(previewEntity),
+    brands: v.array(previewEntity),
+    films: v.array(previewEntity),
+    anchoredOn: v.optional(v.string()),
+    error: v.optional(v.string()),
+  }),
+  handler: async (ctx, { brandId, sources }) => {
+    const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id: brandId });
+    if (!brand) throw new Error("Unknown brand");
+    const trace: Span[] = [];
+    const out = (list: EntityRef[], take: number) =>
+      list.slice(0, take).map((e) => ({ id: e.id, name: e.name, ...(e.image ? { image: e.image } : {}), ...(e.subtitle ? { subtitle: e.subtitle } : {}) }));
+    try {
+      const { signals, artistFilter, anchorIds, city, anchoredOn } = await customSignals(ctx, trace, sources, brand, false);
+      const artists = await soft(trace, "Artists", () => entitiesForSignals(ctx, trace, "artist", { ...signals, ...artistFilter }, 6), []);
+      const { "signal.interests.entities": _ids, "signal.location.query": _city, ...extra } = signals;
+      const brandIds = anchorIds.length ? anchorIds : artists.slice(0, 6).map((a) => a.id);
+      const brands = brandIds.length ? await soft(trace, "Brands", () => brandInsights(ctx, trace, brandIds, city, new Set(), "retail", 6, extra), []) : [];
+      const movies = await soft(trace, "Films", () => entitiesForSignals(ctx, trace, "movie", signals, 4), []);
+      const tv = await soft(trace, "Shows", () => entitiesForSignals(ctx, trace, "tv_show", signals, 3), []);
+      const failed = trace.filter((t) => t.result.startsWith("failed")).length;
+      return {
+        artists: out(artists, 6),
+        brands: brands.slice(0, 6).map((b) => ({ id: b.id, name: b.name, ...(b.image ? { image: b.image } : {}), ...(b.industries[0] ? { subtitle: b.industries[0] } : {}) })),
+        films: out(dedupeById([...movies, ...tv]), 6),
+        ...(anchoredOn ? { anchoredOn } : {}),
+        ...(failed >= 3 ? { error: "Qloo did not answer. Try again in a moment." } : {}),
+      };
+    } catch (err) {
+      return { artists: [], brands: [], films: [], error: String(err).replace(/^Error: /, "").slice(0, 200) };
+    }
+  },
+});
 
 function countEntities(members: Doc<"pagesMembers">[]): ProfileEntity[] {
   const counts = new Map<string, ProfileEntity>();
@@ -586,17 +810,23 @@ function compileDefault(trace: Span[], brand: Doc<"pagesBrands">) {
 // before the dozen restaurants and parks of the same name.
 const SUGGEST_TYPES = ["brand", "artist", "movie", "tv_show", "book", "podcast", "person", "destination", "place"];
 
-/** Name suggestions for the interests field: Qloo search, cached, typed entities only. */
+/**
+ * Name suggestions for the interests field: Qloo search, cached, typed
+ * entities only. `types` (short names: "artist", "podcast") narrows the search
+ * for a custom audience's "listen to" or "watch" condition.
+ */
 export const suggestEntities = action({
-  args: { query: v.string() },
+  args: { query: v.string(), types: v.optional(v.array(v.string())) },
   returns: v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()), subtitle: v.optional(v.string()) })),
-  handler: async (ctx, { query }) => {
+  handler: async (ctx, { query, types }) => {
     const q = query.trim();
     if (q.length < 2) return [];
-    const { body } = await cachedQlooGet(ctx, "/search", { query: q, take: 12 });
+    const order = types?.length ? types : SUGGEST_TYPES;
+    const { body } = await cachedQlooGet(ctx, "/search", { query: q, take: 12, ...(types?.length ? { types: types.map((t) => `urn:entity:${t}`).join(",") } : {}) });
+    // Narrowed to given types, Qloo's relevance decides ("The Bear" the show before the films).
     const rank = (e: Record<string, unknown>) => {
-      const i = SUGGEST_TYPES.indexOf(String((e.types as string[] | undefined)?.[0] ?? "").replace("urn:entity:", ""));
-      return i === -1 ? 99 : i;
+      const i = order.indexOf(String((e.types as string[] | undefined)?.[0] ?? "").replace("urn:entity:", ""));
+      return i === -1 ? 99 : types?.length ? 0 : i;
     };
     // Stable sort: type first, Qloo's relevance within a type.
     const results = ((JSON.parse(body) as { results?: Record<string, unknown>[] }).results ?? [])
@@ -606,7 +836,7 @@ export const suggestEntities = action({
     const out: { id: string; name: string; type: string; image?: string; subtitle?: string }[] = [];
     for (const e of results) {
       const type = String((e.types as string[] | undefined)?.[0] ?? "");
-      if (!SUGGEST_TYPES.includes(type.replace("urn:entity:", ""))) continue;
+      if (!order.includes(type.replace("urn:entity:", ""))) continue;
       const props = (e.properties ?? {}) as Record<string, unknown>;
       const image = ((props.image as Record<string, unknown> | undefined)?.url as string | undefined) ?? undefined;
       const subtitle = (props.short_description as string | undefined) ?? (e.disambiguation as string | undefined);
@@ -618,6 +848,43 @@ export const suggestEntities = action({
         ...(subtitle ? { subtitle: subtitle.length > 80 ? `${subtitle.slice(0, 77)}…` : subtitle } : {}),
       });
       if (out.length >= 6) break;
+    }
+    return out;
+  },
+});
+
+// Music genres, and film, TV and book genres. Other tag families (place
+// ambience, keywords) are too literal to describe people by.
+const GENRE_TAG_TYPES = ["urn:tag:genre:music", "urn:tag:genre:media"];
+
+/** '"indie"' → "Indie", "Indie - Rock" → "Indie rock", "R&B" stays. */
+function cleanTagName(name: string): string {
+  const words = name.replace(/["“”]/g, "").replace(/\s*-\s*/g, " ").replace(/\s+/g, " ").trim().split(" ");
+  return words.map((w, i) => (i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : /^[A-Z][a-z]/.test(w) ? w.toLowerCase() : w)).join(" ");
+}
+
+/** Genre suggestions for a custom audience: Qloo tag search, cached, one tag per spelling. */
+export const suggestTags = action({
+  args: { query: v.string() },
+  returns: v.array(v.object({ id: v.string(), name: v.string(), type: v.string() })),
+  handler: async (ctx, { query }) => {
+    const q = query.trim();
+    if (q.length < 2) return [];
+    const { body } = await cachedQlooGet(ctx, "/v2/tags", { "filter.query": q, "filter.tag.types": GENRE_TAG_TYPES.join(","), take: 24 });
+    const found = (JSON.parse(body) as { results?: { tags?: Record<string, unknown>[] } }).results?.tags ?? [];
+    // Music first, so "Hip hop" the music genre wins over the film and book genre of the same name.
+    const isMusic = (t: Record<string, unknown>) => String(t.type ?? "").startsWith("urn:tag:genre:music");
+    const tags = [...found.filter(isMusic), ...found.filter((t) => !isMusic(t))];
+    const seen = new Set<string>();
+    const out: { id: string; name: string; type: string }[] = [];
+    for (const t of tags) {
+      const name = cleanTagName(String(t.name ?? ""));
+      // "Indie pop" and "Indiepop" are one genre to a merchant.
+      const key = name.toLowerCase().replace(/[^a-z0-9&]/g, "");
+      if (!name || seen.has(key)) continue;
+      seen.add(key);
+      out.push({ id: String(t.id ?? t.tag_id), name, type: String(t.type ?? "") });
+      if (out.length >= 8) break;
     }
     return out;
   },
@@ -645,6 +912,9 @@ export const compile = action({
           break;
         case "interests":
           result = await compileInterests(ctx, trace, audience, progress);
+          break;
+        case "custom":
+          result = await compileCustom(ctx, trace, audience, brand, progress);
           break;
         case "csv":
           result = await compileCsv(ctx, trace, audience, progress);
