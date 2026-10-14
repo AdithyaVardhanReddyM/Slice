@@ -5,6 +5,7 @@ import { Hourglass, Link2, ListFilter, MapPinOff, PenLine, RefreshCw, Trash2, Us
 import { useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
 import { postJson } from "@/lib/pages/stream";
 import { EDITABLE_KINDS } from "@/lib/pages/definition";
@@ -140,6 +141,10 @@ function MembersTable({ audience }: { audience: Audience }) {
 
 /* Drawer ------------------------------------------------------------------------ */
 
+/** The sheet's close button, made legible over a taste cover. */
+export const CLOSE_ON_COVER =
+  "[&>[data-slot=sheet-close]]:z-20 [&>[data-slot=sheet-close]]:rounded-full [&>[data-slot=sheet-close]]:bg-black/55 [&>[data-slot=sheet-close]]:text-white [&>[data-slot=sheet-close]]:backdrop-blur-sm [&>[data-slot=sheet-close]]:hover:bg-black/70";
+
 export function AudienceDrawer({ audience, onClose, onEdit }: { audience: Audience | null; onClose: () => void; onEdit?: (id: Id<"pagesAudiences">) => void }) {
   const remove = useMutation(api.pagesAudiences.remove);
   const run = useCompileAudience();
@@ -158,12 +163,9 @@ export function AudienceDrawer({ audience, onClose, onEdit }: { audience: Audien
     }
   }
 
-  const geoCity = profile?.geo.find((g) => g.lat !== undefined && g.lon !== undefined);
-  const signals = profile?.entities ?? [];
-
   return (
     <Sheet open={!!audience} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full gap-0 overflow-y-auto bg-background data-[side=right]:sm:max-w-3xl [&>[data-slot=sheet-close]]:z-20 [&>[data-slot=sheet-close]]:rounded-full [&>[data-slot=sheet-close]]:bg-black/55 [&>[data-slot=sheet-close]]:text-white [&>[data-slot=sheet-close]]:backdrop-blur-sm [&>[data-slot=sheet-close]]:hover:bg-black/70">
+      <SheetContent className={cn("w-full gap-0 overflow-y-auto bg-background data-[side=right]:sm:max-w-3xl", CLOSE_ON_COVER)}>
         {audience && (
           <>
             <TasteCover
@@ -220,87 +222,98 @@ export function AudienceDrawer({ audience, onClose, onEdit }: { audience: Audien
               </div>
             </div>
 
-            <Tabs defaultValue="profile" className="gap-0">
-              <TabList className="sticky top-0 z-10 bg-background px-6">
-                <Tab value="profile">Profile</Tab>
-                <Tab value="culture">Culture</Tab>
-                <Tab value="geo">Geo</Tab>
-                <Tab value="brief">Brief</Tab>
-                <Tab value="trace">Trace</Tab>
-                {audience.kind === "csv" && <Tab value="members">Members</Tab>}
-              </TabList>
-              <div className="min-h-[60svh] bg-neutral-50 px-6 py-6">
-                <TabPanel value="profile" className="space-y-5">
-                  {profile ? (
-                    <>
-                      <Panel title="Taste tags" description={`${fmt.int(profile.tags.length)} tags from Qloo, strongest first in each group`}>
-                        <TagTable tags={profile.tags} />
-                      </Panel>
-                      <div className="grid items-start gap-5 lg:grid-cols-2">
-                        <Panel title="Brands they trust" description="Affinity out of 100">
-                          <BrandsList brands={profile.brands} max={10} />
-                        </Panel>
-                        <Panel title="Demographics" description="Skew against the Qloo baseline. Right of centre means over-indexed.">
-                          <div className="p-4">
-                            <DemographicsBars demographics={profile.demographics} />
-                          </div>
-                        </Panel>
-                      </div>
-                      <Panel title="Signals" description={`${fmt.int(signals.length)} entities the profile was built from`}>
-                        <div className="p-4">
-                          <EntityStrip
-                            items={signals.map((e) => ({ ...e, subtitle: e.count ? `${e.count} members` : e.type.replace("urn:entity:", "") }))}
-                            max={24}
-                          />
-                        </div>
-                      </Panel>
-                    </>
-                  ) : (
-                    <EmptyPanel icon={Hourglass} title="Not compiled yet">The profile appears once compilation finishes.</EmptyPanel>
-                  )}
-                </TabPanel>
-                <TabPanel value="culture">
-                  <CultureLists culture={profile?.culture} max={8} />
-                </TabPanel>
-                <TabPanel value="geo" className="space-y-5">
-                  {geoCity && (
-                    <CityMap
-                      city={{ name: geoCity.name, country: audience.sources.location?.country ?? "", countryCode: "", lat: geoCity.lat!, lon: geoCity.lon! }}
-                    />
-                  )}
-                  {profile?.geo.length ? (
-                    <Panel title="Where they are" description={`${fmt.int(profile.geo.length)} places`}>
-                      <GeoList geo={profile.geo} />
-                    </Panel>
-                  ) : (
-                    <EmptyPanel icon={MapPinOff} title="Not tied to a place">
-                      {audience.kind === "interests" || audience.kind === "demographic" || audience.kind === "custom"
-                        ? "This audience is defined by taste, not location, so it reaches people wherever they are. City audiences and customer clusters show where their people live."
-                        : "No location data yet. It appears once the audience compiles."}
-                    </EmptyPanel>
-                  )}
-                </TabPanel>
-                <TabPanel value="brief">
-                  <AudienceBriefView brief={brief} />
-                </TabPanel>
-                <TabPanel value="trace">
-                  <Panel title="Trace" description="Every call made while compiling this audience">
-                    <div className="p-4">
-                      <TraceList spans={audience.trace} />
-                    </div>
-                  </Panel>
-                </TabPanel>
-                {audience.kind === "csv" && (
-                  <TabPanel value="members">
-                    <MembersTable audience={audience} />
-                  </TabPanel>
-                )}
-              </div>
-            </Tabs>
+            <AudienceTabs audience={audience} />
           </>
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** One audience's profile, culture, geo, brief and trace as tabs (and the members of a CSV cluster). */
+export function AudienceTabs({ audience }: { audience: Audience }) {
+  const profile = profileOf(audience);
+  const brief = audienceBriefOf(audience);
+  const geoCity = profile?.geo.find((g) => g.lat !== undefined && g.lon !== undefined);
+  const signals = profile?.entities ?? [];
+  return (
+    <Tabs defaultValue="profile" className="gap-0">
+      <TabList className="sticky top-0 z-10 bg-background px-6">
+        <Tab value="profile">Profile</Tab>
+        <Tab value="culture">Culture</Tab>
+        <Tab value="geo">Geo</Tab>
+        <Tab value="brief">Brief</Tab>
+        <Tab value="trace">Trace</Tab>
+        {audience.kind === "csv" && <Tab value="members">Members</Tab>}
+      </TabList>
+      <div className="min-h-[60svh] bg-neutral-50 px-6 py-6">
+        <TabPanel value="profile" className="space-y-5">
+          {profile ? (
+            <>
+              <Panel title="Taste tags" description={`${fmt.int(profile.tags.length)} tags from Qloo, strongest first in each group`}>
+                <TagTable tags={profile.tags} />
+              </Panel>
+              <div className="grid items-start gap-5 lg:grid-cols-2">
+                <Panel title="Brands they trust" description="Affinity out of 100">
+                  <BrandsList brands={profile.brands} max={10} />
+                </Panel>
+                <Panel title="Demographics" description="Skew against the Qloo baseline. Right of centre means over-indexed.">
+                  <div className="p-4">
+                    <DemographicsBars demographics={profile.demographics} />
+                  </div>
+                </Panel>
+              </div>
+              <Panel title="Signals" description={`${fmt.int(signals.length)} entities the profile was built from`}>
+                <div className="p-4">
+                  <EntityStrip
+                    items={signals.map((e) => ({ ...e, subtitle: e.count ? `${e.count} members` : e.type.replace("urn:entity:", "") }))}
+                    max={24}
+                  />
+                </div>
+              </Panel>
+            </>
+          ) : (
+            <EmptyPanel icon={Hourglass} title="Not compiled yet">The profile appears once compilation finishes.</EmptyPanel>
+          )}
+        </TabPanel>
+        <TabPanel value="culture">
+          <CultureLists culture={profile?.culture} max={8} />
+        </TabPanel>
+        <TabPanel value="geo" className="space-y-5">
+          {geoCity && (
+            <CityMap
+              city={{ name: geoCity.name, country: audience.sources.location?.country ?? "", countryCode: "", lat: geoCity.lat!, lon: geoCity.lon! }}
+            />
+          )}
+          {profile?.geo.length ? (
+            <Panel title="Where they are" description={`${fmt.int(profile.geo.length)} places`}>
+              <GeoList geo={profile.geo} />
+            </Panel>
+          ) : (
+            <EmptyPanel icon={MapPinOff} title="Not tied to a place">
+              {audience.kind === "interests" || audience.kind === "demographic" || audience.kind === "custom"
+                ? "This audience is defined by taste, not location, so it reaches people wherever they are. City audiences and customer clusters show where their people live."
+                : "No location data yet. It appears once the audience compiles."}
+            </EmptyPanel>
+          )}
+        </TabPanel>
+        <TabPanel value="brief">
+          <AudienceBriefView brief={brief} />
+        </TabPanel>
+        <TabPanel value="trace">
+          <Panel title="Trace" description="Every call made while compiling this audience">
+            <div className="p-4">
+              <TraceList spans={audience.trace} />
+            </div>
+          </Panel>
+        </TabPanel>
+        {audience.kind === "csv" && (
+          <TabPanel value="members">
+            <MembersTable audience={audience} />
+          </TabPanel>
+        )}
+      </div>
+    </Tabs>
   );
 }
 

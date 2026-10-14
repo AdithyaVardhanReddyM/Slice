@@ -106,7 +106,7 @@ Items the brand can feature (id: name):
 {_items_block(brand)}
 
 AUDIENCE: "{audience.get('name')}" (kind: {audience.get('kind')}, size: {audience.get('size')})
-Defined by: {json.dumps(sources, ensure_ascii=False)}
+{"This audience is ONE customer from the brand's own customer list, not a group. Write every field about this one person, by first name or as they; never \"these people\" or \"this audience\"." if audience.get("kind") == "lead" else f"Defined by: {json.dumps(sources, ensure_ascii=False)}"}
 Qloo taste profile:
 {json.dumps(profile_summary(audience.get('profile')), ensure_ascii=False, indent=1)}
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { Lock, Settings2 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { usePagesModel } from "@/lib/pages/models";
 import type { BuildStep } from "@/lib/pages/stream";
@@ -34,7 +34,8 @@ const msgId = () => `${Date.now().toString(36)}-${Math.random().toString(36).sli
 export function NewPageBuilder() {
   const brand = useBrand();
   const router = useRouter();
-  const audiences = (useQuery(api.pagesAudiences.list, { brandId: brand._id }) ?? []) as Audience[];
+  const audienceList = useQuery(api.pagesAudiences.list, { brandId: brand._id }) as Audience[] | undefined;
+  const audiences = useMemo(() => audienceList ?? [], [audienceList]);
   const items = useMemo(() => ((briefOf(brand)?.items ?? []) as BrandItem[]), [brand]);
   const planPage = usePlanPage(brand);
   const createPage = useCreatePage(brand);
@@ -50,6 +51,16 @@ export function NewPageBuilder() {
   const first = useRef<{ text: string; attachments: Attachment[] } | null>(null);
   const named = useRef<Set<string>>(new Set());
   const [pending, setPending] = useState<{ plan: Plan; trace: Span[] } | null>(null);
+
+  // ?for=<audience id> (a person's "Build a page" button in a customer list): the prompt starts with them.
+  const forId = useSearchParams().get("for");
+  const prefilled = useRef(false);
+  useEffect(() => {
+    const a = forId ? audiences.find((x) => x._id === forId) : undefined;
+    if (!a || prefilled.current) return;
+    prefilled.current = true;
+    composer.current?.set(["A page for ", a, " "]);
+  }, [forId, audiences]);
 
   const status = (text: string) => setTurn((t) => (t ? { ...t, status: text } : t));
   const fail = (err: unknown) => setTurn((t) => (t ? { ...t, status: null, error: String((err as Error).message ?? err).replace(/^Error: /, "") } : t));

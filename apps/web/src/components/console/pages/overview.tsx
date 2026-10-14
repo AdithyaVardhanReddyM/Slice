@@ -25,7 +25,7 @@ import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
-import { AUDIENCE_KIND_LABEL, briefOf, kitOf, profileOf, type Audience, type Brand, type Page } from "@/lib/pages/types";
+import { AUDIENCE_KIND_LABEL, briefOf, kitOf, listOf, listedAudiences, profileOf, type Audience, type Brand, type Page } from "@/lib/pages/types";
 import { hostOf } from "@/lib/pages/urls";
 import { Segmented } from "@/components/console/form";
 import { Panel, PanelHeader, Skeleton } from "@/components/console/primitives";
@@ -392,8 +392,9 @@ function nextSteps(brand: Brand, pages: PageRow[], audiences: Audience[], byPage
     });
   }
 
+  // Pages are written for the people in a customer list, never for the list itself.
   const covered = new Set(pages.flatMap((p) => p.audienceIds));
-  const uncovered = audiences.filter((a) => a.status === "ready" && !covered.has(a._id));
+  const uncovered = audiences.filter((a) => a.status === "ready" && a.kind !== "people" && !covered.has(a._id));
   if (uncovered.length) {
     const names = uncovered.slice(0, 3).map((a) => a.name);
     const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
@@ -424,7 +425,7 @@ function nextSteps(brand: Brand, pages: PageRow[], audiences: Audience[], byPage
       });
   }
 
-  const compiling = audiences.filter((a) => a.status !== "ready" && a.status !== "failed");
+  const compiling = listedAudiences(audiences).filter((a) => a.status !== "ready" && a.status !== "failed");
   if (compiling.length)
     steps.push({
       key: "compiling",
@@ -534,20 +535,26 @@ function RecentActivity({ pages, audiences, base }: { pages: PageRow[] | undefin
 function AudienceTiles({ audiences, pages, byPage, base }: { audiences: Audience[] | undefined; pages: PageRow[] | undefined; byPage: Map<string, Overview> | undefined; base: string }) {
   const reach = useMemo(() => {
     const m = new Map<string, { pages: number; visitors: number; views: number; ctaClicks: number }>();
+    const add = (id: string, o: Overview | undefined) => {
+      const r = m.get(id) ?? { pages: 0, visitors: 0, views: 0, ctaClicks: 0 };
+      r.pages += 1;
+      r.visitors += o?.visitors ?? 0;
+      r.views += o?.views ?? 0;
+      r.ctaClicks += o?.ctaClicks ?? 0;
+      m.set(id, r);
+    };
     for (const p of pages ?? [])
       for (const id of p.audienceIds) {
-        const r = m.get(id) ?? { pages: 0, visitors: 0, views: 0, ctaClicks: 0 };
-        const o = byPage?.get(p._id);
-        r.pages += 1;
-        r.visitors += o?.visitors ?? 0;
-        r.views += o?.views ?? 0;
-        r.ctaClicks += o?.ctaClicks ?? 0;
-        m.set(id, r);
+        add(id, byPage?.get(p._id));
+        // A page for someone in a customer list counts for the list's tile too.
+        const person = audiences?.find((a) => a._id === id);
+        const list = person && listOf(person, audiences ?? []);
+        if (list) add(list._id, byPage?.get(p._id));
       }
     return m;
-  }, [pages, byPage]);
+  }, [pages, byPage, audiences]);
   const shown = useMemo(
-    () => [...(audiences ?? [])].sort((a, b) => (reach.get(b._id)?.visitors ?? -1) - (reach.get(a._id)?.visitors ?? -1)).slice(0, 7),
+    () => listedAudiences(audiences ?? []).sort((a, b) => (reach.get(b._id)?.visitors ?? -1) - (reach.get(a._id)?.visitors ?? -1)).slice(0, 7),
     [audiences, reach],
   );
 
@@ -630,10 +637,11 @@ export function BrandOverview() {
   const prevDaily = useMemo(() => (overview ? { daily: sumDaily(overview.map((o) => o.prevDaily ?? [])) } : undefined), [overview]);
   const steps = pages && audiences ? nextSteps(brand, pages, audiences, byPage, range) : undefined;
   const allDrafts = !!pages?.length && pages.every((p) => p.status !== "published");
+  const listed = useMemo(() => audiences && listedAudiences(audiences), [audiences]);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-6 py-6">
-      <BrandHero brand={brand} pages={pages} audiences={audiences} />
+      <BrandHero brand={brand} pages={pages} audiences={listed} />
 
       <section>
         <SectionHeading
@@ -663,7 +671,7 @@ export function BrandOverview() {
         <TopPages pages={pages} byPage={byPage} range={range} base={base} />
         <div className="space-y-6">
           <NextSteps steps={steps} />
-          <RecentActivity pages={pages} audiences={audiences} base={base} />
+          <RecentActivity pages={pages} audiences={listed} base={base} />
         </div>
       </div>
 

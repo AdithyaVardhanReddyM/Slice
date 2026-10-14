@@ -126,6 +126,13 @@ export interface AudienceProfile {
   culture: { artists: ProfileEntity[]; films: ProfileEntity[]; places: ProfileEntity[]; books: ProfileEntity[] };
 }
 
+/**
+ * A customer list kept one by one compiles a taste profile per person, one
+ * after another (Qloo rate-limits bursts), so it stays short. Longer lists
+ * are clustered.
+ */
+export const MAX_LIST_PEOPLE = 25;
+
 export interface AudienceBrief {
   /** One sentence spoken to the merchant: who these people are. */
   summary: string;

@@ -1,6 +1,6 @@
 import type { QlooParams } from "@slice/qloo";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   action,
@@ -10,6 +10,7 @@ import {
   query,
   type ActionCtx,
   type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
 import {
   AESTHETIC_TAG_GROUPS,
@@ -30,7 +31,7 @@ import {
 import { cachedQlooGet } from "./qloo";
 import { SEGMENT_FAMILIES, SEGMENTS } from "./pagesSegments";
 import { spanValidator } from "./schema";
-import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity } from "./pagesTypes";
+import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity, ProfileTag } from "./pagesTypes";
 import {
   audienceLabel,
   cultureKind,
@@ -46,9 +47,9 @@ import {
 
 // An audience is a named group with a Qloo taste profile. `compile` turns the
 // merchant's definition (a city, a demographic, names, a mix of those with
-// lifestyle segments and genres, a CSV cluster, one customer) into the same
-// AudienceProfile shape, so a page variant is always page × audience whatever
-// the source.
+// lifestyle segments and genres, a CSV cluster, one customer, a customer list
+// kept one by one) into the same AudienceProfile shape, so a page variant is
+// always page × audience whatever the source.
 
 export const sourcesValidator = v.object({
   location: v.optional(v.object({ city: v.string(), country: v.optional(v.string()) })),
@@ -152,7 +153,7 @@ export const update = mutation({
   handler: async (ctx, { id, name, kind, sources }) => {
     const audience = await ctx.db.get(id);
     if (!audience) throw new Error("Unknown audience");
-    if (["default", "csv", "lead"].includes(audience.kind)) throw new Error("This audience is not defined by conditions");
+    if (["default", "csv", "lead", "people"].includes(audience.kind)) throw new Error("This audience is not defined by conditions");
     const trimmed = name.trim() || audience.name;
     const renamed = trimmed !== audience.name;
     await ctx.db.patch(id, {
@@ -195,9 +196,26 @@ export const remove = mutation({
     // Pages built for it keep their version and drop it from their audiences.
     await ctx.db.delete(id);
     await relabelPages(ctx, audience.brandId, id, true);
+    // A customer list takes its people with it, and the upload they came from.
+    const uploadId = audience.kind === "people" ? audience.sources.uploadId : undefined;
+    if (uploadId) {
+      for (const lead of await leadsOf(ctx, audience.brandId, uploadId)) {
+        await ctx.db.delete(lead._id);
+        await relabelPages(ctx, audience.brandId, lead._id, true);
+      }
+      const members = await ctx.db.query("pagesMembers").withIndex("by_upload", (q) => q.eq("uploadId", uploadId)).collect();
+      for (const m of members) await ctx.db.delete(m._id);
+      await ctx.db.delete(uploadId);
+    }
     return null;
   },
 });
+
+/** The people in a customer list: one `lead` audience per row of the upload. */
+async function leadsOf(ctx: QueryCtx, brandId: Id<"pagesBrands">, uploadId: Id<"pagesUploads">) {
+  const all = await ctx.db.query("pagesAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
+  return all.filter((a) => a.kind === "lead" && a.sources.uploadId === uploadId);
+}
 
 export const setProgress = internalMutation({
   args: { id: v.id("pagesAudiences"), value: v.number(), label: v.string() },
@@ -774,6 +792,87 @@ async function compileLead(ctx: ActionCtx, trace: Span[], audience: Doc<"pagesAu
   return { profile, size: 1 };
 }
 
+/**
+ * A customer list kept one by one: every person is compiled as their own
+ * audience (one after another; Qloo rate-limits bursts), then the list's
+ * profile gathers theirs for its cover and overview. Pages are built for the
+ * people, never for the list.
+ */
+async function compilePeople(ctx: ActionCtx, trace: Span[], audience: Doc<"pagesAudiences">, progress: Progress) {
+  const uploadId = audience.sources.uploadId;
+  if (!uploadId) throw new Error("A customer list needs its upload");
+  const members = await ctx.runQuery(internal.pagesUploads.membersInternal, { uploadId });
+  if (!members.length) throw new Error("The list has no people");
+  const ids = await ctx.runMutation(internal.pagesUploads.ensureLeads, { uploadId });
+  const people: Doc<"pagesAudiences">[] = [];
+  for (const [i, id] of ids.entries()) {
+    const lead = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
+    await progress(0.2 + 0.75 * (i / ids.length), `Reading ${lead?.name ?? "the next person"} (${i + 1} of ${ids.length})`);
+    const t0 = Date.now();
+    await ctx.runAction(api.pagesAudiences.compile, { id });
+    const done = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
+    trace.push({
+      kind: "slice",
+      name: `Read ${done?.name ?? "a person"}`,
+      ms: Date.now() - t0,
+      result: done?.status === "ready" ? `${profileOf(done).entities.length} signals, ${profileOf(done).tags.length} tags` : `failed: ${done?.error ?? "unknown"}`,
+    });
+    if (done?.status === "ready") people.push(done);
+  }
+  if (!people.length) throw new Error("No one in the list could be read from Qloo");
+  await progress(0.97, "Gathering the list");
+  const profile = mergeProfiles(people.map(profileOf), countEntities(members).slice(0, 40));
+  trace.push({ kind: "slice", name: "Gather the people's profiles", ms: 0, result: `${people.length} of ${ids.length} people read` });
+  return { profile, size: members.length };
+}
+
+const profileOf = (a: Doc<"pagesAudiences">) => a.profile as AudienceProfile;
+
+/** Mean affinity across all the people (missing counts as 0), so shared tastes rank first. */
+function meanAffinity<T extends { id: string; affinity: number }>(lists: T[][], n: number): T[] {
+  const sum = new Map<string, { item: T; total: number }>();
+  for (const l of lists)
+    for (const x of l) {
+      const cur = sum.get(x.id);
+      if (cur) cur.total += x.affinity;
+      else sum.set(x.id, { item: x, total: x.affinity });
+    }
+  return [...sum.values()]
+    .map(({ item, total }) => ({ ...item, affinity: Math.round((total / lists.length) * 1000) / 1000 }))
+    .sort((a, b) => b.affinity - a.affinity)
+    .slice(0, n);
+}
+
+function mergeProfiles(profiles: AudienceProfile[], entities: ProfileEntity[]): AudienceProfile {
+  const geo = new Map<string, AudienceProfile["geo"][number]>();
+  for (const p of profiles)
+    for (const g of p.geo) {
+      const cur = geo.get(g.name);
+      if (cur) cur.count += g.count;
+      else geo.set(g.name, { ...g });
+    }
+  const demos = profiles.map((p) => p.demographics).filter((d): d is NonNullable<AudienceProfile["demographics"]> => !!d);
+  const mean = (maps: Record<string, number>[]) => {
+    const out: Record<string, number> = {};
+    for (const m of maps) for (const [k, val] of Object.entries(m)) out[k] = (out[k] ?? 0) + val / maps.length;
+    return out;
+  };
+  return {
+    entities,
+    tags: meanAffinity<ProfileTag>(profiles.map((p) => p.tags), 120),
+    brands: meanAffinity<ProfileBrand>(profiles.map((p) => p.brands), 20),
+    demographics: demos.length ? { age: mean(demos.map((d) => d.age ?? {})), gender: mean(demos.map((d) => d.gender ?? {})) } : null,
+    geo: [...geo.values()].sort((a, b) => b.count - a.count),
+    // Everyone's first pick, then everyone's second, so every person shows on the cover.
+    culture: {
+      artists: dedupeById(interleave(profiles.map((p) => p.culture.artists), 60), 12),
+      films: dedupeById(interleave(profiles.map((p) => p.culture.films), 60), 12),
+      places: dedupeById(interleave(profiles.map((p) => p.culture.places), 60), 12),
+      books: dedupeById(interleave(profiles.map((p) => p.culture.books), 60), 12),
+    },
+  };
+}
+
 function compileDefault(trace: Span[], brand: Doc<"pagesBrands">) {
   const q = brand.qloo;
   const anchors: ProfileEntity[] = q?.entityId
@@ -921,6 +1020,9 @@ export const compile = action({
           break;
         case "lead":
           result = await compileLead(ctx, trace, audience, progress);
+          break;
+        case "people":
+          result = await compilePeople(ctx, trace, audience, progress);
           break;
         case "default":
           result = compileDefault(trace, brand);

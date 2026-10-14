@@ -74,7 +74,25 @@ export const AUDIENCE_KIND_LABEL: Record<string, string> = {
   custom: "Custom",
   csv: "Customer cluster",
   lead: "Personal",
+  people: "Customer list",
 };
+
+/** The people in a customer list: one `lead` audience per row, in row order. */
+export function peopleIn(list: Audience, audiences: Audience[]): Audience[] {
+  if (list.kind !== "people" || !list.sources.uploadId) return [];
+  return audiences.filter((a) => a.kind === "lead" && a.sources.uploadId === list.sources.uploadId).sort((a, b) => a._creationTime - b._creationTime);
+}
+
+/** The customer list a person belongs to, if they came from one. */
+export function listOf(person: Audience, audiences: Audience[]): Audience | undefined {
+  if (person.kind !== "lead" || !person.sources.uploadId) return undefined;
+  return audiences.find((a) => a.kind === "people" && a.sources.uploadId === person.sources.uploadId);
+}
+
+/** The audiences that get a card of their own: people in a customer list live inside the list's card. */
+export function listedAudiences(audiences: Audience[]): Audience[] {
+  return audiences.filter((a) => !listOf(a, audiences));
+}
 
 export const GOALS: { value: string; label: string }[] = [
   { value: "launch", label: "Launch" },

@@ -89,7 +89,7 @@ type Starter = { icon: LucideIcon; label: string; parts: (string | Audience)[] }
 
 function starters(brand: Brand, audiences: Audience[]): Starter[] {
   const items = ((brand.brief?.items ?? []) as BrandItem[]).filter((i) => i.name);
-  const audience = audiences.find((a) => a.status === "ready");
+  const audience = audiences.find((a) => a.status === "ready" && a.kind !== "people");
   const lead = items[0]?.name;
   return [
     {

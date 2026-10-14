@@ -23,7 +23,7 @@ import {
 import { Fragment, useState, type ComponentType, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import type { Brand } from "@/lib/pages/types";
+import { listedAudiences, type Brand } from "@/lib/pages/types";
 import { brandDomain, brandHomeUrl, faviconOf, hostOf } from "@/lib/pages/urls";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -233,7 +233,7 @@ function BrandSidebar({ brand }: { brand: Brand }) {
       label: "Build",
       items: [
         { href: base, label: "Overview", icon: LayoutDashboard, exact: true },
-        { href: `${base}/audiences`, label: "Audiences", icon: Users, count: audiences?.length },
+        { href: `${base}/audiences`, label: "Audiences", icon: Users, count: audiences && listedAudiences(audiences).length },
         { href: `${base}/pages`, label: "Pages", icon: FileText, count: pages?.length },
         { href: `${base}/analytics`, label: "Analytics", icon: BarChart3 },
       ],

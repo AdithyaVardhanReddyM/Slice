@@ -320,7 +320,7 @@ export default defineSchema({
     brandId: v.id("pagesBrands"),
     name: v.string(),
     slug: v.string(),
-    /** "default" | "location" | "demographic" | "interests" | "custom" | "csv" | "lead" */
+    /** "default" | "location" | "demographic" | "interests" | "custom" | "csv" | "lead" | "people" */
     kind: v.string(),
     /** How it was defined; the compiler reads this. A custom audience combines any of these. */
     sources: v.object({
@@ -346,7 +346,7 @@ export default defineSchema({
     profile: v.optional(v.any()),
     /** AudienceBrief, written by the agent. */
     brief: v.optional(v.any()),
-    /** Members for CSV clusters; 1 for a lead; estimated reach otherwise. */
+    /** Members for CSV clusters and customer lists; 1 for a lead; estimated reach otherwise. */
     size: v.number(),
     trace: v.array(spanValidator),
     error: v.optional(v.string()),
@@ -364,6 +364,13 @@ export default defineSchema({
     /** "resolving" | "clustering" | "ready" | "failed" */
     status: v.string(),
     progress: v.optional(v.object({ value: v.number(), label: v.string() })),
+    /**
+     * "clusters" (the default): k-means into `csv` audiences. "people": one `people`
+     * audience for the list and a `lead` audience per row, for personal pages.
+     */
+    mode: v.optional(v.string()),
+    /** The list's `people` audience, in people mode. */
+    audienceId: v.optional(v.id("pagesAudiences")),
     /** Which columns carry taste, geo, demographics. */
     mapping: v.object({
       taste: v.array(v.string()),

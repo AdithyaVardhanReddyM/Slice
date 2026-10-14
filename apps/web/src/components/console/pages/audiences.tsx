@@ -7,19 +7,20 @@ import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { fmt } from "@/lib/format";
 import { EDITABLE_KINDS } from "@/lib/pages/definition";
-import { AGE_LABEL, AUDIENCE_KIND_LABEL, audienceBriefOf, profileOf, type Audience, type AudienceProfile, type Upload } from "@/lib/pages/types";
+import { AGE_LABEL, AUDIENCE_KIND_LABEL, audienceBriefOf, listOf, listedAudiences, peopleIn, profileOf, type Audience, type AudienceProfile, type Upload } from "@/lib/pages/types";
 import { Segmented } from "@/components/console/form";
 import { PageHeader, Skeleton } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/console/settings/confirm-dialog";
 import { AudienceDrawer } from "./audience-drawer";
+import { PeopleDrawer } from "./people-drawer";
 import { useBrand } from "./brand-context";
 import { AUDIENCE_SOURCES, BuilderCard, EditAudienceSheet, NewAudienceSheet, SourceIcon, type AudienceSourceKind } from "./new-audience-sheet";
 import { useCompileAudience } from "./use-compile-audience";
 import { KIND_ICON, TasteCover, coverTiles } from "./taste-cover";
 import { TagChips } from "./profile-view";
-import { ProgressLine, StatusBadge, audienceSubtitle } from "./shared";
+import { ProgressLine, StatusBadge, Thumb, audienceSubtitle } from "./shared";
 
 
 /** "Skews 25 to 29, women": the strongest over-indexed age band and a clear gender lean, if any. */
@@ -35,11 +36,12 @@ function skewLabel(d: AudienceProfile["demographics"] | undefined) {
 }
 
 
-export function AudienceCard({ audience, onOpen, onEdit }: { audience: Audience; onOpen: () => void; onEdit?: () => void }) {
+export function AudienceCard({ audience, people, onOpen, onEdit }: { audience: Audience; people?: Audience[]; onOpen: () => void; onEdit?: () => void }) {
   const profile = profileOf(audience);
   const brief = audienceBriefOf(audience);
   const ready = audience.status === "ready";
   const skew = skewLabel(profile?.demographics);
+  const list = audience.kind === "people";
   return (
     <div className="group relative flex">
       <button
@@ -65,22 +67,52 @@ export function AudienceCard({ audience, onOpen, onEdit }: { audience: Audience;
         />
         <div className="flex flex-1 flex-col gap-3 p-4">
           {!ready && <ProgressLine progress={audience.progress} status={audience.status} error={audience.error} />}
-          {brief?.summary ? (
-            <p className="line-clamp-2 text-sm">{brief.summary}</p>
-          ) : ready ? (
-            <p className="text-sm text-muted-foreground">No brief yet. Open the audience to write one.</p>
-          ) : null}
-          {profile && profile.tags.length > 0 && <TagChips tags={profile.tags} max={3} />}
-          {profile && <p className="mt-auto text-xs text-muted-foreground">{skew ?? "No demographic read"}</p>}
+          {list ? (
+            <PeopleSummary people={people ?? []} />
+          ) : (
+            <>
+              {brief?.summary ? (
+                <p className="line-clamp-2 text-sm">{brief.summary}</p>
+              ) : ready ? (
+                <p className="text-sm text-muted-foreground">No brief yet. Open the audience to write one.</p>
+              ) : null}
+              {profile && profile.tags.length > 0 && <TagChips tags={profile.tags} max={3} />}
+              {profile && <p className="mt-auto text-xs text-muted-foreground">{skew ?? "No demographic read"}</p>}
+            </>
+          )}
         </div>
       </button>
-      <CardMenu audience={audience} onEdit={onEdit} />
+      <CardMenu audience={audience} people={people} onEdit={onEdit} />
     </div>
   );
 }
 
+const PEOPLE_SHOWN = 3;
+
+/** A customer list's card body: its first few people with their first taste picture, and where to use them. */
+function PeopleSummary({ people }: { people: Audience[] }) {
+  if (!people.length) return null;
+  const more = people.length - PEOPLE_SHOWN;
+  return (
+    <>
+      <ul className="space-y-2">
+        {people.slice(0, PEOPLE_SHOWN).map((p) => (
+          <li key={p._id} className="flex items-center gap-2.5 text-sm">
+            <Thumb src={coverTiles(profileOf(p), 1)[0]?.image} className="size-6" rounded="rounded-full" />
+            <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
+            <span className="shrink-0 truncate text-xs text-muted-foreground">{profileOf(p)?.geo[0]?.name}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-auto text-xs text-muted-foreground">
+        {more > 0 ? `and ${more} more. ` : ""}Type @ and a name in the builder for a page for one of them.
+      </p>
+    </>
+  );
+}
+
 /** "⋯" on the card cover: edit, recompile or delete without opening the audience. */
-function CardMenu({ audience, onEdit }: { audience: Audience; onEdit?: () => void }) {
+function CardMenu({ audience, people, onEdit }: { audience: Audience; people?: Audience[]; onEdit?: () => void }) {
   const remove = useMutation(api.pagesAudiences.remove);
   const run = useCompileAudience();
   const [confirm, setConfirm] = useState(false);
@@ -104,7 +136,7 @@ function CardMenu({ audience, onEdit }: { audience: Audience; onEdit?: () => voi
               <ListFilter /> Edit conditions
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={() => void run(audience._id)} disabled={audience.status === "compiling"}>
+          <DropdownMenuItem onClick={() => void run(audience._id, people?.map((p) => p._id))} disabled={audience.status === "compiling"}>
             <RefreshCw /> Recompile
           </DropdownMenuItem>
           {audience.kind !== "default" && (
@@ -121,7 +153,11 @@ function CardMenu({ audience, onEdit }: { audience: Audience; onEdit?: () => voi
         open={confirm}
         onOpenChange={setConfirm}
         title={`Delete ${audience.name}?`}
-        description="Pages built for this audience keep what they say and stop listing it. This cannot be undone."
+        description={
+          audience.kind === "people"
+            ? `This removes the list and the people in it. Pages built for them keep what they say and stop listing them. This cannot be undone.`
+            : "Pages built for this audience keep what they say and stop listing it. This cannot be undone."
+        }
         actionLabel="Delete audience"
         onConfirm={() => void remove({ id: audience._id })}
       />
@@ -190,16 +226,17 @@ function NewAudienceTile({ onOpen }: { onOpen: () => void }) {
       </span>
       <span className="space-y-0.5">
         <span className="block text-sm font-medium">New audience</span>
-        <span className="block text-sm text-muted-foreground">Combine a place, ages, interests and lifestyle, or cluster your customers</span>
+        <span className="block text-sm text-muted-foreground">Combine a place, ages, interests and lifestyle, or upload your customers</span>
       </span>
     </button>
   );
 }
 
-const FILTERS = ["custom", "csv", "location", "demographic", "interests", "lead", "default"] as const;
+const FILTERS = ["custom", "people", "csv", "location", "demographic", "interests", "lead", "default"] as const;
 
 const FILTER_LABEL: Record<string, string> = {
   custom: "Custom",
+  people: "Customer lists",
   csv: "Customer clusters",
   location: "Locations",
   demographic: "Demographics",
@@ -223,8 +260,9 @@ export function AudiencesScreen() {
   const params = useSearchParams();
   const audiences = useQuery(api.pagesAudiences.list, { brandId: brand._id }) as Audience[] | undefined;
   const uploads = useQuery(api.pagesUploads.list, { brandId: brand._id }) as Upload[] | undefined;
-  // ?open=<id> (from the overview) opens that audience's drawer.
+  // ?open=<id> (from the overview) opens that audience's drawer; a person in a list opens the list on them.
   const [open, setOpen] = useState<string | null>(() => params.get("open"));
+  const [person, setPerson] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
 
@@ -236,11 +274,16 @@ export function AudiencesScreen() {
   const openSheet = (kind: AudienceSourceKind | null) => router.replace(`${base}?new=${kind ?? 1}`);
   const closeSheet = () => router.replace(base);
 
-  const busyUploads = (uploads ?? []).filter((u) => u.status !== "ready" && u.status !== "failed");
-  const selected = (audiences ?? []).find((a) => a._id === open) ?? null;
-  const edited = (audiences ?? []).find((a) => a._id === editing) ?? null;
-  const kinds = FILTERS.filter((k) => (audiences ?? []).some((a) => a.kind === k));
-  const shown = (audiences ?? []).filter((a) => filter === "all" || a.kind === filter);
+  // A customer list follows its own progress on its card.
+  const busyUploads = (uploads ?? []).filter((u) => u.status !== "ready" && u.status !== "failed" && u.mode !== "people");
+  const all = audiences ?? [];
+  const listed = listedAudiences(all);
+  const opened = all.find((a) => a._id === open) ?? null;
+  const openedList = opened?.kind === "people" ? opened : opened ? (listOf(opened, all) ?? null) : null;
+  const selected = openedList ? null : opened;
+  const edited = all.find((a) => a._id === editing) ?? null;
+  const kinds = FILTERS.filter((k) => listed.some((a) => a.kind === k));
+  const shown = listed.filter((a) => filter === "all" || a.kind === filter);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-6">
@@ -288,17 +331,26 @@ export function AudiencesScreen() {
               value={filter}
               onChange={setFilter}
               options={[
-                { value: "all", label: <FilterLabel label="All" count={audiences.length} /> },
+                { value: "all", label: <FilterLabel label="All" count={listed.length} /> },
                 ...kinds.map((k) => ({
                   value: k,
-                  label: <FilterLabel label={FILTER_LABEL[k] ?? k} count={audiences.filter((a) => a.kind === k).length} />,
+                  label: <FilterLabel label={FILTER_LABEL[k] ?? k} count={listed.filter((a) => a.kind === k).length} />,
                 })),
               ]}
             />
           )}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {shown.map((a) => (
-              <AudienceCard key={a._id} audience={a} onOpen={() => setOpen(a._id)} onEdit={() => setEditing(a._id)} />
+              <AudienceCard
+                key={a._id}
+                audience={a}
+                people={a.kind === "people" ? peopleIn(a, all) : undefined}
+                onOpen={() => {
+                  setPerson(null);
+                  setOpen(a._id);
+                }}
+                onEdit={() => setEditing(a._id)}
+              />
             ))}
             <NewAudienceTile onOpen={() => openSheet(null)} />
           </div>
@@ -306,6 +358,13 @@ export function AudiencesScreen() {
       )}
 
       <NewAudienceSheet open={sheetOpen} kind={sheetKind} onOpenChange={(o) => (o ? openSheet(sheetKind) : closeSheet())} onKindChange={openSheet} />
+      <PeopleDrawer
+        list={openedList}
+        people={openedList ? peopleIn(openedList, all) : []}
+        personId={person ?? (opened && opened !== openedList ? opened._id : null)}
+        onPerson={setPerson}
+        onClose={() => setOpen(null)}
+      />
       <AudienceDrawer
         audience={selected}
         onClose={() => setOpen(null)}

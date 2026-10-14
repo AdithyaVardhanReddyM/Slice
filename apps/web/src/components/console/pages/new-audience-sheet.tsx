@@ -1,17 +1,18 @@
 "use client";
 
 import { useAction, useMutation } from "convex/react";
-import { ArrowLeft, Cake, Check, ChevronRight, Compass, FileSpreadsheet, Heart, ListFilter, MapPin, Music, Plug, ShoppingBag, Upload as UploadIcon, Users, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Boxes, Cake, Check, ChevronRight, Compass, FileSpreadsheet, Heart, ListFilter, MapPin, Music, Plug, ShoppingBag, Upload as UploadIcon, Users, UsersRound, X, type LucideIcon } from "lucide-react";
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
+import { MAX_LIST_PEOPLE } from "@slice/backend/convex/pagesTypes";
 import { parseCsv, suggestMapping, type CsvMapping, type ParsedCsv } from "@/lib/pages/csv";
 import { postJson } from "@/lib/pages/stream";
 import type { Audience } from "@/lib/pages/types";
-import { Field, Select } from "@/components/console/form";
-import { FieldGroup, Spinner } from "@/components/console/setup/atoms";
+import { Field, Input, Select } from "@/components/console/form";
+import { ChoiceCard, ChoiceCardGroup, FieldGroup, Spinner } from "@/components/console/setup/atoms";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -22,11 +23,11 @@ import { CRMS, type CrmId } from "./crm-logos";
 
 const CHUNK = 200;
 
-function Footer({ busy, disabled, label, error, onSubmit }: { busy: boolean; disabled: boolean; label: string; error: string | null; onSubmit: () => void }) {
+function Footer({ busy, disabled, label, error, note, onSubmit }: { busy: boolean; disabled: boolean; label: string; error: string | null; note?: string; onSubmit: () => void }) {
   return (
     <div className="sticky bottom-0 -mx-6 mt-auto flex items-center justify-between gap-4 border-t bg-popover px-6 py-4">
       <p className="text-xs text-muted-foreground">
-        {error ? <span className="text-destructive">{error}</span> : "Takes about 20 seconds. The audience card fills in as Qloo answers."}
+        {error ? <span className="text-destructive">{error}</span> : (note ?? "Takes about 20 seconds. The audience card fills in as Qloo answers.")}
       </p>
       <Button onClick={onSubmit} disabled={busy || disabled}>
         {busy && <Spinner data-icon="inline-start" />}
@@ -47,6 +48,14 @@ const ROLES: { key: Exclude<keyof CsvMapping, "taste">; label: string }[] = [
   { key: "gender", label: "Gender" },
 ];
 
+type CsvMode = "people" | "clusters";
+
+/** "gwen-customers.csv" → "Gwen customers". */
+const listName = (filename: string) => {
+  const base = filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+  return base ? base.charAt(0).toUpperCase() + base.slice(1) : "Customers";
+};
+
 function CsvTab({ onDone }: { onDone: () => void }) {
   const brand = useBrand();
   const createUpload = useMutation(api.pagesUploads.create);
@@ -56,6 +65,8 @@ function CsvTab({ onDone }: { onDone: () => void }) {
   const [filename, setFilename] = useState("");
   const [parsed, setParsed] = useState<ParsedCsv | null>(null);
   const [mapping, setMapping] = useState<CsvMapping>({ taste: [] });
+  const [mode, setMode] = useState<CsvMode>("people");
+  const [name, setName] = useState("");
   const [k, setK] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +82,9 @@ function CsvTab({ onDone }: { onDone: () => void }) {
     setFilename(file.name);
     setParsed(p);
     setMapping(suggestMapping(p.columns));
+    // A short list reads best one by one; a long one in clusters.
+    setMode(p.rows.length <= MAX_LIST_PEOPLE ? "people" : "clusters");
+    setName(listName(file.name));
   }
 
   const sample = useMemo(() => parsed?.rows.slice(0, 5) ?? [], [parsed]);
@@ -84,15 +98,27 @@ function CsvTab({ onDone }: { onDone: () => void }) {
     setError(null);
     try {
       const rows = parsed.rows;
-      const { id } = await createUpload({ brandId: brand._id, filename, columns: parsed.columns, rows: rows.slice(0, CHUNK), mapping });
+      const { id } = await createUpload({
+        brandId: brand._id,
+        filename,
+        columns: parsed.columns,
+        rows: rows.slice(0, CHUNK),
+        mapping,
+        mode,
+        ...(mode === "people" ? { name: name.trim() || listName(filename) } : {}),
+      });
       for (let i = CHUNK; i < rows.length; i += CHUNK) {
         setBusy(`Uploading rows ${fmt.int(i)} of ${fmt.int(rows.length)}`);
         await appendRows({ uploadId: id, rows: rows.slice(i, i + CHUNK) });
       }
       onDone();
       // The long part runs server-side; the audiences screen follows the upload's progress.
-      process({ uploadId: id, ...(k ? { k: Number(k) } : {}) })
-        .then(() => postJson("/api/pages/name-clusters", { upload_id: id }).catch(() => undefined))
+      process({ uploadId: id, ...(mode === "clusters" && k ? { k: Number(k) } : {}) })
+        .then(({ people }) =>
+          people
+            ? Promise.all(people.map((p) => postJson("/api/pages/audience-brief", { audience_id: p }).catch(() => undefined)))
+            : postJson("/api/pages/name-clusters", { upload_id: id }).catch(() => undefined),
+        )
         .catch(() => undefined);
     } catch (err) {
       setError(String((err as Error).message ?? err));
@@ -180,16 +206,43 @@ function CsvTab({ onDone }: { onDone: () => void }) {
               </Field>
             ))}
           </div>
-          <Field label="Number of clusters" optional hint="Leave empty to pick 2 to 4 automatically.">
-            <Select value={k} onChange={(e) => setK(e.target.value)}>
-              <option value="">Automatic</option>
-              {[2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </Select>
-          </Field>
+          <FieldGroup label="Cluster them?">
+            <ChoiceCardGroup value={mode} onValueChange={setMode} className="sm:grid-cols-2" aria-label="Cluster them?">
+              <ChoiceCard
+                value="people"
+                icon={<UsersRound className="size-4" />}
+                title="No, one by one"
+                description={
+                  parsed.rows.length > MAX_LIST_PEOPLE
+                    ? `For lists of up to ${MAX_LIST_PEOPLE} people. This file has ${fmt.int(parsed.rows.length)}.`
+                    : "Each person gets their own taste profile. In the builder, type @ and a name to write a page for one of them."
+                }
+                disabled={parsed.rows.length > MAX_LIST_PEOPLE}
+              />
+              <ChoiceCard
+                value="clusters"
+                icon={<Boxes className="size-4" />}
+                title="Yes, in clusters"
+                description="People with similar taste are grouped into a few audiences, each with one shared profile. Best for long lists."
+              />
+            </ChoiceCardGroup>
+          </FieldGroup>
+          {mode === "people" ? (
+            <Field label="List name" hint="One card on the Audiences page holds everyone in the list.">
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={listName(filename)} />
+            </Field>
+          ) : (
+            <Field label="Number of clusters" optional hint="Leave empty to pick 2 to 4 automatically.">
+              <Select value={k} onChange={(e) => setK(e.target.value)}>
+                <option value="">Automatic</option>
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
@@ -227,8 +280,9 @@ function CsvTab({ onDone }: { onDone: () => void }) {
       <Footer
         busy={!!busy}
         disabled={!parsed || mapping.taste.length === 0}
-        label={busy ?? "Upload and cluster"}
+        label={busy ?? (mode === "people" ? "Upload the list" : "Upload and cluster")}
         error={error}
+        note={mode === "people" && parsed ? "Qloo reads one person at a time, about 15 seconds each. The list's card fills in as it goes." : undefined}
         onSubmit={submit}
       />
     </div>
@@ -326,8 +380,8 @@ export const AUDIENCE_SOURCES: { kind: AudienceSourceKind; icon: LucideIcon; tit
     kind: "csv",
     icon: FileSpreadsheet,
     title: "Your customers",
-    body: "Upload a customer CSV. Qloo resolves what each person likes, then the rows are clustered into audiences.",
-    example: "Your top customers, clustered",
+    body: "Upload a customer CSV. Qloo reads what each person likes. Keep them one by one for personal pages, or cluster them into audiences.",
+    example: "Your top customers",
   },
   { kind: "crm", icon: Plug, title: "Connect a CRM", body: "Sync customers from HubSpot or Salesforce and keep the audiences up to date.", soon: true },
 ];

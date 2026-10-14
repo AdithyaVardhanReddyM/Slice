@@ -258,6 +258,7 @@ export function audienceSubtitle(a: Audience) {
 export function audienceSizeLabel(a: Audience) {
   if (a.kind === "lead") return "1 person";
   if (a.kind === "csv") return `${fmt.int(a.size)} customers`;
+  if (a.kind === "people") return a.size === 1 ? "1 person" : `${fmt.int(a.size)} people`;
   if (a.kind === "default") return "Everyone";
   const { location, demographics, interests, segments, tags } = a.sources;
   const ages = demographics?.ages?.length ? agesPhrase(demographics.ages) : demographics?.age ? AGE_LABEL[demographics.age] ?? demographics.age : "";

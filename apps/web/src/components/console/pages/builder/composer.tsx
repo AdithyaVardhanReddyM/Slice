@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowUp, AtSign, Check, ChevronDown, Paperclip, Square, SquareDashed, SquareDashedMousePointer, Users } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { AUDIENCE_KIND_LABEL, profileOf, type Audience } from "@/lib/pages/types";
+import { AUDIENCE_KIND_LABEL, listOf, profileOf, type Audience } from "@/lib/pages/types";
 import { PAGES_MODELS, type PagesModel } from "@/lib/pages/models";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -311,7 +311,8 @@ export const PromptComposer = forwardRef<
   const matches = useMemo(() => {
     if (!menu) return [];
     const q = menu.query.trim().toLowerCase();
-    return audiences.filter((a) => a.status !== "failed" && (!q || a.name.toLowerCase().includes(q))).slice(0, 8);
+    // A customer list is not written for as a whole; its people are, one by one.
+    return audiences.filter((a) => a.status !== "failed" && a.kind !== "people" && (!q || a.name.toLowerCase().includes(q))).slice(0, 8);
   }, [menu, audiences]);
 
   const sync = useCallback(() => {
@@ -491,7 +492,7 @@ export const PromptComposer = forwardRef<
                         <span className="block truncate text-sm font-medium">{a.name}</span>
                         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           {a.status !== "ready" && <StatusDot status={a.status} />}
-                          {AUDIENCE_KIND_LABEL[a.kind] ?? a.kind}
+                          {listOf(a, audiences)?.name ?? AUDIENCE_KIND_LABEL[a.kind] ?? a.kind}
                           {a.status === "compiling" && " · compiling"}
                         </span>
                       </span>

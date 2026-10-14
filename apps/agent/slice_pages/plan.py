@@ -110,6 +110,8 @@ def _audience_line(a: dict[str, Any]) -> str:
         bits.append("lifestyle " + ", ".join(x.get("name", "") for x in src["segments"][:4]))
     if src.get("tags"):
         bits.append("genres " + ", ".join(t.get("name", "") for t in src["tags"][:4]))
+    if a.get("kind") == "lead":
+        bits.append("one customer from the brand's own list")
     return f"  - {a['_id']}: {a.get('name')} [{a.get('kind')}{'; ' + '; '.join(bits) if bits else ''}]"
 
 
@@ -182,7 +184,8 @@ async def plan_page(
     brand = await convex.query("pagesBrands:get", {"id": brand_id})
     if not brand:
         raise ValueError(f"brand {brand_id} not found")
-    audiences = await convex.query("pagesAudiences:list", {"brandId": brand_id}) or []
+    # A customer list is never a page's audience; the people in it are, one by one.
+    audiences = [a for a in (await convex.query("pagesAudiences:list", {"brandId": brand_id}) or []) if a.get("kind") != "people"]
     try:
         segments = await convex.query("pagesAudiences:segments", {}) or []
     except Exception:

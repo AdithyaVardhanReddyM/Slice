@@ -245,18 +245,21 @@ export function ChoiceCard({
   icon,
   title,
   description,
+  disabled,
   className,
 }: {
   value: string;
   icon?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
+  disabled?: boolean;
   className?: string;
 }) {
   return (
     <label
       className={cn(
         "flex cursor-pointer flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 has-focus-visible:ring-3 has-focus-visible:ring-ring/50 has-data-checked:border-primary has-data-checked:bg-primary/5",
+        disabled && "cursor-not-allowed opacity-60 hover:bg-card",
         className,
       )}
     >
@@ -266,7 +269,7 @@ export function ChoiceCard({
             {icon}
           </span>
         )}
-        <RadioGroupItem value={value} className="ml-auto" />
+        <RadioGroupItem value={value} disabled={disabled} className="ml-auto" />
       </span>
       <span className="space-y-0.5">
         <span className="block text-sm font-medium">{title}</span>

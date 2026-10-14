@@ -1,16 +1,22 @@
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import type { Span } from "./qlooApi";
 import { spanValidator } from "./schema";
 import { ageBucket, kmeans, lift, normalizeGender, splitTerms, type ClusterRow, type CsvMapping } from "./pagesCsv";
+import { MAX_LIST_PEOPLE } from "./pagesTypes";
+import { uniqueAudienceSlug } from "./pagesAudiences";
 import { norm, resolveNames, safeRecord, slugify } from "./pagesUtil";
 
 // A customer CSV becomes audiences: each row's taste columns are resolved to
-// Qloo entities, rows are clustered on those entities (plus city and age),
-// and every cluster is compiled as a `csv` audience. One row can also become
-// a `lead` audience for a personal link.
+// Qloo entities, then either
+// - "clusters": rows are clustered on those entities (plus city and age) and
+//   every cluster is compiled as a `csv` audience (one row can still become a
+//   `lead` audience for a personal page), or
+// - "people": every row becomes a `lead` audience of its own, gathered under
+//   one `people` audience for the list, so the builder can write a page for
+//   any one person.
 
 const mappingValidator = v.object({
   taste: v.array(v.string()),
@@ -48,9 +54,13 @@ export const create = mutation({
     columns: v.array(v.string()),
     rows: rowsValidator,
     mapping: mappingValidator,
+    /** "clusters" (default) or "people". */
+    mode: v.optional(v.string()),
+    /** The list's name, in people mode. */
+    name: v.optional(v.string()),
   },
-  returns: v.object({ id: v.id("pagesUploads") }),
-  handler: async (ctx, { brandId, filename, columns, rows, mapping }) => {
+  returns: v.object({ id: v.id("pagesUploads"), audienceId: v.optional(v.id("pagesAudiences")) }),
+  handler: async (ctx, { brandId, filename, columns, rows, mapping, mode, name }) => {
     if (rows.length > MAX_ROWS_PER_CALL) throw new Error(`Send at most ${MAX_ROWS_PER_CALL} rows per call; use appendRows for the rest`);
     const now = Date.now();
     const id = await ctx.db.insert("pagesUploads", {
@@ -60,6 +70,7 @@ export const create = mutation({
       rowCount: rows.length,
       status: "uploading",
       progress: { value: 0, label: "Uploading rows" },
+      mode: mode === "people" ? "people" : "clusters",
       mapping,
       clusters: [],
       trace: [],
@@ -67,7 +78,24 @@ export const create = mutation({
       updatedAt: now,
     });
     for (const row of rows) await ctx.db.insert("pagesMembers", memberFromRow(brandId, id, row, mapping));
-    return { id };
+    if (mode !== "people") return { id };
+    // The list's card shows up right away and follows the upload from here.
+    const label = name?.trim() || filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim() || "Customers";
+    const audienceId = await ctx.db.insert("pagesAudiences", {
+      brandId,
+      name: label,
+      slug: await uniqueAudienceSlug(ctx, brandId, slugify(label)),
+      kind: "people",
+      sources: { uploadId: id },
+      status: "compiling",
+      progress: { value: 0, label: "Uploading rows" },
+      size: rows.length,
+      trace: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch(id, { audienceId });
+    return { id, audienceId };
   },
 });
 
@@ -228,17 +256,30 @@ function plausible(term: string, found: string): boolean {
  */
 export const process = action({
   args: { uploadId: v.id("pagesUploads"), k: v.optional(v.number()), seed: v.optional(v.number()) },
-  returns: v.object({ clusters: v.number(), resolved: v.number(), unique: v.number() }),
-  handler: async (ctx, { uploadId, k, seed = 7 }): Promise<{ clusters: number; resolved: number; unique: number }> => {
+  returns: v.object({
+    clusters: v.number(),
+    resolved: v.number(),
+    unique: v.number(),
+    /** People mode: each person's audience, in row order. */
+    people: v.optional(v.array(v.id("pagesAudiences"))),
+  }),
+  handler: async (ctx, { uploadId, k, seed = 7 }): Promise<{ clusters: number; resolved: number; unique: number; people?: Id<"pagesAudiences">[] }> => {
     const upload = await ctx.runQuery(internal.pagesUploads.getInternal, { id: uploadId });
     if (!upload) throw new Error("Unknown upload");
+    const listId = upload.mode === "people" ? upload.audienceId : undefined;
     const trace: Span[] = [];
-    const progress = (value: number, label: string, status?: string) =>
-      ctx.runMutation(internal.pagesUploads.setProgress, { id: uploadId, value, label, status });
+    const progress = async (value: number, label: string, status?: string) => {
+      await ctx.runMutation(internal.pagesUploads.setProgress, { id: uploadId, value, label, status });
+      // The list's card shows the reading of the rows as the first fifth of its own progress.
+      if (listId) await ctx.runMutation(internal.pagesAudiences.setProgress, { id: listId, value: value * 0.3, label });
+    };
     try {
       /* 1. Resolve taste terms. */
       await progress(0, "Reading the rows", "resolving");
       const members = await ctx.runQuery(internal.pagesUploads.membersInternal, { uploadId });
+      if (listId && members.length > MAX_LIST_PEOPLE) {
+        throw new Error(`A list kept one by one holds up to ${MAX_LIST_PEOPLE} people; this file has ${members.length}. Cluster it instead.`);
+      }
       const termsByMember = new Map<Id<"pagesMembers">, string[]>();
       const unique = new Map<string, string>(); // lower → display
       for (const m of members) {
@@ -281,6 +322,16 @@ export const process = action({
         return { id: m._id, entities };
       });
       for (const batch of chunk(updates, 50)) await ctx.runMutation(internal.pagesUploads.setMemberEntities, { updates: batch });
+
+      if (listId) {
+        /* 2. One audience per person, read one after another; the list's profile gathers theirs. */
+        await ctx.runMutation(internal.pagesUploads.patch, { id: uploadId, patch: { spans: trace } });
+        await ctx.runMutation(internal.pagesUploads.setProgress, { id: uploadId, value: 0.62, label: "Reading each person", status: "compiling" });
+        await ctx.runAction(api.pagesAudiences.compile, { id: listId });
+        const people = await ctx.runMutation(internal.pagesUploads.ensureLeads, { uploadId });
+        await ctx.runMutation(internal.pagesUploads.patch, { id: uploadId, patch: { status: "ready", progress: { value: 1, label: "Ready" } } });
+        return { clusters: 0, resolved: resolved.size, unique: names.length, people };
+      }
 
       /* 2. Cluster. */
       await progress(0.62, "Clustering members", "clustering");
@@ -352,49 +403,57 @@ export const process = action({
         id: uploadId,
         patch: { status: "failed", error: String(err).slice(0, 300), spans: trace },
       });
+      if (listId) await ctx.runMutation(internal.pagesAudiences.setStatus, { id: listId, status: "failed", error: String(err).replace(/^Error: /, "").slice(0, 300) });
       throw err;
     }
   },
 });
 
-/** A one-member audience for a personal link (`?g=<memberId>`). The console compiles it next. */
+/** A one-member audience for one row: a personal page is a page built for it. */
+async function insertLead(ctx: MutationCtx, member: Doc<"pagesMembers">): Promise<Id<"pagesAudiences">> {
+  if (member.leadAudienceId && (await ctx.db.get(member.leadAudienceId))) return member.leadAudienceId;
+  const upload = await ctx.db.get(member.uploadId);
+  const nameCol = upload?.mapping.name;
+  const idCol = upload?.mapping.id;
+  const label =
+    (nameCol && member.row[nameCol]) || (idCol && member.row[idCol]) || `Guest ${String(member._id).slice(-5)}`;
+  const now = Date.now();
+  const audienceId = await ctx.db.insert("pagesAudiences", {
+    brandId: member.brandId,
+    name: label,
+    slug: await uniqueAudienceSlug(ctx, member.brandId, slugify(`lead-${label}`)),
+    kind: "lead",
+    sources: { memberId: member._id, uploadId: member.uploadId, cluster: member.cluster },
+    status: "compiling",
+    progress: { value: 0, label: "Starting" },
+    size: 1,
+    trace: [],
+    createdAt: now,
+    updatedAt: now,
+  });
+  await ctx.db.patch(member._id, { leadAudienceId: audienceId });
+  return audienceId;
+}
+
+/** One row's audience, from a cluster's Members tab. The console compiles it next. */
 export const createLead = mutation({
   args: { memberId: v.id("pagesMembers") },
   returns: v.object({ audienceId: v.id("pagesAudiences") }),
   handler: async (ctx, { memberId }) => {
     const member = await ctx.db.get(memberId);
     if (!member) throw new Error("Unknown member");
-    if (member.leadAudienceId && (await ctx.db.get(member.leadAudienceId))) return { audienceId: member.leadAudienceId };
-    const upload = await ctx.db.get(member.uploadId);
-    const nameCol = upload?.mapping.name;
-    const idCol = upload?.mapping.id;
-    const label =
-      (nameCol && member.row[nameCol]) || (idCol && member.row[idCol]) || `Guest ${String(memberId).slice(-5)}`;
-    const now = Date.now();
-    const base = slugify(`lead-${label}`);
-    let slug = base;
-    for (let n = 2; ; n++) {
-      const taken = await ctx.db
-        .query("pagesAudiences")
-        .withIndex("by_brand_slug", (q) => q.eq("brandId", member.brandId).eq("slug", slug))
-        .unique();
-      if (!taken) break;
-      slug = `${base}-${n}`;
-    }
-    const audienceId = await ctx.db.insert("pagesAudiences", {
-      brandId: member.brandId,
-      name: label,
-      slug,
-      kind: "lead",
-      sources: { memberId, uploadId: member.uploadId, cluster: member.cluster },
-      status: "compiling",
-      progress: { value: 0, label: "Starting" },
-      size: 1,
-      trace: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    await ctx.db.patch(memberId, { leadAudienceId: audienceId });
-    return { audienceId };
+    return { audienceId: await insertLead(ctx, member) };
+  },
+});
+
+/** Every row's audience (created where missing), in row order. For a customer list. */
+export const ensureLeads = internalMutation({
+  args: { uploadId: v.id("pagesUploads") },
+  returns: v.array(v.id("pagesAudiences")),
+  handler: async (ctx, { uploadId }) => {
+    const members = await ctx.db.query("pagesMembers").withIndex("by_upload", (q) => q.eq("uploadId", uploadId)).collect();
+    const ids: Id<"pagesAudiences">[] = [];
+    for (const m of members) ids.push(await insertLead(ctx, m));
+    return ids;
   },
 });
