@@ -18,7 +18,7 @@ export function SalesforceLogo({ className }: { className?: string }) {
 
 export const CRMS = [
   { id: "hubspot", name: "HubSpot", logo: HubSpotLogo, body: "Contacts, lists and properties" },
-  { id: "salesforce", name: "Salesforce", logo: SalesforceLogo, body: "Leads and contacts from a report" },
+  { id: "salesforce", name: "Salesforce", logo: SalesforceLogo, body: "Contacts from a campaign" },
 ] as const;
 
 export type CrmId = (typeof CRMS)[number]["id"];

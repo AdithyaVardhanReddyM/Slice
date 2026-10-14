@@ -9,7 +9,8 @@ import { MAX_LIST_PEOPLE } from "./pagesTypes";
 import { uniqueAudienceSlug } from "./pagesAudiences";
 import { norm, resolveNames, safeRecord, slugify } from "./pagesUtil";
 
-// A customer CSV becomes audiences: each row's taste columns are resolved to
+// A customer CSV (or a CRM list pulled through Composio, in the same row shape)
+// becomes audiences: each row's taste columns are resolved to
 // Qloo entities, then either
 // - "clusters": rows are clustered on those entities (plus city and age) and
 //   every cluster is compiled as a `csv` audience (one row can still become a
@@ -58,9 +59,11 @@ export const create = mutation({
     mode: v.optional(v.string()),
     /** The list's name, in people mode. */
     name: v.optional(v.string()),
+    /** Set when the rows come from a connected CRM rather than a file. */
+    source: v.optional(v.object({ crm: v.string(), listId: v.string(), listName: v.string() })),
   },
   returns: v.object({ id: v.id("pagesUploads"), audienceId: v.optional(v.id("pagesAudiences")) }),
-  handler: async (ctx, { brandId, filename, columns, rows, mapping, mode, name }) => {
+  handler: async (ctx, { brandId, filename, columns, rows, mapping, mode, name, source }) => {
     if (rows.length > MAX_ROWS_PER_CALL) throw new Error(`Send at most ${MAX_ROWS_PER_CALL} rows per call; use appendRows for the rest`);
     const now = Date.now();
     const id = await ctx.db.insert("pagesUploads", {
@@ -71,6 +74,7 @@ export const create = mutation({
       status: "uploading",
       progress: { value: 0, label: "Uploading rows" },
       mode: mode === "people" ? "people" : "clusters",
+      ...(source ? { source } : {}),
       mapping,
       clusters: [],
       trace: [],
@@ -148,6 +152,12 @@ export const membersInternal = internalQuery({
     const all = await ctx.db.query("pagesMembers").withIndex("by_upload", (q) => q.eq("uploadId", uploadId)).collect();
     return cluster === undefined ? all : all.filter((m) => m.cluster === cluster);
   },
+});
+
+/** One row, for the agent (a CRM contact's id lives in `row.crm_id`). */
+export const member = query({
+  args: { id: v.id("pagesMembers") },
+  handler: async (ctx, { id }) => ctx.db.get(id),
 });
 
 export const memberInternal = internalQuery({

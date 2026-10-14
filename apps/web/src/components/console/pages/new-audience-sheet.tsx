@@ -2,7 +2,7 @@
 
 import { useAction, useMutation } from "convex/react";
 import { ArrowLeft, Boxes, Cake, Check, ChevronRight, Compass, FileSpreadsheet, Heart, ListFilter, MapPin, Music, Plug, ShoppingBag, Upload as UploadIcon, Users, UsersRound, X, type LucideIcon } from "lucide-react";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
@@ -56,36 +56,42 @@ const listName = (filename: string) => {
   return base ? base.charAt(0).toUpperCase() + base.slice(1) : "Customers";
 };
 
-function CsvTab({ onDone }: { onDone: () => void }) {
+/** Where imported rows came from when it is not a file: a CRM list pulled through Composio. */
+type CrmSource = { crm: CrmId; listId: string; listName: string };
+
+/**
+ * The mapping, the cluster-or-not choice and the upload, for rows from a CSV
+ * or from a CRM list. Remount it (key) when the rows change.
+ */
+function RowsImport({
+  parsed,
+  filename,
+  defaultName,
+  source,
+  pickError,
+  onDone,
+}: {
+  parsed: ParsedCsv | null;
+  filename: string;
+  defaultName: string;
+  source?: CrmSource;
+  pickError?: string | null;
+  onDone: () => void;
+}) {
   const brand = useBrand();
   const createUpload = useMutation(api.pagesUploads.create);
   const appendRows = useMutation(api.pagesUploads.appendRows);
   const process = useAction(api.pagesUploads.process);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [filename, setFilename] = useState("");
-  const [parsed, setParsed] = useState<ParsedCsv | null>(null);
-  const [mapping, setMapping] = useState<CsvMapping>({ taste: [] });
-  const [mode, setMode] = useState<CsvMode>("people");
-  const [name, setName] = useState("");
+  // CRM rows carry the contact's id in crm_id: it is what the builder and the write-back look up.
+  const [mapping, setMapping] = useState<CsvMapping>(() => (parsed ? { ...suggestMapping(parsed.columns), ...(source ? { id: "crm_id" } : {}) } : { taste: [] }));
+  // A short list reads best one by one; a long one in clusters.
+  const [mode, setMode] = useState<CsvMode>(() => (parsed && parsed.rows.length <= MAX_LIST_PEOPLE ? "people" : "clusters"));
+  const [name, setName] = useState(defaultName);
   const [k, setK] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  async function onFile(file: File) {
-    setError(null);
-    const text = await file.text();
-    const p = parseCsv(text);
-    if (p.columns.length === 0 || p.rows.length === 0) {
-      setError("That file has no rows. Export it as CSV with a header row.");
-      return;
-    }
-    setFilename(file.name);
-    setParsed(p);
-    setMapping(suggestMapping(p.columns));
-    // A short list reads best one by one; a long one in clusters.
-    setMode(p.rows.length <= MAX_LIST_PEOPLE ? "people" : "clusters");
-    setName(listName(file.name));
-  }
+  const noun = source ? "list" : "file";
+  const verb = source ? "Import" : "Upload";
 
   const sample = useMemo(() => parsed?.rows.slice(0, 5) ?? [], [parsed]);
   const toggleTaste = (c: string) => setMapping((m) => ({ ...m, taste: m.taste.includes(c) ? m.taste.filter((x) => x !== c) : [...m.taste, c] }));
@@ -94,7 +100,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
 
   async function submit() {
     if (!parsed) return;
-    setBusy("Uploading rows");
+    setBusy(source ? "Importing contacts" : "Uploading rows");
     setError(null);
     try {
       const rows = parsed.rows;
@@ -105,10 +111,11 @@ function CsvTab({ onDone }: { onDone: () => void }) {
         rows: rows.slice(0, CHUNK),
         mapping,
         mode,
-        ...(mode === "people" ? { name: name.trim() || listName(filename) } : {}),
+        ...(mode === "people" ? { name: name.trim() || defaultName } : {}),
+        ...(source ? { source } : {}),
       });
       for (let i = CHUNK; i < rows.length; i += CHUNK) {
-        setBusy(`Uploading rows ${fmt.int(i)} of ${fmt.int(rows.length)}`);
+        setBusy(`${source ? "Importing" : "Uploading"} rows ${fmt.int(i)} of ${fmt.int(rows.length)}`);
         await appendRows({ uploadId: id, rows: rows.slice(i, i + CHUNK) });
       }
       onDone();
@@ -127,50 +134,18 @@ function CsvTab({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-5">
-      <input
-        ref={fileRef}
-        type="file"
-        accept=".csv,text/csv,text/plain"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void onFile(f);
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => fileRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          const f = e.dataTransfer.files?.[0];
-          if (f) void onFile(f);
-        }}
-        className={cn(
-          "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 py-8 text-center transition-colors hover:bg-muted/50",
-          parsed && "border-solid bg-muted/30",
-        )}
-      >
-        <UploadIcon className="size-5 text-muted-foreground" />
-        {parsed ? (
-          <>
-            <span className="text-sm font-medium">{filename}</span>
-            <span className="text-xs text-muted-foreground">
-              {fmt.int(parsed.rows.length)} rows · {parsed.columns.length} columns · click to replace
-            </span>
-          </>
-        ) : (
-          <>
-            <span className="text-sm font-medium">Drop a CSV here or click to choose</span>
-            <span className="text-xs text-muted-foreground">Parsed in your browser; only the rows you confirm are uploaded.</span>
-          </>
-        )}
-      </button>
-
+    <>
       {parsed && (
         <>
-          <FieldGroup label="Taste columns" hint="Multi-value cells split on ; , or |. Pick every column that holds things people like." aside={`${mapping.taste.length} selected`}>
+          <FieldGroup
+            label={source ? "Taste properties" : "Taste columns"}
+            hint={
+              source
+                ? "Pick every property that holds things people like, such as custom properties for favourite artists, brands or interests."
+                : "Multi-value cells split on ; , or |. Pick every column that holds things people like."
+            }
+            aside={`${mapping.taste.length} selected`}
+          >
             <div className="flex flex-wrap gap-1.5">
               {parsed.columns.map((c) => {
                 const on = mapping.taste.includes(c);
@@ -196,7 +171,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
             {ROLES.map((r) => (
               <Field key={r.key} label={r.label} optional>
                 <Select value={mapping[r.key] ?? ""} onChange={(e) => setRole(r.key, e.target.value)}>
-                  <option value="">Not in file</option>
+                  <option value="">Not in {noun}</option>
                   {parsed.columns.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -214,7 +189,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
                 title="No, one by one"
                 description={
                   parsed.rows.length > MAX_LIST_PEOPLE
-                    ? `For lists of up to ${MAX_LIST_PEOPLE} people. This file has ${fmt.int(parsed.rows.length)}.`
+                    ? `For lists of up to ${MAX_LIST_PEOPLE} people. This ${noun} has ${fmt.int(parsed.rows.length)}.`
                     : "Each person gets their own taste profile. In the builder, type @ and a name to write a page for one of them."
                 }
                 disabled={parsed.rows.length > MAX_LIST_PEOPLE}
@@ -229,7 +204,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
           </FieldGroup>
           {mode === "people" ? (
             <Field label="List name" hint="One card on the Audiences page holds everyone in the list.">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={listName(filename)} />
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={defaultName} />
             </Field>
           ) : (
             <Field label="Number of clusters" optional hint="Leave empty to pick 2 to 4 automatically.">
@@ -280,10 +255,79 @@ function CsvTab({ onDone }: { onDone: () => void }) {
       <Footer
         busy={!!busy}
         disabled={!parsed || mapping.taste.length === 0}
-        label={busy ?? (mode === "people" ? "Upload the list" : "Upload and cluster")}
-        error={error}
+        label={busy ?? (mode === "people" ? `${verb} the list` : `${verb} and cluster`)}
+        error={error ?? pickError ?? null}
         note={mode === "people" && parsed ? "Qloo reads one person at a time, about 15 seconds each. The list's card fills in as it goes." : undefined}
         onSubmit={submit}
+      />
+    </>
+  );
+}
+
+function CsvTab({ onDone }: { onDone: () => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<{ name: string; parsed: ParsedCsv } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFile(f: File) {
+    setError(null);
+    const parsed = parseCsv(await f.text());
+    if (parsed.columns.length === 0 || parsed.rows.length === 0) {
+      setError("That file has no rows. Export it as CSV with a header row.");
+      return;
+    }
+    setFile({ name: f.name, parsed });
+  }
+
+  const parsed = file?.parsed ?? null;
+  return (
+    <div className="flex flex-1 flex-col gap-5">
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".csv,text/csv,text/plain"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void onFile(f);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const f = e.dataTransfer.files?.[0];
+          if (f) void onFile(f);
+        }}
+        className={cn(
+          "flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 py-8 text-center transition-colors hover:bg-muted/50",
+          parsed && "border-solid bg-muted/30",
+        )}
+      >
+        <UploadIcon className="size-5 text-muted-foreground" />
+        {file && parsed ? (
+          <>
+            <span className="text-sm font-medium">{file.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {fmt.int(parsed.rows.length)} rows · {parsed.columns.length} columns · click to replace
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-sm font-medium">Drop a CSV here or click to choose</span>
+            <span className="text-xs text-muted-foreground">Parsed in your browser; only the rows you confirm are uploaded.</span>
+          </>
+        )}
+      </button>
+      <RowsImport
+        key={file ? `${file.name}:${parsed?.rows.length}` : "none"}
+        parsed={parsed}
+        filename={file?.name ?? ""}
+        defaultName={file ? listName(file.name) : "Customers"}
+        pickError={error}
+        onDone={onDone}
       />
     </div>
   );
@@ -291,7 +335,34 @@ function CsvTab({ onDone }: { onDone: () => void }) {
 
 /* CRM ------------------------------------------------------------------------- */
 
-function CrmConnectButton({ crm, onClick }: { crm: (typeof CRMS)[number]; onClick?: () => void }) {
+type CrmStatus = Partial<Record<CrmId, { connected: boolean; accountId?: string | null }>>;
+type CrmList = { id: string; name: string; size: number | null };
+
+/** Which CRMs this brand has connected through Composio. `null` while loading. */
+function useCrmStatus() {
+  const brand = useBrand();
+  const [status, setStatus] = useState<CrmStatus | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const refresh = useCallback(async () => {
+    try {
+      const res = await postJson<{ ok: boolean; crms?: CrmStatus; error?: string }>("/api/pages/crm/status", { brand_id: brand._id });
+      if (!res.ok) throw new Error(res.error ?? "Could not reach Composio");
+      setStatus(res.crms ?? {});
+      setError(null);
+      return res.crms ?? {};
+    } catch (err) {
+      setError(String((err as Error).message ?? err));
+      setStatus({});
+      return {};
+    }
+  }, [brand._id]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { status, error, refresh };
+}
+
+function CrmConnectButton({ crm, connected, onClick }: { crm: (typeof CRMS)[number]; connected?: boolean; onClick?: () => void }) {
   const Logo = crm.logo;
   return (
     <button
@@ -304,38 +375,198 @@ function CrmConnectButton({ crm, onClick }: { crm: (typeof CRMS)[number]; onClic
         <span className="block text-sm font-medium">{crm.name}</span>
         <span className="block text-xs text-muted-foreground">{crm.body}</span>
       </span>
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-        Connect <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-      </span>
+      {connected ? (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+          <Check className="size-3.5" /> Connected · Import
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+          Connect <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+        </span>
+      )}
     </button>
   );
 }
 
-function CrmTab({ crm, onCrm }: { crm: CrmId | null; onCrm: (id: CrmId) => void }) {
+/**
+ * Connect HubSpot or Salesforce through Composio (a hosted sign-in in a popup),
+ * pick a list, pull its contacts, then the same mapping as a CSV.
+ */
+function CrmTab({ crm, onCrm, onDone }: { crm: CrmId | null; onCrm: (id: CrmId) => void; onDone: () => void }) {
+  const brand = useBrand();
+  const { status, error: statusError, refresh } = useCrmStatus();
+  const [connecting, setConnecting] = useState(false);
+  const [lists, setLists] = useState<CrmList[] | null>(null);
+  const [listId, setListId] = useState("all");
+  const [pulled, setPulled] = useState<{ parsed: ParsedCsv; source: CrmSource } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const chosen = CRMS.find((c) => c.id === crm);
+  const connected = !!(crm && status?.[crm]?.connected);
+
+  // While the popup is open: check again when it reports back, and every few seconds meanwhile.
+  useEffect(() => {
+    if (!connecting || !crm) return;
+    let stopped = false;
+    const check = async () => {
+      const s = await refresh();
+      if (!stopped && s[crm]?.connected) setConnecting(false);
+    };
+    const onMessage = (e: MessageEvent) => {
+      if (e.origin === window.location.origin && (e.data as { type?: string })?.type === "slice:crm-connected") void check();
+    };
+    window.addEventListener("message", onMessage);
+    const timer = setInterval(check, 3000);
+    const giveUp = setTimeout(() => setConnecting(false), 180_000);
+    return () => {
+      stopped = true;
+      window.removeEventListener("message", onMessage);
+      clearInterval(timer);
+      clearTimeout(giveUp);
+    };
+  }, [connecting, crm, refresh]);
+
+  // Once connected, the lists to import from.
+  useEffect(() => {
+    if (!crm || !connected) return;
+    let alive = true;
+    setLists(null);
+    postJson<{ ok: boolean; lists?: CrmList[]; error?: string }>("/api/pages/crm/lists", { brand_id: brand._id, crm })
+      .then((res) => {
+        if (!alive) return;
+        if (!res.ok) throw new Error(res.error ?? "Could not read the lists");
+        setLists(res.lists ?? []);
+      })
+      .catch((err) => alive && setError(String((err as Error).message ?? err)));
+    return () => {
+      alive = false;
+    };
+  }, [brand._id, crm, connected]);
+
+  async function connect() {
+    if (!crm) return;
+    setError(null);
+    try {
+      const res = await postJson<{ ok: boolean; url?: string; error?: string }>("/api/pages/crm/connect", {
+        brand_id: brand._id,
+        crm,
+        callback_url: `${window.location.origin}/crm-connected`,
+      });
+      if (!res.ok || !res.url) throw new Error(res.error ?? "Could not start the connection");
+      window.open(res.url, "slice-crm-connect", "popup,width=560,height=720");
+      setConnecting(true);
+    } catch (err) {
+      setError(String((err as Error).message ?? err));
+    }
+  }
+
+  async function pull() {
+    if (!crm || !chosen) return;
+    const list = lists?.find((l) => l.id === listId);
+    setBusy("Reading contacts");
+    setError(null);
+    try {
+      const res = await postJson<{ ok: boolean; columns?: string[]; rows?: Record<string, string>[]; error?: string }>("/api/pages/crm/contacts", {
+        brand_id: brand._id,
+        crm,
+        list_id: listId,
+      });
+      if (!res.ok) throw new Error(res.error ?? "Could not read the contacts");
+      if (!res.rows?.length) throw new Error(`No contacts in ${list?.name ?? "that list"}.`);
+      setPulled({
+        parsed: { columns: res.columns ?? [], rows: res.rows, delimiter: "," },
+        source: { crm, listId, listName: list?.name ?? "All contacts" },
+      });
+    } catch (err) {
+      setError(String((err as Error).message ?? err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (!chosen)
     return (
-      <div className="grid gap-3 sm:grid-cols-2">
-        {CRMS.map((c) => (
-          <CrmConnectButton key={c.id} crm={c} onClick={() => onCrm(c.id)} />
-        ))}
+      <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {CRMS.map((c) => (
+            <CrmConnectButton key={c.id} crm={c} connected={!!status?.[c.id]?.connected} onClick={() => onCrm(c.id)} />
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">Connections run through Composio. You sign in to your CRM; Slice never sees a password or token.</p>
       </div>
     );
+
   const Logo = chosen.logo;
+  if (!connected)
+    return (
+      <div className="flex flex-1 flex-col gap-5">
+        <div className="flex flex-col items-center gap-4 rounded-xl border px-6 py-10 text-center">
+          <Logo className="size-14" />
+          <div className="space-y-1">
+            <h3 className="font-semibold">Connect {chosen.name}</h3>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              Sign in to {chosen.name} in the window that opens. Slice reads {chosen.body.toLowerCase()}, Qloo reads what each customer likes, and you keep them one by one or cluster them.
+            </p>
+          </div>
+          <Button onClick={connect} disabled={connecting || status === null}>
+            {(connecting || status === null) && <Spinner data-icon="inline-start" />}
+            {connecting ? "Waiting for the sign-in" : `Connect ${chosen.name}`}
+          </Button>
+          <p className="text-xs text-muted-foreground">Secured by Composio. Slice never sees a password or token.</p>
+        </div>
+        {(error ?? statusError) && <p className="text-sm text-destructive">{error ?? statusError}</p>}
+      </div>
+    );
+
   return (
     <div className="flex flex-1 flex-col gap-5">
-      <div className="flex flex-col items-center gap-4 rounded-xl border px-6 py-10 text-center">
-        <Logo className="size-14" />
-        <div className="space-y-1">
-          <h3 className="font-semibold">Connect {chosen.name}</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Slice syncs {chosen.body.toLowerCase()}, resolves what each customer likes with Qloo and clusters them into audiences that stay up to date.
-          </p>
+      <div className="flex items-center gap-3 rounded-xl border p-4">
+        <Logo className="size-8 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium">{chosen.name} is connected</div>
+          <div className="text-xs text-muted-foreground">Through Composio, for this brand only.</div>
         </div>
-        <Button disabled>Connect {chosen.name}</Button>
-        <Badge variant="outline">Coming soon</Badge>
+        <Badge variant="secondary">
+          <Check /> Connected
+        </Badge>
       </div>
-      <p className="text-sm text-muted-foreground">Until then, export a customer list from {chosen.name} and upload it under Your customers.</p>
+      <div className="flex items-end gap-3">
+        <Field label={crm === "hubspot" ? "List" : "Campaign"} className="min-w-0 flex-1">
+          <Select
+            value={listId}
+            disabled={!lists}
+            onChange={(e) => {
+              setListId(e.target.value);
+              setPulled(null);
+            }}
+          >
+            {(lists ?? [{ id: "all", name: "Loading lists…", size: null }]).map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+                {l.size != null ? ` (${fmt.int(l.size)})` : ""}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Button variant="outline" onClick={pull} disabled={!lists || !!busy}>
+          {busy && <Spinner data-icon="inline-start" />}
+          {pulled ? "Read again" : "Read contacts"}
+        </Button>
+      </div>
+      {pulled && (
+        <p className="text-xs text-muted-foreground">
+          {fmt.int(pulled.parsed.rows.length)} contacts · {pulled.parsed.columns.length} properties from {pulled.source.listName}
+        </p>
+      )}
+      <RowsImport
+        key={pulled ? `${pulled.source.crm}:${pulled.source.listId}:${pulled.parsed.rows.length}` : "none"}
+        parsed={pulled?.parsed ?? null}
+        filename={pulled ? `${chosen.name} · ${pulled.source.listName}` : ""}
+        defaultName={pulled ? (pulled.source.listId === "all" ? `${chosen.name} contacts` : pulled.source.listName) : `${chosen.name} contacts`}
+        source={pulled?.source}
+        pickError={error}
+        onDone={onDone}
+      />
     </div>
   );
 }
@@ -383,7 +614,13 @@ export const AUDIENCE_SOURCES: { kind: AudienceSourceKind; icon: LucideIcon; tit
     body: "Upload a customer CSV. Qloo reads what each person likes. Keep them one by one for personal pages, or cluster them into audiences.",
     example: "Your top customers",
   },
-  { kind: "crm", icon: Plug, title: "Connect a CRM", body: "Sync customers from HubSpot or Salesforce and keep the audiences up to date.", soon: true },
+  {
+    kind: "crm",
+    icon: Plug,
+    title: "Connect a CRM",
+    body: "Import contacts from a HubSpot list or a Salesforce campaign through Composio. Qloo reads each person; keep them one by one or cluster them.",
+    example: "Your HubSpot webinar list",
+  },
 ];
 
 export function SourceIcon({ icon: Icon, className }: { icon: LucideIcon; className?: string }) {
@@ -457,6 +694,7 @@ function SourceRow({ src, onClick }: { src: (typeof AUDIENCE_SOURCES)[number]; o
 }
 
 function SourcePicker({ onPick, onCrm }: { onPick: (k: AudienceSourceKind) => void; onCrm: (id: CrmId) => void }) {
+  const { status } = useCrmStatus();
   const starters = AUDIENCE_SOURCES.filter((src) => src.kind === "location" || src.kind === "demographic" || src.kind === "interests");
   const customers = AUDIENCE_SOURCES.find((src) => src.kind === "csv")!;
   return (
@@ -477,13 +715,10 @@ function SourcePicker({ onPick, onCrm }: { onPick: (k: AudienceSourceKind) => vo
         <SourceRow src={customers} onClick={() => onPick("csv")} />
       </section>
       <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium">Or connect a CRM</h3>
-          <Badge variant="outline">Soon</Badge>
-        </div>
+        <h3 className="text-sm font-medium">Or connect a CRM</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           {CRMS.map((c) => (
-            <CrmConnectButton key={c.id} crm={c} onClick={() => onCrm(c.id)} />
+            <CrmConnectButton key={c.id} crm={c} connected={!!status?.[c.id]?.connected} onClick={() => onCrm(c.id)} />
           ))}
         </div>
       </section>
@@ -543,7 +778,7 @@ export function NewAudienceSheet({
           {!source && <SourcePicker onPick={onKindChange} onCrm={pickCrm} />}
           {builder && <AudienceBuilder key={source.kind} initialRows={PRESET_ROWS[source.kind]} onDone={close} onCancel={close} />}
           {source?.kind === "csv" && <CsvTab onDone={close} />}
-          {source?.kind === "crm" && <CrmTab crm={crm} onCrm={setCrm} />}
+          {source?.kind === "crm" && <CrmTab crm={crm} onCrm={setCrm} onDone={close} />}
         </div>
       </SheetContent>
     </Sheet>

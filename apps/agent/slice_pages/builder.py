@@ -34,7 +34,7 @@ from slice_agent import trace
 from slice_agent.trace import record
 from .timing import timer
 
-from . import browser, capture, crawl, hand, images
+from . import browser, capture, crawl, crm, hand, images
 from .audience_brief import profile_summary
 from .insights import catalogue, quote_on_page, remember_entities, resolve_name, section_text
 from .llm import clip, generate_json, generate_text
@@ -168,6 +168,12 @@ async def load_build_state(page_id: str, variant_id: str) -> dict[str, Any]:
     # The page's audiences (bundle.audiences follows page.audienceIds), combined into one.
     audiences = [a for a in (bundle.get("audiences") or []) if isinstance(a, dict)]
     audience = combine_audiences(audiences) if audiences else default_audience(brand)
+    # A personal page for a contact imported from HubSpot or Salesforce: the builder can read their live record.
+    if audience.get("kind") == "lead":
+        try:
+            audience = {**audience, "crm": await crm.lead_contact(audience)}
+        except Exception as err:
+            print(f"[slice-pages] CRM lookup skipped: {err}")
     doc = variant.get("doc")
     if isinstance(doc, dict) and doc.get("kind") != "html":
         doc = None  # a page from the old section builder: this builder starts fresh
@@ -328,6 +334,11 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
         + json.dumps(profile_summary(profile, tags_per_type=6, brands=8, culture=5), ensure_ascii=False, indent=1)
         + "\nAudience brief (how to speak to them): "
         + (json.dumps(audience.get("brief"), ensure_ascii=False) if audience.get("brief") else "none written yet; derive it from the profile.")
+        + (
+            f"\nThis person is a {crm.CRMS[audience['crm']['crm']]} contact. Call crm_record once, with get_audience_detail: their lifecycle stage, company and open deals decide the offer and the call to action (a new lead gets an introduction, a customer an upgrade or renewal). Taste still decides the look and the references. Never print private CRM fields on the page (email, phone, amounts, internal notes)."
+            if audience.get("crm")
+            else ""
+        )
     )
 
     image_rule = (
@@ -495,6 +506,23 @@ async def get_audience_detail(tool_context: ToolContext) -> dict:
         "demographics": profile.get("demographics"),
         "brief": aud.get("brief"),
     }
+
+
+async def crm_record(tool_context: ToolContext) -> dict:
+    """The live CRM record (HubSpot or Salesforce, read through Composio) of the one person this
+    page is for: their fields (lifecycle stage, company, job title, custom properties) and their
+    deals or opportunities. Only for a personal page built for a contact imported from a CRM."""
+    found = _audience(tool_context).get("crm")
+    if not found:
+        return {"ok": False, "note": "This page is not for one CRM contact; there is no record to read."}
+    t0 = time.time()
+    try:
+        rec = await crm.record(found["brandId"], found["crm"], found["contactId"])
+    except Exception as err:
+        record("crm", f"Read the {crm.CRMS.get(found['crm'], 'CRM')} record", f"failed: {str(err)[:120]}", ms=int((time.time() - t0) * 1000))
+        return {"ok": False, "error": str(err)[:300]}
+    record("crm", f"Read the {crm.CRMS[found['crm']]} record", f"{len(rec['fields'])} fields, {len(rec['deals'])} deals", ms=int((time.time() - t0) * 1000))
+    return {"ok": True, **rec}
 
 
 async def _place_tag(kind: str) -> str:
@@ -1598,6 +1626,7 @@ web_search = GoogleSearchAgentTool(search_agent)
 TOOLS = [
     get_brand_site,
     get_audience_detail,
+    crm_record,
     qloo_places,
     qloo_culture,
     qloo_search,
@@ -1621,6 +1650,7 @@ TOOLS = [
 STATUS_FOR_TOOL = {
     "get_brand_site": "Reading the brand's homepage",
     "get_audience_detail": "Reading the audience's taste profile",
+    "crm_record": "Reading their CRM record",
     "qloo_places": "Asking Qloo for places this audience would love",
     "qloo_culture": "Asking Qloo for cultural references",
     "qloo_search": "Looking up on Qloo",

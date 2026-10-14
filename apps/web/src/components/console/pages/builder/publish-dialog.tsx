@@ -1,19 +1,21 @@
 "use client";
 
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import QRCode from "qrcode";
-import { Download, ExternalLink, Globe } from "lucide-react";
+import { Check, Download, ExternalLink, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { downloadText } from "@/lib/pages/csv";
 import type { Audience, Page, Variant } from "@/lib/pages/types";
 import { publicPageUrl } from "@/lib/pages/urls";
+import { postJson } from "@/lib/pages/stream";
 import { CopyButton, Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Hint, SectionLabel } from "../shared";
 import { AudienceStrip } from "./preview";
+import { CRMS } from "../crm-logos";
 
 function QrCode({ value, className }: { value: string; className?: string }) {
   const [svg, setSvg] = useState<string | null>(null);
@@ -39,6 +41,60 @@ function QrCode({ value, className }: { value: string; className?: string }) {
           <Download data-icon="inline-start" /> Download SVG
         </Button>
       )}
+    </div>
+  );
+}
+
+/**
+ * A personal page for a contact imported from HubSpot or Salesforce: put its
+ * link on the contact (through Composio), so the merchant's own emails and
+ * sequences can use it as a merge field.
+ */
+function CrmWriteBack({ audience, url, title }: { audience: Audience; url: string; title: string }) {
+  const upload = useQuery(api.pagesUploads.get, audience.kind === "lead" && audience.sources.uploadId ? { id: audience.sources.uploadId } : "skip");
+  const crm = CRMS.find((c) => c.id === upload?.source?.crm);
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  if (!crm) return null;
+  const Logo = crm.logo;
+
+  async function send() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await postJson<{ ok: boolean; message?: string; error?: string }>("/api/pages/crm/push-link", { audience_id: audience._id, url, title });
+      if (!res.ok) throw new Error(res.error ?? "Could not reach the CRM");
+      setDone(res.message ?? "Done");
+    } catch (err) {
+      setError(String((err as Error).message ?? err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <Logo className="size-8 shrink-0" />
+        <div className="min-w-0">
+          <div className="text-sm font-medium">Send the link to {crm.name}</div>
+          <div className="text-xs text-muted-foreground">
+            {error ? (
+              <span className="text-destructive">{error}</span>
+            ) : (
+              done ??
+              (crm.id === "hubspot"
+                ? `Sets the "Slice page" property on ${audience.name}'s contact, ready as a merge field in your emails.`
+                : `Logs a completed task with the link on ${audience.name}'s contact.`)
+            )}
+          </div>
+        </div>
+      </div>
+      <Button size="sm" variant="outline" onClick={send} disabled={busy || !!done}>
+        {busy ? <Spinner data-icon="inline-start" /> : done ? <Check data-icon="inline-start" /> : null}
+        {done ? "Sent" : `Send to ${crm.name}`}
+      </Button>
     </div>
   );
 }
@@ -122,6 +178,7 @@ export function PublishDialog({
             </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {published && audiences.length === 1 && <CrmWriteBack audience={audiences[0]} url={url} title={page.title} />}
 
           <div className="grid gap-6 sm:grid-cols-[1fr_12rem]">
             <section className="space-y-2">

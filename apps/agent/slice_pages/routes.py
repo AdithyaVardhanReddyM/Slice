@@ -9,6 +9,11 @@ POST /pages/plan            {brand_id, prompt, audience_ids?, source_page_id?}  
 POST /pages/build           {page_id, variant_id, kind, message?, history?, mentions?, hand_edits?, elements?}   NDJSON stream
 POST /pages/image           {brand_id, model, prompt?, query?, aspect?}       {images}
 POST /pages/insights        {variant_id}                       {ok, insights}
+POST /pages/crm/status      {brand_id}                         {ok, crms}
+POST /pages/crm/connect     {brand_id, crm, callback_url?}     {ok, url}
+POST /pages/crm/lists       {brand_id, crm}                    {ok, lists}
+POST /pages/crm/contacts    {brand_id, crm, list_id?, limit?}  {ok, columns, rows}
+POST /pages/crm/push-link   {audience_id, url, title}          {ok, message}
 """
 
 from __future__ import annotations
@@ -33,7 +38,7 @@ from slice_agent import convex_client as convex
 from slice_agent.trace import Span, record, start_turn
 
 from . import builder as B
-from . import capture, images
+from . import capture, crm, images
 from .audience_brief import name_clusters, write_audience_brief
 from .audience_parse import parse_audience
 from .insights import write_insights
@@ -789,3 +794,76 @@ async def _persist_build(req: BuildRequest, message_id: str, merchant_text: str,
 @router.post("/build")
 async def build(req: BuildRequest) -> StreamingResponse:
     return StreamingResponse(_build_stream(req), media_type="application/x-ndjson")
+
+
+# --- CRM (HubSpot, Salesforce through Composio; see crm.py) -------------------------------
+
+
+class CrmBrandRequest(BaseModel):
+    brand_id: str
+    crm: str = "hubspot"
+
+
+class CrmConnectRequest(CrmBrandRequest):
+    callback_url: str | None = None
+
+
+class CrmContactsRequest(CrmBrandRequest):
+    list_id: str = crm.ALL
+    limit: int = crm.MAX_CONTACTS
+
+
+class CrmPushLinkRequest(BaseModel):
+    audience_id: str
+    url: str
+    title: str = ""
+
+
+def _crm_error(err: Exception) -> dict[str, Any]:
+    return {"ok": False, "error": crm.explain(err)}
+
+
+@router.post("/crm/status")
+async def crm_status(req: CrmBrandRequest) -> dict[str, Any]:
+    try:
+        return {"ok": True, "crms": await crm.status(req.brand_id)}
+    except Exception as err:
+        return _crm_error(err)
+
+
+@router.post("/crm/connect")
+async def crm_connect(req: CrmConnectRequest) -> dict[str, Any]:
+    try:
+        return {"ok": True, **(await crm.connect(req.brand_id, req.crm, req.callback_url))}
+    except Exception as err:
+        return _crm_error(err)
+
+
+@router.post("/crm/lists")
+async def crm_lists(req: CrmBrandRequest) -> dict[str, Any]:
+    try:
+        return {"ok": True, "lists": await crm.lists(req.brand_id, req.crm)}
+    except Exception as err:
+        return _crm_error(err)
+
+
+@router.post("/crm/contacts")
+async def crm_contacts(req: CrmContactsRequest) -> dict[str, Any]:
+    try:
+        return {"ok": True, **(await crm.contacts(req.brand_id, req.crm, req.list_id, req.limit))}
+    except Exception as err:
+        return _crm_error(err)
+
+
+@router.post("/crm/push-link")
+async def crm_push_link(req: CrmPushLinkRequest) -> dict[str, Any]:
+    """A published personal page's link, written back on the contact it was built for."""
+    try:
+        audience = await convex.query("pagesAudiences:get", {"id": req.audience_id})
+        found = await crm.lead_contact(audience or {})
+        if not found:
+            return {"ok": False, "error": "This page is not for a contact imported from a CRM."}
+        message = await crm.push_link(found["brandId"], found["crm"], found["contactId"], req.url, req.title)
+        return {"ok": True, "crm": found["crm"], "message": message}
+    except Exception as err:
+        return _crm_error(err)

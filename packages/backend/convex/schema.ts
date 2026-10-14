@@ -381,6 +381,13 @@ export default defineSchema({
     mode: v.optional(v.string()),
     /** The list's `people` audience, in people mode. */
     audienceId: v.optional(v.id("pagesAudiences")),
+    /**
+     * Rows pulled from a CRM through Composio instead of a file: which CRM and
+     * which list (HubSpot list, Salesforce campaign, or "all"). Each row then
+     * carries the contact's id in `crm_id`, for the builder's crm_record tool
+     * and for writing a page's link back on the contact.
+     */
+    source: v.optional(v.object({ crm: v.string(), listId: v.string(), listName: v.string() })),
     /** Which columns carry taste, geo, demographics. */
     mapping: v.object({
       taste: v.array(v.string()),
