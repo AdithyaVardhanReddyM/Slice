@@ -1,5 +1,6 @@
 import { WidgetSidebar } from "@/components/console/sidebar";
 import { Topbar } from "@/components/console/topbar";
+import { insetClass } from "@/components/console/shell-ui";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { conversationsFor } from "@/lib/mock/conversations";
 import { widgets } from "@/lib/mock/widgets";
@@ -18,7 +19,7 @@ export default function WidgetLayout({
   return (
     <SidebarProvider>
       <WidgetSidebar conversationCounts={conversationCounts} />
-      <SidebarInset className="border md:peer-data-[variant=inset]:shadow-none">
+      <SidebarInset className={insetClass}>
         <Topbar />
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </SidebarInset>

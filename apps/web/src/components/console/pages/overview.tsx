@@ -29,6 +29,7 @@ import { AUDIENCE_KIND_LABEL, briefOf, kitOf, listOf, listedAudiences, profileOf
 import { hostOf } from "@/lib/pages/urls";
 import { Segmented } from "@/components/console/form";
 import { Panel, PanelHeader, Skeleton } from "@/components/console/primitives";
+import { ConsolePage } from "@/components/console/shell-ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { MetricOverview, useWindow, type Range } from "./analytics/page-analytics";
 import { Delta, Sparkline, StatusPill, Thumb, audienceOf } from "./brand-analytics";
@@ -87,7 +88,7 @@ function SectionHeading({ title, description, actions }: { title: string; descri
   return (
     <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold tracking-tight">{title}</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-neutral-950">{title}</h2>
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -128,9 +129,9 @@ function BrandHero({ brand, pages, audiences }: { brand: Brand; pages: PageRow[]
     : undefined;
 
   return (
-    <Panel className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
+    <Panel className="home-rise grid rounded-3xl lg:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]">
       {fonts && <link rel="stylesheet" href={fonts} />}
-      <div className="flex min-w-0 flex-col gap-6 p-6 lg:p-8">
+      <div className="flex min-w-0 flex-col gap-7 p-6 lg:p-9">
         <div className="space-y-3">
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <BrandGlyph brand={brand} />
@@ -138,31 +139,29 @@ function BrandHero({ brand, pages, audiences }: { brand: Brand; pages: PageRow[]
               {hostOf(brand.url)} <ArrowUpRight className="size-3.5 shrink-0" />
             </a>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight">{brand.name}</h1>
-          {brief?.summary && <p className="line-clamp-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">{brief.summary}</p>}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            {pages === undefined ? (
-              <Skeleton className="h-5 w-48" />
-            ) : (
-              <>
-                <span>
-                  <span className="font-medium tabular-nums">{pages.length}</span> <span className="text-muted-foreground">page{pages.length === 1 ? "" : "s"}</span>
-                </span>
-                <span>
-                  <span className="font-medium tabular-nums">{live}</span> <span className="text-muted-foreground">live</span>
-                </span>
-              </>
-            )}
-            {audiences !== undefined && (
-              <span>
-                <span className="font-medium tabular-nums">{audiences.length}</span> <span className="text-muted-foreground">audience{audiences.length === 1 ? "" : "s"}</span>
-              </span>
-            )}
-          </div>
+          <h1 className="pt-1 text-4xl leading-[1.05] font-medium tracking-[-0.035em] text-neutral-950 sm:text-[44px]">{brand.name}</h1>
+          {brief?.summary && <p className="line-clamp-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">{brief.summary}</p>}
         </div>
 
+        <dl className="flex flex-wrap gap-x-10 gap-y-4">
+          {(
+            [
+              [pages?.length === 1 ? "Page" : "Pages", pages?.length],
+              ["Live", pages === undefined ? undefined : live],
+              [audiences?.length === 1 ? "Audience" : "Audiences", audiences?.length],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-[13px] text-muted-foreground">{label}</dt>
+              <dd className="num mt-1 text-[30px] leading-none font-medium tracking-[-0.03em] text-neutral-950">
+                {value === undefined ? <Skeleton className="h-8 w-10" /> : value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
         {kit && (
-          <div className="flex flex-wrap items-end gap-x-8 gap-y-4 border-t pt-5">
+          <div className="flex flex-wrap items-end gap-x-8 gap-y-4 rounded-2xl bg-neutral-50 p-4 ring-1 ring-black/[0.04]">
             <KitCell label="Palette">
               <span className="flex -space-x-1.5">
                 {(["primary", "foreground", "background", "accent", "muted", "surface"] as const).map((k) => (
@@ -183,17 +182,17 @@ function BrandHero({ brand, pages, audiences }: { brand: Brand; pages: PageRow[]
                 {brief?.ctas[0] ?? "Get started"}
               </span>
             </KitCell>
-            <Link href={`${base}/kit`} className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-mb-0.5 ml-auto text-muted-foreground")}>
+            <Link href={`${base}/kit`} className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "-mb-0.5 ml-auto rounded-full text-muted-foreground hover:bg-white")}>
               <Palette data-icon="inline-start" /> Edit kit
             </Link>
           </div>
         )}
 
         <div className="mt-auto flex flex-wrap gap-2">
-          <Link href={`${base}/new`} className={buttonVariants()}>
+          <Link href={`${base}/new`} className={cn(buttonVariants(), "h-10 rounded-full px-4")}>
             <Plus data-icon="inline-start" /> New page
           </Link>
-          <Link href={`${base}/audiences?new=1`} className={buttonVariants({ variant: "outline" })}>
+          <Link href={`${base}/audiences?new=1`} className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-full px-4")}>
             <UserPlus data-icon="inline-start" /> New audience
           </Link>
         </div>
@@ -562,7 +561,7 @@ function AudienceTiles({ audiences, pages, byPage, base }: { audiences: Audience
     return (
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <Skeleton key={i} className="aspect-[4/3] rounded-xl" />
+          <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
         ))}
       </div>
     );
@@ -575,7 +574,7 @@ function AudienceTiles({ audiences, pages, byPage, base }: { audiences: Audience
           <Link
             key={a._id}
             href={`${base}/audiences?open=${a._id}`}
-            className="group flex flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-shadow outline-none hover:shadow-lg focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow outline-none hover:shadow-lg focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <TasteCover
               tiles={coverTiles(profileOf(a))}
@@ -609,7 +608,7 @@ function AudienceTiles({ audiences, pages, byPage, base }: { audiences: Audience
       })}
       <Link
         href={`${base}/audiences?new=1`}
-        className="group/new flex min-h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed text-muted-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40 hover:text-foreground"
+        className="group/new flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-black/15 text-muted-foreground transition-colors hover:border-black/30 hover:bg-white hover:text-foreground"
       >
         <span className="flex size-10 items-center justify-center rounded-full bg-muted transition-colors group-hover/new:bg-background group-hover/new:shadow-sm">
           <UserPlus className="size-5" />
@@ -640,10 +639,10 @@ export function BrandOverview() {
   const listed = useMemo(() => audiences && listedAudiences(audiences), [audiences]);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8 px-6 py-6">
+    <ConsolePage className="space-y-12">
       <BrandHero brand={brand} pages={pages} audiences={listed} />
 
-      <section>
+      <section className="home-rise" style={{ animationDelay: "80ms" }}>
         <SectionHeading
           title="Performance"
           description={`Every page combined, last ${range} days${allDrafts ? ". All pages are drafts, so this is test traffic" : ""}.`}
@@ -658,16 +657,28 @@ export function BrandOverview() {
                   { value: "30", label: "30 days" },
                 ]}
               />
-              <Button variant="outline" size="sm" nativeButton={false} render={<Link href={`${base}/analytics`} />}>
+              <Button variant="outline" nativeButton={false} className="h-9 rounded-full px-3.5" render={<Link href={`${base}/analytics`} />}>
                 <BarChart3 data-icon="inline-start" /> Analytics
               </Button>
             </>
           }
         />
-        <MetricOverview stats={daily} prev={prevDaily} range={range} window={w} />
+        <MetricOverview
+          stats={daily}
+          prev={prevDaily}
+          range={range}
+          window={w}
+          emptyAction={
+            allDrafts ? (
+              <Link href={`${base}/pages`} className={cn(buttonVariants({ size: "sm" }), "h-9 rounded-full px-4")}>
+                <Rocket data-icon="inline-start" /> Publish a page
+              </Link>
+            ) : undefined
+          }
+        />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      <div className="home-rise grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]" style={{ animationDelay: "140ms" }}>
         <TopPages pages={pages} byPage={byPage} range={range} base={base} />
         <div className="space-y-6">
           <NextSteps steps={steps} />
@@ -675,7 +686,7 @@ export function BrandOverview() {
         </div>
       </div>
 
-      <section>
+      <section className="home-rise" style={{ animationDelay: "200ms" }}>
         <SectionHeading
           title="Audiences"
           description="Who the pages are written for, with the traffic their pages drew."
@@ -687,6 +698,6 @@ export function BrandOverview() {
         />
         <AudienceTiles audiences={audiences} pages={pages} byPage={byPage} base={base} />
       </section>
-    </div>
+    </ConsolePage>
   );
 }

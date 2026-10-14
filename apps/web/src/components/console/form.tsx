@@ -125,7 +125,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       className={cn(
-        "inline-flex items-center rounded-lg bg-muted p-[3px] text-muted-foreground",
+        "inline-flex items-center gap-0.5 rounded-full bg-white p-[3px] text-neutral-600 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.07]",
         size === "sm" ? "h-8" : "h-9",
         className,
       )}
@@ -138,8 +138,9 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "inline-flex h-full items-center justify-center rounded-md px-2.5 text-sm font-medium whitespace-nowrap transition-all hover:text-foreground",
-            value === o.value && "bg-background text-foreground shadow-sm",
+            "inline-flex h-full items-center justify-center rounded-full px-3 text-sm font-medium whitespace-nowrap transition-colors hover:bg-neutral-100 hover:text-neutral-950",
+            value === o.value &&
+              "bg-neutral-900 text-white shadow-sm hover:bg-neutral-900 hover:text-white",
           )}
         >
           {o.label}

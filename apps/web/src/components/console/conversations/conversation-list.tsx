@@ -47,7 +47,7 @@ export function ConversationList({
   }, [items, filter, query]);
 
   return (
-    <div className="flex h-full w-[340px] shrink-0 flex-col border-r">
+    <div className="flex h-full w-[340px] shrink-0 flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.05] shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)]">
       <div className="space-y-3 border-b p-4">
         <div className="flex items-baseline justify-between">
           <h1 className="text-base font-semibold">Conversations</h1>

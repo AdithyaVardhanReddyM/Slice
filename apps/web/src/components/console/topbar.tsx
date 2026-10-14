@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Kbd } from "./primitives";
+import { topbarClass, topbarPillClass } from "./shell-ui";
+import { cn } from "@/lib/utils";
 
 const SECTION_LABELS: Record<string, string> = {
   conversations: "Conversations",
@@ -56,7 +58,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 rounded-t-xl border-b bg-background/95 px-4 backdrop-blur">
+    <header className={topbarClass}>
       <div className="flex min-w-0 items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -81,8 +83,11 @@ export function Topbar() {
       </div>
       <div className="flex items-center gap-2">
         <Button
-          variant="outline"
-          className="w-64 justify-start font-normal text-muted-foreground"
+          variant="ghost"
+          className={cn(
+            topbarPillClass,
+            "hidden w-64 justify-start text-muted-foreground md:inline-flex",
+          )}
         >
           <Search />
           <span className="flex-1 text-left">Search…</span>
@@ -92,6 +97,7 @@ export function Topbar() {
           <Button
             variant="ghost"
             nativeButton={false}
+            className={cn(topbarPillClass, "font-medium")}
             render={
               <a
                 href={`${STORES_URL}/${widget.storeKey}`}

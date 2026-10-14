@@ -9,13 +9,17 @@ export default function ConversationsLayout({
   children,
   params,
 }: LayoutProps<"/dashboard/concierge/[widget]/conversations">) {
-  // Fills the sheet below the 56px top bar; each pane scrolls on its own.
+  // Fills the area below the 64px top bar as two white panes; each scrolls on its own.
   return (
-    <div className="flex h-[calc(100dvh-74px)] min-h-[560px]">
-      <Suspense fallback={<div className="w-[340px] shrink-0 border-r" />}>
+    <div className="flex h-[calc(100dvh-82px)] min-h-[560px] gap-4 px-4 pt-2 pb-4 sm:px-6">
+      <Suspense
+        fallback={<div className="w-[340px] shrink-0 rounded-2xl bg-white" />}
+      >
         <List params={params} />
       </Suspense>
-      {children}
+      <div className="flex min-w-0 flex-1 overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.05] shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)]">
+        {children}
+      </div>
     </div>
   );
 }

@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SliceWordmark } from "@/components/console/logo";
 import { Badge, PageSkeleton } from "@/components/console/primitives";
+import { ServiceMark, insetClass, navBadgeClass, navButtonClass, navGroupLabelClass, switcherClass, topbarClass, topbarPillClass } from "@/components/console/shell-ui";
 import { BrandProvider } from "./brand-context";
 
 type NavItem = { href: string; label: string; icon: ComponentType<{ className?: string }>; count?: number; exact?: boolean };
@@ -131,7 +132,7 @@ function BrandSwitcher({ current }: { current: Brand }) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<SidebarMenuButton size="lg" className="bg-background shadow-xs ring-1 ring-sidebar-border data-popup-open:bg-sidebar-accent" />}
+            render={<SidebarMenuButton size="lg" className={switcherClass} />}
           >
             <BrandGlyph brand={current} />
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -177,9 +178,9 @@ function NavUser() {
     .toUpperCase();
   const identity = (
     <>
-      <Avatar className="size-8 rounded-lg">
+      <Avatar className="size-8 rounded-full">
         {user?.imageUrl && <AvatarImage src={user.imageUrl} alt="" />}
-        <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+        <AvatarFallback className="rounded-full">{initials}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{name}</span>
@@ -191,7 +192,7 @@ function NavUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger render={<SidebarMenuButton size="lg" className="data-popup-open:bg-sidebar-accent" />}>
+          <DropdownMenuTrigger render={<SidebarMenuButton size="lg" className="rounded-2xl hover:bg-neutral-100 data-popup-open:bg-neutral-100" />}>
             {identity}
             <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
           </DropdownMenuTrigger>
@@ -250,27 +251,27 @@ function BrandSidebar({ brand }: { brand: Brand }) {
   const isActive = (item: NavItem) => (item.exact ? pathname === item.href : pathname.startsWith(item.href));
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="gap-5">
-        <Link href="/dashboard" className="px-2 pt-2">
-          <SliceWordmark className="h-7" />
+      <SidebarHeader className="gap-5 px-3 pt-3">
+        <Link href="/dashboard" aria-label="Home">
+          <ServiceMark wordmark={<SliceWordmark />} service="Pages" />
         </Link>
         <BrandSwitcher current={brand} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-1">
         {groups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className={navGroupLabelClass}>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton isActive={isActive(item)} render={<Link href={item.href} />}>
+                      <SidebarMenuButton isActive={isActive(item)} className={navButtonClass} render={<Link href={item.href} />}>
                         <Icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
-                      {item.count !== undefined && <SidebarMenuBadge>{item.count}</SidebarMenuBadge>}
+                      {item.count !== undefined && <SidebarMenuBadge className={navBadgeClass}>{item.count}</SidebarMenuBadge>}
                     </SidebarMenuItem>
                   );
                 })}
@@ -279,7 +280,7 @@ function BrandSidebar({ brand }: { brand: Brand }) {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
@@ -309,7 +310,7 @@ function BrandTopbar({ brand }: { brand: Brand }) {
     crumbs.push({ label: page?.title ?? parts[0] });
   }
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-4 rounded-t-xl border-b bg-background/95 px-4 backdrop-blur">
+    <header className={topbarClass}>
       <div className="flex min-w-0 items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -333,7 +334,7 @@ function BrandTopbar({ brand }: { brand: Brand }) {
               <Button
                 variant="ghost"
                 nativeButton={false}
-                className="hidden font-normal text-muted-foreground sm:inline-flex"
+                className={cn(topbarPillClass, "hidden sm:inline-flex")}
                 render={<a href={brandHomeUrl(brand.slug)} target="_blank" rel="noreferrer" />}
               />
             }
@@ -354,8 +355,7 @@ function BrandTopbar({ brand }: { brand: Brand }) {
             </p>
           </TooltipContent>
         </Tooltip>
-        <Separator orientation="vertical" className="hidden h-4 sm:block" />
-        <Button variant="ghost" nativeButton={false} render={<a href={brand.url} target="_blank" rel="noreferrer" />}>
+        <Button variant="ghost" nativeButton={false} className={cn(topbarPillClass, "font-medium")} render={<a href={brand.url} target="_blank" rel="noreferrer" />}>
           Brand website
           <ExternalLink data-icon="inline-end" />
         </Button>
@@ -391,7 +391,7 @@ export function BrandShell({ children }: { children: ReactNode }) {
       {/* The window never scrolls: the inset card does, so its scrollbar sits inside the card. */}
       <SidebarProvider className="h-svh overflow-hidden">
         <BrandSidebar brand={brand} />
-        <SidebarInset className="min-h-0 overflow-x-hidden overflow-y-auto border md:peer-data-[variant=inset]:shadow-none">
+        <SidebarInset className={cn("min-h-0 overflow-x-hidden overflow-y-auto", insetClass)}>
           <BrandTopbar brand={brand} />
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </SidebarInset>

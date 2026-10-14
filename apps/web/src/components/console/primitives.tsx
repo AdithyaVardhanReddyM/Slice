@@ -15,7 +15,7 @@ export function Panel({ className, ...props }: ComponentProps<"section">) {
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-xl bg-card text-card-foreground ring-1 ring-foreground/10",
+        "overflow-hidden rounded-2xl bg-card text-card-foreground ring-1 ring-black/[0.05] shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)]",
         className,
       )}
       {...props}
@@ -37,14 +37,18 @@ export function PanelHeader({
   return (
     <header
       className={cn(
-        "flex min-h-12 items-center justify-between gap-3 border-b px-4 py-3",
+        "flex min-h-14 items-center justify-between gap-3 border-b border-black/[0.05] px-5 py-3.5",
         className,
       )}
     >
       <div className="min-w-0">
-        <h2 className="truncate text-sm font-medium">{title}</h2>
+        <h2 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">
+          {title}
+        </h2>
         {hint && (
-          <p className="truncate text-xs text-muted-foreground">{hint}</p>
+          <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+            {hint}
+          </p>
         )}
       </div>
       {actions && (
@@ -67,8 +71,10 @@ export function PageHeader({
 }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 pb-6">
-      <div className="min-w-0 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <div className="min-w-0 space-y-1.5">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950 sm:text-[32px]">
+          {title}
+        </h1>
         {description && (
           <p className="max-w-2xl text-sm text-muted-foreground">
             {description}
@@ -352,10 +358,10 @@ export function PageSkeleton() {
         <Skeleton className="h-7 w-56" />
         <Skeleton className="h-4 w-96" />
       </div>
-      <Skeleton className="h-28 w-full rounded-xl" />
+      <Skeleton className="h-28 w-full rounded-2xl" />
       <div className="grid grid-cols-[1.8fr_1fr] gap-4">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-72 rounded-2xl" />
+        <Skeleton className="h-72 rounded-2xl" />
       </div>
     </div>
   );

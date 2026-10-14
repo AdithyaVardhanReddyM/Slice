@@ -5,6 +5,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   AtSign,
+  ChartNoAxesColumn,
   Download,
   ExternalLink,
   Eye,
@@ -148,11 +149,14 @@ export function MetricOverview({
   prev,
   range,
   window: w,
+  emptyAction,
 }: {
   stats: { daily: DayRow[] } | undefined;
   prev: { daily: DayRow[] } | undefined;
   range: Range;
   window: ReturnType<typeof useWindow>;
+  /** Shown under the note when neither period has a single view. */
+  emptyAction?: ReactNode;
 }) {
   const [metricKey, setMetricKey] = useState<MetricKey>("visitors");
   const metric = METRICS.find((m) => m.key === metricKey)!;
@@ -169,6 +173,9 @@ export function MetricOverview({
       previous: metric.value(prevByDay.get(w.prevDays[i]) ?? EMPTY),
     }));
   }, [stats, prev, w, metric]);
+
+  // No views in either period: say so over a dimmed chart instead of drawing a flat line at 0 as if it were data.
+  const empty = !!stats && !!prev && totals.views === 0 && prevTotals.views === 0;
 
   const config = {
     current: { label: "This period", color: "var(--chart-1)" },
@@ -188,19 +195,21 @@ export function MetricOverview({
               aria-selected={active}
               onClick={() => setMetricKey(m.key)}
               className={cn(
-                "relative flex min-w-0 flex-col gap-1.5 px-5 py-4 text-left transition-colors hover:bg-muted/50",
-                i > 0 && "lg:border-l",
-                active && "bg-muted/40",
+                "relative flex min-w-0 flex-col gap-2 px-6 py-5 text-left transition-colors hover:bg-neutral-50",
+                i > 0 && "lg:border-l lg:border-black/[0.05]",
+                active && "bg-linear-to-b from-orange-50 to-orange-50/0 hover:bg-transparent",
               )}
             >
-              <span className={cn("text-sm", active ? "font-medium text-foreground" : "text-muted-foreground")}>{m.label}</span>
+              <span className={cn("text-[13px]", active ? "font-medium text-neutral-950" : "text-muted-foreground")}>{m.label}</span>
               {stats ? (
-                <span className="text-2xl font-semibold tracking-tight tabular-nums">{m.format(m.value(totals))}</span>
+                <span className={cn("num text-[30px] leading-none font-medium tracking-[-0.03em]", active ? "text-neutral-950" : "text-neutral-950/70")}>
+                  {m.format(m.value(totals))}
+                </span>
               ) : (
                 <Skeleton className="h-8 w-20" />
               )}
               {stats && prev ? <Change now={m.value(totals)} before={m.value(prevTotals)} range={range} /> : <Skeleton className="h-4 w-28" />}
-              {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
+              {active && <span className="absolute inset-x-6 bottom-0 h-[3px] rounded-t-full bg-orange-600" />}
             </button>
           );
         })}
@@ -216,9 +225,21 @@ export function MetricOverview({
           </span>
         </div>
       </div>
-      <div className="px-2 pt-2 pb-3">
+      <div className="relative px-2 pt-2 pb-3">
+        {empty && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+            <div className="max-w-sm rounded-2xl bg-white/95 px-6 py-5 text-center shadow-[0_12px_32px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.06] backdrop-blur">
+              <span className="mx-auto flex size-10 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
+                <ChartNoAxesColumn className="size-5" />
+              </span>
+              <p className="mt-3 text-sm font-semibold text-neutral-950">No visits in the last {range} days</p>
+              <p className="mt-1 text-sm text-muted-foreground">Visits show up here once a page is shared with the people it was written for.</p>
+              {emptyAction && <div className="mt-4 flex justify-center">{emptyAction}</div>}
+            </div>
+          </div>
+        )}
         {stats ? (
-          <ChartContainer config={config} className="aspect-auto h-[240px] w-full">
+          <ChartContainer config={config} className={cn("aspect-auto h-[240px] w-full", empty && "opacity-30")}>
             <AreaChart data={data} margin={{ left: 8, right: 16, top: 8 }}>
               <defs>
                 <linearGradient id="analytics-fill" x1="0" y1="0" x2="0" y2="1">

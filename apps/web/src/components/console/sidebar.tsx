@@ -46,6 +46,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SliceWordmark } from "./logo";
+import {
+  ServiceMark,
+  navBadgeClass,
+  navButtonClass,
+  navGroupLabelClass,
+  switcherClass,
+} from "./shell-ui";
 
 type NavItem = {
   href: string;
@@ -107,32 +114,37 @@ export function WidgetSidebar({
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="gap-3">
-        <Link href="/dashboard" className="px-2 pt-1.5">
-          <SliceWordmark />
+      <SidebarHeader className="gap-5 px-3 pt-3">
+        <Link href="/dashboard" aria-label="Home">
+          <ServiceMark wordmark={<SliceWordmark />} service="Concierge" />
         </Link>
         <WidgetSwitcher currentId={widget.id} />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-1">
         {groups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className={navGroupLabelClass}>
+              {group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         isActive={isActive(item)}
+                        className={navButtonClass}
                         render={<Link href={item.href} />}
                       >
                         <Icon />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
                       {item.count !== undefined && (
-                        <SidebarMenuBadge>{item.count}</SidebarMenuBadge>
+                        <SidebarMenuBadge className={navBadgeClass}>
+                          {item.count}
+                        </SidebarMenuBadge>
                       )}
                     </SidebarMenuItem>
                   );
@@ -143,7 +155,7 @@ export function WidgetSidebar({
         ))}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <NavUser />
       </SidebarFooter>
     </Sidebar>
@@ -165,9 +177,9 @@ function NavUser() {
 
   const identity = (
     <>
-      <Avatar className="size-8 rounded-lg">
+      <Avatar className="size-8 rounded-full">
         {user?.imageUrl && <AvatarImage src={user.imageUrl} alt="" />}
-        <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+        <AvatarFallback className="rounded-full">{initials}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{name}</span>
@@ -184,7 +196,7 @@ function NavUser() {
             render={
               <SidebarMenuButton
                 size="lg"
-                className="data-popup-open:bg-sidebar-accent"
+                className="rounded-2xl hover:bg-neutral-100 data-popup-open:bg-neutral-100"
               />
             }
           >
@@ -234,12 +246,7 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="bg-background shadow-xs ring-1 ring-sidebar-border data-popup-open:bg-sidebar-accent"
-              />
-            }
+            render={<SidebarMenuButton size="lg" className={switcherClass} />}
           >
             <WidgetGlyph name={current.name} accent={current.accent} />
             <div className="grid flex-1 text-left text-sm leading-tight">
