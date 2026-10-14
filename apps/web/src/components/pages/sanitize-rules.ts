@@ -4,10 +4,12 @@
 // is plain text work and runs anywhere.
 
 export const SVG_TAGS = ["svg", "path", "circle", "ellipse", "rect", "line", "polyline", "polygon", "g", "defs", "use", "symbol", "title", "desc", "clipPath", "linearGradient", "radialGradient", "stop", "mask", "pattern", "text", "tspan"];
+// sanitize-html's parser lowercases attribute names (viewBox arrives as viewbox),
+// so camelCase names are listed both ways; browsers restore the case for SVG.
 export const SVG_ATTRS = [
   "viewBox", "xmlns", "fill", "stroke", "stroke-width", "stroke-linecap", "stroke-linejoin", "stroke-dasharray", "stroke-dashoffset", "fill-rule", "clip-rule", "fill-opacity", "stroke-opacity", "opacity",
   "d", "cx", "cy", "r", "rx", "ry", "x", "y", "x1", "y1", "x2", "y2", "width", "height", "points", "transform", "preserveAspectRatio", "offset", "stop-color", "stop-opacity", "gradientUnits", "clip-path", "mask", "href", "focusable",
-];
+].flatMap((a) => (a === a.toLowerCase() ? [a] : [a, a.toLowerCase()]));
 
 export const GLOBAL_ATTRS = ["class", "id", "style", "title", "lang", "dir", "tabindex", "hidden", "role", "data-*", "aria-*"];
 
