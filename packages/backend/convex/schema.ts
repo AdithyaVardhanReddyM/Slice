@@ -310,11 +310,21 @@ export default defineSchema({
     crawled: v.array(v.string()),
     trace: v.array(spanValidator),
     error: v.optional(v.string()),
-    /** Clerk subject of the merchant who created it; not enforced yet. */
+    /** Clerk subject of the merchant whose console lists it. Unset on brands made by scripts, which no console shows. */
     owner: v.optional(v.string()),
+    /**
+     * A demo brand: badged in the console and never deleted. A demo without
+     * `demoOf` is a master; every other account gets a copy of it (pagesDemo.ts).
+     */
+    demo: v.optional(v.boolean()),
+    /** The master this copy was made from. */
+    demoOf: v.optional(v.id("pagesBrands")),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_slug", ["slug"]),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_owner", ["owner"])
+    .index("by_demo", ["demo", "demoOf"]),
 
   pagesAudiences: defineTable({
     brandId: v.id("pagesBrands"),

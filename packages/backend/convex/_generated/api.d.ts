@@ -17,6 +17,7 @@ import type * as pages from "../pages.js";
 import type * as pagesAudiences from "../pagesAudiences.js";
 import type * as pagesBrands from "../pagesBrands.js";
 import type * as pagesCsv from "../pagesCsv.js";
+import type * as pagesDemo from "../pagesDemo.js";
 import type * as pagesEvents from "../pagesEvents.js";
 import type * as pagesSeed from "../pagesSeed.js";
 import type * as pagesSegments from "../pagesSegments.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   pagesAudiences: typeof pagesAudiences;
   pagesBrands: typeof pagesBrands;
   pagesCsv: typeof pagesCsv;
+  pagesDemo: typeof pagesDemo;
   pagesEvents: typeof pagesEvents;
   pagesSeed: typeof pagesSeed;
   pagesSegments: typeof pagesSegments;

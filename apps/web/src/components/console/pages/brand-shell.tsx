@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useClerk, useUser } from "@clerk/nextjs";
 import {
   BarChart3,
@@ -63,7 +63,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SliceWordmark } from "@/components/console/logo";
-import { PageSkeleton } from "@/components/console/primitives";
+import { Badge, PageSkeleton } from "@/components/console/primitives";
 import { BrandProvider } from "./brand-context";
 
 type NavItem = { href: string; label: string; icon: ComponentType<{ className?: string }>; count?: number; exact?: boolean };
@@ -147,6 +147,7 @@ function BrandSwitcher({ current }: { current: Brand }) {
                 <DropdownMenuItem key={b._id} render={<Link href={`/dashboard/pages/${b.slug}`} />}>
                   <BrandGlyph brand={b} size="sm" />
                   <span className="flex-1 truncate">{b.name}</span>
+                  {b.demo && <Badge tone="outline">Demo</Badge>}
                   {b._id === current._id && <Check className="size-4" />}
                 </DropdownMenuItem>
               ))}
@@ -367,7 +368,8 @@ function BrandTopbar({ brand }: { brand: Brand }) {
 export function BrandShell({ children }: { children: ReactNode }) {
   const { brand: slug } = useParams<{ brand: string }>();
   const pathname = usePathname();
-  const brand = useQuery(api.pagesBrands.bySlug, { slug });
+  const { isAuthenticated } = useConvexAuth();
+  const brand = useQuery(api.pagesBrands.mineBySlug, isAuthenticated ? { slug } : "skip");
   // The page editor (/new and /[page]) is full screen, without the hub's sidebar and top bar.
   const section = pathname.split("/")[4];
   const editor = !!section && !SECTION_LABELS[section];

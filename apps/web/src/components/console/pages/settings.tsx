@@ -78,29 +78,38 @@ export function BrandSettings() {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/30">
-          <CardHeader>
-            <CardTitle>Delete brand</CardTitle>
-            <CardDescription>Removes the brand with all its audiences, uploads, pages, versions and analytics. Published pages stop resolving at once.</CardDescription>
-          </CardHeader>
-          <CardFooter className="justify-end">
-            <ConfirmDialog
-              trigger={
-                <Button variant="destructive">
-                  <Trash2 data-icon="inline-start" /> Delete {brand.name}
-                </Button>
-              }
-              title={`Delete ${brand.name}?`}
-              description="This cannot be undone. Every page under this brand goes offline and its analytics are gone."
-              actionLabel="Delete brand"
-              confirmText={brand.slug}
-              onConfirm={async () => {
-                await remove({ id: brand._id });
-                router.push("/dashboard/pages");
-              }}
-            />
-          </CardFooter>
-        </Card>
+        {brand.demo ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Delete brand</CardTitle>
+              <CardDescription>This is a demo brand. Demo brands come with every account and can&apos;t be deleted.</CardDescription>
+            </CardHeader>
+          </Card>
+        ) : (
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle>Delete brand</CardTitle>
+              <CardDescription>Removes the brand with all its audiences, uploads, pages, versions and analytics. Published pages stop resolving at once.</CardDescription>
+            </CardHeader>
+            <CardFooter className="justify-end">
+              <ConfirmDialog
+                trigger={
+                  <Button variant="destructive">
+                    <Trash2 data-icon="inline-start" /> Delete {brand.name}
+                  </Button>
+                }
+                title={`Delete ${brand.name}?`}
+                description="This cannot be undone. Every page under this brand goes offline and its analytics are gone."
+                actionLabel="Delete brand"
+                confirmText={brand.slug}
+                onConfirm={async () => {
+                  await remove({ id: brand._id });
+                  router.push("/dashboard/pages");
+                }}
+              />
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </div>
   );

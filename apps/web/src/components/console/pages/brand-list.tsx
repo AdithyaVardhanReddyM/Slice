@@ -2,14 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, Plus } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { fmt } from "@/lib/format";
 import type { Brand } from "@/lib/pages/types";
 import { brandDomain, faviconOf, hostOf } from "@/lib/pages/urls";
-import { PageHeader, Skeleton } from "@/components/console/primitives";
+import { Badge, PageHeader, Skeleton } from "@/components/console/primitives";
 import { buttonVariants } from "@/components/ui/button";
 import { BrowserFrame } from "./browser-frame";
 import { StatusBadge } from "./shared";
@@ -67,7 +67,10 @@ function BrandCard({ brand }: { brand: Brand }) {
             <h3 className="truncate font-medium">{brand.name}</h3>
             <p className="truncate text-sm text-muted-foreground">{hostOf(brand.url)}</p>
           </div>
-          <StatusBadge status={brand.status} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            {brand.demo && <Badge tone="outline">Demo</Badge>}
+            <StatusBadge status={brand.status} />
+          </div>
         </div>
         <dl className="grid grid-cols-3 gap-3 border-t pt-4">
           {(
@@ -130,7 +133,17 @@ function NoBrands() {
 }
 
 export function BrandList() {
-  const brands = useQuery(api.pagesBrands.list, {});
+  const { isAuthenticated } = useConvexAuth();
+  const brands = useQuery(api.pagesBrands.list, isAuthenticated ? {} : "skip");
+  // Every account gets its own copy of the demo brands the first time Pages opens.
+  const provision = useMutation(api.pagesDemo.provision);
+  const [provisioned, setProvisioned] = useState(false);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    provision({})
+      .catch((err) => console.error("Could not add the demo brands", err))
+      .finally(() => setProvisioned(true));
+  }, [isAuthenticated, provision]);
   return (
     <>
       <PageHeader
@@ -142,7 +155,7 @@ export function BrandList() {
           </Link>
         }
       />
-      {brands === undefined ? (
+      {brands === undefined || (brands.length === 0 && !provisioned) ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <Skeleton key={i} className="h-[26rem] rounded-xl" />

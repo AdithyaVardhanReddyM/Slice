@@ -28,10 +28,17 @@ import type { BrandBrief, ProfileTag } from "./pagesTypes";
 
 const progressValidator = v.object({ value: v.number(), label: v.string() });
 
+/** The signed-in merchant's brands, newest first. */
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const brands = await ctx.db.query("pagesBrands").order("desc").collect();
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const brands = await ctx.db
+      .query("pagesBrands")
+      .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
+      .order("desc")
+      .collect();
     return brands.map(({ trace: _t, ...b }) => ({ ...b, trace: [] as Doc<"pagesBrands">["trace"] }));
   },
 });
@@ -50,12 +57,26 @@ export const bySlug = query({
       .unique(),
 });
 
+/** The console's lookup: like `bySlug`, but only for the brand's owner. Published pages use `bySlug`. */
+export const mineBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const brand = await ctx.db
+      .query("pagesBrands")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+    return brand && brand.owner === identity.subject ? brand : null;
+  },
+});
+
 export const getInternal = internalQuery({
   args: { id: v.id("pagesBrands") },
   handler: async (ctx, { id }) => ctx.db.get(id),
 });
 
-async function uniqueSlug(ctx: MutationCtx, base: string): Promise<string> {
+export async function uniqueSlug(ctx: MutationCtx, base: string): Promise<string> {
   let slug = base;
   for (let n = 2; ; n++) {
     const taken = await ctx.db
@@ -73,8 +94,10 @@ export const create = mutation({
   handler: async (ctx, { name, url, slug: wanted, nameFromSite }) => {
     const now = Date.now();
     const slug = await uniqueSlug(ctx, slugify(wanted ?? name));
+    const owner = (await ctx.auth.getUserIdentity())?.subject;
     const id = await ctx.db.insert("pagesBrands", {
       slug,
+      ...(owner ? { owner } : {}),
       name: name.trim(),
       ...(nameFromSite ? { nameFromSite: true } : {}),
       url: url.trim(),
@@ -252,6 +275,9 @@ export const remove = mutation({
   handler: async (ctx, { id }) => {
     const brand = await ctx.db.get(id);
     if (!brand) return null;
+    if (brand.demo) throw new Error("Demo brands can't be deleted");
+    const identity = await ctx.auth.getUserIdentity();
+    if (brand.owner && brand.owner !== identity?.subject) throw new Error("Unknown brand");
     const pageIds = (await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", id)).collect()).map((p) => p._id);
     // Hide it immediately; the purge finishes in the background.
     await ctx.db.patch(id, { status: "deleting", updatedAt: Date.now() });
