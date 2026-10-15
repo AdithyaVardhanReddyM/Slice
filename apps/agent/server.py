@@ -15,6 +15,7 @@ import json
 import os
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
 
 from dotenv import load_dotenv
@@ -38,11 +39,26 @@ from slice_agent.brief import write_brief  # noqa: E402
 from slice_agent.tagging import tag_store  # noqa: E402
 from slice_agent.trace import Span, record, start_turn  # noqa: E402
 from slice_mail.routes import router as email_router  # noqa: E402
+from slice_media.routes import router as media_router  # noqa: E402
+from slice_media import store as media_store  # noqa: E402
 from slice_pages.routes import router as pages_router  # noqa: E402
 
 APP_NAME = "slice_concierge"
 
-app = FastAPI(title="Slice concierge agent")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # Media jobs run in this process; any left open were cut off by the last restart.
+    try:
+        res = await media_store.post("/media/jobs-interrupted", {})
+        if (res or {}).get("count"):
+            print(f"media: marked {res['count']} interrupted job(s) failed", flush=True)
+    except Exception as err:
+        print(f"media: could not close interrupted jobs: {err}", flush=True)
+    yield
+
+
+app = FastAPI(title="Slice concierge agent", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in os.environ.get("AGENT_ALLOW_ORIGINS", "http://localhost:3000").split(",")],
@@ -57,6 +73,7 @@ runner = Runner(app_name=APP_NAME, agent=root_agent, session_service=sessions)
 app.include_router(pages_router)
 # Email service routes (/email/setup, /email/build, ...); see slice_mail/routes.py.
 app.include_router(email_router)
+app.include_router(media_router)
 
 
 class PageContext(BaseModel):
