@@ -625,7 +625,7 @@ function cleanSpan(s: unknown) {
 }
 
 /** A chat message from the agent's JSON, or null when it isn't one. */
-function cleanMessage(m: unknown, now: number) {
+export function cleanMessage(m: unknown, now: number) {
   const r = (m ?? {}) as Record<string, unknown>;
   if (r.role !== "merchant" && r.role !== "agent") return null;
   const list = <T>(x: unknown, f: (y: Record<string, unknown>) => T | null): T[] | undefined =>

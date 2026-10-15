@@ -958,4 +958,127 @@ export default defineSchema({
     .index("by_campaign", ["campaignId"])
     .index("by_resend", ["resendId"])
     .index("by_contact", ["contactId"]),
+
+  /* Media service: posters and short videos (see apps/web/src/lib/media). */
+
+  mediaCampaigns: defineTable({
+    name: v.string(),
+    owner: v.string(),
+    /** "poster" | "video" | "both" */
+    kind: v.string(),
+    /** Where the kit came from. */
+    source: v.object({
+      kind: v.union(v.literal("pages"), v.literal("email"), v.literal("url"), v.literal("manual")),
+      pagesBrandId: v.optional(v.id("pagesBrands")),
+      emailBrandId: v.optional(v.id("emailBrands")),
+      url: v.optional(v.string()),
+    }),
+    /** MediaKit: a snapshot, edited here without touching the source brand. */
+    kit: v.any(),
+    /** MediaBrief: goal, offer, cta, notes, link. */
+    brief: v.any(),
+    /** MediaProduct[] picked for the campaign (snapshots). */
+    products: v.array(v.any()),
+    /** MediaAudience[]: Pages audiences (snapshots) or taste seeds. */
+    audiences: v.array(v.any()),
+    /** Format presets, e.g. "story", "square". */
+    formats: v.array(v.string()),
+    /** "draft" | "smart" | "premium" */
+    tier: v.string(),
+    /** USD cap; generation stops and asks once spend would pass it. */
+    budget: v.number(),
+    /** USD spent on finished jobs. */
+    spend: v.number(),
+    /** "new" | "working" | "ready" */
+    status: v.string(),
+    /** The agent's concepts per audience (MediaConcept[]), for the "why" panel. */
+    concepts: v.optional(v.array(v.any())),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_owner", ["owner"]),
+
+  mediaAssets: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    /** "image" | "video" | "audio" */
+    kind: v.string(),
+    /** "upload" | "generated" | "brand" | "product" | "stock" | "export" */
+    source: v.string(),
+    url: v.string(),
+    storageId: v.optional(v.id("_storage")),
+    mime: v.optional(v.string()),
+    name: v.optional(v.string()),
+    w: v.optional(v.number()),
+    h: v.optional(v.number()),
+    duration: v.optional(v.number()),
+    prompt: v.optional(v.string()),
+    model: v.optional(v.string()),
+    /** The asset this one was edited or extended from. */
+    parentId: v.optional(v.id("mediaAssets")),
+    cost: v.optional(v.number()),
+    credit: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_campaign", ["campaignId"]),
+
+  /** One creative per audience × format. */
+  mediaCreatives: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    name: v.string(),
+    /** Audience id within the campaign ("all" for the brand-wide cut). */
+    audienceKey: v.string(),
+    format: v.string(),
+    /** "poster" | "video" */
+    kind: v.string(),
+    /** MediaDoc */
+    doc: v.any(),
+    version: v.number(),
+    /** "draft" | "rendering" | "ready" */
+    status: v.string(),
+    /** Why this creative, citing Qloo evidence. */
+    why: v.optional(v.array(v.object({ text: v.string(), evidence: v.string() }))),
+    export: v.optional(v.object({ url: v.string(), storageId: v.optional(v.id("_storage")), mime: v.string(), version: v.number(), at: v.number() })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_campaign", ["campaignId"]),
+
+  /** Earlier docs of a creative, for undo and history. */
+  mediaVersions: defineTable({
+    creativeId: v.id("mediaCreatives"),
+    version: v.number(),
+    doc: v.any(),
+    /** "agent" | "merchant" */
+    by: v.string(),
+    note: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_creative", ["creativeId", "version"]),
+
+  /** Generation and export jobs (Veo, Omni, Nano Banana, Lyria, TTS, render). */
+  mediaJobs: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    creativeId: v.optional(v.id("mediaCreatives")),
+    /** Clip or layer the result lands in. */
+    targetId: v.optional(v.string()),
+    /** "video" | "edit" | "extend" | "image" | "music" | "voice" | "export" */
+    kind: v.string(),
+    model: v.string(),
+    prompt: v.optional(v.string()),
+    /** "queued" | "running" | "done" | "failed" */
+    status: v.string(),
+    /** Estimated USD, counted against the budget while running. */
+    estimate: v.number(),
+    /** USD charged once done. */
+    cost: v.optional(v.number()),
+    assetId: v.optional(v.id("mediaAssets")),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_campaign", ["campaignId"])
+    .index("by_creative", ["creativeId"])
+    .index("by_status", ["status"]),
+
+  mediaChats: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    messages: v.array(emailChatMessageValidator),
+    updatedAt: v.number(),
+  }).index("by_campaign", ["campaignId"]),
 });
