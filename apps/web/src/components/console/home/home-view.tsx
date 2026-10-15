@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ChevronDown,
   LayoutTemplate,
+  Mail,
   MessagesSquare,
   Plus,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import {
   RevenueCard,
   TopPicks,
 } from "./concierge";
+import { EmailSection } from "./email";
 import { MediaBanner } from "./media";
 import { PagesSection } from "./pages";
 import { PillTabs, SectionHeader } from "./ui";
@@ -110,6 +112,18 @@ function NewMenu() {
             </span>
           </span>
         </DropdownMenuItem>
+        <DropdownMenuItem
+          render={<Link href="/dashboard/email/new" />}
+          className="gap-3 rounded-lg px-2.5 py-2"
+        >
+          <Mail />
+          <span>
+            <span className="block font-medium">Email brand</span>
+            <span className="block text-xs text-muted-foreground">
+              Kit, contacts and campaigns
+            </span>
+          </span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -192,6 +206,8 @@ export function HomeView({ concierge }: { concierge: ConciergeHome }) {
       </section>
 
       <PagesSection days={range} className="mt-16" />
+
+      <EmailSection days={range} className="mt-16" />
 
       <MediaBanner className="mt-16" delay={120} />
     </div>

@@ -245,14 +245,14 @@ export const setMemberClusters = internalMutation({
   },
 });
 
-const chunk = <T>(items: T[], size: number): T[][] => {
+export const chunk = <T>(items: T[], size: number): T[][] => {
   const out: T[][] = [];
   for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
   return out;
 };
 
 /** A loose name check for CSV cells: the hit must share a word with the term. */
-function plausible(term: string, found: string): boolean {
+export function plausible(term: string, found: string): boolean {
   const a = new Set(norm(term).split(" ").filter((w) => w.length > 2));
   const b = new Set(norm(found).split(" ").filter((w) => w.length > 2));
   if (!a.size || !b.size) return norm(term) === norm(found);

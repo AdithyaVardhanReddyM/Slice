@@ -37,6 +37,7 @@ from slice_agent.agent import root_agent  # noqa: E402
 from slice_agent.brief import write_brief  # noqa: E402
 from slice_agent.tagging import tag_store  # noqa: E402
 from slice_agent.trace import Span, record, start_turn  # noqa: E402
+from slice_mail.routes import router as email_router  # noqa: E402
 from slice_pages.routes import router as pages_router  # noqa: E402
 
 APP_NAME = "slice_concierge"
@@ -54,6 +55,8 @@ runner = Runner(app_name=APP_NAME, agent=root_agent, session_service=sessions)
 
 # Pages service routes (/pages/intake, /pages/build, ...); see slice_pages/routes.py.
 app.include_router(pages_router)
+# Email service routes (/email/setup, /email/build, ...); see slice_mail/routes.py.
+app.include_router(email_router)
 
 
 class PageContext(BaseModel):

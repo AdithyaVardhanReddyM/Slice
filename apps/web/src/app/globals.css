@@ -113,6 +113,15 @@
   }
 }
 
+/* Email editor canvas: the email is inline-styled HTML written for mail clients, so
+   Tailwind's preflight must not restyle it. Editor chrome inside it uses utilities, which win. */
+@layer base {
+  .email-canvas,
+  .email-canvas * {
+    all: revert-layer;
+  }
+}
+
 @layer components {
   .num {
     font-variant-numeric: tabular-nums;

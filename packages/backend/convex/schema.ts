@@ -149,6 +149,115 @@ export const briefValidator = v.object({
   avoid: v.array(v.string()),
 });
 
+/* Email service validators (shapes in emailTypes.ts). */
+
+const emailProgress = v.object({ value: v.number(), label: v.string() });
+
+/** A resolved Qloo entity on a contact. */
+export const emailEntityValidator = v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()) });
+
+export const emailStatsValidator = v.object({
+  recipients: v.number(),
+  sent: v.number(),
+  delivered: v.number(),
+  opened: v.number(),
+  clicked: v.number(),
+  bounced: v.number(),
+  complained: v.number(),
+  unsubscribed: v.number(),
+  failed: v.number(),
+});
+
+export const emailSenderValidator = v.object({ fromName: v.string(), fromLocal: v.string(), replyTo: v.optional(v.string()) });
+
+export const emailDomainValidator = v.object({
+  name: v.string(),
+  resendId: v.optional(v.string()),
+  status: v.union(v.literal("not_started"), v.literal("pending"), v.literal("verified"), v.literal("failed"), v.literal("temporary_failure")),
+  records: v.array(
+    v.object({
+      record: v.string(),
+      name: v.string(),
+      type: v.string(),
+      value: v.string(),
+      ttl: v.optional(v.string()),
+      priority: v.optional(v.number()),
+      status: v.string(),
+    }),
+  ),
+  checkedAt: v.optional(v.number()),
+  error: v.optional(v.string()),
+});
+
+export const emailSetupValidator = v.object({
+  status: v.union(v.literal("reading"), v.literal("done"), v.literal("failed")),
+  progress: v.optional(emailProgress),
+  error: v.optional(v.string()),
+  at: v.number(),
+});
+
+export const emailBriefValidator = v.object({
+  summary: v.string(),
+  speakTo: v.string(),
+  leadWith: v.string(),
+  hooks: v.array(v.object({ text: v.string(), evidence: v.string() })),
+});
+
+export const emailMappingValidator = v.object({
+  email: v.string(),
+  name: v.optional(v.string()),
+  firstName: v.optional(v.string()),
+  lastName: v.optional(v.string()),
+  taste: v.array(v.string()),
+  city: v.optional(v.string()),
+  country: v.optional(v.string()),
+  age: v.optional(v.string()),
+  gender: v.optional(v.string()),
+});
+
+export const emailPersonalizationStateValidator = v.object({
+  status: v.union(v.literal("idle"), v.literal("running"), v.literal("ready"), v.literal("failed")),
+  done: v.number(),
+  total: v.number(),
+  docVersion: v.optional(v.number()),
+  error: v.optional(v.string()),
+  startedAt: v.optional(v.number()),
+});
+
+export const emailChatMessageValidator = v.object({
+  id: v.string(),
+  role: v.union(v.literal("merchant"), v.literal("agent")),
+  at: v.number(),
+  text: v.string(),
+  trace: v.optional(v.array(spanValidator)),
+  steps: v.optional(v.array(v.any())),
+  attachments: v.optional(v.array(v.object({ url: v.string(), name: v.string(), type: v.string() }))),
+  /** Blocks the merchant picked; the text refers to each by its label. */
+  blocks: v.optional(v.array(v.object({ id: v.string(), label: v.string(), type: v.string() }))),
+});
+
+export const sendStatusValidator = v.union(
+  v.literal("queued"),
+  v.literal("sent"),
+  v.literal("delivered"),
+  v.literal("opened"),
+  v.literal("clicked"),
+  v.literal("bounced"),
+  v.literal("complained"),
+  v.literal("failed"),
+  v.literal("skipped"),
+);
+
+export const campaignStatusValidator = v.union(
+  v.literal("draft"),
+  v.literal("scheduled"),
+  v.literal("sending"),
+  v.literal("sent"),
+  v.literal("failed"),
+);
+
+export const sendingModeValidator = v.union(v.literal("domain"), v.literal("shared"), v.literal("demo"), v.literal("none"));
+
 export default defineSchema({
   // Private read-through cache of Qloo responses (see qloo.ts). The hackathon
   // key is rate limited and Qloo data must not be redistributed, so it lives
@@ -615,4 +724,217 @@ export default defineSchema({
     .index("by_session", ["sessionId"])
     // "First session of this visitor on this page today" (visitor counts) and purging by page.
     .index("by_page_visitor", ["pageId", "visitorId", "startedAt"]),
+
+  /* Email service ----------------------------------------------------------
+     Its own brands, contacts, audiences and campaigns (docs/email-plan.md).
+     Kits, docs, profiles and personalisations use the shapes in emailTypes.ts
+     and are stored as v.any(). */
+
+  emailBrands: defineTable({
+    /** URL-safe, unique across emailBrands. */
+    slug: v.string(),
+    name: v.string(),
+    /** A placeholder guessed from the URL; setup replaces it with the name read from the site. */
+    nameFromSite: v.optional(v.boolean()),
+    url: v.optional(v.string()),
+    status: v.union(v.literal("setup"), v.literal("ready")),
+    /** The homepage read (agent /email/setup). */
+    setup: v.optional(emailSetupValidator),
+    /** EmailKit */
+    kit: v.optional(v.any()),
+    /** EmailAbout */
+    about: v.optional(v.any()),
+    /** EmailFooterInfo */
+    footer: v.optional(v.any()),
+    sender: v.optional(emailSenderValidator),
+    domain: v.optional(emailDomainValidator),
+    /** Clerk subject of the merchant whose console lists it. */
+    owner: v.optional(v.string()),
+    /** A demo brand: badged, never deleted. Without `demoOf` it is a master copied into every account (emailDemo.ts). */
+    demo: v.optional(v.boolean()),
+    demoOf: v.optional(v.id("emailBrands")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_owner", ["owner"])
+    .index("by_demo", ["demo", "demoOf"]),
+
+  /** What a brand sells or offers (EmailItem); items blocks and taste picks feature them. */
+  emailItems: defineTable({
+    brandId: v.id("emailBrands"),
+    name: v.string(),
+    subtitle: v.optional(v.string()),
+    /** "book" | "product" | "event" | "offer" | "service" */
+    kind: v.string(),
+    description: v.string(),
+    price: v.optional(v.string()),
+    image: v.optional(v.string()),
+    url: v.optional(v.string()),
+    tags: v.array(v.string()),
+    qloo: v.optional(v.object({ id: v.string(), name: v.string(), type: v.string(), tags: v.optional(v.array(v.string())) })),
+    order: v.number(),
+    createdAt: v.number(),
+  }).index("by_brand", ["brandId"]),
+
+  emailLists: defineTable({
+    brandId: v.id("emailBrands"),
+    name: v.string(),
+    source: v.union(v.literal("csv"), v.literal("manual"), v.literal("demo")),
+    filename: v.optional(v.string()),
+    columns: v.array(v.string()),
+    rowCount: v.number(),
+    /** "groups": clustered into taste groups. "people": kept one by one, a profile per person. */
+    mode: v.union(v.literal("groups"), v.literal("people")),
+    mapping: emailMappingValidator,
+    status: v.union(
+      v.literal("importing"),
+      v.literal("resolving"),
+      v.literal("clustering"),
+      v.literal("profiling"),
+      v.literal("ready"),
+      v.literal("failed"),
+    ),
+    progress: v.optional(emailProgress),
+    /** People mode: the list's audience. */
+    audienceId: v.optional(v.id("emailAudiences")),
+    trace: v.array(spanValidator),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_brand", ["brandId"]),
+
+  emailContacts: defineTable({
+    brandId: v.id("emailBrands"),
+    listId: v.id("emailLists"),
+    /** Lower-cased. */
+    email: v.string(),
+    name: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    /** The CSV row, as strings. */
+    row: v.record(v.string(), v.string()),
+    /** Raw taste terms from the taste columns or the add form. */
+    interests: v.array(v.string()),
+    /** Resolved Qloo entities. */
+    entities: v.array(emailEntityValidator),
+    city: v.optional(v.string()),
+    country: v.optional(v.string()),
+    /** Qloo age bucket (24_and_younger …). */
+    age: v.optional(v.string()),
+    gender: v.optional(v.string()),
+    cluster: v.optional(v.number()),
+    /** Its group (groups mode) or its list's people audience. */
+    audienceId: v.optional(v.id("emailAudiences")),
+    /** People mode: AudienceProfile compiled for this person. */
+    profile: v.optional(v.any()),
+    profileStatus: v.optional(v.union(v.literal("pending"), v.literal("compiling"), v.literal("ready"), v.literal("failed"))),
+    /** Why the profile failed, for the people drawer. */
+    profileError: v.optional(v.string()),
+    unsubscribed: v.optional(v.boolean()),
+    unsubscribedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_list", ["listId"])
+    .index("by_brand", ["brandId"])
+    .index("by_brand_email", ["brandId", "email"])
+    .index("by_audience", ["audienceId"]),
+
+  emailAudiences: defineTable({
+    brandId: v.id("emailBrands"),
+    listId: v.id("emailLists"),
+    name: v.string(),
+    kind: v.union(v.literal("group"), v.literal("people")),
+    cluster: v.optional(v.number()),
+    status: v.union(v.literal("compiling"), v.literal("ready"), v.literal("failed")),
+    progress: v.optional(emailProgress),
+    /** AudienceProfile: the group's, or the people's merged (for the cover). */
+    profile: v.optional(v.any()),
+    brief: v.optional(emailBriefValidator),
+    size: v.number(),
+    /** Names, for cards. */
+    topEntities: v.array(v.string()),
+    trace: v.array(spanValidator),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_brand", ["brandId"])
+    .index("by_list", ["listId"]),
+
+  emailCampaigns: defineTable({
+    brandId: v.id("emailBrands"),
+    name: v.string(),
+    /** The name is cut from the first prompt; the builder's first subject line replaces it. */
+    nameFromPrompt: v.optional(v.boolean()),
+    status: campaignStatusValidator,
+    audienceId: v.optional(v.id("emailAudiences")),
+    /** EmailDoc */
+    doc: v.any(),
+    templateId: v.optional(v.string()),
+    /** The first prompt, for the first generate turn. */
+    prompt: v.optional(v.string()),
+    personalization: v.optional(emailPersonalizationStateValidator),
+    scheduledAt: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    /** Fixed when sending starts. */
+    sendingMode: v.optional(sendingModeValidator),
+    /** The scheduled send (run or simulate), so `cancel` can stop it. */
+    sendJob: v.optional(v.id("_scheduled_functions")),
+    stats: emailStatsValidator,
+    test: v.optional(v.object({ to: v.string(), at: v.number() })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_brand", ["brandId"])
+    .index("by_status", ["status"]),
+
+  /** Builder chat per campaign (same message shape as pagesBuilds). */
+  emailChats: defineTable({
+    campaignId: v.id("emailCampaigns"),
+    messages: v.array(emailChatMessageValidator),
+    updatedAt: v.number(),
+  }).index("by_campaign", ["campaignId"]),
+
+  /** One person's version of a people campaign. */
+  emailVersions: defineTable({
+    campaignId: v.id("emailCampaigns"),
+    contactId: v.id("emailContacts"),
+    /** The doc version it was written against (stale when lower). */
+    docVersion: v.number(),
+    /** Personalization */
+    personalization: v.any(),
+    status: v.union(v.literal("ready"), v.literal("failed")),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_campaign", ["campaignId"])
+    .index("by_campaign_contact", ["campaignId", "contactId"]),
+
+  emailSends: defineTable({
+    campaignId: v.id("emailCampaigns"),
+    brandId: v.id("emailBrands"),
+    contactId: v.id("emailContacts"),
+    email: v.string(),
+    status: sendStatusValidator,
+    resendId: v.optional(v.string()),
+    error: v.optional(v.string()),
+    subject: v.string(),
+    queuedAt: v.number(),
+    sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
+    openedAt: v.optional(v.number()),
+    clickedAt: v.optional(v.number()),
+    bouncedAt: v.optional(v.number()),
+    unsubscribedAt: v.optional(v.number()),
+    opens: v.number(),
+    clicks: v.number(),
+    links: v.array(v.object({ url: v.string(), blockId: v.optional(v.string()), at: v.number() })),
+    /** Demo mode: nothing left Slice; the events were simulated. */
+    simulated: v.optional(v.boolean()),
+  })
+    .index("by_campaign", ["campaignId"])
+    .index("by_resend", ["resendId"])
+    .index("by_contact", ["contactId"]),
 });

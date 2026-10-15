@@ -1,11 +1,11 @@
-// The three services a business can subscribe to. They are independent:
+// The services a business can subscribe to. They are independent:
 // each has its own clients, data and setup, so nothing has to be kept in
 // sync across them. Client-safe: no mock catalog imports.
 
-import { Clapperboard, LayoutTemplate, MessagesSquare } from "lucide-react";
+import { Clapperboard, LayoutTemplate, Mail, MessagesSquare } from "lucide-react";
 import type { ComponentType } from "react";
 
-export type ServiceId = "concierge" | "pages" | "media";
+export type ServiceId = "concierge" | "pages" | "email" | "media";
 
 export interface ServiceMeta {
   id: ServiceId;
@@ -43,6 +43,17 @@ export const SERVICES: ServiceMeta[] = [
     tagline: "Landing, sales and funnel pages that adapt to the visitor.",
     description:
       "One page, many versions. Headlines, imagery, featured offers and calls to action change with the visitor's taste profile, location and campaign.",
+  },
+  {
+    id: "email",
+    label: "Email",
+    segment: "email",
+    icon: Mail,
+    available: true,
+    clientNoun: "brand",
+    tagline: "Email campaigns written for each audience's taste.",
+    description:
+      "Set up a brand once, import contacts, and send campaigns whose picks and copy follow each taste group, or each person on a customer list.",
   },
   {
     id: "media",

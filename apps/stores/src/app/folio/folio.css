@@ -1,0 +1,167 @@
+/* Folio & Fern: an independent bookshop in Carroll Gardens, Brooklyn. Warm
+   paper, deep fern green, one terracotta accent. Fraunces for headings,
+   Source Sans 3 for everything you read (both load via <link> in the layout).
+   Tokens and components are scoped to .folio-root; pages use Tailwind with
+   these variables, e.g. bg-(--ff-green). */
+
+body:has(.folio-root) {
+  background: #f6f1e7;
+}
+
+.folio-root {
+  --ff-paper: #f6f1e7;
+  --ff-paper-2: #efe7d8;
+  --ff-card: #fffcf6;
+  --ff-ink: #1e2a22;
+  --ff-ink-soft: #46504a;
+  --ff-mute: #6b675d;
+  --ff-line: #ddd3c1;
+  --ff-green: #1f3d2b;
+  --ff-green-2: #2b5239;
+  --ff-green-tint: #e4eadf;
+  --ff-terracotta: #c8643b;
+  --ff-terracotta-deep: #a8502c;
+  --ff-terracotta-tint: #f4e1d5;
+  --ff-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --ff-sans: "Source Sans 3", "Helvetica Neue", Arial, sans-serif;
+
+  background: var(--ff-paper);
+  color: var(--ff-ink);
+  font-family: var(--ff-sans);
+  font-size: 17px;
+  line-height: 1.55;
+  font-variation-settings: normal;
+}
+
+.folio-root ::selection {
+  background: var(--ff-green);
+  color: var(--ff-paper);
+}
+
+.folio-root :focus-visible {
+  outline: 2px solid var(--ff-terracotta);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .ff-container {
+    width: 100%;
+    max-width: 1240px;
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+  @media (min-width: 768px) {
+    .ff-container {
+      padding-inline: 32px;
+    }
+  }
+
+  .ff-display {
+    font-family: var(--ff-serif);
+    font-weight: 560;
+    letter-spacing: -0.012em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  .ff-title {
+    font-family: var(--ff-serif);
+    font-weight: 560;
+    line-height: 1.2;
+  }
+
+  .ff-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ff-terracotta-deep);
+  }
+
+  .ff-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 46px;
+    padding-inline: 20px;
+    border-radius: 6px;
+    font-size: 15.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color 150ms,
+      color 150ms,
+      border-color 150ms;
+  }
+  .ff-btn-sm {
+    height: 38px;
+    padding-inline: 14px;
+    font-size: 14.5px;
+  }
+  .ff-btn-primary {
+    background: var(--ff-green);
+    color: var(--ff-paper);
+  }
+  .ff-btn-primary:hover {
+    background: var(--ff-green-2);
+  }
+  .ff-btn-accent {
+    background: var(--ff-terracotta);
+    color: #fff;
+  }
+  .ff-btn-accent:hover {
+    background: var(--ff-terracotta-deep);
+  }
+  .ff-btn-outline {
+    border: 1.5px solid var(--ff-green);
+    color: var(--ff-green);
+  }
+  .ff-btn-outline:hover {
+    background: var(--ff-green-tint);
+  }
+  .ff-btn-light {
+    background: var(--ff-paper);
+    color: var(--ff-green);
+  }
+  .ff-btn-light:hover {
+    background: #fff;
+  }
+
+  .ff-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  }
+  .ff-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* A book standing on the table: soft shadow, square spine, rounder fore-edge. */
+  .ff-cover {
+    display: block;
+    border-radius: 2px 4px 4px 2px;
+    background: var(--ff-paper-2);
+    box-shadow:
+      0 1px 2px rgb(30 42 34 / 0.2),
+      0 12px 24px -12px rgb(30 42 34 / 0.5);
+  }
+
+  .ff-input {
+    height: 46px;
+    min-width: 0;
+    border-radius: 6px;
+    border: 1.5px solid var(--ff-line);
+    background: var(--ff-card);
+    padding-inline: 14px;
+    font-size: 16px;
+    color: var(--ff-ink);
+    outline: none;
+  }
+  .ff-input::placeholder {
+    color: var(--ff-mute);
+  }
+  .ff-input:focus {
+    border-color: var(--ff-green);
+  }
+}

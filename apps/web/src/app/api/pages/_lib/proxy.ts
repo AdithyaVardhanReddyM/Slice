@@ -1,11 +1,11 @@
-// Shared proxy helpers for the Pages agent routes. The agent's address stays
+// Shared proxy helpers for the agent routes (Pages and Email). The agent's address stays
 // server-side; the console only ever talks to this app.
 
 const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:8000";
 
 const offline = (err: unknown) =>
   Response.json(
-    { error: `The Pages agent is offline (${String(err)}). Start it with pnpm --filter @slice/agent dev.` },
+    { error: `The Slice agent is offline (${String(err)}). Start it with pnpm --filter @slice/agent dev.` },
     { status: 502 },
   );
 

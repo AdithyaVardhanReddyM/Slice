@@ -39,6 +39,12 @@ const stores = [
     kind: "Premium credit card · $695, seven credits worth $2,140",
     note: "Brand site for the Pages service: one metal card whose perks span dining, tickets, streaming, hotels, travel, shopping and wellness. Each audience's page leads with the perks that fit its taste.",
   },
+  {
+    href: "/folio",
+    name: "Folio & Fern",
+    kind: "Independent bookshop · Brooklyn, 43 books, 5 events",
+    note: "Brand site for the Email service: the brand setup reads its homepage, and campaign picks and links point at its book pages.",
+  },
 ];
 
 export default function Index() {

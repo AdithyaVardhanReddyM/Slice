@@ -313,16 +313,16 @@ export const patch = internalMutation({
 
 /* Compiler ------------------------------------------------------------------ */
 
-type Progress = (value: number, label: string) => Promise<unknown>;
+export type Progress = (value: number, label: string) => Promise<unknown>;
 
-const emptyCulture = (): AudienceProfile["culture"] => ({ artists: [], films: [], places: [], books: [] });
+export const emptyCulture = (): AudienceProfile["culture"] => ({ artists: [], films: [], places: [], books: [] });
 
 /**
  * `signal.demographics.*` params. Qloo ignores them as the only signal; pair
  * with a city or entities. Several age bands go comma-separated (verified
  * 2026-10-14: "24_and_younger,25_to_29" reads between the two single bands).
  */
-function demographicSignal(d?: Sources["demographics"]): QlooParams {
+export function demographicSignal(d?: Sources["demographics"]): QlooParams {
   const extra: QlooParams = {};
   const ages = agesOf(d);
   if (ages.length) extra["signal.demographics.age"] = ages.join(",");
@@ -331,7 +331,7 @@ function demographicSignal(d?: Sources["demographics"]): QlooParams {
 }
 
 /** Tags, brands and demographics for a set of signal ids, sequential and paced. */
-async function enrich(
+export async function enrich(
   ctx: ActionCtx,
   trace: Span[],
   ids: string[],
@@ -359,7 +359,7 @@ async function enrich(
 }
 
 /** Top ids to use as signals: interleave kinds so one domain does not dominate. */
-function interleave<T>(lists: T[][], take: number): T[] {
+export function interleave<T>(lists: T[][], take: number): T[] {
   const out: T[] = [];
   for (let i = 0; out.length < take; i++) {
     let any = false;
@@ -494,7 +494,7 @@ async function compileDemographic(ctx: ActionCtx, trace: Span[], audience: Doc<"
 }
 
 /** Culture lists from known entities, topped up from Qloo where a kind is thin. */
-async function cultureFrom(
+export async function cultureFrom(
   ctx: ActionCtx,
   trace: Span[],
   entities: ProfileEntity[],
@@ -718,7 +718,10 @@ export const preview = action({
   },
 });
 
-function countEntities(members: Doc<"pagesMembers">[]): ProfileEntity[] {
+/** Rows that carry resolved entities: CSV members here, email contacts in emailAudiences.ts. */
+type EntityRow = { entities: { id: string; name: string; type: string; image?: string }[] };
+
+export function countEntities(members: EntityRow[]): ProfileEntity[] {
   const counts = new Map<string, ProfileEntity>();
   for (const m of members) {
     for (const e of m.entities) {
@@ -730,7 +733,7 @@ function countEntities(members: Doc<"pagesMembers">[]): ProfileEntity[] {
   return [...counts.values()].sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
 }
 
-async function geoFromMembers(ctx: ActionCtx, trace: Span[], members: Doc<"pagesMembers">[], progress: Progress, from: number) {
+export async function geoFromMembers(ctx: ActionCtx, trace: Span[], members: { city?: string }[], progress: Progress, from: number) {
   const cities = new Map<string, number>();
   for (const m of members) if (m.city) cities.set(m.city, (cities.get(m.city) ?? 0) + 1);
   const geo: AudienceProfile["geo"] = [...cities.entries()]
@@ -843,7 +846,7 @@ function meanAffinity<T extends { id: string; affinity: number }>(lists: T[][], 
     .slice(0, n);
 }
 
-function mergeProfiles(profiles: AudienceProfile[], entities: ProfileEntity[]): AudienceProfile {
+export function mergeProfiles(profiles: AudienceProfile[], entities: ProfileEntity[]): AudienceProfile {
   const geo = new Map<string, AudienceProfile["geo"][number]>();
   for (const p of profiles)
     for (const g of p.geo) {
