@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { HomeView } from "@/components/console/home/home-view";
 import { StandaloneShell } from "@/components/console/widgets/shell";
-import { conciergeHome } from "@/lib/mock/home";
+import { widgets } from "@/lib/mock/widgets";
 
 export const metadata: Metadata = { title: "Home" };
 
-/** Console home: how each service is doing, with the way into each. */
+/** Console home: a way into each service. */
 export default function HomePage() {
   return (
     <StandaloneShell>
-      <HomeView concierge={conciergeHome()} />
+      <HomeView liveWidgets={widgets.filter((w) => w.status === "live").length} />
     </StandaloneShell>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useConvexAuth, useQuery } from "convex/react";
-import { ArrowRight, Clapperboard, Film, ImageIcon, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, CircleDollarSign, Film, ImageIcon, Plus } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { TIERS, type MediaKit, type Tier } from "@slice/backend/convex/mediaTypes";
 import { usd } from "@/lib/media/kit";
@@ -59,7 +60,7 @@ function CampaignCard({ row }: { row: Row }) {
             [
               ["Creatives", String(row.creatives), ImageIcon],
               ["Videos", String(row.videos), Film],
-              ["Spent", usd(row.spend), Sparkles],
+              ["Spent", usd(row.spend), CircleDollarSign],
             ] as const
           ).map(([label, value, Icon]) => (
             <div key={label} className="min-w-0">
@@ -89,8 +90,8 @@ function CampaignCard({ row }: { row: Row }) {
 function NoCampaigns() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center py-16 text-center">
-      <div className="mb-6 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <Clapperboard className="size-7" />
+      <div className="relative mb-8 aspect-[522/336] w-full max-w-md overflow-hidden rounded-xl shadow-xl ring-1 ring-foreground/10">
+        <Image src="/illustrations/media-card.svg" alt="" fill priority sizes="448px" className="object-cover" />
       </div>
       <h2 className="text-xl font-semibold tracking-tight">No campaigns yet</h2>
       <p className="mt-2 text-sm text-muted-foreground">

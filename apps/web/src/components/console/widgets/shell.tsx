@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { SERVICES } from "@/lib/services";
-import { workspace } from "@/lib/mock/widgets";
 import { SliceWordmark } from "@/components/console/logo";
 import { AccountButton } from "./account-button";
 
@@ -66,9 +65,6 @@ export function StandaloneShell({
           </nav>
           <div className="flex shrink-0 items-center gap-3">
             {actions}
-            <span className="hidden text-sm font-medium text-neutral-700 xl:inline">
-              {workspace.name}
-            </span>
             <AccountButton />
           </div>
         </div>

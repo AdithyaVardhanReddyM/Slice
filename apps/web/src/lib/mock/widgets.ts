@@ -164,7 +164,6 @@ export function getWidget(id: string) {
 }
 
 export const workspace = {
-  name: "Slice Demo Co.",
   plan: "Growth",
   qlooQuota: { used: 18_420, limit: 50_000 },
 };

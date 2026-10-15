@@ -127,36 +127,6 @@ export function rangeData(span: number, ids?: string[]): ConciergeRangeData {
 const finalRecs = (c: (typeof conversations)[number]) =>
   [...c.messages].reverse().find((m) => m.recs?.length)?.recs ?? [];
 
-function topPicks(): HomePick[] {
-  const byId = new Map<string, HomePick>();
-  for (const c of conversations) {
-    const widget = widgets.find((w) => w.id === c.widgetId)!;
-    for (const rec of finalRecs(c)) {
-      const p = product(rec.productId);
-      const row = byId.get(p.id) ?? {
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        image: productImage(p),
-        widgetId: widget.id,
-        widgetName: widget.name,
-        picked: 0,
-        carted: 0,
-      };
-      row.picked += 1;
-      if (rec.addedToCart) row.carted += 1;
-      byId.set(p.id, row);
-    }
-  }
-  const ranked = [...byId.values()]
-    .filter((p) => p.image)
-    .sort((a, b) => b.picked + b.carted * 2 - (a.picked + a.carted * 2));
-  // Two from each live store, so the grid shows both catalogs.
-  return widgets
-    .filter((w) => w.status === "live")
-    .flatMap((w) => ranked.filter((p) => p.widgetId === w.id).slice(0, 2));
-}
-
 export function recent(widgetId?: string): HomeConversation[] {
   return conversations
     .filter((c) => !widgetId || c.widgetId === widgetId)
@@ -182,19 +152,4 @@ export function recent(widgetId?: string): HomeConversation[] {
           }),
       };
     });
-}
-
-export function conciergeHome(): ConciergeHome {
-  return {
-    widgets: widgets.map((w) => ({
-      id: w.id,
-      name: w.name,
-      domain: w.domain,
-      accent: w.accent,
-      status: w.status,
-    })),
-    ranges: { 7: rangeData(7), 14: rangeData(14) },
-    picks: topPicks(),
-    recent: recent(),
-  };
 }
