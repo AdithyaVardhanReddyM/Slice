@@ -107,8 +107,8 @@ export function Timeline({ muted, onMuted }: { muted: boolean; onMuted: (m: bool
           </div>
         </div>
 
-        <SoundRow label="Music" icon={<Music className="size-3" />} tracks={music} pps={pps} empty="Add music" onEmpty={() => select({ kind: "audio", id: "new:music" })} />
-        <SoundRow label="Voice" icon={<Mic className="size-3" />} tracks={voice} pps={pps} empty="Add a voiceover" onEmpty={() => select({ kind: "audio", id: "new:voice" })} />
+        <SoundRow label="Music" icon={<Music className="size-3" />} tracks={music} pps={pps} duration={duration} empty="Add music" onEmpty={() => select({ kind: "audio", id: "new:music" })} />
+        <SoundRow label="Voice" icon={<Mic className="size-3" />} tracks={voice} pps={pps} duration={duration} empty="Add a voiceover" onEmpty={() => select({ kind: "audio", id: "new:voice" })} />
 
         {doc.layers.length > 0 && (
           <div className="scrollbar-thin mt-1.5 max-h-28 space-y-1 overflow-y-auto">
@@ -124,31 +124,39 @@ export function Timeline({ muted, onMuted }: { muted: boolean; onMuted: (m: bool
   );
 }
 
-function SoundRow({ label, icon, tracks, pps, empty, onEmpty }: { label: string; icon: ReactNode; tracks: AudioClip[]; pps: number; empty: string; onEmpty: () => void }) {
+function SoundRow({ label, icon, tracks, pps, duration, empty, onEmpty }: { label: string; icon: ReactNode; tracks: AudioClip[]; pps: number; duration: number; empty: string; onEmpty: () => void }) {
   const { selection, select } = useStudio();
+  // The export stops every track where the video ends, so a longer one is drawn up to there and says how much is lost.
+  const shown = (a: AudioClip) => Math.max(0, Math.min(a.duration, duration - a.start));
   return (
     <div className="mt-1.5 flex items-center">
       <span className={LABEL}>{label}</span>
       <div className="relative h-7 flex-1">
-        {tracks.map((a) => (
-          <button
-            key={a.id}
-            type="button"
-            onClick={() => select({ kind: "audio", id: a.id })}
-            title={a.text || a.prompt}
-            className={cn(
-              "absolute top-0 flex h-full items-center gap-1 overflow-hidden rounded-md px-2 text-[11px] text-white",
-              a.kind === "music" ? "bg-violet-500" : "bg-teal-600",
-              a.status === "pending" && "opacity-60",
-              a.status === "failed" && "bg-destructive",
-              selection.kind === "audio" && selection.id === a.id && "ring-2 ring-sky-500 ring-offset-1",
-            )}
-            style={{ left: a.start * pps, width: Math.max(16, a.duration * pps) }}
-          >
-            {a.status === "pending" ? <Loader2 className="size-3 shrink-0 animate-spin" /> : icon}
-            <span className="truncate">{a.kind === "voice" ? a.text : a.prompt}</span>
-          </button>
-        ))}
+        {tracks.map((a) => {
+          const over = a.duration - shown(a);
+          const cut = over > 0.05;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => select({ kind: "audio", id: a.id })}
+              title={cut ? `${a.text || a.prompt}\n\nRuns ${over.toFixed(1)}s past the end of the video; the export cuts it there.` : a.text || a.prompt}
+              className={cn(
+                "absolute top-0 flex h-full items-center gap-1 overflow-hidden rounded-md px-2 text-[11px] text-white",
+                a.kind === "music" ? "bg-violet-500" : "bg-teal-600",
+                cut && "rounded-r-none border-r-2 border-dashed border-white/70",
+                a.status === "pending" && "opacity-60",
+                a.status === "failed" && "bg-destructive",
+                selection.kind === "audio" && selection.id === a.id && "ring-2 ring-sky-500 ring-offset-1",
+              )}
+              style={{ left: Math.min(a.start, duration) * pps, width: Math.max(16, shown(a) * pps) }}
+            >
+              {a.status === "pending" ? <Loader2 className="size-3 shrink-0 animate-spin" /> : icon}
+              <span className="truncate">{a.kind === "voice" ? a.text : a.prompt}</span>
+              {cut && <span className="ml-auto shrink-0 pl-1 text-white/80 tabular-nums">+{over.toFixed(1)}s cut</span>}
+            </button>
+          );
+        })}
         {tracks.length === 0 && (
           <button type="button" onClick={onEmpty} className="flex h-full w-full items-center gap-1 rounded-md border border-dashed px-2 text-[11px] text-muted-foreground hover:border-neutral-400 hover:text-foreground">
             <Plus className="size-3" /> {empty}

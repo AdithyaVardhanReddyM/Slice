@@ -6,7 +6,7 @@
 // what each cost.
 
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, Check, Clapperboard, Film, Image as ImageIcon, Loader2, Music, Plus, RotateCcw, Sparkles, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, Bot, Check, Clapperboard, Film, Image as ImageIcon, ImagePlus, Loader2, Music, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Doc } from "@slice/backend/convex/_generated/dataModel";
@@ -183,7 +183,7 @@ export function LibraryTab() {
           {uploading ? <Loader2 className="animate-spin" /> : <Upload />} Upload
         </SmallButton>
         <SmallButton className="flex-1" onClick={() => setGen((g) => ({ ...g, open: !g.open }))}>
-          <Sparkles /> Generate
+          <ImagePlus /> Generate
         </SmallButton>
         <input ref={input} type="file" multiple accept="image/*,video/*,audio/*" hidden onChange={(e) => {
             const el = e.currentTarget;
@@ -224,7 +224,7 @@ export function LibraryTab() {
                 void act("generate_image", { prompt: gen.prompt.trim(), format: doc?.format ?? "story", reference_urls: gen.refs, quality: gen.quality === "fast" ? "standard" : gen.quality }, "image").then((ok) => ok && setGen({ ...gen, prompt: "", refs: [] }))
               }
             >
-              {pending.includes("image") ? <Loader2 className="animate-spin" /> : <Sparkles />} Make it
+              {pending.includes("image") ? <Loader2 className="animate-spin" /> : <ImagePlus />} Make it
             </SmallButton>
           </div>
         </div>
@@ -254,7 +254,7 @@ export function LibraryTab() {
               )}
             </div>
             <span className="absolute top-1 left-1 flex gap-1">
-              {it.asset?.source === "generated" && <Sparkles className="size-3.5 rounded bg-white/90 p-0.5" />}
+              {it.asset?.source === "generated" && <Bot className="size-3.5 rounded bg-white/90 p-0.5" />}
               {it.kind === "video" && <Clapperboard className="size-3.5 rounded bg-white/90 p-0.5" />}
             </span>
             <div className="absolute inset-x-1 bottom-1 flex flex-wrap gap-1 opacity-0 transition-opacity group-hover:opacity-100">

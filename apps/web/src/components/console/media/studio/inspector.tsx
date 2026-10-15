@@ -27,7 +27,8 @@ import {
   Lock,
   QrCode,
   Shapes,
-  Sparkles,
+  MessageSquareText,
+  Stamp,
   Trash2,
   Type,
   Unlock,
@@ -45,7 +46,7 @@ import { AudioPanel, ShotPanel } from "./shot-panel";
 const TYPE_ICON: Record<Layer["type"], ReactNode> = {
   text: <Type />,
   image: <ImageIcon />,
-  logo: <Sparkles />,
+  logo: <Stamp />,
   shape: <Shapes />,
   qr: <QrCode />,
 };
@@ -218,7 +219,7 @@ function LayerPanel({ layer: l }: { layer: Layer }) {
       >
         <div className="flex flex-wrap gap-1.5">
           <SmallButton onClick={() => ask({ id: l.id, label: layerLabel(l), type: l.type, text: l.type === "text" ? l.text : layerLabel(l) })}>
-            <Sparkles /> Ask AI
+            <MessageSquareText /> Ask AI
           </SmallButton>
           <SmallButton onClick={() => duplicate([l.id])} title="Duplicate (⌘D)">
             <Copy />
@@ -477,7 +478,7 @@ function MultiPanel({ layers }: { layers: Layer[] }) {
         <AlignButtons layers={layers} doc={doc} />
         <div className="flex flex-wrap gap-1.5">
           <SmallButton onClick={() => ask({ id: ids.join(","), label: `${layers.length} layers`, type: "group", text: layers.map(layerLabel).join(" · ") })}>
-            <Sparkles /> Ask AI
+            <MessageSquareText /> Ask AI
           </SmallButton>
           <SmallButton onClick={() => duplicate(ids)}>
             <Copy /> Duplicate

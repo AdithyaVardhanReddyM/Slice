@@ -7,7 +7,7 @@
 // directly with an estimate on each, so only chat turns use the LLM.
 
 import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, Download, Film, Image as ImageIcon, Loader2, QrCode, Redo2, RectangleHorizontal, Sparkles, SquareMousePointer, Type, Undo2 } from "lucide-react";
+import { ArrowLeft, Clapperboard, Download, Film, Image as ImageIcon, Loader2, QrCode, Redo2, RectangleHorizontal, SquareMousePointer, Type, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge, Meter } from "@/components/console/primitives";
 import { CopyButton } from "@/components/console/setup/atoms";
-import { Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
+import { Select, Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
 import { useAppSurface } from "@/components/console/pages/builder/editor-shell";
 import type { ChatComposerHandle } from "@/components/console/email/editor/chat-composer";
 import { postJson } from "@/lib/pages/stream";
@@ -368,7 +368,7 @@ function EmptyCanvas() {
       </div>
       {!agent.busy && (
         <Button onClick={() => void agent.generate()}>
-          <Sparkles /> Generate creatives
+          <Clapperboard /> Generate creatives
         </Button>
       )}
     </div>
@@ -435,19 +435,19 @@ function TopBar() {
         onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
         className="min-w-0 max-w-64 rounded-md px-2 py-1 text-sm font-semibold outline-none hover:bg-neutral-50 focus:ring-1 focus:ring-sky-500"
       />
-      <select
+      <Select
         aria-label="Cost tier"
         value={campaign.tier}
         onChange={(e) => void update({ id: campaignId, tier: e.target.value })}
         title={isTier(campaign.tier) ? TIERS[campaign.tier].blurb : undefined}
-        className="h-7 rounded-md bg-neutral-100 px-2 text-xs font-medium outline-none"
+        className="h-7 w-auto rounded-md border-0 bg-neutral-100 text-xs font-medium [field-sizing:content] hover:bg-neutral-200/70"
       >
         {(Object.keys(TIERS) as (keyof typeof TIERS)[]).map((t) => (
           <option key={t} value={t}>
             {TIERS[t].label}
           </option>
         ))}
-      </select>
+      </Select>
 
       <div className="ml-auto flex items-center gap-3">
         <div className="flex w-48 flex-col gap-1" title={running ? `${usd(running)} on jobs still running` : undefined}>
@@ -480,7 +480,7 @@ function TopBar() {
           <Meter value={ratio} tone={ratio > 0.9 ? "warn" : "ink"} />
         </div>
         <Button variant="outline" size="sm" disabled={agent.busy} onClick={() => void agent.generate()}>
-          {agent.busy ? <Loader2 className="animate-spin" /> : <Sparkles />} Generate
+          {agent.busy ? <Loader2 className="animate-spin" /> : <Clapperboard />} Generate
         </Button>
         {fresh && (
           <>

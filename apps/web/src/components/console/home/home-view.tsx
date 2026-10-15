@@ -10,26 +10,28 @@ import { api } from "@slice/backend/convex/_generated/api";
 import { serviceMeta, type ServiceId } from "@/lib/services";
 import { RippleField, type RippleFieldHandle } from "./ripple-field";
 
-const noop = () => () => {};
+/** Re-reads the clock every minute, so the greeting turns over while the page is open. */
+const everyMinute = (tick: () => void) => {
+  const id = window.setInterval(tick, 60_000);
+  return () => window.clearInterval(id);
+};
 
-/** The greeting comes from the viewer's clock, so the server renders a neutral one. */
+/** The greeting comes from the viewer's own clock and time zone, so the server renders a neutral one. */
 function Greeting() {
   const { user } = useUser();
   const hour = useSyncExternalStore(
-    noop,
+    everyMinute,
     () => new Date().getHours(),
     () => -1,
   );
   const part =
     hour < 0
       ? "Welcome back"
-      : hour < 5
-        ? "Good evening"
-        : hour < 12
-          ? "Good morning"
-          : hour < 18
-            ? "Good afternoon"
-            : "Good evening";
+      : hour < 12
+        ? "Good morning"
+        : hour < 18
+          ? "Good afternoon"
+          : "Good evening";
   const name = user?.firstName || user?.username;
   return (
     <header className="home-rise mx-auto max-w-3xl self-end pb-10 text-center">
