@@ -320,6 +320,118 @@ emailRoute("/email/audience-brief", async (ctx, body) => {
   return json({ ok: true });
 });
 
+/* Media service: the agent's reads and writes (QLOO_PROXY_SECRET). */
+
+/** Campaign, brand, live audiences, creatives, assets and jobs. */
+emailRoute("/media/read", async (ctx, { campaignId }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id) return json({ error: "expected { campaignId }" }, 400);
+  const data = await ctx.runQuery(internal.media.readForAgent, { id });
+  return data ? json(data) : json({ error: "Unknown campaign" }, 404);
+});
+
+emailRoute("/media/campaign", async (ctx, { campaignId, patch }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id || !patch) return json({ error: "expected { campaignId, patch }" }, 400);
+  await ctx.runMutation(internal.media.patchCampaign, { id, patch });
+  return json({ ok: true });
+});
+
+/** A new creative (no creativeId) or a new version of one. */
+emailRoute("/media/creative", async (ctx, body) => {
+  const campaignId = asId<"mediaCampaigns">(body.campaignId);
+  if (!campaignId || !body.doc) return json({ error: "expected { campaignId, doc }" }, 400);
+  return json(
+    await ctx.runMutation(internal.media.writeCreative, {
+      campaignId,
+      ...(body.creativeId ? { creativeId: asId<"mediaCreatives">(body.creativeId)! } : {}),
+      ...(typeof body.name === "string" ? { name: body.name } : {}),
+      ...(typeof body.audienceKey === "string" ? { audienceKey: body.audienceKey } : {}),
+      ...(Array.isArray(body.why) ? { why: (body.why as { text?: unknown; evidence?: unknown }[]).map((w) => ({ text: String(w.text ?? ""), evidence: String(w.evidence ?? "") })) } : {}),
+      ...(typeof body.note === "string" ? { note: body.note } : {}),
+      doc: body.doc,
+    }),
+  );
+});
+
+emailRoute("/media/creative-status", async (ctx, { creativeId, status }) => {
+  const id = asId<"mediaCreatives">(creativeId);
+  if (!id || typeof status !== "string") return json({ error: "expected { creativeId, status }" }, 400);
+  await ctx.runMutation(internal.media.setCreativeStatus, { creativeId: id, status });
+  return json({ ok: true });
+});
+
+/** A shot, audio clip or layer patched in place (a finished job). */
+emailRoute("/media/clip", async (ctx, { creativeId, clipId, patch }) => {
+  const id = asId<"mediaCreatives">(creativeId);
+  if (!id || typeof clipId !== "string" || !patch) return json({ error: "expected { creativeId, clipId, patch }" }, 400);
+  return json(await ctx.runMutation(internal.media.setClip, { creativeId: id, clipId, patch }));
+});
+
+/** A file in the library: { storageId } from /media/upload-url, or an https url. */
+emailRoute("/media/asset", async (ctx, { campaignId, asset }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id || !asset || typeof asset !== "object") return json({ error: "expected { campaignId, asset }" }, 400);
+  const a = asset as Record<string, unknown>;
+  return json(
+    await ctx.runMutation(internal.media.addAssetInternal, {
+      campaignId: id,
+      asset: {
+        ...pick(a, ["url", "mime", "name", "w", "h", "duration", "prompt", "model", "cost", "credit"]),
+        ...(a.storageId ? { storageId: (a.storageId as Id<"_storage">)! } : {}),
+        ...(a.parentId ? { parentId: asId<"mediaAssets">(a.parentId)! } : {}),
+        kind: String(a.kind ?? "image"),
+        source: String(a.source ?? "generated"),
+      } as never,
+    }),
+  );
+});
+
+emailRoute("/media/job", async (ctx, body) => {
+  const campaignId = asId<"mediaCampaigns">(body.campaignId);
+  if (!campaignId) return json({ error: "expected { campaignId }" }, 400);
+  return json(
+    await ctx.runMutation(internal.media.upsertJob, {
+      campaignId,
+      ...pick(body, ["kind", "model", "prompt", "status", "estimate", "cost", "error", "targetId"]),
+      ...(body.jobId ? { jobId: asId<"mediaJobs">(body.jobId)! } : {}),
+      ...(body.creativeId ? { creativeId: asId<"mediaCreatives">(body.creativeId)! } : {}),
+      ...(body.assetId ? { assetId: asId<"mediaAssets">(body.assetId)! } : {}),
+    } as never),
+  );
+});
+
+emailRoute("/media/jobs-interrupted", async (ctx) => json(await ctx.runMutation(internal.media.interruptJobs, {})));
+
+emailRoute("/media/export", async (ctx, body) => {
+  const creativeId = asId<"mediaCreatives">(body.creativeId);
+  if (!creativeId || typeof body.url !== "string" || typeof body.mime !== "string") return json({ error: "expected { creativeId, url, mime, version }" }, 400);
+  await ctx.runMutation(internal.media.setExport, {
+    creativeId,
+    url: body.url,
+    mime: body.mime,
+    version: Number(body.version ?? 0),
+    ...(body.storageId ? { storageId: (body.storageId as Id<"_storage">)! } : {}),
+  });
+  return json({ ok: true });
+});
+
+emailRoute("/media/chat", async (ctx, { campaignId, messages }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id || !Array.isArray(messages)) return json({ error: "expected { campaignId, messages }" }, 400);
+  await ctx.runMutation(internal.media.appendChat, { id, messages });
+  return json({ ok: true });
+});
+
+/** A one-time storage upload URL: the agent POSTs a video, image or audio file there (no 20 MB action limit), then names the storageId. */
+emailRoute("/media/upload-url", async (ctx) => json({ url: await ctx.storage.generateUploadUrl() }));
+
+emailRoute("/media/storage-url", async (ctx, { storageId }) => {
+  const id = (storageId as Id<"_storage">);
+  if (!id) return json({ error: "expected { storageId }" }, 400);
+  return json({ url: await ctx.runQuery(internal.media.storageUrl, { storageId: id }) });
+});
+
 /* Recipients' routes */
 
 const PIXEL = Uint8Array.from(atob("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"), (c) => c.charCodeAt(0));
