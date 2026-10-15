@@ -1095,7 +1095,7 @@ export function applyOps(doc: EmailDoc, ops: EmailOp[]): { doc: EmailDoc; proble
 export const PERSONAL_FIELDS: Partial<Record<BlockType, string[]>> = {
   heading: ["text"],
   text: ["html"],
-  image: ["src", "alt"],
+  image: ["src", "alt", "href"],
   button: ["label", "href"],
   items: ["itemIds", "reasons"],
   quote: ["text", "author"],

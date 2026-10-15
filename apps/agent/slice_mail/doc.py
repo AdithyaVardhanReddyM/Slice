@@ -32,7 +32,7 @@ PREHEADER_MIN, PREHEADER_MAX = 40, 90
 PERSONAL_FIELDS: dict[str, tuple[str, ...]] = {
     "heading": ("text",),
     "text": ("html",),
-    "image": ("src", "alt"),
+    "image": ("src", "alt", "href"),
     "button": ("label", "href"),
     "items": ("itemIds", "reasons"),
     "quote": ("text", "author"),
@@ -760,6 +760,11 @@ def clean_personalization(raw: dict[str, Any], doc: dict[str, Any], allowed: All
                 notes.append(f"{bid}: image not from their picks, kept the base one")
             if _str(e.get("alt")) and ("src" in fields or not _str(e.get("src"))):
                 fields["alt"] = clip(visible(e["alt"]), 160)
+            if _str(e.get("href")):
+                if norm_url(e["href"]) in links:
+                    fields["href"] = e["href"]
+                else:
+                    notes.append(f"{bid}: link not allowed, kept the base one")
         elif t == "button":
             if _str(e.get("label")):
                 fields["label"] = clip(visible(clean_dashes(e["label"])[0]), 40)

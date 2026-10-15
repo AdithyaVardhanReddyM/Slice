@@ -61,7 +61,7 @@ PERSONAL_SCHEMA: dict[str, Any] = {
 FIELD_HELP = {
     "heading": "text (inline html, under 8 words)",
     "text": "html (<p> paragraphs, 1 to 3 sentences)",
-    "image": "src and alt (src only from the PICKS images)",
+    "image": "src, alt and href (src only from the PICKS images, href that pick's url)",
     "button": "label (2 to 4 words) and href (only a PICKS url or the base href)",
     "items": "itemIds (from PICKS, in your order) and reasons (one short line each, under 70 characters, in the reader's terms)",
     "quote": "text and author",
