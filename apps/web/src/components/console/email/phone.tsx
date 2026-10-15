@@ -6,7 +6,7 @@
 // the way they do on a real phone.
 
 import type { ReactNode } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/console/setup/atoms";
 import { EmailFrame } from "@/components/console/email/email-frame";
@@ -67,6 +67,57 @@ export interface InboxMail {
   /** The brand's icon or logo, for the sender's circle. */
   mark?: string;
   color?: string;
+}
+
+/** Mail's inbox with this brand's email on top, unread, and the rest of the inbox drawn as quiet placeholders. */
+export function PhoneInbox({ width = 320, mail }: { width?: number; mail: InboxMail }) {
+  const pt = pointAt(width);
+  const bar = (w: number, h: number, className: string) => <span className={cn("block rounded-full", className)} style={{ width: w * pt, height: h * pt }} />;
+  return (
+    <PhoneFrame width={width}>
+      <div className="flex h-full flex-col bg-white">
+        <StatusBar pt={pt} />
+        <div className="flex shrink-0 items-center text-sky-600" style={{ padding: `${2 * pt}px ${12 * pt}px`, fontSize: 16 * pt, gap: 2 * pt }}>
+          <ChevronLeft style={{ width: 20 * pt, height: 20 * pt }} /> Mailboxes
+        </div>
+        <div className="font-bold tracking-tight text-neutral-950" style={{ padding: `${4 * pt}px ${16 * pt}px ${8 * pt}px`, fontSize: 32 * pt }}>
+          Inbox
+        </div>
+        <div className="flex items-center rounded-full bg-neutral-100 text-neutral-400" style={{ margin: `0 ${16 * pt}px ${10 * pt}px`, height: 36 * pt, padding: `0 ${12 * pt}px`, gap: 6 * pt, fontSize: 16 * pt }}>
+          <Search style={{ width: 16 * pt, height: 16 * pt }} /> Search
+        </div>
+        <div className="flex items-start border-b border-black/[0.06]" style={{ padding: `${12 * pt}px ${16 * pt}px`, gap: 12 * pt }}>
+          <SenderMark name={mail.from} mark={mail.mark} color={mail.color} size={40 * pt} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline justify-between" style={{ gap: 6 * pt }}>
+              <span className="truncate font-semibold text-neutral-950" style={{ fontSize: 16 * pt }}>
+                {mail.from}
+              </span>
+              <span className="shrink-0 text-neutral-400" style={{ fontSize: 14 * pt }}>
+                9:41
+              </span>
+            </div>
+            <div className="truncate text-neutral-950" style={{ fontSize: 15 * pt, marginTop: 1 * pt }}>
+              {mail.subject || "No subject"}
+            </div>
+            <div className="line-clamp-2 text-neutral-500" style={{ fontSize: 15 * pt, lineHeight: 1.3 }}>
+              {mail.preheader}
+            </div>
+          </div>
+        </div>
+        {[0.62, 0.48, 0.7, 0.55].map((w, i) => (
+          <div key={i} className="flex items-start border-b border-black/[0.04]" style={{ padding: `${14 * pt}px ${16 * pt}px`, gap: 12 * pt }}>
+            <span className="shrink-0 rounded-full bg-neutral-100" style={{ width: 40 * pt, height: 40 * pt }} />
+            <div className="min-w-0 flex-1" style={{ display: "grid", gap: 7 * pt, paddingTop: 3 * pt }}>
+              {bar(120 * w + 40, 9, "bg-neutral-200")}
+              {bar(260 * w, 8, "bg-neutral-100")}
+              {bar(300 * w, 8, "bg-neutral-100")}
+            </div>
+          </div>
+        ))}
+      </div>
+    </PhoneFrame>
+  );
 }
 
 /** The email opened in Mail: the sender and subject, then the email itself, scrolling under the status bar. */

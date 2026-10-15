@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { useAction } from "convex/react";
-import { Check, CircleAlert, CircleCheck, Clock, Copy, Globe, RefreshCw, ShieldCheck, Unplug } from "lucide-react";
+import { Check, CircleAlert, CircleCheck, Clock, Copy, FlaskConical, Globe, RefreshCw, ShieldCheck, Unplug } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { DnsRecord } from "@slice/backend/convex/emailTypes";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hostOf } from "../brand-shell";
 import { ResendMissing } from "./resend-missing";
+
+const CONNECT_STEPS = [
+  ["Connect it", "Slice registers the domain with Resend, our sending provider."],
+  ["Add the records", "Copy the DNS records Slice lists into your domain provider."],
+  ["Verify", "Once the records check out, campaigns go to real inboxes."],
+] as const;
 
 const TONE_ICON: Record<Tone, typeof Check> = { ok: CircleCheck, warn: Clock, bad: CircleAlert, neutral: Clock, outline: Clock };
 const TONE_CLASS: Record<Tone, string> = {
@@ -167,33 +173,47 @@ export function DomainPanel({ brand }: { brand: EmailBrand }) {
         ))}
 
       {!domain ? (
-        <form onSubmit={submit} className="grid gap-4 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-          <div className="space-y-2">
-            <label htmlFor="email-domain" className="text-sm font-medium">
-              Domain
-            </label>
-            <AdornedInput
-              id="email-domain"
-              className="h-10"
-              prefix="@"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="yourshop.com"
-              spellCheck={false}
-              inputMode="url"
-            />
-            <p className="text-xs text-muted-foreground">
-              The part after the @ in your email address. Slice registers it with Resend, our sending provider, and lists the records your DNS needs.
-            </p>
-          </div>
-          <Button type="submit" className="h-10 rounded-full px-5" disabled={!name.trim() || busy !== null}>
-            {busy === "connect" ? <Spinner data-icon="inline-start" /> : <ShieldCheck data-icon="inline-start" />}
-            Connect domain
-          </Button>
+        <>
+          <form onSubmit={submit} className="space-y-6 p-5">
+            <div className="space-y-2">
+              <label htmlFor="email-domain" className="text-sm font-medium">
+                Domain
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <AdornedInput
+                  id="email-domain"
+                  className="h-10 sm:flex-1"
+                  prefix="@"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="yourshop.com"
+                  spellCheck={false}
+                  inputMode="url"
+                />
+                <Button type="submit" className="h-10 rounded-full px-5" disabled={!name.trim() || busy !== null}>
+                  {busy === "connect" ? <Spinner data-icon="inline-start" /> : <ShieldCheck data-icon="inline-start" />}
+                  Connect domain
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">The part after the @ in your email address. Use one you own and can edit the DNS for.</p>
+            </div>
+            <ol className="grid gap-3 sm:grid-cols-3">
+              {CONNECT_STEPS.map(([title, body], i) => (
+                <li key={title} className="rounded-xl bg-neutral-50 p-4 ring-1 ring-black/[0.04]">
+                  <span className="num flex size-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-neutral-700 ring-1 ring-black/10">{i + 1}</span>
+                  <p className="mt-3 text-sm font-medium">{title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
+                </li>
+              ))}
+            </ol>
+          </form>
           {brand.demo && (
-            <Notice className="md:col-span-2">This is a demo brand: its campaigns are simulated, so it doesn&apos;t need a domain. You can still try the flow.</Notice>
+            <p className="flex items-start gap-2 border-t border-black/[0.05] bg-neutral-50/70 px-5 py-3 text-[13px] text-muted-foreground">
+              <FlaskConical className="mt-0.5 size-4 shrink-0" />
+              Demo brands simulate their campaigns, so this one doesn&apos;t need a domain. You can still try the flow.
+            </p>
           )}
-        </form>
+        </>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">

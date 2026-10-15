@@ -367,9 +367,19 @@ export function FooterEditor({ draft, onChange }: DraftProps) {
 }
 
 /** From name, the address's local part and where replies go. Also used on the Sending screen. */
-export function SenderFields({ sender, domain, onChange }: { sender: EmailSender; domain: string; onChange: (sender: EmailSender) => void }) {
+export function SenderFields({
+  sender,
+  domain,
+  onChange,
+  className,
+}: {
+  sender: EmailSender;
+  domain: string;
+  onChange: (sender: EmailSender) => void;
+  className?: string;
+}) {
   return (
-    <div className="grid gap-5">
+    <div className={cn("grid gap-5", className)}>
       <EditorField label="From name" hint="What the inbox shows before the subject. Usually the brand, sometimes a person at it.">
         <Input value={sender.fromName} onChange={(e) => onChange({ ...sender, fromName: e.target.value })} placeholder="Stackhouse Books" />
       </EditorField>

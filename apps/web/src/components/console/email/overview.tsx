@@ -7,13 +7,10 @@ import {
   ArrowRight,
   ArrowUpRight,
   CalendarClock,
+  Check,
   ChevronRight,
-  FileUp,
-  Globe,
-  Library,
   Mail,
   Palette,
-  PenLine,
   Plus,
   UserPlus,
   UsersRound,
@@ -42,7 +39,7 @@ import {
   type EmailBrand,
   type EmailItemRow,
 } from "@/lib/email/types";
-import { Panel, PanelHeader, Skeleton } from "@/components/console/primitives";
+import { Panel, Skeleton } from "@/components/console/primitives";
 import { ConsolePage } from "@/components/console/shell-ui";
 import { buttonVariants } from "@/components/ui/button";
 import { KIND_ICON, TasteCover, coverTiles } from "@/components/console/pages/taste-cover";
@@ -271,18 +268,20 @@ function BrandHero({
         }}
       >
         {html ? (
-          <Link
-            href={latest ? `${base}/campaigns/${latest._id}` : `${base}/campaigns/new`}
-            className="absolute inset-x-10 top-10 bottom-0 block overflow-hidden rounded-t-xl shadow-2xl ring-1 shadow-black/20 ring-black/10 transition-transform duration-500 hover:-translate-y-1.5"
-            style={{ background: theme.colors.surface }}
-          >
-            <EmailFrame html={html} width={600} thumbnail title="" />
-            <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm">
+          <>
+            <span className="absolute top-5 left-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm">
               {latest ? (latest.status === "sent" ? `Sent ${relativeTime(campaignAt(latest))}` : CAMPAIGN_STATUS[latest.status]?.label) : "Your welcome email, in your kit"}
             </span>
-          </Link>
+            <Link
+              href={latest ? `${base}/campaigns/${latest._id}` : `${base}/campaigns/new`}
+              className="absolute inset-x-10 top-14 bottom-0 block overflow-hidden rounded-t-xl shadow-2xl ring-1 shadow-black/20 ring-black/10 transition-transform duration-500 hover:-translate-y-1.5"
+              style={{ background: theme.colors.surface }}
+            >
+              <EmailFrame html={html} width={600} thumbnail title="" />
+            </Link>
+          </>
         ) : (
-          <Skeleton className="absolute inset-x-10 top-10 bottom-0 rounded-b-none bg-white/40" />
+          <Skeleton className="absolute inset-x-10 top-14 bottom-0 rounded-b-none bg-white/40" />
         )}
       </div>
     </Panel>
@@ -291,54 +290,129 @@ function BrandHero({
 
 /* Next steps ---------------------------------------------------------------------------- */
 
-type Step = { key: string; icon: LucideIcon; title: string; body: string; href: string };
+type Step = { key: string; title: string; body: string; href: string; cta: string; done: boolean; note?: string };
 
-function nextSteps(brand: EmailBrand, campaigns: CampaignRow[], items: EmailItemRow[], contacts: number): Step[] {
+/** The path from a new brand to its first send, ticked off as it goes; demo brands skip the domain. */
+function setupSteps(brand: EmailBrand, campaigns: CampaignRow[], items: EmailItemRow[], contacts: number): Step[] {
   const base = `/dashboard/email/${brand.slug}`;
-  const steps: Step[] = [];
-  if (brand.status === "setup")
-    steps.push({ key: "setup", icon: Palette, title: "Finish setting up the brand", body: "Check the kit, voice and footer every email is built from.", href: `/dashboard/email/new?brand=${brand._id}` });
   const domain = domainOf(brand);
-  if (!brand.demo && domain?.status !== "verified")
+  const drafts = campaigns.filter((c) => c.status === "draft");
+  const sent = campaigns.some((c) => c.status !== "draft");
+  const steps: Step[] = [
+    {
+      key: "setup",
+      title: "Set up the brand",
+      body: "Check the kit, voice and footer every email is built from.",
+      href: brand.status === "setup" ? `/dashboard/email/new?brand=${brand._id}` : `${base}/brand`,
+      cta: "Finish setup",
+      done: brand.status !== "setup",
+      note: "Kit and voice",
+    },
+  ];
+  if (!brand.demo)
     steps.push({
       key: "domain",
-      icon: Globe,
-      title: domain ? `Verify ${domain.name}` : "Set up your sending domain",
+      title: domain ? `Verify ${domain.name}` : "Connect your sending domain",
       body: domain ? "Add the DNS records, then verify. Campaigns go out once it is verified." : "Campaigns go to real inboxes from your own address once your domain is verified.",
       href: `${base}/sending`,
+      cta: domain ? "Verify domain" : "Connect domain",
+      done: domain?.status === "verified",
+      note: domain?.name,
     });
-  if (contacts === 0)
-    steps.push({ key: "contacts", icon: FileUp, title: "Import contacts", body: "Upload a CSV: Slice reads each person's taste and sorts them into taste groups, or keeps them as individual contacts.", href: `${base}/contacts` });
-  if (items.length === 0)
-    steps.push({ key: "items", icon: Library, title: "Add what you sell", body: "Books, products or events. Taste picks in your emails come from this catalog.", href: `${base}/brand?tab=items` });
-  const drafts = campaigns.filter((c) => c.status === "draft");
-  if (campaigns.length === 0)
-    steps.push({ key: "campaign", icon: PenLine, title: "Create your first campaign", body: "Describe it or start from a template; the builder writes it in your kit and voice.", href: `${base}/campaigns/new` });
-  else if (drafts.length && !campaigns.some((c) => c.status !== "draft"))
-    steps.push({ key: "send", icon: Mail, title: `Send ${drafts[0].name}`, body: "Pick its audience, check it over and send it, or schedule it.", href: `${base}/campaigns/${drafts[0]._id}` });
+  steps.push(
+    {
+      key: "contacts",
+      title: "Import contacts",
+      body: "Upload a CSV: Slice reads each person's taste and sorts them into taste groups, or keeps them as individual contacts.",
+      href: `${base}/contacts`,
+      cta: "Import contacts",
+      done: contacts > 0,
+      note: `${fmt.int(contacts)} ${contacts === 1 ? "contact" : "contacts"}`,
+    },
+    {
+      key: "items",
+      title: "Add what you sell",
+      body: "Books, products or events. Taste picks in your emails come from this catalog.",
+      href: `${base}/brand?tab=items`,
+      cta: "Add items",
+      done: items.length > 0,
+      note: `${fmt.int(items.length)} in the catalog`,
+    },
+    {
+      key: "campaign",
+      title: "Create your first campaign",
+      body: "Describe it or start from a template; the builder writes it in your kit and voice.",
+      href: `${base}/campaigns/new`,
+      cta: "New campaign",
+      done: campaigns.length > 0,
+      note: `${fmt.int(campaigns.length)} ${campaigns.length === 1 ? "campaign" : "campaigns"}`,
+    },
+    {
+      key: "send",
+      title: drafts.length && !sent ? `Send ${drafts[0].name}` : "Send your first campaign",
+      body: "Pick who it goes to, check it over, then send it or schedule it.",
+      href: drafts.length ? `${base}/campaigns/${drafts[0]._id}` : `${base}/campaigns/new`,
+      cta: "Review and send",
+      done: sent,
+    },
+  );
   return steps;
 }
 
 function NextSteps({ steps }: { steps: Step[] }) {
+  const done = steps.filter((s) => s.done).length;
+  const current = steps.find((s) => !s.done);
   return (
     <Panel className="h-full">
-      <PanelHeader title="Next steps" hint="What gets this brand sending" />
-      <ul className="divide-y divide-black/[0.05]">
-        {steps.map((s) => (
-          <li key={s.key}>
-            <Link href={s.href} className="group flex items-start gap-3 px-5 py-3.5 transition-colors hover:bg-neutral-50">
-              <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-800">
-                <s.icon className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{s.title}</span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{s.body}</span>
-              </span>
-              <ChevronRight className="mt-2 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-950">Next steps</h2>
+          <span className="num text-[13px] text-muted-foreground">
+            {done} of {steps.length} done
+          </span>
+        </div>
+        <div className="mt-3 flex gap-1" aria-hidden>
+          {steps.map((s) => (
+            <span key={s.key} className={cn("h-1.5 flex-1 rounded-full", s.done ? "bg-emerald-500" : "bg-neutral-200")} />
+          ))}
+        </div>
+      </div>
+      <ol className="space-y-0.5 px-2 pb-2">
+        {steps.map((s, i) =>
+          s === current ? (
+            <li key={s.key} className="my-1 rounded-xl bg-neutral-50 p-3.5 ring-1 ring-black/[0.05]">
+              <div className="flex items-start gap-3">
+                <span className="num flex size-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-[11px] font-semibold text-white">{i + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm leading-6 font-medium text-neutral-950">{s.title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>
+                  <Link href={s.href} className={cn(buttonVariants({ size: "sm" }), "mt-3 rounded-full px-3.5")}>
+                    {s.cta} <ArrowRight data-icon="inline-end" />
+                  </Link>
+                </div>
+              </div>
+            </li>
+          ) : (
+            <li key={s.key}>
+              <Link href={s.href} className="group flex items-center gap-3 rounded-xl px-3.5 py-2 transition-colors hover:bg-neutral-50">
+                {s.done ? (
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                    <Check className="size-3.5" strokeWidth={2.5} />
+                  </span>
+                ) : (
+                  <span className="num flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-muted-foreground ring-1 ring-black/10">{i + 1}</span>
+                )}
+                <span className={cn("min-w-0 flex-1 truncate text-sm", s.done ? "text-muted-foreground" : "text-neutral-800")}>{s.title}</span>
+                {s.done && s.note ? (
+                  <span className="num shrink-0 text-xs text-muted-foreground">{s.note}</span>
+                ) : (
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                )}
+              </Link>
+            </li>
+          ),
+        )}
+      </ol>
     </Panel>
   );
 }
@@ -468,14 +542,15 @@ export function EmailOverview() {
   const items = useQuery(api.emailItems.list, { brandId: brand._id }) as EmailItemRow[] | undefined;
   const rows = useQuery(api.emailBrands.list, {}) as BrandRow[] | undefined;
   const contacts = countsOf(rows?.find((r) => r._id === brand._id)).contacts;
-  const steps = campaigns && items && contacts !== undefined ? nextSteps(brand, campaigns, items, contacts) : [];
+  const steps = campaigns && items && contacts !== undefined ? setupSteps(brand, campaigns, items, contacts) : [];
+  const open = steps.some((s) => !s.done);
 
   return (
     <ConsolePage className="space-y-12">
       <BrandHero brand={brand} campaigns={campaigns} items={items} contacts={contacts} />
-      <div className={cn("home-rise grid gap-6", steps.length > 0 && "lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]")} style={{ animationDelay: "80ms" }}>
-        <LatestCampaigns brand={brand} campaigns={campaigns} items={items} wide={steps.length === 0} />
-        {steps.length > 0 && (
+      <div className={cn("home-rise grid gap-6", open && "lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]")} style={{ animationDelay: "80ms" }}>
+        <LatestCampaigns brand={brand} campaigns={campaigns} items={items} wide={!open} />
+        {open && (
           <div className="lg:pt-[3.25rem]">
             <NextSteps steps={steps} />
           </div>
