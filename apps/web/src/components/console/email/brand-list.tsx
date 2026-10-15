@@ -5,87 +5,49 @@ import { useEffect, useMemo, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, Loader2, Plus } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
-import { THEME_PRESETS } from "@slice/backend/convex/emailThemes";
+import { fillMergePlain } from "@slice/backend/convex/emailRender";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
-import { brandTheme, renderTemplateFor, templateIdFor } from "@/lib/email/render-context";
-import { campaignAt, docOf, rates, statsOf, sumStats, type CampaignRow, type EmailItemRow } from "@/lib/email/types";
+import { CAMPAIGN_STATUS } from "@/lib/email/labels";
+import { audienceNameOf, campaignAt, docOf, kitOf, rates, statsOf, sumStats, type CampaignRow } from "@/lib/email/types";
 import { Badge, PageHeader, Skeleton } from "@/components/console/primitives";
 import { buttonVariants } from "@/components/ui/button";
-import { EmailBrandGlyph, countsOf, hostOf, type BrandRow } from "./brand-shell";
-import { EmailFrame } from "./email-frame";
-import { CampaignStatusChip, useCampaignHtml } from "./overview";
+import { countsOf, hostOf, type BrandRow } from "./brand-shell";
+import { ComposeFrame } from "./compose-frame";
 
-/**
- * A few emails fanned out over a wash: the brand list's and the home tile's
- * picture of what the service makes, before there is anything of the
- * merchant's own to show.
- */
-export function EmailFan({ className }: { className?: string }) {
-  const samples = useMemo(
-    () =>
-      [
-        { template: templateIdFor("welcome"), theme: THEME_PRESETS[1] ?? THEME_PRESETS[0], name: "Your brand" },
-        { template: templateIdFor("new arrivals") ?? templateIdFor("welcome"), theme: THEME_PRESETS[0], name: "Your brand" },
-        { template: templateIdFor("event") ?? templateIdFor("welcome"), theme: THEME_PRESETS[2] ?? THEME_PRESETS[0], name: "Your brand" },
-      ].map((s) => ({ html: renderTemplateFor({ name: s.name }, s.template, [], s.theme), backdrop: s.theme?.colors.backdrop })),
-    [],
-  );
-  const layouts = ["left-[4%] top-[16%] w-[38%] -rotate-[6deg]", "left-[31%] top-[6%] w-[38%] z-10", "right-[4%] top-[16%] w-[38%] rotate-[6deg]"];
+/** The card artwork: the latest campaign in the compose window (who it went to, its subject) and the brand's logo on the body. */
+function BrandArt({ brand, latest }: { brand: BrandRow; latest: CampaignRow | undefined }) {
+  const kit = kitOf(brand);
+  const logo = kit?.logo?.src ?? kit?.icon;
+  const [broken, setBroken] = useState<string | null>(null);
+  const subject = docOf(latest)?.subject;
   return (
-    <div
-      className={cn("relative overflow-hidden", className)}
-      style={{ background: "radial-gradient(70% 80% at 0% 0%, #fde68a66, transparent 70%), radial-gradient(70% 80% at 100% 100%, #fdba7466, transparent 70%), #f7f6f3" }}
-      aria-hidden
-    >
-      {samples.map((s, i) => (
-        <div
-          key={i}
-          className={cn("absolute aspect-[4/5] overflow-hidden rounded-xl shadow-[0_18px_40px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/10", layouts[i])}
-          style={{ background: s.backdrop }}
-        >
-          {s.html && <EmailFrame html={s.html} width={640} height={800} thumbnail title="" />}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** The card artwork: the brand's latest campaign (else its welcome email) on a wash of its own colours. */
-function BrandArt({ brand, latest, items }: { brand: BrandRow; latest: CampaignRow | undefined; items: EmailItemRow[] | undefined }) {
-  const theme = useMemo(() => brandTheme(brand.kit), [brand.kit]);
-  const campaignHtml = useCampaignHtml(brand, latest, items);
-  const fallback = useMemo(() => (latest ? null : renderTemplateFor(brand, templateIdFor("welcome"), items ?? [])), [latest, brand, items]);
-  const html = campaignHtml ?? fallback;
-  const surface = latest ? (docOf(latest)?.theme?.colors?.surface ?? theme.colors.surface) : theme.colors.surface;
-  return (
-    <div
-      className="relative h-56 overflow-hidden border-b border-black/[0.05]"
-      style={{
-        background: `radial-gradient(80% 90% at 0% 0%, color-mix(in oklab, ${theme.colors.primary} 26%, transparent), transparent 70%), ${theme.colors.accent}`,
-      }}
-    >
-      <span className="absolute top-4 left-4 z-10">
-        <EmailBrandGlyph brand={brand} size="lg" className="shadow-sm" />
-      </span>
-      <div
-        className="absolute inset-x-[16%] top-8 bottom-0 overflow-hidden rounded-t-xl shadow-[0_18px_40px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/10 transition-transform duration-500 group-hover:-translate-y-1.5"
-        style={{ background: surface }}
-      >
-        {html ? <EmailFrame html={html} width={600} thumbnail title="" /> : <Skeleton className="size-full rounded-none" />}
-      </div>
-      {latest ? (
-        <CampaignStatusChip status={latest.status} className="absolute right-4 bottom-4 z-10" />
-      ) : (
-        <span className="absolute right-4 bottom-4 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-neutral-700 shadow-sm">Welcome email, in its kit</span>
-      )}
-    </div>
+    <ComposeFrame
+      className="border-b border-black/[0.05]"
+      hoverZoom
+      to={latest ? audienceNameOf(latest) : undefined}
+      subject={subject ? fillMergePlain(subject, { brand: brand.name }) : undefined}
+      bodyBackground={kit ? (kit.logo?.onDark ? kit.colors.foreground : kit.colors.background) : undefined}
+      body={
+        logo && broken !== logo ? (
+          // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt={kit?.logo?.alt ?? brand.name} className="max-h-[44%] max-w-[70%] object-contain" onError={() => setBroken(logo)} />
+        ) : (
+          <span
+            className="truncate px-[4%] text-[3.6cqw] font-semibold tracking-tight"
+            style={{ color: kit?.colors.foreground, fontFamily: kit?.fonts.heading.family }}
+          >
+            {kit?.wordmark ?? brand.name}
+          </span>
+        )
+      }
+    />
   );
 }
 
 function BrandCard({ brand }: { brand: BrandRow }) {
   const campaigns = useQuery(api.emailCampaigns.list, { brandId: brand._id }) as CampaignRow[] | undefined;
-  const items = useQuery(api.emailItems.list, { brandId: brand._id }) as EmailItemRow[] | undefined;
   const counts = countsOf(brand);
   const latest = useMemo(() => [...(campaigns ?? [])].sort((a, b) => campaignAt(b) - campaignAt(a))[0], [campaigns]);
   const sent = campaigns?.filter((c) => c.status === "sent" || c.status === "sending") ?? [];
@@ -98,7 +60,7 @@ function BrandCard({ brand }: { brand: BrandRow }) {
       href={href}
       className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow hover:shadow-lg"
     >
-      <BrandArt brand={brand} latest={latest} items={items} />
+      <BrandArt brand={brand} latest={latest} />
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -130,7 +92,10 @@ function BrandCard({ brand }: { brand: BrandRow }) {
           ))}
         </dl>
         <div className="mt-auto flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span className="truncate">{latest ? latest.name : brand.status === "ready" ? "No campaigns yet" : "Finish the brand setup"}</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <span className="truncate">{latest ? latest.name : brand.status === "ready" ? "No campaigns yet" : "Finish the brand setup"}</span>
+            {latest && <Badge tone={CAMPAIGN_STATUS[latest.status]?.tone ?? "outline"}>{CAMPAIGN_STATUS[latest.status]?.label ?? latest.status}</Badge>}
+          </span>
           <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
         </div>
       </div>
@@ -138,14 +103,19 @@ function BrandCard({ brand }: { brand: BrandRow }) {
   );
 }
 
+/** The compose window with a taste group and a subject filled in: the empty states' picture of what the service sends. */
+export function SampleComposeFrame({ className, priority, sizes }: { className?: string; priority?: boolean; sizes?: string }) {
+  return <ComposeFrame className={className} priority={priority} sizes={sizes} to="Fans of slow-burn mysteries" subject="Hi there, we picked these for you" />;
+}
+
 function NoBrands() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center py-10 text-center">
-      <EmailFan className="mb-10 aspect-[16/9] w-full max-w-xl rounded-3xl ring-1 ring-black/[0.05]" />
+      <SampleComposeFrame className="mb-10 w-full max-w-xl rounded-3xl ring-1 ring-black/[0.05]" priority sizes="576px" />
       <h2 className="text-2xl font-medium tracking-[-0.02em] text-neutral-950">Emails that follow each reader&apos;s taste</h2>
       <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
         Give Slice your website and it reads your logo, colours, fonts and voice. Import your contacts, and every campaign is written for
-        the taste of the group it goes to, or for each person on a customer list.
+        the taste of the group it goes to, or for each individual contact you pick.
       </p>
       <ol className="mt-8 grid w-full gap-3 text-left sm:grid-cols-3">
         {[

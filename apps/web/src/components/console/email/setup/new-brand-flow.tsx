@@ -9,6 +9,7 @@ import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { postJson } from "@/lib/pages/stream";
+import { nameFromUrl } from "@/lib/pages/urls";
 import { errorText } from "@/lib/email/labels";
 import { renderTemplateFor, templateIdFor } from "@/lib/email/render-context";
 import { aboutOf, kitOf, type EmailBrand, type EmailItemRow } from "@/lib/email/types";
@@ -17,8 +18,8 @@ import { AdornedInput, Notice, Spinner } from "@/components/console/setup/atoms"
 import { PageHeader, Skeleton } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EmailFan } from "../brand-list";
 import { EmailBrandGlyph, hostOf } from "../brand-shell";
+import { ComposeFrame } from "../compose-frame";
 import { EmailFrame } from "../email-frame";
 import { BrandEditor } from "../kit/brand-editor";
 
@@ -47,6 +48,7 @@ function Start({ onStarted }: { onStarted: (id: Id<"emailBrands">, url?: string)
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guess = byHand ? name.trim() : nameFromUrl(url);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -71,7 +73,7 @@ function Start({ onStarted }: { onStarted: (id: Id<"emailBrands">, url?: string)
             <h2 className="text-xl font-medium tracking-[-0.02em]">Set the brand up by hand</h2>
             <p className="mt-1.5 max-w-lg text-sm text-muted-foreground">Start from a neutral kit and fill in the logo, colours, voice and footer yourself. You can add a website later.</p>
             <Field label="Brand name" className="mt-6">
-              <Input className="h-10" value={name} onChange={(e) => setName(e.target.value)} placeholder="Folio & Fern" autoFocus required />
+              <Input className="h-10" value={name} onChange={(e) => setName(e.target.value)} placeholder="Stackhouse Books" autoFocus required />
             </Field>
           </>
         ) : (
@@ -86,7 +88,7 @@ function Start({ onStarted }: { onStarted: (id: Id<"emailBrands">, url?: string)
                 prefix={/^http:\/\//i.test(url) ? "http://" : "https://"}
                 value={url.replace(/^https?:\/\//i, "")}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="folioandfern.com"
+                placeholder="stackhousebooks.com"
                 inputMode="url"
                 spellCheck={false}
                 autoFocus
@@ -109,7 +111,16 @@ function Start({ onStarted }: { onStarted: (id: Id<"emailBrands">, url?: string)
       </form>
 
       <aside className="space-y-5">
-        <EmailFan className="aspect-[16/10] rounded-3xl ring-1 ring-black/[0.05]" />
+        <ComposeFrame
+          className="rounded-3xl ring-1 ring-black/[0.05]"
+          priority
+          sizes="480px"
+          subject={guess ? `Welcome to ${guess}` : undefined}
+          bodyBackground="#ffffff"
+          body={
+            <span className={cn("truncate px-[4%] text-[3.6cqw] font-semibold tracking-tight", !guess && "text-neutral-400")}>{guess || "Your brand"}</span>
+          }
+        />
         <div className="rounded-3xl bg-white p-6 ring-1 ring-black/[0.05]">
           <h3 className="text-sm font-semibold">What Slice reads</h3>
           <ul className="mt-4 space-y-3.5">

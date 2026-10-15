@@ -39,3 +39,21 @@ export function faviconOf(url: string) {
   if (/localhost|127\.0\.0\.1/.test(host)) return null;
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
 }
+
+/** A first guess at the brand's name from its website: the domain's first label, or the path on a local site. */
+export function nameFromUrl(url: string) {
+  const t = url.trim();
+  if (!t) return "";
+  try {
+    const u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`);
+    const host = u.hostname.replace(/^www\./, "");
+    if (/localhost|127\.0\.0\.1/.test(host)) {
+      const seg = u.pathname.split("/").filter(Boolean)[0];
+      return seg ? seg.charAt(0).toUpperCase() + seg.slice(1) : "";
+    }
+    const label = host.split(".")[0];
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  } catch {
+    return "";
+  }
+}

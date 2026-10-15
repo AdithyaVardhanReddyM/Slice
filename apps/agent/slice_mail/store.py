@@ -1,7 +1,7 @@
 """Reading the Email service's data from Convex, normalised for the agent.
 
 `emailCampaigns:getForAgent` bundles a campaign with its brand, audience, items and
-(for a customer list kept one by one) its contacts. Rows come back with Convex `_id`s;
+(for individual contacts) the people ticked. Rows come back with Convex `_id`s;
 the agent works with `id`s, as emailTypes.ts does.
 """
 
@@ -100,5 +100,6 @@ def brand_links(brand: dict[str, Any]) -> set[str]:
 
 def brand_images(brand: dict[str, Any]) -> set[str]:
     kit = brand.get("kit") or {}
-    out = {kit.get("icon")} | {(kit.get("logo") or {}).get("src")}
+    logo = kit.get("logo") or {}
+    out = {kit.get("icon"), logo.get("src"), logo.get("light")}
     return {u for u in out if isinstance(u, str) and u.startswith("http")}

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { AlertCircle, Boxes, Eye, Fingerprint, MailX, RefreshCw, Upload, UserPlus, UserStar, UsersRound } from "lucide-react";
+import { AlertCircle, Boxes, Check, Eye, Fingerprint, MailX, RefreshCw, Upload, UserPlus, UserStar, UsersRound } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { personalBlocks } from "@slice/backend/convex/emailDoc";
@@ -30,9 +30,9 @@ import { Progress } from "@/components/ui/progress";
 type Version = FunctionReturnType<typeof api.emailCampaigns.versions>[number];
 
 /**
- * Step 2: who the campaign goes to. One audience: a taste group (one email
- * written for its taste) or a list kept one by one, where every person gets
- * their own version of the personal blocks.
+ * Step 2: who the campaign goes to. One taste group (one email written for
+ * its taste), or individual contacts ticked one by one, where every ticked
+ * person gets their own version of the personal blocks.
  */
 export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; brand: EmailBrand }) {
   const audiences = useQuery(api.emailAudiences.list, { brandId: brand._id });
@@ -43,16 +43,19 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
 
   const all = audiences ?? [];
   const selected = all.find((a) => a._id === campaign.audienceId) ?? null;
-  const groups = all.filter((a) => a.kind === "group");
-  const people = all.filter((a) => a.kind === "people");
+  const groups = all.filter((a) => a.kind === "group").sort((a, b) => b.size - a.size);
+  const individuals = all.find((a) => a.kind === "people" && a.size > 0) ?? null;
 
+  /** Aims the campaign at a group, or at the individual contacts (no one ticked yet). */
   async function pick(a: AudienceRow) {
-    if (locked || a.status !== "ready" || a._id === campaign.audienceId) return;
+    if (locked || a._id === campaign.audienceId || (a.kind === "group" && a.status !== "ready")) return true;
     setError(null);
     try {
       await setAudience({ id: campaign._id, audienceId: a._id });
+      return true;
     } catch (err) {
       setError(errorText(err));
+      return false;
     }
   }
 
@@ -77,7 +80,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
         <div className="min-w-0 space-y-1.5">
           <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">Who is it for?</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Pick one audience. A taste group gets one email written for its taste; a list kept one by one gets a version for each person, written from their own profile.
+            Pick one taste group, or tick individual contacts. A taste group gets one email written for its taste; each person you tick gets their own version, written from their profile.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -90,7 +93,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
         </div>
       </div>
 
-      {locked && <Notice>This campaign has left the drafts, so its audience is fixed.</Notice>}
+      {locked && <Notice>This campaign has left the drafts, so who it goes to is fixed.</Notice>}
       {error && <Notice tone="bad">{error}</Notice>}
 
       {audiences === undefined ? (
@@ -106,7 +109,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
           </span>
           <h2 className="mt-4 font-semibold">No contacts yet</h2>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Import a CSV and group it by taste, or keep a short list one by one. Qloo reads what each person likes so the email can follow it.
+            Import a CSV and sort it into taste groups, or add people as individual contacts. Qloo reads what each person likes so the email can follow it.
           </p>
           <div className="mt-5 flex gap-2">
             <Button className="h-9 rounded-full px-4" onClick={() => setSheet("import")}>
@@ -125,21 +128,110 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
               {grid(groups)}
             </section>
           )}
-          {people.length > 0 && (
+          {individuals && (
             <section className="space-y-4">
-              <SectionTitle icon={UsersRound} title="Lists kept one by one" hint="A version of the email for each person" />
-              {grid(people)}
+              <SectionTitle icon={UsersRound} title="Individual contacts" hint="Tick who gets it: each person gets a version written for them" />
+              <PickPeople campaign={campaign} audience={individuals} locked={locked} onUse={() => pick(individuals)} />
             </section>
           )}
         </>
       )}
 
       {selected?.kind === "group" && <GroupNote audience={selected} />}
-      {selected?.kind === "people" && <Personalise campaign={campaign} brand={brand} audience={selected} />}
+      {selected?.kind === "people" && (campaign.contactIds?.length ?? 0) > 0 && <Personalise campaign={campaign} brand={brand} audience={selected} />}
 
       <ImportContactsSheet open={sheet === "import"} onOpenChange={(o) => setSheet(o ? "import" : null)} />
       <AddContactSheet open={sheet === "add"} onOpenChange={(o) => setSheet(o ? "add" : null)} />
     </div>
+  );
+}
+
+/** The individual contacts as a tick list; ticking someone also aims the campaign at the individuals. */
+function PickPeople({ campaign, audience, locked, onUse }: { campaign: EmailCampaign; audience: AudienceRow; locked: boolean; onUse: () => Promise<boolean> }) {
+  const contacts = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
+  const setContacts = useMutation(api.emailCampaigns.setContacts);
+  const [error, setError] = useState<string | null>(null);
+  const active = campaign.audienceId === audience._id;
+  const ticked = useMemo(() => new Set<string>(active ? (campaign.contactIds ?? []) : []), [active, campaign.contactIds]);
+  const reachable = (contacts ?? []).filter((c) => !c.unsubscribed);
+
+  async function save(ids: string[]) {
+    if (locked) return;
+    setError(null);
+    try {
+      if (!active && !(await onUse())) return;
+      await setContacts({ id: campaign._id, contactIds: ids as Id<"emailContacts">[] });
+    } catch (err) {
+      setError(errorText(err));
+    }
+  }
+  const toggle = (id: string) => void save(ticked.has(id) ? [...ticked].filter((x) => x !== id) : [...ticked, id]);
+
+  return (
+    <Panel className={cn("overflow-visible", active && "ring-2 ring-neutral-900")}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.05] px-5 py-3.5">
+        <p className="text-sm">
+          {active && ticked.size ? (
+            <span className="font-medium text-neutral-950">
+              {fmt.int(ticked.size)} of {peopleCount(reachable.length, "person")} ticked
+            </span>
+          ) : (
+            <span className="text-muted-foreground">{peopleCount(audience.size, "person")}. Tick the ones this campaign is for.</span>
+          )}
+        </p>
+        {!locked && (
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" disabled={!reachable.length || ticked.size === reachable.length} onClick={() => void save(reachable.map((c) => c._id))}>
+              Tick everyone
+            </Button>
+            {ticked.size > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => void save([])}>
+                Clear
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+      {error && <p className="px-5 pt-3 text-sm text-destructive">{error}</p>}
+      {contacts === undefined ? (
+        <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-14 rounded-xl" />
+          ))}
+        </div>
+      ) : (
+        <ul className="grid gap-1 p-2 sm:grid-cols-2 xl:grid-cols-3">
+          {contacts.map((c) => {
+            const on = ticked.has(c._id);
+            return (
+              <li key={c._id}>
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={on}
+                  disabled={locked || !!c.unsubscribed}
+                  onClick={() => toggle(c._id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                    on && "bg-neutral-100",
+                    c.unsubscribed && "opacity-60",
+                  )}
+                >
+                  <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-md border", on ? "border-neutral-900 bg-neutral-900 text-white" : "border-black/20 bg-white")}>
+                    {on && <Check className="size-3.5" />}
+                  </span>
+                  <ContactAvatar contact={c} className="size-8" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-neutral-950">{c.name || c.email}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{c.unsubscribed ? "Unsubscribed" : aboutOf(c) || c.entities[0]?.name || c.email}</span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
   );
 }
 
@@ -191,10 +283,14 @@ function GroupNote({ audience }: { audience: AudienceRow }) {
   );
 }
 
-/** For a list kept one by one: write everyone's version, watch it fill, check each person's. */
+/** For the individuals ticked: write everyone's version, watch it fill, check each person's. */
 function Personalise({ campaign, brand, audience }: { campaign: EmailCampaign; brand: EmailBrand; audience: AudienceRow }) {
   const pathname = usePathname();
-  const contacts = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
+  const everyone = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
+  const contacts = useMemo(() => {
+    const picked = new Set<string>(campaign.contactIds ?? []);
+    return everyone?.filter((c) => picked.has(c._id));
+  }, [everyone, campaign.contactIds]);
   const versions = useQuery(api.emailCampaigns.versions, { id: campaign._id });
   const items = useBrandItems(brand._id);
   const [starting, setStarting] = useState(false);

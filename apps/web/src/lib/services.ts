@@ -53,7 +53,7 @@ export const SERVICES: ServiceMeta[] = [
     clientNoun: "brand",
     tagline: "Email campaigns written for each audience's taste.",
     description:
-      "Set up a brand once, import contacts, and send campaigns whose picks and copy follow each taste group, or each person on a customer list.",
+      "Set up a brand once, import contacts, and send campaigns whose picks and copy follow each taste group, or each individual contact.",
   },
   {
     id: "media",

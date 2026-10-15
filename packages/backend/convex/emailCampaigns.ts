@@ -1,6 +1,7 @@
 import { v, type Infer } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { membersFor } from "./emailAudiences";
 import { editableBrand } from "./emailBrands";
 import { allBlocks, applyOps as applyDocOps, applyPersonalization, blankDoc, blockLabel, findBlock, validateEmailDoc } from "./emailDoc";
 import { toEmailItem } from "./emailItems";
@@ -74,7 +75,10 @@ export function renderOne(doc: EmailDoc, ctx: RenderContext) {
 
 /* Queries ---------------------------------------------------------------------------- */
 
-/** The brand's campaigns, newest first, each with its audience's name and kind. */
+/** "3 individual contacts" for a campaign sent to people ticked one by one. */
+export const pickedName = (n: number) => (n === 1 ? "1 individual contact" : `${n} individual contacts`);
+
+/** The brand's campaigns, newest first, each with who it goes to and their kind. */
 export const list = query({
   args: { brandId: v.id("emailBrands") },
   handler: async (ctx, { brandId }) => {
@@ -82,7 +86,8 @@ export const list = query({
     return Promise.all(
       campaigns.map(async (c) => {
         const audience = c.audienceId ? await ctx.db.get(c.audienceId) : null;
-        return { ...c, audienceName: audience?.name, audienceKind: audience?.kind };
+        const name = audience?.kind === "people" ? (c.contactIds?.length ? pickedName(c.contactIds.length) : undefined) : audience?.name;
+        return { ...c, audienceName: name, audienceKind: audience?.kind };
       }),
     );
   },
@@ -142,7 +147,7 @@ export const versions = query({
   },
 });
 
-/** Everything the builder agent reads at the start of a turn. People audiences come with each person and their profile. */
+/** Everything the builder agent reads at the start of a turn. Sent to individual contacts, it comes with each ticked person and their profile. */
 export const getForAgent = query({
   args: { id: v.id("emailCampaigns") },
   handler: async (ctx, { id }) => {
@@ -153,7 +158,7 @@ export const getForAgent = query({
     const items = (await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect()).sort((a, b) => a.order - b.order);
     let contacts;
     if (audience?.kind === "people") {
-      const members = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", audience._id)).collect();
+      const members = await membersFor(ctx, campaign, audience);
       contacts = members
         .filter((m) => !m.unsubscribed)
         .map((m) => ({
@@ -299,9 +304,11 @@ export const create = mutation({
     doc: v.optional(v.any()),
     prompt: v.optional(v.string()),
     audienceId: v.optional(v.id("emailAudiences")),
+    /** For the individual contacts audience: who is ticked. */
+    contactIds: v.optional(v.array(v.id("emailContacts"))),
   },
   returns: v.id("emailCampaigns"),
-  handler: async (ctx, { brandId, name, templateId, doc: given, prompt, audienceId }) => {
+  handler: async (ctx, { brandId, name, templateId, doc: given, prompt, audienceId, contactIds }) => {
     const brand = await editableBrand(ctx, brandId);
     const theme = themeFromKit(brand.kit as EmailKit | undefined);
     const template = templateId && templateId !== "blank" ? EMAIL_TEMPLATES.find((t) => t.id === templateId) : undefined;
@@ -327,6 +334,7 @@ export const create = mutation({
       ...(fromPrompt ? { nameFromPrompt: true } : {}),
       status: "draft",
       ...(audienceId ? { audienceId } : {}),
+      ...(audienceId && contactIds ? { contactIds } : {}),
       doc,
       ...(templateId ? { templateId } : {}),
       ...(prompt?.trim() ? { prompt: prompt.trim() } : {}),
@@ -359,6 +367,7 @@ export const duplicate = mutation({
       name: `${campaign.name} (copy)`,
       status: "draft",
       ...(campaign.audienceId ? { audienceId: campaign.audienceId } : {}),
+      ...(campaign.contactIds ? { contactIds: campaign.contactIds } : {}),
       doc: { ...(campaign.doc as EmailDoc), version: 1 },
       ...(campaign.templateId ? { templateId: campaign.templateId } : {}),
       stats: emptyStats(),
@@ -437,7 +446,11 @@ export const applyOps = mutation({
   },
 });
 
-/** Points the campaign at an audience. A different audience makes the personal versions meaningless, so they go. */
+/**
+ * Points the campaign at a taste group or the individual contacts (no one
+ * ticked yet). A different audience makes the personal versions meaningless,
+ * so they go.
+ */
 export const setAudience = mutation({
   args: { id: v.id("emailCampaigns"), audienceId: v.optional(v.id("emailAudiences")) },
   returns: v.null(),
@@ -450,7 +463,26 @@ export const setAudience = mutation({
       if (!audience || audience.brandId !== campaign.brandId) throw new Error("Unknown audience");
     }
     for (const r of await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(r._id);
-    await ctx.db.patch(id, { audienceId, personalization: undefined, updatedAt: Date.now() });
+    await ctx.db.patch(id, { audienceId, contactIds: undefined, personalization: undefined, updatedAt: Date.now() });
+    return null;
+  },
+});
+
+/** Ticks who of the individual contacts get the campaign. Versions of people unticked stay, in case they come back. */
+export const setContacts = mutation({
+  args: { id: v.id("emailCampaigns"), contactIds: v.array(v.id("emailContacts")) },
+  returns: v.null(),
+  handler: async (ctx, { id, contactIds }) => {
+    const { campaign } = await editableCampaign(ctx, id);
+    if (LOCKED.has(campaign.status) || campaign.status === "scheduled") throw new Error(`A ${campaign.status} campaign can't change who it goes to`);
+    const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
+    if (audience?.kind !== "people") throw new Error("Pick the individual contacts first");
+    const picked: Id<"emailContacts">[] = [];
+    for (const cid of new Set(contactIds)) {
+      const c = await ctx.db.get(cid);
+      if (c && c.brandId === campaign.brandId && c.audienceId === audience._id) picked.push(cid);
+    }
+    await ctx.db.patch(id, { contactIds: picked, updatedAt: Date.now() });
     return null;
   },
 });

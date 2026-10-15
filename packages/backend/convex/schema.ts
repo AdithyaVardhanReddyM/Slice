@@ -208,7 +208,12 @@ export const emailMappingValidator = v.object({
   name: v.optional(v.string()),
   firstName: v.optional(v.string()),
   lastName: v.optional(v.string()),
+  /** Columns of what they bought or booked (recent orders, bookings, visits). */
+  purchases: v.optional(v.array(v.string())),
+  /** Columns of what they like, when the business knows it. */
   taste: v.array(v.string()),
+  /** Neighbourhood within the city, for local brands. */
+  neighborhood: v.optional(v.string()),
   city: v.optional(v.string()),
   country: v.optional(v.string()),
   age: v.optional(v.string()),
@@ -796,7 +801,7 @@ export default defineSchema({
       v.literal("failed"),
     ),
     progress: v.optional(emailProgress),
-    /** People mode: the list's audience. */
+    /** People mode: the brand's individual contacts audience the list's people joined. */
     audienceId: v.optional(v.id("emailAudiences")),
     trace: v.array(spanValidator),
     error: v.optional(v.string()),
@@ -814,19 +819,29 @@ export default defineSchema({
     lastName: v.optional(v.string()),
     /** The CSV row, as strings. */
     row: v.record(v.string(), v.string()),
-    /** Raw taste terms from the taste columns or the add form. */
+    /** What they bought or booked, most recent first, as the business wrote it. */
+    purchases: v.optional(v.array(v.string())),
+    /** Purchases found in the brand's own catalog. */
+    boughtItemIds: v.optional(v.array(v.id("emailItems"))),
+    /** What they like, when the business knows it: from the taste columns or the add form. */
     interests: v.array(v.string()),
-    /** Resolved Qloo entities. */
+    /** Qloo entities read from what they bought and like. */
     entities: v.array(emailEntityValidator),
+    /** Where in the city they live (Park Slope), for a local shop; Qloo reads "Park Slope, Brooklyn". */
+    neighborhood: v.optional(v.string()),
     city: v.optional(v.string()),
     country: v.optional(v.string()),
     /** Qloo age bucket (24_and_younger …). */
     age: v.optional(v.string()),
     gender: v.optional(v.string()),
     cluster: v.optional(v.number()),
-    /** Its group (groups mode) or its list's people audience. */
+    /** Kept as an individual contact (their own profile, ticked per campaign) rather than placed in a taste group. */
+    individual: v.optional(v.boolean()),
+    /** Why they are in their taste group when it wasn't what they bought: no purchases yet, so placed by age, gender and city through Qloo. */
+    placement: v.optional(v.object({ by: v.literal("demographics"), note: v.string() })),
+    /** Its taste group, or the brand's individual contacts audience. */
     audienceId: v.optional(v.id("emailAudiences")),
-    /** People mode: AudienceProfile compiled for this person. */
+    /** Individuals: AudienceProfile compiled for this person. */
     profile: v.optional(v.any()),
     profileStatus: v.optional(v.union(v.literal("pending"), v.literal("compiling"), v.literal("ready"), v.literal("failed"))),
     /** Why the profile failed, for the people drawer. */
@@ -842,7 +857,8 @@ export default defineSchema({
 
   emailAudiences: defineTable({
     brandId: v.id("emailBrands"),
-    listId: v.id("emailLists"),
+    /** A group: the upload that started it (later uploads can add to it). Unset on the brand's individual contacts. */
+    listId: v.optional(v.id("emailLists")),
     name: v.string(),
     kind: v.union(v.literal("group"), v.literal("people")),
     cluster: v.optional(v.number()),
@@ -869,6 +885,8 @@ export default defineSchema({
     nameFromPrompt: v.optional(v.boolean()),
     status: campaignStatusValidator,
     audienceId: v.optional(v.id("emailAudiences")),
+    /** Sent to individual contacts: the people ticked for this campaign. */
+    contactIds: v.optional(v.array(v.id("emailContacts"))),
     /** EmailDoc */
     doc: v.any(),
     templateId: v.optional(v.string()),

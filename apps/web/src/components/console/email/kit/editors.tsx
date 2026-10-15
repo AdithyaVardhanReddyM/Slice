@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { ImageOff, Plus, Trash2, X } from "lucide-react";
 import type { EmailFont, EmailFooterInfo, EmailKit, EmailSender, SocialNetwork } from "@slice/backend/convex/emailTypes";
-import { fontStack } from "@slice/backend/convex/emailThemes";
+import { fontStack, isDark } from "@slice/backend/convex/emailThemes";
 import { cn } from "@/lib/utils";
 import { FONT_SUGGESTIONS, SANS_FALLBACK, SERIF_FALLBACK, cleanLocal, type BrandDraft } from "@/lib/email/kit";
 import { SOCIAL_LABEL } from "@/lib/email/labels";
@@ -142,6 +142,21 @@ function LogoPreview({ kit, name }: { kit: EmailKit; name: string }) {
   );
 }
 
+/** The light logo on the kit's text colour (when that is dark), as a dark section would show it. */
+function LightLogoPreview({ src, background }: { src?: string; background: string }) {
+  const [broken, setBroken] = useState<string | null>(null);
+  return (
+    <span className="flex h-9 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg px-2 ring-1 ring-black/10" style={{ background }}>
+      {src && broken !== src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt="" className="max-h-6 max-w-full object-contain" onError={() => setBroken(src)} />
+      ) : (
+        <ImageOff className="size-4 text-white/60" />
+      )}
+    </span>
+  );
+}
+
 function IconPreview({ src }: { src?: string }) {
   const [broken, setBroken] = useState<string | null>(null);
   return (
@@ -160,11 +175,12 @@ function IconPreview({ src }: { src?: string }) {
 export function IdentityEditor({ draft, onChange }: DraftProps) {
   const { kit } = draft;
   const set = <K extends keyof EmailKit>(key: K, value: EmailKit[K]) => onChange({ ...draft, kit: { ...kit, [key]: value } });
-  const setLogo = (src: string | undefined) => set("logo", src ? { src, alt: kit.logo?.alt || draft.name, onDark: kit.logo?.onDark } : undefined);
+  const setLogo = (src: string | undefined) => set("logo", src ? { ...kit.logo, src, alt: kit.logo?.alt || draft.name } : undefined);
+  const setLight = (light: string | undefined) => kit.logo && set("logo", { ...kit.logo, light });
   return (
     <div>
       <EditorSection title="Name" description="How the brand signs its emails and appears in the console.">
-        <Input value={draft.name} onChange={(e) => onChange({ ...draft, name: e.target.value })} placeholder="Folio & Fern" />
+        <Input value={draft.name} onChange={(e) => onChange({ ...draft, name: e.target.value })} placeholder="Stackhouse Books" />
       </EditorSection>
 
       <EditorSection title="Logo" description="Sits at the top of every email. Upload a PNG or SVG, or paste the address of one.">
@@ -184,6 +200,20 @@ export function IdentityEditor({ draft, onChange }: DraftProps) {
           <EditorField label="Wordmark" aside="Optional" hint="Set in the heading font when there is no logo image.">
             <Input value={kit.wordmark ?? ""} placeholder={draft.name} onChange={(e) => set("wordmark", e.target.value || undefined)} />
           </EditorField>
+          {kit.logo && !kit.logo.onDark && (
+            <EditorField
+              label="Light version"
+              aside="Optional"
+              hint="A white or reversed logo for dark sections, such as a coloured header. Without one, a dark logo can disappear there."
+              className="sm:col-span-2"
+            >
+              <div className="flex items-center gap-2">
+                <LightLogoPreview src={kit.logo.light} background={isDark(kit.colors.foreground) ? kit.colors.foreground : "#171717"} />
+                <Input value={kit.logo.light ?? ""} placeholder="https://…/logo-light.png" onChange={(e) => setLight(e.target.value || undefined)} />
+                <UploadImage label="Upload" onUploaded={setLight} />
+              </div>
+            </EditorField>
+          )}
           <EditorField label="Icon" aside="Optional" hint="A square mark for small tiles in Slice." className="sm:col-span-2">
             <div className="flex items-center gap-2">
               <IconPreview src={kit.icon} />
@@ -341,7 +371,7 @@ export function SenderFields({ sender, domain, onChange }: { sender: EmailSender
   return (
     <div className="grid gap-5">
       <EditorField label="From name" hint="What the inbox shows before the subject. Usually the brand, sometimes a person at it.">
-        <Input value={sender.fromName} onChange={(e) => onChange({ ...sender, fromName: e.target.value })} placeholder="Folio & Fern" />
+        <Input value={sender.fromName} onChange={(e) => onChange({ ...sender, fromName: e.target.value })} placeholder="Stackhouse Books" />
       </EditorField>
       <EditorField label="From address" hint="Mail goes out from this address once the domain is verified.">
         <AdornedInput

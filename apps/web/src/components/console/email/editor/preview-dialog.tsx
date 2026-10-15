@@ -3,7 +3,7 @@
 // Preview: the real email HTML (rendered on the server the way it is sent,
 // without tracking) at desktop and phone width, under its inbox line, as
 // anyone or as one person of the audience (their merge values and, for a
-// customer list, their own version).
+// individual contact, their own version).
 
 import { useQuery } from "convex/react";
 import { Monitor, Smartphone } from "lucide-react";

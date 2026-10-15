@@ -600,7 +600,7 @@ function CommonFields({ block, set }: { block: EmailBlock; set: SetFields }) {
               <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
                 {audience?.kind === "people"
                   ? "When you personalise, each person's version rewrites this block from their own taste."
-                  : "Used when the campaign goes to a customer list kept one by one. Taste groups get one email."}
+                  : "Used when the campaign goes to individual contacts. Taste groups get one email."}
               </span>
             </span>
             <Switch size="sm" checked={!!block.personal} onCheckedChange={(on) => set({ personal: on || null })} aria-label="Taste slot" />

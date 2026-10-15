@@ -144,7 +144,7 @@ export function fillMerge(text: string, merge: RenderContext["merge"], mode: Ren
 }
 
 /** Merge tags in plain text: value, else fallback, else nothing. */
-function fillMergePlain(text: string, merge: RenderContext["merge"]): string {
+export function fillMergePlain(text: string, merge: RenderContext["merge"]): string {
   return String(text ?? "").replace(MERGE_RE, (_m, k: string, fb: string | undefined) => {
     const v = merge?.[k.toLowerCase() as MergeKey];
     return v && String(v).trim() ? String(v) : decodeEntities(fb?.trim() ?? "");
@@ -407,7 +407,9 @@ function logoHtml(b: LogoBlock, ctx: BlockRenderContext): string {
   const name = ctx.brand.wordmark || ctx.brand.name || "Your brand";
   let inner: string;
   if (logo?.src) {
-    inner = `<img src="${attr(logo.src)}" alt="${attr(logo.alt || ctx.brand.name)}" width="${b.width}" style="display:block;width:100%;max-width:${b.width}px;height:auto;border:0;outline:none;text-decoration:none;margin:${alignMargin(b.align)}">`;
+    // A dark logo on a dark section disappears: draw its light version there when the kit has one.
+    const src = logo.light && !logo.onDark && isDark(fillOf(ctx.sectionBackground, ctx.theme)) ? logo.light : logo.src;
+    inner = `<img src="${attr(src)}" alt="${attr(logo.alt || ctx.brand.name)}" width="${b.width}" style="display:block;width:100%;max-width:${b.width}px;height:auto;border:0;outline:none;text-decoration:none;margin:${alignMargin(b.align)}">`;
   } else {
     const size = Math.max(18, Math.min(38, Math.round(b.width / 5.2)));
     const color = onColor(ctx.sectionBackground, ctx.theme);

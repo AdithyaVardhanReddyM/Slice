@@ -2,7 +2,7 @@
 
 // Personalise: what changes per reader. Merge tags to place in the text
 // (first name, city…), the blocks marked as taste slots (rewritten for each
-// person of a customer list), and Preview as: the canvas shows one person's
+// individual contact), and Preview as: the canvas shows one person's
 // version, with their merge values and their personal blocks.
 
 import { useQuery } from "convex/react";
@@ -115,7 +115,7 @@ function TasteSlots() {
       <p className="text-xs leading-5 text-muted-foreground">
         {people
           ? "Each person's version rewrites these blocks from their own taste: their picks, their hooks, in your voice."
-          : "Used when the campaign goes to a customer list kept one by one. A taste group gets one email written for the group."}
+          : "Used when the campaign goes to individual contacts. A taste group gets one email written for the group."}
       </p>
       <div className="divide-y rounded-xl ring-1 ring-black/[0.08]">
         {candidates.length === 0 && <p className="px-3 py-3 text-xs text-muted-foreground">No headings, text, images, buttons, picks or quotes yet.</p>}

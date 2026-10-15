@@ -40,8 +40,8 @@ const stores = [
     note: "Brand site for the Pages service: one metal card whose perks span dining, tickets, streaming, hotels, travel, shopping and wellness. Each audience's page leads with the perks that fit its taste.",
   },
   {
-    href: "/folio",
-    name: "Folio & Fern",
+    href: "/stackhouse",
+    name: "Stackhouse Books",
     kind: "Independent bookshop · Brooklyn, 43 books, 5 events",
     note: "Brand site for the Email service: the brand setup reads its homepage, and campaign picks and links point at its book pages.",
   },

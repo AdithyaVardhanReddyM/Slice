@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalAction, internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { unsubscribedEmails } from "./emailAudiences";
+import { membersFor, unsubscribedEmails } from "./emailAudiences";
 import { editableBrand, formatFrom, hostOf, RESEND_MISSING, sendingInfoFor } from "./emailBrands";
 import { docFor, itemsRecord, mergeFor, renderContextFor, renderOne } from "./emailCampaigns";
 import { unsubscribeEmail } from "./emailContacts";
@@ -174,7 +174,14 @@ async function blocker(ctx: { db: QueryCtx["db"] }, campaign: Doc<"emailCampaign
   if (!campaign.audienceId) return "Choose who it goes to";
   const audience = await ctx.db.get(campaign.audienceId);
   if (!audience) return "Choose who it goes to";
-  if (audience.status !== "ready") return audience.status === "failed" ? `${audience.name} couldn't be read: ${audience.error ?? "try again"}` : `${audience.name} is still being read`;
+  if (audience.kind === "people" && !campaign.contactIds?.length) return "Tick who gets it";
+  if (audience.status !== "ready" && audience.kind === "group") {
+    return audience.status === "failed" ? `${audience.name} couldn't be read: ${audience.error ?? "try again"}` : `${audience.name} is still being read`;
+  }
+  if (audience.kind === "people") {
+    const picked = await membersFor(ctx, campaign, audience);
+    if (picked.some((m) => m.profileStatus === "pending" || m.profileStatus === "compiling")) return "Some of the people ticked are still being read";
+  }
   if (audience.kind === "people" && personalBlocks(doc).length) {
     if (campaign.personalization?.status === "running") return "The personal versions are still being written";
     const versions = await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id)).collect();
@@ -196,7 +203,8 @@ export const readiness = query({
     if (!brand) throw new Error("Unknown brand");
     const reason = await blocker(ctx, campaign, brand);
     const { mode, from } = sendingInfoFor(brand);
-    const members = campaign.audienceId ? await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", campaign.audienceId)).collect() : [];
+    const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
+    const members = await membersFor(ctx, campaign, audience);
     const out = await unsubscribedEmails(ctx, campaign.brandId);
     const emails = new Set(members.map((m) => m.email));
     const recipients = [...emails].filter((e) => !out.has(e)).length;
@@ -205,21 +213,21 @@ export const readiness = query({
 });
 
 /**
- * One queued send per recipient: the audience's members, opted-out people
- * left out, one email per address. A failed campaign sent again starts from
- * a clean slate.
+ * One queued send per recipient: the group's members or the individuals
+ * ticked, opted-out people left out, one email per address. A failed
+ * campaign sent again starts from a clean slate.
  */
 async function queueRecipients(ctx: MutationCtx, campaign: Doc<"emailCampaigns">, audience: Doc<"emailAudiences">, simulated: boolean) {
   for (const s of await ctx.db.query("emailSends").withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id)).collect()) await ctx.db.delete(s._id);
   const out = await unsubscribedEmails(ctx, campaign.brandId);
-  const members = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", audience._id)).collect();
+  const members = await membersFor(ctx, campaign, audience);
   const seen = new Set<string>();
   const recipients = members.filter((m) => {
     if (m.unsubscribed || out.has(m.email) || seen.has(m.email)) return false;
     seen.add(m.email);
     return true;
   });
-  if (!recipients.length) throw new Error(`No one to send to: everyone in ${audience.name} opted out`);
+  if (!recipients.length) throw new Error(audience.kind === "people" ? "No one to send to: everyone ticked opted out" : `No one to send to: everyone in ${audience.name} opted out`);
   const now = Date.now();
   const subject = (campaign.doc as EmailDoc).subject;
   for (const m of recipients) {

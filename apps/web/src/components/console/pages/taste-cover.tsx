@@ -25,16 +25,11 @@ const TEXT_TILES = ["bg-neutral-800", "bg-stone-700", "bg-zinc-900", "bg-neutral
  * Up to `n` picks for the cover, taken round-robin across artists, places,
  * brands, films and books so one kind never fills it. Pictures first.
  */
-export function coverTiles(profile: AudienceProfile | null, n = 5): Tile[] {
+export function coverTiles(profile: AudienceProfile | null, n = 5, own = false): Tile[] {
   if (!profile) return [];
-  const lists: Tile[][] = [
-    profile.culture.artists,
-    profile.culture.places,
-    profile.brands,
-    profile.culture.films,
-    profile.culture.books,
-    profile.entities,
-  ].map((l) => l.map((e) => ({ key: e.id, name: e.name, image: e.image })));
+  // `own`: their own entities (what they bought) lead, Qloo's wider read fills in.
+  const qloo = [profile.culture.artists, profile.culture.places, profile.brands, profile.culture.films, profile.culture.books];
+  const lists: Tile[][] = (own ? [profile.entities, ...qloo] : [...qloo, profile.entities]).map((l) => l.map((e) => ({ key: e.id, name: e.name, image: e.image })));
   const seen = new Set<string>();
   const ordered: Tile[] = [];
   for (let i = 0; ordered.length < 40 && lists.some((l) => i < l.length); i++) {

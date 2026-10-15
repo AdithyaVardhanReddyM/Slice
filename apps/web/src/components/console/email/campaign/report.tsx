@@ -49,7 +49,7 @@ function tickFormat(spanMs: number) {
     );
 }
 
-/** "folioandfern.com/books/piranesi" from a tracked URL. */
+/** "stackhousebooks.com/books/piranesi" from a tracked URL. */
 function shortUrl(url: string) {
   try {
     const u = new URL(url);
@@ -61,7 +61,7 @@ function shortUrl(url: string) {
 
 /**
  * What happened to a sent campaign: who got it, opened and clicked, over
- * time, which links pulled, and per person for a list kept one by one. The
+ * time, which links pulled, and per person for individual contacts. The
  * report query is reactive, so a demo send fills in while you watch.
  */
 export function CampaignReport({ campaign, brand }: { campaign: EmailCampaign; brand: EmailBrand }) {
@@ -299,7 +299,7 @@ function Rates({ stats }: { stats: CampaignStats | null }) {
 
 type PersonRow = { contactId: string; name: string; email: string; status: SendStatus | string; opened: unknown; clicked: unknown; subject: string };
 
-/** A list kept one by one: each person's own subject line and what they did with it. */
+/** Individual contacts: each person's own subject line and what they did with it. */
 function People({ people }: { people: PersonRow[] }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();

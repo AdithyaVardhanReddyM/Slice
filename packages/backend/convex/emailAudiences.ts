@@ -13,7 +13,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { editableBrand } from "./emailBrands";
-import type { ContactLite } from "./emailContacts";
+import { locationOf, tasteTerms, type ContactLite } from "./emailContacts";
 import type { AudienceProfile } from "./emailTypes";
 import {
   countEntities,
@@ -30,10 +30,12 @@ import { cachedQlooGet } from "./qloo";
 import { locateCity, type EntityRef, type Span } from "./qlooApi";
 import { spanValidator } from "./schema";
 
-// An email audience is who one campaign goes to: a taste group (a k-means
-// cluster of a contact list, one email written for the group) or a list kept
-// one by one ("people", a version of the email per person). Profiles reuse
-// the Pages compile helpers; contacts carry their own resolved entities.
+// An email audience is who one campaign goes to: a taste group (people whose
+// tastes sit close together, from any upload; one email written for the
+// group) or the brand's individual contacts ("people": each has a profile of
+// their own, a campaign ticks who gets it and writes a version per person).
+// Profiles reuse the Pages compile helpers; contacts carry their own
+// resolved entities.
 
 /* Queries ------------------------------------------------------------------------ */
 
@@ -49,7 +51,7 @@ export const list = query({
         const members = optedOut.size ? await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", a._id)).collect() : [];
         return {
           ...a,
-          listName: lists.find((l) => l._id === a.listId)?.name ?? "",
+          listName: (a.listId && lists.find((l) => l._id === a.listId)?.name) || "",
           unsubscribed: members.filter((m) => optedOut.has(m.email)).length,
         };
       }),
@@ -72,7 +74,7 @@ export const get = query({
   handler: async (ctx, { id }) => {
     const audience = await ctx.db.get(id);
     if (!audience) return null;
-    const list = await ctx.db.get(audience.listId);
+    const list = audience.listId ? await ctx.db.get(audience.listId) : null;
     return { ...audience, listName: list?.name ?? "" };
   },
 });
@@ -93,8 +95,6 @@ export const rename = mutation({
     await editableBrand(ctx, audience.brandId);
     if (!name.trim()) return null;
     await ctx.db.patch(id, { name: name.trim().slice(0, 80), updatedAt: Date.now() });
-    // A people list is named like its audience.
-    if (audience.kind === "people") await ctx.db.patch(audience.listId, { name: name.trim().slice(0, 80), updatedAt: Date.now() });
     return null;
   },
 });
@@ -109,18 +109,48 @@ async function detachCampaigns(ctx: MutationCtx, brandId: Id<"emailBrands">, aud
   }
 }
 
-/** A list and everything it made: contacts, its groups or its people audience. Sent campaigns keep their sends. */
+/**
+ * After people left a group: a group with no one left goes (and draft
+ * campaigns aimed at it lose their audience); otherwise its size follows.
+ */
+export async function settleGroup(ctx: MutationCtx, id: Id<"emailAudiences">) {
+  const group = await ctx.db.get(id);
+  if (!group || group.kind !== "group") return;
+  const members = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", id)).collect();
+  if (!members.length) {
+    await detachCampaigns(ctx, group.brandId, new Set([id]));
+    await ctx.db.delete(id);
+    return;
+  }
+  await ctx.db.patch(id, { size: members.length, updatedAt: Date.now() });
+}
+
+/**
+ * An upload and the people it brought in. Groups other uploads also fill stay
+ * (smaller); groups left empty go; the individual contacts shrink. Sent
+ * campaigns keep their sends.
+ */
 export async function deleteListCascade(ctx: MutationCtx, listId: Id<"emailLists">) {
   const list = await ctx.db.get(listId);
   if (!list) return;
-  const audiences = await ctx.db.query("emailAudiences").withIndex("by_list", (q) => q.eq("listId", listId)).collect();
-  await detachCampaigns(ctx, list.brandId, new Set(audiences.map((a) => a._id)));
-  for (const a of audiences) await ctx.db.delete(a._id);
-  for (const c of await ctx.db.query("emailContacts").withIndex("by_list", (q) => q.eq("listId", listId)).collect()) await ctx.db.delete(c._id);
+  const touched = new Set<Id<"emailAudiences">>();
+  for (const a of await ctx.db.query("emailAudiences").withIndex("by_list", (q) => q.eq("listId", listId)).collect()) {
+    touched.add(a._id);
+    await ctx.db.patch(a._id, { listId: undefined });
+  }
+  for (const c of await ctx.db.query("emailContacts").withIndex("by_list", (q) => q.eq("listId", listId)).collect()) {
+    if (c.audienceId) touched.add(c.audienceId);
+    await ctx.db.delete(c._id);
+  }
   await ctx.db.delete(listId);
+  for (const id of touched) {
+    const a = await ctx.db.get(id);
+    if (a?.kind === "group") await settleGroup(ctx, id);
+    else if (a) await refreshPeopleAudience(ctx, id);
+  }
 }
 
-/** A group goes alone (its members stay in their list, ungrouped); a people audience takes its list with it. */
+/** A taste group and the people in it. The individual contacts can't go as a whole; people leave one by one. */
 export const remove = mutation({
   args: { id: v.id("emailAudiences") },
   returns: v.null(),
@@ -128,16 +158,189 @@ export const remove = mutation({
     const audience = await ctx.db.get(id);
     if (!audience) return null;
     await editableBrand(ctx, audience.brandId);
-    if (audience.kind === "people") {
-      await deleteListCascade(ctx, audience.listId);
-      return null;
-    }
+    if (audience.kind === "people") throw new Error("Remove individual contacts one at a time");
     await detachCampaigns(ctx, audience.brandId, new Set([id]));
-    for (const c of await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", id)).collect()) {
-      await ctx.db.patch(c._id, { audienceId: undefined, cluster: undefined });
-    }
+    for (const c of await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", id)).collect()) await ctx.db.delete(c._id);
     await ctx.db.delete(id);
     return null;
+  },
+});
+
+/* The brand's individual contacts ------------------------------------------------------- */
+
+export const INDIVIDUALS = "Individual contacts";
+
+/** The brand's one audience of individual contacts, made on first use. */
+export async function individualsAudience(ctx: MutationCtx, brandId: Id<"emailBrands">): Promise<Doc<"emailAudiences">> {
+  const all = await ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
+  const found = all.filter((a) => a.kind === "people").sort((a, b) => a._creationTime - b._creationTime)[0];
+  if (found) return found;
+  const now = Date.now();
+  const id = await ctx.db.insert("emailAudiences", {
+    brandId,
+    name: INDIVIDUALS,
+    kind: "people",
+    status: "ready",
+    size: 0,
+    topEntities: [],
+    trace: [],
+    createdAt: now,
+    updatedAt: now,
+  });
+  return (await ctx.db.get(id))!;
+}
+
+/**
+ * Who a campaign goes to: everyone in its taste group, or the individual
+ * contacts ticked for it (still individuals of the brand).
+ */
+export async function membersFor(
+  ctx: { db: QueryCtx["db"] },
+  campaign: Pick<Doc<"emailCampaigns">, "brandId" | "contactIds">,
+  audience: Doc<"emailAudiences"> | null,
+): Promise<Doc<"emailContacts">[]> {
+  if (!audience) return [];
+  if (audience.kind === "group") return ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", audience._id)).collect();
+  const out: Doc<"emailContacts">[] = [];
+  for (const id of new Set(campaign.contactIds ?? [])) {
+    const c = await ctx.db.get(id);
+    if (c && c.brandId === campaign.brandId && c.audienceId === audience._id) out.push(c);
+  }
+  return out;
+}
+
+/* Fitting people into taste groups ------------------------------------------------------ */
+
+/**
+ * The fit a person needs to join a group rather than start a new one: their
+ * favourites, each weighted by the share of the group who also love it,
+ * summed. 0.75 is three of their favourites loved by a quarter of the group,
+ * or one loved by most of it. On the demo subscribers a person scores at
+ * least 3.5 with their own group and at most 1.1 with any other.
+ */
+export const MIN_FIT = 0.75;
+
+export type GroupTaste = { id: Id<"emailAudiences">; size: number; counts: Record<string, number> };
+
+/** How well someone with these favourites fits a group. */
+export function fitOf(entityIds: Iterable<string>, group: GroupTaste): number {
+  if (!group.size) return 0;
+  let score = 0;
+  for (const id of entityIds) score += (group.counts[id] ?? 0) / group.size;
+  return score;
+}
+
+/** The group someone fits best, when they fit it well enough. */
+export function bestGroup(entityIds: string[], groups: GroupTaste[], exclude?: string): GroupTaste | null {
+  let best: GroupTaste | null = null;
+  let bestFit = 0;
+  for (const g of groups) {
+    if (g.id === exclude) continue;
+    const fit = fitOf(entityIds, g);
+    if (fit > bestFit) {
+      bestFit = fit;
+      best = g;
+    }
+  }
+  return best && bestFit >= MIN_FIT ? best : null;
+}
+
+/** The brand's taste groups, profiles included. */
+export const groupsOf = internalQuery({
+  args: { brandId: v.id("emailBrands") },
+  handler: async (ctx, { brandId }) => (await ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect()).filter((a) => a.kind === "group"),
+});
+
+const AGE_WORDS: Record<string, string> = {
+  "24_and_younger": "under 25s",
+  "25_to_29": "25 to 29s",
+  "30_to_34": "30 to 34s",
+  "35_to_44": "35 to 44s",
+  "45_to_54": "45 to 54s",
+  "55_and_older": "over 55s",
+};
+const signed = (x: number) => `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(2)}`;
+
+export type ProspectFit = { id: Id<"emailAudiences">; name: string; score: number; note: string };
+
+/**
+ * How someone with no purchases yet fits each taste group, from Qloo alone:
+ * the group's demographic skew (Qloo's read of who loves its books, kept in
+ * its profile) for their age and gender, plus how many of the group's books
+ * land with people like them in their city (insights restricted to those
+ * books, with their location and demographics as signals). Best first.
+ */
+export async function prospectFits(
+  ctx: ActionCtx,
+  trace: Span[],
+  person: { age?: string; gender?: string; city?: string; neighborhood?: string },
+  groups: Doc<"emailAudiences">[],
+): Promise<ProspectFit[]> {
+  const out: ProspectFit[] = [];
+  const where = locationOf(person);
+  for (const g of groups) {
+    const profile = g.profile as AudienceProfile | undefined;
+    if (!profile) continue;
+    const d = profile.demographics;
+    const ageSkew = person.age ? (d?.age?.[person.age] ?? 0) : 0;
+    const genderSkew = person.gender ? (d?.gender?.[person.gender] ?? 0) : 0;
+    let local = 0;
+    let localNote = "";
+    if (where) {
+      const top = profile.entities.slice(0, 20);
+      const types = new Map<string, number>();
+      for (const e of top) types.set(e.type, (types.get(e.type) ?? 0) + 1);
+      const type = [...types].sort((a, b) => b[1] - a[1])[0]?.[0];
+      const ids = top.filter((e) => e.type === type).map((e) => e.id);
+      if (type && ids.length) {
+        const t0 = Date.now();
+        try {
+          const { body, status } = await paced(
+            [],
+            () =>
+              cachedQlooGet(ctx, "/v2/insights", {
+                "filter.type": type,
+                "filter.results.entities": ids.join(","),
+                "signal.location.query": where,
+                ...demographicSignal({ age: person.age, gender: person.gender }),
+                take: ids.length,
+              }),
+            120,
+          );
+          const rows = (JSON.parse(body) as { results?: { entities?: Json[] } }).results?.entities ?? [];
+          local = rows.reduce((s, r) => s + Number(((r.query ?? {}) as Json).affinity ?? 0), 0) / ids.length;
+          // No rows means Qloo has little data there, not that they'd dislike it: say nothing.
+          if (rows.length) localNote = `${rows.length} of its ${ids.length} titles ${rows.length === 1 ? "is" : "are"} popular with people like them in ${where}`;
+          trace.push({ kind: "qloo", name: `How ${g.name} lands in ${where}`, path: "/v2/insights", cache: status, ms: Date.now() - t0, result: localNote || "no local data" });
+        } catch {
+          // No location read; the demographic skew decides.
+        }
+      }
+    }
+    const skews = [
+      person.age && d ? `${signed(ageSkew)} with ${AGE_WORDS[person.age] ?? person.age}` : "",
+      person.gender && d ? `${signed(genderSkew)} with ${person.gender === "female" ? "women" : "men"}` : "",
+    ].filter(Boolean);
+    const note = [skews.length ? `Qloo finds this group's titles skew ${skews.join(" and ")}` : "", localNote].filter(Boolean).join("; ");
+    // A city where most groups' titles land says less than who reads them: half weight.
+    out.push({ id: g._id, name: g.name, score: ageSkew + genderSkew + 0.5 * local, note: note ? `${note}.` : "" });
+  }
+  return out.sort((a, b) => b.score - a.score);
+}
+
+/** Every taste group of the brand with how many of its members love each entity. */
+export const groupTastes = internalQuery({
+  args: { brandId: v.id("emailBrands") },
+  handler: async (ctx, { brandId }): Promise<GroupTaste[]> => {
+    const groups = (await ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect()).filter((a) => a.kind === "group");
+    const out: GroupTaste[] = [];
+    for (const g of groups) {
+      const members = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", g._id)).collect();
+      const counts: Record<string, number> = {};
+      for (const m of members) for (const e of m.entities) counts[e.id] = (counts[e.id] ?? 0) + 1;
+      out.push({ id: g._id, size: members.length, counts });
+    }
+    return out;
   },
 });
 
@@ -406,7 +609,7 @@ type PersonLike = {
 export async function compilePersonProfile(ctx: ActionCtx, trace: Span[], person: PersonLike, progress: Progress): Promise<AudienceProfile> {
   const entities = person.entities.map((e) => ({ ...e, source: "csv", count: 1 }));
   if (!entities.length) {
-    throw new Error(person.interests.length ? "None of their favourites matched anything in Qloo" : "No favourites to read their taste from");
+    throw new Error(person.interests.length ? "Nothing they bought or like matched anything in Qloo" : "No purchases or favourites to read their taste from");
   }
   const ids = entities.slice(0, 12).map((e) => e.id);
   await progress(0.1, "Reading their taste");
@@ -427,7 +630,7 @@ export async function compileGroupProfile(ctx: ActionCtx, trace: Span[], members
   if (!members.length) throw new Error("The group has no members");
   await progress(0.05, `Counting what ${members.length} people love`);
   const ranked = countEntities(members);
-  if (!ranked.length) throw new Error("No one in this group listed favourites that matched Qloo");
+  if (!ranked.length) throw new Error("Nothing this group bought or likes matched Qloo");
   const ids = ranked.slice(0, 12).map((e) => e.id);
   trace.push({ kind: "slice", name: "Rank the group's favourites", ms: 0, result: ranked.slice(0, 6).map((e) => `${e.name} ×${e.count}`).join(", ") });
   const culture = await cultureFrom(ctx, trace, ranked, ids, progress, 0.15);
@@ -456,7 +659,8 @@ export async function compileGroupAudience(ctx: ActionCtx, id: Id<"emailAudience
   await ctx.runMutation(internal.emailAudiences.setStatus, { id, status: "compiling" });
   try {
     const members: ContactLite[] = await ctx.runQuery(internal.emailContacts.byAudienceInternal, { audienceId: id });
-    const profile = await compileGroupProfile(ctx, trace, members, progress);
+    // What they bought counts like what they listed when the profile reads genres.
+    const profile = await compileGroupProfile(ctx, trace, members.map((m) => ({ ...m, city: locationOf(m), interests: tasteTerms(m) })), progress);
     await ctx.runMutation(internal.emailAudiences.setProfile, { id, profile, size: members.length, trace });
     return true;
   } catch (err) {
@@ -498,7 +702,7 @@ export const compilePeopleStep = internalAction({
       const t0 = Date.now();
       const local: Span[] = [];
       try {
-        const profile = await compilePersonProfile(ctx, local, m, async () => {});
+        const profile = await compilePersonProfile(ctx, local, { ...m, city: locationOf(m), interests: tasteTerms(m) }, async () => {});
         await ctx.runMutation(internal.emailContacts.setProfile, { id: m._id, profile });
         trace.push({ kind: "slice", name: `Read ${m.name}`, ms: Date.now() - t0, result: `${profile.entities.length} favourites, ${profile.tags.length} tags, ${profile.brands.length} brands` });
       } catch (err) {
@@ -549,8 +753,10 @@ export async function refreshPeopleAudience(ctx: MutationCtx, id: Id<"emailAudie
       update.error = "No one in the list could be read from Qloo. Check that their favourites are names (authors, artists, books, films).";
     }
     update.trace = [...(update.trace ?? audience.trace), { kind: "slice", name: "Gather the people's profiles", ms: 0, result: `${ready.length} of ${members.length} people read` }];
-    const list = await ctx.db.get(audience.listId);
-    if (list && list.status !== "ready" && list.status !== "failed") {
+    // Uploads kept as individuals are done once no one is waiting.
+    const lists = await ctx.db.query("emailLists").withIndex("by_brand", (q) => q.eq("brandId", audience.brandId)).collect();
+    for (const list of lists) {
+      if (list.mode !== "people" || list.status !== "profiling") continue;
       await ctx.db.patch(list._id, { status: "ready", progress: { value: 1, label: "Ready" }, updatedAt: now });
     }
   }

@@ -106,7 +106,7 @@ export function hostOf(url: string | undefined): string | undefined {
   }
 }
 
-/** A readable placeholder from a URL: "folio-and-fern.com" → "Folio And Fern". */
+/** A readable placeholder from a URL: "stackhouse-books.com" → "Stackhouse Books". */
 function nameFromUrl(url: string): string {
   const host = hostOf(url) ?? url;
   const label = host.split(".")[0] ?? host;
@@ -247,7 +247,7 @@ export const patch = internalMutation({
 
 /* Sending ------------------------------------------------------------------- */
 
-/** `"Folio & Fern" <hello@folioandfern.com>`; quoted when the name has characters an address header can't carry bare. */
+/** `"Stackhouse Books" <hello@stackhousebooks.com>`; quoted when the name has characters an address header can't carry bare. */
 export function formatFrom(name: string, address: string): string {
   const clean = name.replace(/["\r\n<>]/g, "").trim();
   if (!clean) return address;

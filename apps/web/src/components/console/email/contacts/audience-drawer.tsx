@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { AlertCircle, Boxes, Check, MailX, PenLine, Search, Trash2, UsersRound } from "lucide-react";
+import { AlertCircle, Boxes, Check, MailX, MapPin, PenLine, Search, ShoppingBag, Trash2, UsersRound } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { profileOf } from "@/lib/email/types";
 import { errorText, relativeTime } from "@/lib/email/labels";
 import { CLOSE_ON_COVER } from "@/components/console/pages/audience-drawer";
 import { BrandsList, CultureLists, DemographicsBars, TagChips, TagTable } from "@/components/console/pages/profile-view";
-import { EntityStrip, Hint, ProgressLine } from "@/components/console/pages/shared";
+import { EntityStrip, Hint, ProgressLine, Thumb } from "@/components/console/pages/shared";
 import { TasteCover, coverTiles } from "@/components/console/pages/taste-cover";
 import { ConfirmDialog } from "@/components/console/settings/confirm-dialog";
 import { Spinner } from "@/components/console/setup/atoms";
@@ -48,7 +48,7 @@ function Panel({ title, description, children }: { title: string; description?: 
 }
 
 /**
- * A taste group or a list kept one by one: the cover, then its people (with
+ * A taste group or the individual contacts: the cover, then its people (with
  * search) on the left and on the right either the group's profile and brief or
  * the chosen person's taste.
  */
@@ -71,7 +71,7 @@ export function AudienceDrawer({
     const all = contacts ?? [];
     return needle ? all.filter((c) => c.name.toLowerCase().includes(needle) || c.email.includes(needle) || (c.city ?? "").toLowerCase().includes(needle)) : all;
   }, [contacts, q]);
-  // A group opens on itself; a list kept one by one opens on its first person.
+  // A group opens on itself; the individual contacts open on their first person.
   const selected = personId ?? (group ? GROUP : (contacts?.[0]?._id ?? null));
   const person = contacts?.find((c) => c._id === selected) ?? null;
 
@@ -89,11 +89,11 @@ export function AudienceDrawer({
         {audience && (
           <>
             <TasteCover
-              tiles={coverTiles(profileOf(audience))}
+              tiles={coverTiles(profileOf(audience), 5, true)}
               icon={KIND_ICON[audience.kind] ?? UsersRound}
               kindLabel={KIND_LABEL[audience.kind] ?? audience.kind}
               title={audience.name}
-              subtitle={`${peopleCount(audience.size, group ? "contact" : "person")}${audience.listName ? ` · ${audience.listName}` : ""}`}
+              subtitle={peopleCount(audience.size, group ? "contact" : "person")}
               corner={isBusy(audience.status) ? <Pill className="mr-10">{statusLabel(audience.status)}</Pill> : undefined}
               className="aspect-[21/6] shrink-0"
             />
@@ -157,10 +157,10 @@ export function AudienceDrawer({
   );
 }
 
-/** Name, rename, progress and delete. */
+/** What it is, progress, and for a group rename and delete. */
 function AudienceBar({ audience, onRemoved }: { audience: AudienceRow; onRemoved: () => void }) {
   const rename = useMutation(api.emailAudiences.rename);
-  // Removing a people audience removes its list too (the backend cascades).
+  // Deleting a group deletes its people too (the backend cascades).
   const remove = useMutation(api.emailAudiences.remove);
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(audience.name);
@@ -194,13 +194,12 @@ function AudienceBar({ audience, onRemoved }: { audience: AudienceRow; onRemoved
           </form>
         ) : (
           <p className="min-w-0 flex-1 text-[15px] leading-relaxed text-neutral-800">
-            {brief?.summary ??
-              (group
-                ? "People from the same list whose tastes sit close together. A campaign for them is written once, for the group's taste."
-                : "Each person has their own taste profile. A campaign to this list writes a version of the email for each of them.")}
+            {group
+              ? (brief?.summary ?? "People whose tastes sit close together. A campaign for them is written once, for the group's taste.")
+              : "Each person has their own taste profile. Tick them on a campaign and each gets a version of the email written for them."}
           </p>
         )}
-        {!editing && (
+        {!editing && group && (
           <div className="flex shrink-0 items-center gap-1">
             <Button
               variant="outline"
@@ -215,16 +214,12 @@ function AudienceBar({ audience, onRemoved }: { audience: AudienceRow; onRemoved
             <ConfirmDialog
               trigger={
                 <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                  <Trash2 data-icon="inline-start" /> {group ? "Delete group" : "Delete list"}
+                  <Trash2 data-icon="inline-start" /> Delete group
                 </Button>
               }
               title={`Delete ${audience.name}?`}
-              description={
-                group
-                  ? "The group and its profile go. Its people stay in the list but drop out of any campaign written for this group. Campaigns already sent keep their reports."
-                  : `This removes the list and the ${peopleCount(audience.size, "person")} in it. Campaigns already sent keep their reports. This cannot be undone.`
-              }
-              actionLabel={group ? "Delete group" : "Delete list"}
+              description={`The group and the ${peopleCount(audience.size)} in it are removed, and draft campaigns written for it lose their audience. Campaigns already sent keep their reports. This cannot be undone.`}
+              actionLabel="Delete group"
               onConfirm={async () => {
                 await remove({ id: audience._id });
                 onRemoved();
@@ -324,6 +319,12 @@ function GroupPanel({ audience }: { audience: AudienceRow }) {
 
 function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved: () => void }) {
   const remove = useMutation(api.emailContacts.remove);
+  const items = useQuery(api.emailItems.list, { brandId: contact.brandId });
+  const itemById = useMemo(() => new Map((items ?? []).map((i) => [i._id as string, i])), [items]);
+  const bought = (contact.boughtItemIds ?? []).map((id) => itemById.get(id)).filter((i) => !!i);
+  // Purchases the catalog didn't have, as written.
+  const named = new Set(bought.map((i) => i.name.toLowerCase()));
+  const elsewhere = (contact.purchases ?? []).filter((p) => !named.has(p.toLowerCase()) && ![...named].some((n) => p.toLowerCase().startsWith(n)));
   // The list queries leave profiles out; the person's own row has it.
   const full = useQuery(api.emailContacts.get, contact.hasProfile ? { id: contact._id } : "skip");
   const [error, setError] = useState<string | null>(null);
@@ -352,7 +353,7 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
             </Button>
           }
           title={`Remove ${contact.name || contact.email}?`}
-          description="They leave the list and get no more campaigns. Reports of campaigns already sent keep their row."
+          description="They are removed from your contacts and get no more campaigns. Reports of campaigns already sent keep their row."
           actionLabel="Remove contact"
           onConfirm={async () => {
             try {
@@ -373,22 +374,62 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
         <p className="text-sm text-destructive">{contact.profileError ?? `Qloo could not read ${first}'s taste.`}</p>
       ) : null}
 
-      <Panel title="What they like" description="From their row or the add form, and the Qloo entities it resolved to">
+      {contact.placement && (
+        <div className="flex gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/[0.06]">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+            <MapPin className="size-4" />
+          </span>
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">No purchases yet: placed by age and location</p>
+            <p className="mt-0.5 leading-relaxed text-muted-foreground">{contact.placement.note}</p>
+          </div>
+        </div>
+      )}
+
+      <Panel title="What they bought" description="Recent orders or bookings, newest first. Items from the catalog link to it; Qloo reads their taste from them.">
         <div className="space-y-3 p-4">
-          {contact.interests.length > 0 ? (
+          {bought.length > 0 && (
+            <ul className="flex flex-wrap gap-3">
+              {bought.map((i) => (
+                <li key={i._id} className="w-20">
+                  <Thumb src={i.image} alt={i.name} className="aspect-[2/3] w-20 ring-1 ring-black/10" rounded="rounded-md" />
+                  <p className="mt-1.5 line-clamp-2 text-xs leading-snug font-medium">{i.name}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          {elsewhere.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {contact.interests.map((t) => (
-                <Badge key={t} variant="secondary" className="font-normal">
-                  {t}
+              {elsewhere.map((p) => (
+                <Badge key={p} variant="outline" className="font-normal">
+                  <ShoppingBag /> {p}
                 </Badge>
               ))}
             </div>
-          ) : (
-            <Hint>No interests on file.</Hint>
           )}
-          {contact.entities.length > 0 && <EntityStrip items={contact.entities} max={16} size="size-6" />}
+          {!bought.length && !elsewhere.length && <Hint>Nothing bought yet.</Hint>}
         </div>
       </Panel>
+
+      {contact.interests.length > 0 && (
+        <Panel title="What they like" description="What the business knows they like">
+          <div className="flex flex-wrap gap-1.5 p-4">
+            {contact.interests.map((t) => (
+              <Badge key={t} variant="secondary" className="font-normal">
+                {t}
+              </Badge>
+            ))}
+          </div>
+        </Panel>
+      )}
+
+      {contact.entities.length > 0 && (
+        <Panel title="How Qloo reads it" description="What they bought and like, as Qloo knows it">
+          <div className="p-4">
+            <EntityStrip items={contact.entities} max={16} size="size-6" />
+          </div>
+        </Panel>
+      )}
 
       {profile && (
         <>

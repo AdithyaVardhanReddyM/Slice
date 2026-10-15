@@ -22,7 +22,7 @@ BLOCK_TYPES = ("logo", "heading", "text", "image", "button", "divider", "spacer"
 COLOR_TOKENS = ("surface", "backdrop", "primary", "accent", "muted", "text", "border")
 NETWORKS = ("instagram", "facebook", "x", "tiktok", "youtube", "linkedin", "pinterest", "threads", "website")
 # emailTypes.MERGE_TAGS: key -> example, used to measure a subject the way an inbox shows it.
-MERGE_TAGS = {"first_name": "Maya", "last_name": "Okafor", "name": "Maya Okafor", "email": "maya@example.com", "city": "Brooklyn", "brand": "Folio & Fern"}
+MERGE_TAGS = {"first_name": "Maya", "last_name": "Okafor", "name": "Maya Okafor", "email": "maya@example.com", "city": "Brooklyn", "brand": "Stackhouse Books"}
 OPS = ("update_block", "insert_block", "remove_block", "move_block", "update_section", "insert_section", "remove_section", "move_section", "set_columns", "update_column", "set_subject", "set_theme")
 
 SUBJECT_MAX = 45
@@ -488,7 +488,7 @@ class Checker:
                 if not self.link_ok(str(link.get("url") or "")):
                     problems.append(f"{label}: {link.get('url')} is not one of the brand's own links")
         if b.get("personal") and self.audience_kind != "people" and (only is None or "personal" in only):
-            warnings.append(f"{label}: personal is ignored unless the campaign goes to a customer list one by one")
+            warnings.append(f"{label}: personal is ignored unless the campaign goes to individual contacts")
         if b.get("personal") and t not in PERSONAL_FIELDS:
             warnings.append(f"{label}: only heading, text, image, button, items and quote blocks can be personal")
         return problems, warnings

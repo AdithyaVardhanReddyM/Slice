@@ -12,7 +12,8 @@ import { ProgressLine } from "@/components/console/pages/shared";
 import { TasteCover, coverTiles } from "@/components/console/pages/taste-cover";
 
 // Shapes and small pieces shared by the Contacts screen and the campaign's
-// Recipients step: the brand's lists, their taste groups and people.
+// Recipients step: the brand's taste groups, its individual contacts, and
+// the uploads they came from.
 
 /** An audience as `emailAudiences.list` returns it: the row plus `unsubscribed` and `listName`. */
 export type AudienceRow = FunctionReturnType<typeof api.emailAudiences.list>[number];
@@ -31,7 +32,7 @@ export interface AudienceBrief {
 export const briefOf = (a: { brief?: unknown } | null | undefined) => (a?.brief ?? null) as AudienceBrief | null;
 
 export const KIND_ICON: Record<string, LucideIcon> = { group: Boxes, people: UsersRound };
-export const KIND_LABEL: Record<string, string> = { group: "Taste group", people: "One by one" };
+export const KIND_LABEL: Record<string, string> = { group: "Taste group", people: "Individuals" };
 
 const LIST_STATUS: Record<string, string> = {
   importing: "Importing",
@@ -47,12 +48,12 @@ export const isBusy = (s: string) => s !== "ready" && s !== "failed";
 
 /** A person's face: the first picture from their taste, else nothing (initials stand in). */
 export function faceOf(c: Pick<EmailContact, "entities"> & { profile?: unknown }) {
-  return coverTiles(profileOf(c), 1)[0]?.image ?? c.entities.find((e) => e.image)?.image;
+  return coverTiles(profileOf(c), 1, true)[0]?.image ?? c.entities.find((e) => e.image)?.image;
 }
 
 /** "25 to 29 · Brooklyn". */
-export function aboutOf(c: Pick<EmailContact, "age" | "city">) {
-  return [c.age ? (AGE_LABEL[c.age] ?? c.age) : null, c.city].filter(Boolean).join(" · ");
+export function aboutOf(c: Pick<EmailContact, "age" | "city" | "neighborhood">) {
+  return [c.age ? (AGE_LABEL[c.age] ?? c.age) : null, c.neighborhood ?? c.city].filter(Boolean).join(" · ");
 }
 
 export const firstNameOf = (c: Pick<EmailContact, "name" | "firstName" | "email">) =>
@@ -153,11 +154,11 @@ export function AudienceCard({
       )}
     >
       <TasteCover
-        tiles={coverTiles(profileOf(audience))}
+        tiles={coverTiles(profileOf(audience), 5, true)}
         icon={KIND_ICON[audience.kind] ?? UsersRound}
         kindLabel={KIND_LABEL[audience.kind] ?? audience.kind}
         title={audience.name}
-        subtitle={audience.listName ? `${peopleCount(audience.size, people ? "person" : "contact")} · ${audience.listName}` : peopleCount(audience.size)}
+        subtitle={peopleCount(audience.size, people ? "person" : "contact")}
         corner={
           selected ? (
             <span className="flex size-7 items-center justify-center rounded-full bg-white text-neutral-950 shadow-md">
@@ -175,10 +176,7 @@ export function AudienceCard({
         ) : ready && audience.topEntities.length > 0 ? (
           <p className="line-clamp-2 text-sm text-muted-foreground">Into {audience.topEntities.slice(0, 3).join(", ")}</p>
         ) : null}
-        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="font-medium text-neutral-800">{peopleCount(audience.size, people ? "person" : "contact")}</span>
-          {unsubscribed > 0 && <span>{fmt.int(unsubscribed)} unsubscribed, left out of sends</span>}
-        </div>
+        {unsubscribed > 0 && <div className="mt-auto text-xs text-muted-foreground">{fmt.int(unsubscribed)} unsubscribed, left out of sends</div>}
         {footer}
       </div>
     </button>

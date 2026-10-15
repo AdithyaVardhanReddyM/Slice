@@ -25,7 +25,14 @@ export interface EmailFont {
 
 /** What the brand looks like and sounds like, read once from its homepage and edited by the merchant. */
 export interface EmailKit {
-  logo?: { src: string; alt: string; /** The mark is light and needs a dark background. */ onDark?: boolean };
+  logo?: {
+    src: string;
+    alt: string;
+    /** The mark is light and needs a dark background. */
+    onDark?: boolean;
+    /** A white or reversed version of a dark logo, drawn on dark sections where `src` would disappear. */
+    light?: string;
+  };
   /** Square icon or favicon, for small tiles. */
   icon?: string;
   /** Text wordmark when there is no logo image. */
@@ -397,7 +404,7 @@ export const MERGE_TAGS = [
   { key: "name", label: "Full name", example: "Maya Okafor" },
   { key: "email", label: "Email", example: "maya@example.com" },
   { key: "city", label: "City", example: "Brooklyn" },
-  { key: "brand", label: "Brand name", example: "Folio & Fern" },
+  { key: "brand", label: "Brand name", example: "Stackhouse Books" },
 ] as const;
 
 export type MergeKey = (typeof MERGE_TAGS)[number]["key"];

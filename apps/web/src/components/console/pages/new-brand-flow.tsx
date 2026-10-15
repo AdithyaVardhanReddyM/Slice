@@ -8,7 +8,7 @@ import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { postJson, postStream } from "@/lib/pages/stream";
-import { brandDomain, hostOf } from "@/lib/pages/urls";
+import { brandDomain, hostOf, nameFromUrl } from "@/lib/pages/urls";
 import { briefOf, kitOf, slugify, type Brand, type BrandBrief, type BrandKit, type Span } from "@/lib/pages/types";
 import { Field, Tab, TabList, TabPanel, Tabs } from "@/components/console/form";
 import { AdornedInput, Spinner } from "@/components/console/setup/atoms";
@@ -36,20 +36,6 @@ function normalizeUrl(raw: string) {
   return /^https?:\/\//i.test(t) ? t : `https://${t}`;
 }
 
-function guessName(url: string) {
-  try {
-    const host = new URL(normalizeUrl(url)).hostname.replace(/^www\./, "");
-    if (/localhost|127\.0\.0\.1/.test(host)) {
-      const seg = new URL(normalizeUrl(url)).pathname.split("/").filter(Boolean)[0];
-      return seg ? seg.charAt(0).toUpperCase() + seg.slice(1) : "";
-    }
-    const label = host.split(".")[0];
-    return label.charAt(0).toUpperCase() + label.slice(1);
-  } catch {
-    return "";
-  }
-}
-
 /* Step 1: URL + name --------------------------------------------------------- */
 
 const OUTPUTS = [
@@ -67,7 +53,7 @@ const TIMELINE = [
 ];
 
 function PublishPreview({ url }: { url: string }) {
-  const name = guessName(url);
+  const name = nameFromUrl(url);
   const slug = name ? slugify(name) : "";
   return (
     <Card className="overflow-hidden pt-0">
@@ -169,7 +155,7 @@ function BrandStart({ onCreated }: { onCreated: (id: Id<"pagesBrands">, url: str
     try {
       // A placeholder from the URL (it also sets the subdomain); the intake
       // swaps in the name it reads from the site.
-      const { id } = await create({ name: guessName(full) || hostOf(full), url: full, nameFromSite: true });
+      const { id } = await create({ name: nameFromUrl(full) || hostOf(full), url: full, nameFromSite: true });
       onCreated(id, full);
     } catch (err) {
       setError(String((err as Error).message ?? err));

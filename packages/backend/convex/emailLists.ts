@@ -2,26 +2,36 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
-import { compileGroupAudience, deleteListCascade, resolveTerms } from "./emailAudiences";
+import {
+  bestGroup,
+  compileGroupAudience,
+  deleteListCascade,
+  individualsAudience,
+  prospectFits,
+  settleGroup,
+  type GroupTaste,
+} from "./emailAudiences";
 import { editableBrand } from "./emailBrands";
-import { contactFromRow, type ContactLite, type Mapping } from "./emailContacts";
+import { contactFromRow, readTastes, type ContactLite, type Mapping } from "./emailContacts";
 import { MAX_CONTACT_ROWS, MAX_PEOPLE_LIST } from "./emailTypes";
 import { kmeans, lift, type ClusterRow } from "./pagesCsv";
-import { chunk, plausible } from "./pagesUploads";
+import { chunk } from "./pagesUploads";
 import type { Span } from "./qlooApi";
 import { emailMappingValidator, spanValidator } from "./schema";
 
-// A contact list: a CSV (or people added by hand) and what it becomes. Every
-// row's favourites are resolved to Qloo entities, then either
-// - "groups": k-means on those entities (plus city and age) into taste
-//   groups, each compiled as a `group` audience, or
-// - "people": one `people` audience for the list and a profile per person,
-//   compiled one after another in scheduled steps.
+// An upload: a CSV (or people added by hand) and where its people went.
+// Every row's purchases (catalog items first) and favourites become Qloo
+// entities, then either
+// - "groups": each person joins the brand's taste group they fit best
+//   (`MIN_FIT`); whoever fits none is grouped with the others left over by
+//   k-means (favourites, city and age) into new groups, or
+// - "people": they join the brand's individual contacts, and each gets a
+//   profile of their own, compiled one after another in scheduled steps.
 
 const rowsValidator = v.array(v.record(v.string(), v.string()));
 
 const MAX_ROWS_PER_CALL = 500;
-/** Unique favourites resolved per list; the most common first. */
+/** Terms searched in Qloo per upload (purchases outside the catalog and favourites); the most common first. */
 const MAX_TERMS = 600;
 /** Groups k-means may choose (by silhouette). */
 const K_RANGE: [number, number] = [2, 6];
@@ -60,7 +70,7 @@ async function insertRows(ctx: MutationCtx, list: Doc<"emailLists">, rows: Recor
     known.add(contact.email);
     await ctx.db.insert("emailContacts", {
       ...contact,
-      ...(list.mode === "people" && list.audienceId ? { audienceId: list.audienceId, profileStatus: "pending" as const } : {}),
+      ...(list.mode === "people" && list.audienceId ? { individual: true, audienceId: list.audienceId, profileStatus: "pending" as const } : {}),
     });
     added++;
   }
@@ -69,15 +79,15 @@ async function insertRows(ctx: MutationCtx, list: Doc<"emailLists">, rows: Recor
 
 function checkSize(mode: "groups" | "people", total: number) {
   if (mode === "people" && total > MAX_PEOPLE_LIST) {
-    throw new Error(`A list kept one by one holds up to ${MAX_PEOPLE_LIST} people; this one has ${total}. Cluster it into taste groups instead.`);
+    throw new Error(`Up to ${MAX_PEOPLE_LIST} people can be kept as individual contacts in one upload; this file has ${total}. Sort them into taste groups instead.`);
   }
-  if (total > MAX_CONTACT_ROWS) throw new Error(`A list holds up to ${MAX_CONTACT_ROWS} contacts; this one has ${total}.`);
+  if (total > MAX_CONTACT_ROWS) throw new Error(`An upload holds up to ${MAX_CONTACT_ROWS} contacts; this one has ${total}.`);
 }
 
 /**
- * A new list from CSV rows (≤ 500 per call; send the rest with `appendRows`,
- * then call `process`). In people mode the list's audience card exists from
- * the start and follows the processing.
+ * A new upload from CSV rows (≤ 500 per call; send the rest with
+ * `appendRows`, then call `process`). Kept as individuals, its people join
+ * the brand's individual contacts at once and are read as it goes.
  */
 export const create = mutation({
   args: {
@@ -115,25 +125,13 @@ export const create = mutation({
     });
     let audienceId: Id<"emailAudiences"> | undefined;
     if (mode === "people") {
-      audienceId = await ctx.db.insert("emailAudiences", {
-        brandId,
-        listId: id,
-        name: label,
-        kind: "people",
-        status: "compiling",
-        progress: { value: 0, label: "Importing contacts" },
-        size: 0,
-        topEntities: [],
-        trace: [],
-        createdAt: now,
-        updatedAt: now,
-      });
+      audienceId = (await individualsAudience(ctx, brandId))._id;
       await ctx.db.patch(id, { audienceId });
     }
     const list = (await ctx.db.get(id))!;
     const { added, skipped } = await insertRows(ctx, list, rows, new Set());
     await ctx.db.patch(id, { rowCount: added });
-    if (audienceId) await ctx.db.patch(audienceId, { size: added });
+    if (audienceId) await growIndividuals(ctx, audienceId, added);
     return { id, ...(audienceId ? { audienceId } : {}), added, skipped };
   },
 });
@@ -151,10 +149,17 @@ export const appendRows = mutation({
     const { added, skipped } = await insertRows(ctx, list, rows, new Set(existing.map((c) => c.email)));
     const rowCount = existing.length + added;
     await ctx.db.patch(listId, { rowCount, updatedAt: Date.now() });
-    if (list.audienceId) await ctx.db.patch(list.audienceId, { size: rowCount, updatedAt: Date.now() });
+    if (list.audienceId) await growIndividuals(ctx, list.audienceId, added);
     return { rowCount, added, skipped };
   },
 });
+
+/** The individual contacts gained people who still need reading. */
+async function growIndividuals(ctx: MutationCtx, audienceId: Id<"emailAudiences">, added: number) {
+  const audience = await ctx.db.get(audienceId);
+  if (!audience || !added) return;
+  await ctx.db.patch(audienceId, { size: audience.size + added, status: "compiling", progress: { value: 0, label: "Importing contacts" }, updatedAt: Date.now() });
+}
 
 /** Removes the list, its contacts and its audiences. Sent campaigns keep their reports. */
 export const remove = mutation({
@@ -178,7 +183,6 @@ export const rename = mutation({
     await editableBrand(ctx, list.brandId);
     if (!name.trim()) return null;
     await ctx.db.patch(id, { name: name.trim().slice(0, 80), updatedAt: Date.now() });
-    if (list.audienceId) await ctx.db.patch(list.audienceId, { name: name.trim().slice(0, 80), updatedAt: Date.now() });
     return null;
   },
 });
@@ -206,57 +210,56 @@ export const setState = internalMutation({
   },
 });
 
-const clusterValidator = v.object({ index: v.number(), name: v.string(), size: v.number(), topEntities: v.array(v.string()) });
+const clusterValidator = v.object({ index: v.number(), size: v.number(), topEntities: v.array(v.string()) });
 
-/**
- * One group audience per cluster. A list processed again keeps its groups'
- * ids where it can (campaigns stay aimed at them); extra old groups go.
- */
-export const saveGroups = internalMutation({
+/** New taste groups started by an upload (or by one person added by hand), named after what their people love most. */
+export const newGroups = internalMutation({
   args: { listId: v.id("emailLists"), clusters: v.array(clusterValidator) },
   returns: v.array(v.id("emailAudiences")),
   handler: async (ctx, { listId, clusters }) => {
     const list = await ctx.db.get(listId);
     if (!list) throw new Error("Unknown list");
-    const old = (await ctx.db.query("emailAudiences").withIndex("by_list", (q) => q.eq("listId", listId)).collect()).filter((a) => a.kind === "group");
+    const taken = new Set((await ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", list.brandId)).collect()).map((a) => a.name));
     const now = Date.now();
     const ids: Id<"emailAudiences">[] = [];
     for (const c of clusters) {
-      const prev = old.find((a) => a.cluster === c.index);
-      const fields = {
-        name: c.name,
-        cluster: c.index,
-        status: "compiling" as const,
-        progress: { value: 0, label: "Waiting" },
-        size: c.size,
-        topEntities: c.topEntities,
-        updatedAt: now,
-      };
-      if (prev) {
-        // A group the merchant (or the agent) renamed keeps its name.
-        const auto = prev.name.startsWith("Group ") || autoNames(prev.topEntities).includes(prev.name);
-        await ctx.db.patch(prev._id, { ...fields, name: auto ? c.name : prev.name });
-        ids.push(prev._id);
-      } else {
-        ids.push(await ctx.db.insert("emailAudiences", { brandId: list.brandId, listId, kind: "group", ...fields, trace: [], createdAt: now }));
-      }
-    }
-    for (const a of old) {
-      if (ids.includes(a._id)) continue;
-      for (const c of await ctx.db.query("emailCampaigns").withIndex("by_brand", (q) => q.eq("brandId", list.brandId)).collect()) {
-        if (c.audienceId === a._id && c.status === "draft") await ctx.db.patch(c._id, { audienceId: undefined, updatedAt: now });
-      }
-      await ctx.db.delete(a._id);
+      ids.push(
+        await ctx.db.insert("emailAudiences", {
+          brandId: list.brandId,
+          listId,
+          kind: "group",
+          name: groupName(c.topEntities, taken),
+          cluster: c.index,
+          status: "compiling",
+          progress: { value: 0, label: "Waiting" },
+          size: c.size,
+          topEntities: c.topEntities,
+          trace: [],
+          createdAt: now,
+          updatedAt: now,
+        }),
+      );
     }
     return ids;
   },
 });
 
-export const assignClusters = internalMutation({
-  args: { updates: v.array(v.object({ id: v.id("emailContacts"), cluster: v.number(), audienceId: v.id("emailAudiences") })) },
+const placementValidator = v.object({ by: v.literal("demographics"), note: v.string() });
+
+/** Puts people in taste groups (with why, when it wasn't what they bought); the groups they left and joined count again (an emptied one goes). */
+export const joinGroups = internalMutation({
+  args: { updates: v.array(v.object({ id: v.id("emailContacts"), audienceId: v.id("emailAudiences"), placement: v.optional(placementValidator) })) },
   returns: v.null(),
   handler: async (ctx, { updates }) => {
-    for (const u of updates) if (await ctx.db.get(u.id)) await ctx.db.patch(u.id, { cluster: u.cluster, audienceId: u.audienceId });
+    const touched = new Set<Id<"emailAudiences">>();
+    for (const u of updates) {
+      const c = await ctx.db.get(u.id);
+      if (!c) continue;
+      if (c.audienceId && c.audienceId !== u.audienceId) touched.add(c.audienceId);
+      touched.add(u.audienceId);
+      await ctx.db.patch(u.id, { audienceId: u.audienceId, individual: undefined, placement: u.placement });
+    }
+    for (const id of touched) await settleGroup(ctx, id);
     return null;
   },
 });
@@ -268,14 +271,23 @@ function autoNames(top: string[]): string[] {
 }
 
 /** "Sally Rooney & Phoebe Bridgers": a group's name until the console (or the agent) gives it a better one. */
-function groupName(top: string[], index: number, taken: Set<string>): string {
-  for (const name of [...autoNames(top), `Group ${index + 1}`]) {
-    if (name && !taken.has(name)) {
+function groupName(top: string[], taken: Set<string>): string {
+  for (let n = 1; ; n++) {
+    const name = [...autoNames(top), `Taste group ${n}`].find((x) => x && !taken.has(x));
+    if (name) {
       taken.add(name);
       return name;
     }
   }
-  return `Group ${index + 1}`;
+}
+
+/** What k-means compares people on: their favourites, and a little of their city and age. */
+function featuresOf(entities: { id: string }[], contact: Pick<ContactLite, "city" | "age">): ClusterRow {
+  const features: Record<string, number> = {};
+  for (const e of entities) features[e.id] = 1;
+  if (contact.city) features[`city:${contact.city.toLowerCase()}`] = 0.5;
+  if (contact.age) features[`age:${contact.age}`] = 0.5;
+  return { features };
 }
 
 /**
@@ -296,40 +308,20 @@ export const process = action({
       if (list.audienceId) await ctx.runMutation(internal.emailAudiences.setProgress, { id: list.audienceId, value: value * 0.3, label });
     };
     try {
-      /* 1. Resolve the favourites, most common first. */
-      await progress(0.02, "Reading the favourites", "resolving");
+      /* 1. What they bought (catalog items first) and like, as Qloo entities. */
+      await progress(0.02, "Reading what they bought", "resolving");
       const contacts: ContactLite[] = await ctx.runQuery(internal.emailContacts.byListInternal, { listId: id });
-      if (!contacts.length) throw new Error("The list has no contacts with a valid email");
+      if (!contacts.length) throw new Error("The upload has no contacts with a valid email");
       checkSize(list.mode, contacts.length);
-      const counts = new Map<string, { term: string; n: number }>();
-      for (const c of contacts) {
-        for (const t of c.interests) {
-          const cur = counts.get(t.toLowerCase());
-          if (cur) cur.n++;
-          else counts.set(t.toLowerCase(), { term: t, n: 1 });
-        }
-      }
-      const ordered = [...counts.values()].sort((a, b) => b.n - a.n);
-      const terms = ordered.slice(0, MAX_TERMS).map((x) => x.term);
-      if (ordered.length > MAX_TERMS) trace.push({ kind: "slice", name: "Keep the most common favourites", ms: 0, result: `${MAX_TERMS} of ${ordered.length} terms` });
-      const found = await resolveTerms(ctx, trace, terms, {
-        label: `Find ${terms.length} favourites in Qloo`,
-        onProgress: (done, total) => progress(0.05 + 0.55 * (done / total), `Found ${done} of ${total} favourites`),
+      const read = await readTastes(ctx, trace, list.brandId, contacts, {
+        maxTerms: MAX_TERMS,
+        onProgress: (done, total) => progress(0.05 + 0.55 * (done / total), `Found ${done} of ${total} in Qloo`),
       });
-      const updates = contacts.map((c) => {
-        const seen = new Set<string>();
-        const entities: { id: string; name: string; type: string; image?: string }[] = [];
-        for (const t of c.interests) {
-          const e = found.get(t.toLowerCase());
-          if (!e || seen.has(e.id) || !plausible(t, e.name)) continue;
-          seen.add(e.id);
-          entities.push({ id: e.id, name: e.name, type: e.type, ...(e.image ? { image: e.image } : {}) });
-        }
-        return { id: c._id, entities };
-      });
+      const updates = contacts.map((c) => ({ id: c._id, ...read.get(c._id)! }));
       for (const batch of chunk(updates, 100)) await ctx.runMutation(internal.emailContacts.setEntities, { updates: batch });
       const resolved = updates.filter((u) => u.entities.length).length;
-      trace.push({ kind: "slice", name: "Match favourites to people", ms: 0, result: `${resolved} of ${contacts.length} people have at least one favourite Qloo knows` });
+      const terms = new Set(updates.flatMap((u) => u.entities.map((e) => e.id)));
+      trace.push({ kind: "slice", name: "Match tastes to people", ms: 0, result: `${resolved} of ${contacts.length} people have something Qloo knows` });
 
       if (list.mode === "people") {
         /* 2. A profile per person, read in scheduled steps; the last step makes the list ready. */
@@ -337,65 +329,107 @@ export const process = action({
         await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", progress: { value: 0.62, label: "Reading each person" }, spans: trace });
         await ctx.runMutation(internal.emailAudiences.requeuePeople, { id: list.audienceId });
         await ctx.scheduler.runAfter(0, internal.emailAudiences.compilePeopleStep, { audienceId: list.audienceId });
-        return { groups: 0, resolved, unique: terms.length };
+        return { groups: 0, resolved, unique: terms.size };
       }
 
-      /* 2. Cluster on favourites, city and age. */
-      await progress(0.62, "Finding taste groups", "clustering");
+      /* 2. Each person joins the taste group they fit best, if they fit one well enough. */
+      await progress(0.62, "Matching people to taste groups", "clustering");
       const t1 = Date.now();
-      const rows: ClusterRow[] = updates.map((u, i) => {
-        const features: Record<string, number> = {};
-        for (const e of u.entities) features[e.id] = 1;
-        const c = contacts[i];
-        if (c.city) features[`city:${c.city.toLowerCase()}`] = 0.5;
-        if (c.age) features[`age:${c.age}`] = 0.5;
-        return { features };
-      });
-      const result = kmeans(rows, { k, seed, kRange: K_RANGE });
-      const overall: Record<string, number> = {};
-      const nameOf = new Map<string, string>();
-      for (const u of updates)
-        for (const e of u.entities) {
-          overall[e.id] = (overall[e.id] ?? 0) + 1;
-          nameOf.set(e.id, e.name);
+      const existing: GroupTaste[] = await ctx.runQuery(internal.emailAudiences.groupTastes, { brandId: list.brandId });
+      const placed = new Map<Id<"emailContacts">, Id<"emailAudiences">>();
+      const left: number[] = [];
+      // Nothing bought or liked that Qloo knows: placed by age, gender and city once the groups are read (step 5).
+      let prospects: number[] = [];
+      updates.forEach((u, i) => {
+        if (!u.entities.length) {
+          prospects.push(i);
+          return;
         }
-      const taken = new Set<string>();
-      const clusters = Array.from({ length: Math.max(1, result.k) }, (_, index) => {
-        const inCluster: Record<string, number> = {};
-        let size = 0;
-        updates.forEach((u, i) => {
-          if (result.assignments[i] !== index) return;
-          size++;
-          for (const e of u.entities) inCluster[e.id] = (inCluster[e.id] ?? 0) + 1;
-        });
-        // What sets the group apart; in a tiny group, simply what it loves most.
-        let top = lift(inCluster, size, overall, updates.length, { take: 6 }).map((t) => t.id);
-        if (top.length < 2) top = Object.entries(inCluster).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([eid]) => eid);
-        const topEntities = top.map((eid) => nameOf.get(eid) ?? eid);
-        return { index, name: groupName(topEntities, index, taken), size, topEntities };
+        const g = bestGroup(u.entities.map((e) => e.id), existing);
+        if (g) placed.set(u.id, g.id);
+        else left.push(i);
       });
+      // No groups and no one to start one from: group them on city and age alone.
+      if (!existing.length && !left.length) {
+        left.push(...prospects);
+        prospects = [];
+      }
       trace.push({
         kind: "slice",
-        name: "k-means on favourites, city and age",
+        name: "Match people to the taste groups",
         ms: Date.now() - t1,
-        result: `${clusters.length} groups (${clusters.map((c) => c.size).join("/")})${result.k >= 2 ? `, silhouette ${result.silhouette.toFixed(2)}` : ""}`,
+        result: `${existing.length ? `${placed.size} joined ${existing.length} existing groups, ${left.length} fit none` : `No taste groups yet, ${left.length} people to group`}${prospects.length ? `, ${prospects.length} with no purchases` : ""}`,
       });
-      const audienceIds = await ctx.runMutation(internal.emailLists.saveGroups, { listId: id, clusters });
-      const assignments = updates.map((u, i) => {
-        const cluster = result.assignments[i] ?? 0;
-        return { id: u.id, cluster, audienceId: audienceIds[cluster] ?? audienceIds[0] };
-      });
-      for (const batch of chunk(assignments, 200)) await ctx.runMutation(internal.emailLists.assignClusters, { updates: batch });
+
+      /* 3. Whoever fits no group is grouped with the others left over, into new groups. */
+      let created: Id<"emailAudiences">[] = [];
+      if (left.length) {
+        const t2 = Date.now();
+        const result = kmeans(
+          left.map((i) => featuresOf(updates[i].entities, contacts[i])),
+          { k, seed, kRange: K_RANGE },
+        );
+        const overall: Record<string, number> = {};
+        const nameOf = new Map<string, string>();
+        for (const i of left)
+          for (const e of updates[i].entities) {
+            overall[e.id] = (overall[e.id] ?? 0) + 1;
+            nameOf.set(e.id, e.name);
+          }
+        const clusters = Array.from({ length: Math.max(1, result.k) }, (_, index) => {
+          const inCluster: Record<string, number> = {};
+          let size = 0;
+          left.forEach((i, n) => {
+            if ((result.assignments[n] ?? 0) !== index) return;
+            size++;
+            for (const e of updates[i].entities) inCluster[e.id] = (inCluster[e.id] ?? 0) + 1;
+          });
+          // What sets the group apart; in a tiny group, simply what it loves most.
+          let top = lift(inCluster, size, overall, left.length, { take: 6 }).map((t) => t.id);
+          if (top.length < 2) top = Object.entries(inCluster).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([eid]) => eid);
+          return { index, size, topEntities: top.map((eid) => nameOf.get(eid) ?? eid) };
+        });
+        trace.push({
+          kind: "slice",
+          name: "k-means on favourites, city and age",
+          ms: Date.now() - t2,
+          result: `${clusters.length} new groups (${clusters.map((c) => c.size).join("/")})${result.k >= 2 ? `, silhouette ${result.silhouette.toFixed(2)}` : ""}`,
+        });
+        created = await ctx.runMutation(internal.emailLists.newGroups, { listId: id, clusters });
+        left.forEach((i, n) => placed.set(updates[i].id, created[result.assignments[n] ?? 0] ?? created[0]));
+      }
+      const moves = [...placed].map(([contactId, audienceId]) => ({ id: contactId, audienceId }));
+      for (const batch of chunk(moves, 200)) await ctx.runMutation(internal.emailLists.joinGroups, { updates: batch });
       await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", spans: trace });
 
-      /* 3. Read each group's taste, one after another. */
-      for (const [i, audienceId] of audienceIds.entries()) {
-        const c = clusters[i];
-        await progress(0.7 + 0.3 * (i / audienceIds.length), `Reading ${c.name} (${c.size} people)`);
+      /* 4. Read each new group's taste, and again for the groups that grew. */
+      const grown = [...new Set(placed.values())].filter((g) => !created.includes(g));
+      const toRead = [...created, ...grown];
+      for (const [i, audienceId] of toRead.entries()) {
+        await progress(0.7 + 0.25 * (i / toRead.length), `Reading taste group ${i + 1} of ${toRead.length}`);
         await compileGroupAudience(ctx, audienceId);
       }
+
+      /* 5. People with no purchases join the group Qloo says people like them (age, gender, city) go for. */
+      if (prospects.length) {
+        await progress(0.96, `Placing ${prospects.length} people with no purchases by age and location`);
+        const groups: Doc<"emailAudiences">[] = await ctx.runQuery(internal.emailAudiences.groupsOf, { brandId: list.brandId });
+        const biggest = [...groups].sort((a, b) => b.size - a.size)[0];
+        const moves: { id: Id<"emailContacts">; audienceId: Id<"emailAudiences">; placement: { by: "demographics"; note: string } }[] = [];
+        for (const i of prospects) {
+          const c = contacts[i];
+          const known = !!(c.age || c.gender || c.city || c.neighborhood);
+          const best = known ? (await prospectFits(ctx, trace, c, groups))[0] : undefined;
+          const target = best?.id ?? biggest?._id;
+          if (!target) continue;
+          moves.push({ id: c._id, audienceId: target, placement: { by: "demographics", note: best?.note || "No purchases, age or city yet, so they joined the largest group." } });
+        }
+        if (moves.length) await ctx.runMutation(internal.emailLists.joinGroups, { updates: moves });
+        trace.push({ kind: "slice", name: "Place people with no purchases", ms: 0, result: moves.map((m) => groups.find((g) => g._id === m.audienceId)?.name ?? "").join(", ") });
+        await ctx.runMutation(internal.emailLists.setState, { id, spans: trace.slice(-1) });
+      }
       await ctx.runMutation(internal.emailLists.setState, { id, status: "ready", progress: { value: 1, label: "Ready" } });
-      return { groups: clusters.length, resolved, unique: terms.length };
+      return { groups: created.length, resolved, unique: terms.size };
     } catch (err) {
       const error = String(err).replace(/^Error: /, "").slice(0, 300);
       await ctx.runMutation(internal.emailLists.setState, { id, status: "failed", error, spans: trace });

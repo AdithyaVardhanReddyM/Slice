@@ -2,10 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { Boxes, FileSpreadsheet, MoreHorizontal, Plus, Trash2, Upload, UserPlus, UsersRound } from "lucide-react";
-import { useState } from "react";
+import { Boxes, FileSpreadsheet, MoreHorizontal, Plus, Trash2, Upload, UserPlus, UsersRound, type LucideIcon } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
-import { MAX_PEOPLE_LIST } from "@slice/backend/convex/emailTypes";
 import { fmt } from "@/lib/format";
 import { profileOf } from "@/lib/email/types";
 import { relativeTime } from "@/lib/email/labels";
@@ -22,11 +21,14 @@ import { AudienceDrawer } from "./audience-drawer";
 import { ImportContactsSheet } from "./import-sheet";
 import { AudienceCard, ContactAvatar, Pill, firstNameOf, isBusy, peopleCount, statusLabel, type AudienceRow, type ListRow } from "./shared";
 
-const LIST_ICON = { csv: FileSpreadsheet, manual: UserPlus, demo: FileSpreadsheet } as const;
-
-// Empty blocks in the cover's mosaic shape while a list is still being read.
+// Empty blocks in the cover's mosaic shape while there is no taste to show yet.
 const GHOST_TILES = [0, 1, 2, 3, 4].map((i) => ({ key: `ghost-${i}`, name: "" }));
 
+/**
+ * Contacts in two kinds: taste groups (people with similar taste, one email
+ * each) and individual contacts (a profile each, ticked per campaign). Which
+ * upload someone came from is only history, at the bottom.
+ */
 export function ContactsScreen() {
   const brand = useEmailBrand();
   const router = useRouter();
@@ -48,7 +50,11 @@ export function ContactsScreen() {
 
   const all = audiences ?? [];
   const opened = all.find((a) => a._id === open) ?? null;
-  const groups = all.filter((a) => a.kind === "group").length;
+  const groups = all.filter((a) => a.kind === "group").sort((a, b) => b.size - a.size);
+  const individuals = all.find((a) => a.kind === "people") ?? null;
+  // Everyone added by hand may have been removed again; an empty "Added by hand" row says nothing.
+  const uploads = [...(lists ?? [])].filter((l) => l.source !== "manual" || l.rowCount > 0).sort((a, b) => b.createdAt - a.createdAt);
+  const inFlight = uploads.filter((l) => isBusy(l.status) || l.status === "failed");
   const openAudience = (id: string, personId: string | null = null) => {
     setPerson(personId);
     setOpen(id);
@@ -58,7 +64,7 @@ export function ContactsScreen() {
     <ConsolePage>
       <PageHeader
         title="Contacts"
-        description="Who your campaigns go to. Qloo reads what each person likes, so a list either splits into taste groups that each get their own email, or stays one by one and every person gets a version written for them."
+        description="Who your campaigns go to. A taste group gets one email written for its taste; an individual contact gets their own version of each campaign you tick them for."
         actions={
           lists && lists.length > 0 ? (
             <>
@@ -90,8 +96,8 @@ export function ContactsScreen() {
             {(
               [
                 ["Contacts", counts?.total],
-                ["Lists", lists.length],
-                ["Taste groups", groups],
+                ["Taste groups", groups.length],
+                ["Individual contacts", individuals?.size ?? 0],
                 ["Unsubscribed", counts?.unsubscribed],
               ] as const
             ).map(([label, value]) => (
@@ -103,11 +109,38 @@ export function ContactsScreen() {
               </div>
             ))}
           </Panel>
-          {[...lists]
-            .sort((a, b) => b.createdAt - a.createdAt)
-            .map((l) => (
-              <ListSection key={l._id} list={l} audiences={all.filter((a) => a.listId === l._id)} size={l.rowCount} onOpen={openAudience} />
-            ))}
+
+          {inFlight.map((l) => (
+            <UploadProgress key={l._id} list={l} />
+          ))}
+
+          <section className="space-y-4">
+            <SectionTitle icon={Boxes} title="Taste groups" hint="People with similar taste. Each group gets one email, written for what it loves." />
+            {groups.length ? (
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {groups.map((a) => (
+                  <AudienceCard key={a._id} audience={a} onClick={() => openAudience(a._id)} />
+                ))}
+              </div>
+            ) : (
+              <EmptyKind>No taste groups yet. Import contacts and sort them into taste groups, or add someone to a taste group.</EmptyKind>
+            )}
+          </section>
+
+          <section className="space-y-4">
+            <SectionTitle
+              icon={UsersRound}
+              title="Individual contacts"
+              hint="Each has their own taste profile. Tick them on a campaign and each gets a version written for them."
+            />
+            {individuals && individuals.size > 0 ? (
+              <IndividualsCard audience={individuals} onOpen={openAudience} />
+            ) : (
+              <EmptyKind>No individual contacts yet. Add someone by hand, or import a short list and keep them as individual contacts.</EmptyKind>
+            )}
+          </section>
+
+          <UploadHistory lists={uploads} />
         </div>
       )}
 
@@ -118,95 +151,53 @@ export function ContactsScreen() {
   );
 }
 
-/** One list: its header, then its taste groups as covers or its people as faces. */
-function ListSection({
-  list,
-  audiences,
-  size,
-  onOpen,
-}: {
-  list: ListRow;
-  audiences: AudienceRow[];
-  size: number;
-  onOpen: (audienceId: string, personId?: string | null) => void;
-}) {
-  const remove = useMutation(api.emailLists.remove);
-  const [confirm, setConfirm] = useState(false);
-  const Icon = LIST_ICON[list.source] ?? FileSpreadsheet;
-  const busy = isBusy(list.status);
-  const groups = audiences.filter((a) => a.kind === "group").sort((a, b) => b.size - a.size);
-  const people = audiences.find((a) => a.kind === "people");
-  const meta = [
-    peopleCount(size, list.mode === "people" ? "person" : "contact"),
-    list.mode === "groups" ? (groups.length ? `${groups.length} taste groups` : "Grouped by taste") : "Kept one by one",
-    list.filename,
-    `added ${relativeTime(list.createdAt)}`,
-  ].filter(Boolean);
-
+function SectionTitle({ icon: Icon, title, hint }: { icon: LucideIcon; title: string; hint: string }) {
   return (
-    <section className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.06]">
-          <Icon className="size-[18px] text-neutral-800" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-lg font-semibold tracking-tight text-neutral-950">{list.name}</h2>
-          <p className="truncate text-sm text-muted-foreground">{meta.join(" · ")}</p>
-        </div>
-        {busy && <Pill>{statusLabel(list.status)}</Pill>}
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${list.name}`} className="text-muted-foreground" />}>
-            <MoreHorizontal />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem variant="destructive" onClick={() => setConfirm(true)}>
-              <Trash2 /> Delete list
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <ConfirmDialog
-          open={confirm}
-          onOpenChange={setConfirm}
-          title={`Delete ${list.name}?`}
-          description={`Its ${peopleCount(size)} and ${list.mode === "groups" ? "taste groups" : "profiles"} go with it. Campaigns already sent keep their reports. This cannot be undone.`}
-          actionLabel="Delete list"
-          onConfirm={() => void remove({ id: list._id })}
-        />
+    <div className="flex items-center gap-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.06]">
+        <Icon className="size-[18px] text-neutral-800" />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-lg font-semibold tracking-tight text-neutral-950">{title}</h2>
+        <p className="text-sm text-muted-foreground">{hint}</p>
       </div>
+    </div>
+  );
+}
 
-      {list.status === "failed" ? (
-        <Panel className="p-5">
-          <ProgressLine progress={list.progress} status={list.status} error={list.error ?? "The import failed."} />
-        </Panel>
-      ) : busy && audiences.length === 0 ? (
-        <Panel className="grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-          <TasteCover tiles={GHOST_TILES} icon={list.mode === "groups" ? Boxes : UsersRound} kindLabel={list.mode === "groups" ? "Taste groups" : "One by one"} title={list.name} subtitle={peopleCount(size)} />
-          <div className="flex flex-col justify-center gap-3 p-6">
-            <ProgressLine progress={list.progress ?? { value: 0.05, label: statusLabel(list.status) }} status={list.status} />
-            <p className="text-sm text-muted-foreground">
-              {list.mode === "groups"
-                ? "Qloo reads what everyone likes, then the list splits into taste groups. Each gets a cover, a profile and a brief."
-                : "Qloo reads each person's taste, one after another. Their faces fill in as it goes."}
-            </p>
-          </div>
-        </Panel>
-      ) : list.mode === "groups" ? (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {groups.map((a) => (
-            <AudienceCard key={a._id} audience={a} onClick={() => onOpen(a._id)} />
-          ))}
-        </div>
-      ) : people ? (
-        <PeopleListCard audience={people} onOpen={onOpen} />
-      ) : null}
-    </section>
+function EmptyKind({ children }: { children: ReactNode }) {
+  return <div className="rounded-2xl border border-dashed border-black/10 px-6 py-8 text-center text-sm text-muted-foreground">{children}</div>;
+}
+
+/** An upload still being read (or one that failed), until its people are in place. */
+function UploadProgress({ list }: { list: ListRow }) {
+  const remove = useMutation(api.emailLists.remove);
+  const failed = list.status === "failed";
+  return (
+    <Panel className="flex flex-wrap items-center gap-4 p-5">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-100">
+        <FileSpreadsheet className="size-[18px] text-neutral-800" />
+      </span>
+      <div className="min-w-0 flex-1 space-y-2">
+        <p className="truncate text-sm font-medium">
+          {failed ? "Import failed" : "Importing"} {list.filename ?? list.name} · {peopleCount(list.rowCount)},{" "}
+          {list.mode === "groups" ? "into taste groups" : "as individual contacts"}
+        </p>
+        <ProgressLine progress={list.progress ?? { value: 0.05, label: statusLabel(list.status) }} status={list.status} error={failed ? (list.error ?? "The import failed.") : undefined} />
+      </div>
+      {failed && (
+        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => void remove({ id: list._id })}>
+          <Trash2 data-icon="inline-start" /> Remove
+        </Button>
+      )}
+    </Panel>
   );
 }
 
 const FACES_SHOWN = 12;
 
-/** A list kept one by one: its merged cover beside the people themselves. */
-function PeopleListCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (audienceId: string, personId?: string | null) => void }) {
+/** The individual contacts: their merged cover beside the people themselves. */
+function IndividualsCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (audienceId: string, personId?: string | null) => void }) {
   const contacts = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
   const shown = (contacts ?? []).slice(0, FACES_SHOWN);
   const more = (contacts?.length ?? 0) - shown.length;
@@ -215,9 +206,9 @@ function PeopleListCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (
     <Panel className="grid lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       <button type="button" onClick={() => onOpen(audience._id)} className="group block text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
         <TasteCover
-          tiles={coverTiles(profileOf(audience))}
+          tiles={coverTiles(profileOf(audience), 5, true)}
           icon={UsersRound}
-          kindLabel="One by one"
+          kindLabel="Individuals"
           title={audience.name}
           subtitle={peopleCount(audience.size, "person")}
           corner={isBusy(audience.status) ? <Pill>{statusLabel(audience.status)}</Pill> : undefined}
@@ -237,7 +228,7 @@ function PeopleListCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (
                 <ContactAvatar contact={c} className={c.unsubscribed ? "opacity-50 grayscale" : undefined} />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{firstNameOf(c)}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{c.unsubscribed ? "Unsubscribed" : (c.city ?? c.entities[0]?.name ?? " ")}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{c.unsubscribed ? "Unsubscribed" : (c.neighborhood ?? c.city ?? c.entities[0]?.name ?? " ")}</span>
                 </span>
               </button>
             </li>
@@ -254,7 +245,7 @@ function PeopleListCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (
           <span className="text-muted-foreground">
             {more > 0 ? `and ${more} more · ` : ""}
             {unsubscribed > 0 ? `${fmt.int(unsubscribed)} unsubscribed · ` : ""}
-            Each gets their own version of a campaign. Up to {MAX_PEOPLE_LIST} people.
+            Ticked people get their own version of a campaign.
           </span>
           <Button variant="outline" size="sm" onClick={() => onOpen(audience._id)}>
             <UsersRound data-icon="inline-start" /> See everyone
@@ -265,7 +256,62 @@ function PeopleListCard({ audience, onOpen }: { audience: AudienceRow; onOpen: (
   );
 }
 
-/** First visit: what a list becomes, and the two ways in. */
+/** Every import and where its people went; removing one removes the people it brought in. */
+function UploadHistory({ lists }: { lists: ListRow[] }) {
+  if (!lists.length) return null;
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-sm font-semibold text-neutral-950">Import history</h2>
+        <p className="text-sm text-muted-foreground">Each file you imported, and people added by hand.</p>
+      </div>
+      <Panel className="divide-y divide-black/[0.05]">
+        {lists.map((l) => (
+          <UploadRow key={l._id} list={l} />
+        ))}
+      </Panel>
+    </section>
+  );
+}
+
+function UploadRow({ list }: { list: ListRow }) {
+  const remove = useMutation(api.emailLists.remove);
+  const [confirm, setConfirm] = useState(false);
+  const manual = list.source === "manual";
+  const label = manual ? "Added by hand" : (list.filename ?? list.name);
+  const where = manual ? "one at a time" : list.mode === "groups" ? "sorted into taste groups" : "kept as individual contacts";
+  return (
+    <div className="flex items-center gap-3 px-5 py-3">
+      {manual ? <UserPlus className="size-4 shrink-0 text-muted-foreground" /> : <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{label}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {peopleCount(list.rowCount)} {where} · {relativeTime(list.createdAt)}
+        </p>
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={`Actions for ${label}`} className="text-muted-foreground" />}>
+          <MoreHorizontal />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuItem variant="destructive" onClick={() => setConfirm(true)}>
+            <Trash2 /> Remove its contacts
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ConfirmDialog
+        open={confirm}
+        onOpenChange={setConfirm}
+        title={`Remove the ${peopleCount(list.rowCount)} from ${label}?`}
+        description="They leave their taste groups or the individual contacts, and a group left empty goes. Campaigns already sent keep their reports. This cannot be undone."
+        actionLabel="Remove contacts"
+        onConfirm={() => void remove({ id: list._id })}
+      />
+    </div>
+  );
+}
+
+/** First visit: the two kinds of contact, and the two ways in. */
 function NoContacts({ onImport, onAdd }: { onImport: () => void; onAdd: () => void }) {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -274,8 +320,8 @@ function NoContacts({ onImport, onAdd }: { onImport: () => void; onAdd: () => vo
           {
             icon: Boxes,
             kind: "Taste groups",
-            title: "Upload a list and group it by taste",
-            body: "A CSV of subscribers with what they like (favourite authors, books, films, genres). Qloo reads everyone and splits the list into a few taste groups, each with its own email.",
+            title: "Sort a list into taste groups",
+            body: "Upload your customers with what they bought or booked, plus neighbourhood, city and age if you have them. Qloo reads their taste from it and groups people who buy alike; anyone who hasn't bought yet joins the group people like them go for.",
             action: (
               <Button className="h-9 rounded-full px-4" onClick={onImport}>
                 <Upload data-icon="inline-start" /> Import contacts
@@ -284,9 +330,9 @@ function NoContacts({ onImport, onAdd }: { onImport: () => void; onAdd: () => vo
           },
           {
             icon: UsersRound,
-            kind: "One by one",
-            title: "Keep a short list one by one",
-            body: `Up to ${MAX_PEOPLE_LIST} people, each with their own taste profile: a book club, your regulars. Every campaign to them writes a version for each person.`,
+            kind: "Individuals",
+            title: "Keep people as individual contacts",
+            body: "Each person gets their own taste profile: your regulars, a book club, VIPs. Tick them on a campaign and each gets a version written for them.",
             action: (
               <Button variant="outline" className="h-9 rounded-full bg-white px-4" onClick={onAdd}>
                 <Plus data-icon="inline-start" /> Add a contact

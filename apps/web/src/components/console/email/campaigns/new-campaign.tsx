@@ -333,7 +333,7 @@ function TemplatePreview({
           <div className="space-y-3 text-sm">
             <PersonalBadge />
             <p className="leading-relaxed text-muted-foreground">
-              Built around taste slots. Sent to a list kept one by one, the marked blocks are rewritten for each person from their own Qloo profile; sent to a taste group, they are written for the group.
+              Built around taste slots. Sent to individual contacts, the marked blocks are rewritten for each person from their own Qloo profile; sent to a taste group, they are written for the group.
             </p>
           </div>
         ) : undefined

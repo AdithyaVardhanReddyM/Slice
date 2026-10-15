@@ -1,21 +1,21 @@
-// Folio & Fern, the Email service's demo brand: an independent bookshop on
+// Stackhouse Books, the Email service's demo brand: an independent bookshop on
 // Court Street in Carroll Gardens, Brooklyn (fictional). Everything the seed
 // (emailSeed.ts) needs, as plain data: the catalog, the shop's kit, about,
-// footer and sender, two contact lists and three hand-written campaign docs.
+// footer and sender, and two uploads: seven customers for taste groups (five
+// with purchase history, two new prospects with only age, gender and city)
+// and three regulars kept as individual contacts.
 // No Convex imports.
 //
-// The shop's site is apps/stores (/folio). The block between the "shared"
-// markers below is copied verbatim to apps/stores/src/lib/folio/books.ts, so
+// The shop's site is apps/stores (/stackhouse). The block between the "shared"
+// markers below is copied verbatim to apps/stores/src/lib/stackhouse/books.ts, so
 // the site and the emails sell the same books: edit it here, then copy it over.
 //
-// Item references: campaign docs point at books as `slug:<book slug>` (and at
-// events as `event:<event slug>`) in ItemsBlock.itemIds and as the keys of
-// ItemsBlock.reasons. `folioItems()` returns each item with that `ref`, so the
-// seed swaps refs for the emailItems ids it creates. See `folioRef`.
+// Item references: books are `slug:<book slug>` and events `event:<event
+// slug>`. `folioItems()` returns each item with that `ref`. See `folioRef`.
 
-import type { EmailAbout, EmailDoc, EmailFooterInfo, EmailItem, EmailKit, EmailSender } from "./emailTypes";
+import type { EmailAbout, EmailFooterInfo, EmailItem, EmailKit, EmailSender } from "./emailTypes";
 
-/* ---- shared with apps/stores/src/lib/folio/books.ts ---- */
+/* ---- shared with apps/stores/src/lib/stackhouse/books.ts ---- */
 
 export type FolioSectionId =
   | "literary-fiction"
@@ -664,7 +664,7 @@ export interface FolioEvent {
   /** Debut Night's readers (fictional authors and books). */
   readers?: { name: string; book: string; line: string }[];
   host?: string;
-  /** Photo key (public/folio/photos/<key>.jpg). */
+  /** Photo key (public/stackhouse/photos/<key>.jpg). */
   photo?: string;
   /** Repeats every week ("Every Saturday"). */
   recurring?: string;
@@ -705,7 +705,7 @@ export const FOLIO_EVENTS: FolioEvent[] = [
   },
   {
     slug: "poetry-night",
-    title: "Poetry at the Fern: open reading",
+    title: "Poetry at Stackhouse: open reading",
     kind: "Poetry",
     date: "Wednesday, October 28",
     time: "7:30–9pm",
@@ -752,8 +752,8 @@ export const FOLIO_EVENTS: FolioEvent[] = [
 ];
 
 export const FOLIO_SHOP = {
-  name: "Folio & Fern",
-  legalName: "Folio & Fern Books LLC",
+  name: "Stackhouse Books",
+  legalName: "Stackhouse Books LLC",
   tagline: "An independent bookshop in Carroll Gardens, Brooklyn.",
   founded: 2014,
   street: "418 Court Street",
@@ -763,17 +763,17 @@ export const FOLIO_SHOP = {
   postalCode: "11231",
   country: "US",
   phone: "(718) 555-0142",
-  email: "hello@folioandfernbooks.com",
+  email: "hello@stackhousebooks.com",
   hours: [
     { days: "Monday to Thursday", short: "Mon–Thu", open: "10:00", close: "20:00", label: "10am–8pm" },
     { days: "Friday and Saturday", short: "Fri–Sat", open: "10:00", close: "21:00", label: "10am–9pm" },
     { days: "Sunday", short: "Sun", open: "11:00", close: "19:00", label: "11am–7pm" },
   ],
   socials: [
-    { network: "instagram", label: "Instagram", handle: "@folioandfernbooks", url: "https://www.instagram.com/folioandfernbooks" },
-    { network: "tiktok", label: "TikTok", handle: "@folioandfernbooks", url: "https://www.tiktok.com/@folioandfernbooks" },
-    { network: "facebook", label: "Facebook", handle: "Folio & Fern Books", url: "https://www.facebook.com/folioandfernbooks" },
-    { network: "threads", label: "Threads", handle: "@folioandfernbooks", url: "https://www.threads.net/@folioandfernbooks" },
+    { network: "instagram", label: "Instagram", handle: "@stackhousebooks", url: "https://www.instagram.com/stackhousebooks" },
+    { network: "tiktok", label: "TikTok", handle: "@stackhousebooks", url: "https://www.tiktok.com/@stackhousebooks" },
+    { network: "facebook", label: "Facebook", handle: "Stackhouse Books", url: "https://www.facebook.com/stackhousebooks" },
+    { network: "threads", label: "Threads", handle: "@stackhousebooks", url: "https://www.threads.net/@stackhousebooks" },
   ],
 } as const;
 
@@ -782,7 +782,7 @@ export const FOLIO_SHOP = {
 /* Brand --------------------------------------------------------------------- */
 
 /** Where the site runs locally; the seed passes the deployed one when there is one. */
-export const FOLIO_SITE = "http://localhost:3002/folio";
+export const FOLIO_SITE = "http://localhost:3002/stackhouse";
 
 /** A ref the seed maps to an emailItems id. */
 export const folioRef = (slug: string, kind: "book" | "event" = "book") => (kind === "book" ? `slug:${slug}` : `event:${slug}`);
@@ -790,7 +790,7 @@ export const folioRef = (slug: string, kind: "book" | "event" = "book") => (kind
 const pexels = (id: number, w = 1200, h?: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}${h ? `&h=${h}&fit=crop` : ""}`;
 
-/** The site's photos (also in apps/stores/public/folio/photos), from Pexels, for emails; the portrait hero is cropped landscape. */
+/** The site's photos (also in apps/stores/public/stackhouse/photos), from Pexels, for emails; the portrait hero is cropped landscape. */
 export const FOLIO_PHOTOS = {
   shopReading: { src: pexels(31600273, 1200, 760), alt: "A customer reading between the shelves by the chalkboard wall", credit: "Ytalo Marcos / Pexels" },
   storefront: { src: pexels(17160725), alt: "A green-painted bookshop front with a table of books on the sidewalk", credit: "Huy Phan / Pexels" },
@@ -804,9 +804,9 @@ const photoFor = (key: string) => FOLIO_PHOTOS[key.replace(/-(\w)/g, (_, c: stri
 
 export function folioKit(site = FOLIO_SITE): EmailKit {
   return {
-    logo: { src: `${site}/logo.png`, alt: "Folio & Fern" },
+    logo: { src: `${site}/logo.png`, alt: "Stackhouse Books", light: `${site}/logo-light.png` },
     icon: `${site}/mark.png`,
-    wordmark: "Folio & Fern",
+    wordmark: "Stackhouse Books",
     colors: {
       background: "#F6F1E7",
       foreground: "#1E2A22",
@@ -848,7 +848,7 @@ export const FOLIO_KIT: EmailKit = folioKit();
 
 export const FOLIO_ABOUT: EmailAbout = {
   summary:
-    "Folio & Fern is an independent bookshop on Court Street in Carroll Gardens, Brooklyn, open since 2014. It sells new books across literary and translated fiction, sci-fi and fantasy, crime, ideas and nonfiction, poetry, cookbooks and kids' books, with handwritten staff picks, a monthly book club, author events in the reading room and a Saturday Story Hour.",
+    "Stackhouse Books is an independent bookshop on Court Street in Carroll Gardens, Brooklyn, open since 2014. It sells new books across literary and translated fiction, sci-fi and fantasy, crime, ideas and nonfiction, poetry, cookbooks and kids' books, with handwritten staff picks, a monthly book club, author events in the reading room and a Saturday Story Hour.",
   audience:
     "Neighborhood readers in Brooklyn and across New York: regulars who want a considered recommendation, book club members, parents of young readers and people who come for the events.",
   categories: ["Literary fiction", "Fiction in translation", "Sci-fi & fantasy", "Crime & suspense", "Ideas & nonfiction", "Poetry", "Cookbooks", "Kids & YA", "Events"],
@@ -867,10 +867,10 @@ export function folioFooter(site = FOLIO_SITE): EmailFooterInfo {
 
 export const FOLIO_FOOTER: EmailFooterInfo = folioFooter();
 
-export const FOLIO_SENDER: EmailSender = { fromName: "Folio & Fern", fromLocal: "hello", replyTo: FOLIO_SHOP.email };
+export const FOLIO_SENDER: EmailSender = { fromName: "Stackhouse Books", fromLocal: "hello", replyTo: FOLIO_SHOP.email };
 
 /** The domain the shop would verify with Resend. */
-export const FOLIO_DOMAIN = "folioandfernbooks.com";
+export const FOLIO_DOMAIN = "stackhousebooks.com";
 
 /* Items ----------------------------------------------------------------------- */
 
@@ -905,1124 +905,74 @@ export function folioItems(site = FOLIO_SITE): (Omit<EmailItem, "id"> & { ref: s
 
 /* Contacts ------------------------------------------------------------------------ */
 
-/** One CSV row. Taste columns hold semicolon-separated values. */
+/**
+ * One row of the shop's customer export: who they are, where, and what they
+ * bought most recently (titles from the shop's own catalog, newest first, split
+ * by semicolons). The shop doesn't know what its customers like; their
+ * purchases are what their taste is read from.
+ */
 export interface FolioContact {
   email: string;
   first_name: string;
   last_name: string;
+  /** Where in Brooklyn: the shop is on Court Street in Carroll Gardens. */
+  neighborhood: string;
   city: string;
   age: number;
   gender: string;
-  favourite_authors: string;
-  favourite_books: string;
-  music: string;
-  films: string;
-  genres: string;
+  recent_purchases: string;
 }
 
-export const FOLIO_CONTACT_COLUMNS: (keyof FolioContact)[] = [
-  "email",
-  "first_name",
-  "last_name",
-  "city",
-  "age",
-  "gender",
-  "favourite_authors",
-  "favourite_books",
-  "music",
-  "films",
-  "genres",
-];
+export const FOLIO_CONTACT_COLUMNS: (keyof FolioContact)[] = ["email", "first_name", "last_name", "neighborhood", "city", "age", "gender", "recent_purchases"];
 
 /** The column mapping the import step would pick (emailLists.mapping). */
 export const FOLIO_LIST_MAPPING = {
   email: "email",
   firstName: "first_name",
   lastName: "last_name",
+  neighborhood: "neighborhood",
   city: "city",
   age: "age",
   gender: "gender",
-  // "genres" stays in the file but isn't a taste column: words like "history"
-  // aren't names, and Qloo matches them to unrelated entities (a TV channel).
-  taste: ["favourite_authors", "favourite_books", "music", "films"],
+  purchases: ["recent_purchases"],
+  taste: [] as string[],
 };
 
-/** Eight members kept one by one ("people"): each has a distinct, specific taste. */
-export const FOLIO_BOOK_CLUB: FolioContact[] = [
-  {
-    email: "maya.okafor@example.com",
-    first_name: "Maya",
-    last_name: "Okafor",
-    city: "Brooklyn",
-    age: 29,
-    gender: "female",
-    favourite_authors: "Zadie Smith; Sally Rooney; Brit Bennett",
-    favourite_books: "Swing Time; Normal People; The Vanishing Half",
-    music: "Solange; Frank Ocean; Mitski",
-    films: "Moonlight; Past Lives; Lady Bird",
-    genres: "literary fiction; contemporary fiction",
-  },
-  {
-    email: "daniel.reyes@example.com",
-    first_name: "Daniel",
-    last_name: "Reyes",
-    city: "Queens",
-    age: 41,
-    gender: "male",
-    favourite_authors: "Cormac McCarthy; Denis Johnson; Annie Proulx",
-    favourite_books: "The Road; Train Dreams; Blood Meridian",
-    music: "Bruce Springsteen; Jason Isbell; Townes Van Zandt",
-    films: "No Country for Old Men; There Will Be Blood; Paris, Texas",
-    genres: "literary fiction; westerns; american fiction",
-  },
-  {
-    email: "hana.kobayashi@example.com",
-    first_name: "Hana",
-    last_name: "Kobayashi",
-    city: "Brooklyn",
-    age: 34,
-    gender: "female",
-    favourite_authors: "Haruki Murakami; Kazuo Ishiguro; Yoko Ogawa",
-    favourite_books: "Never Let Me Go; The Memory Police; Kafka on the Shore",
-    music: "Ryuichi Sakamoto; Nils Frahm; Joe Hisaishi",
-    films: "Drive My Car; In the Mood for Love; Perfect Days",
-    genres: "translated fiction; japanese literature; magical realism",
-  },
-  {
-    email: "marcus.bell@example.com",
-    first_name: "Marcus",
-    last_name: "Bell",
-    city: "Brooklyn",
-    age: 52,
-    gender: "male",
-    favourite_authors: "Robert Caro; Isabel Wilkerson; Ta-Nehisi Coates",
-    favourite_books: "The Power Broker; The Warmth of Other Suns; Between the World and Me",
-    music: "John Coltrane; Miles Davis; Nina Simone",
-    films: "13th; I Am Not Your Negro; Do the Right Thing",
-    genres: "history; biography; politics",
-  },
-  {
-    email: "chloe.brennan@example.com",
-    first_name: "Chloe",
-    last_name: "Brennan",
-    city: "Jersey City",
-    age: 26,
-    gender: "female",
-    favourite_authors: "Taylor Jenkins Reid; Emily Henry; Madeline Miller",
-    favourite_books: "The Seven Husbands of Evelyn Hugo; Circe; Book Lovers",
-    music: "Taylor Swift; Olivia Rodrigo; Gracie Abrams",
-    films: "Pride & Prejudice; Little Women; Mamma Mia!",
-    genres: "romance; historical fiction; mythology retellings",
-  },
-  {
-    email: "ravi.menon@example.com",
-    first_name: "Ravi",
-    last_name: "Menon",
-    city: "Manhattan",
-    age: 38,
-    gender: "male",
-    favourite_authors: "Ted Chiang; Liu Cixin; Andy Weir",
-    favourite_books: "Exhalation; The Three-Body Problem; Project Hail Mary",
-    music: "Daft Punk; Brian Eno; Vangelis",
-    films: "Arrival; Interstellar; Blade Runner 2049",
-    genres: "hard science fiction; popular science",
-  },
-  {
-    email: "ruth.abramson@example.com",
-    first_name: "Ruth",
-    last_name: "Abramson",
-    city: "Brooklyn",
-    age: 67,
-    gender: "female",
-    favourite_authors: "Alice Munro; Marilynne Robinson; Elizabeth Strout",
-    favourite_books: "Gilead; Olive Kitteridge; Runaway",
-    music: "Joni Mitchell; Leonard Cohen; Johann Sebastian Bach",
-    films: "Howards End; The Remains of the Day; Moonstruck",
-    genres: "literary fiction; short stories; poetry",
-  },
-  {
-    email: "jules.fischer@example.com",
-    first_name: "Jules",
-    last_name: "Fischer",
-    city: "Queens",
-    age: 31,
-    gender: "non-binary",
-    favourite_authors: "Agatha Christie; Anthony Horowitz; Richard Osman",
-    favourite_books: "Magpie Murders; The Thursday Murder Club; And Then There Were None",
-    music: "Vampire Weekend; The Kinks; Belle and Sebastian",
-    films: "Knives Out; Glass Onion; Murder on the Orient Express",
-    genres: "cozy mystery; puzzle mysteries; british crime",
-  },
-];
-
-const literary: FolioContact[] = [
-  {
-    email: "nora.haddad@example.com",
-    first_name: "Nora",
-    last_name: "Haddad",
-    city: "Brooklyn",
-    age: 28,
-    gender: "female",
-    favourite_authors: "Sally Rooney; Ocean Vuong; Rachel Cusk",
-    favourite_books: "Normal People; On Earth We're Briefly Gorgeous; Outline",
-    music: "Phoebe Bridgers; Big Thief; Mitski",
-    films: "Aftersun; Past Lives; Frances Ha",
-    genres: "literary fiction; poetry",
-  },
-  {
-    email: "elliot.park@example.com",
-    first_name: "Elliot",
-    last_name: "Park",
-    city: "Brooklyn",
-    age: 31,
-    gender: "male",
-    favourite_authors: "Ocean Vuong; Sally Rooney; Ben Lerner",
-    favourite_books: "On Earth We're Briefly Gorgeous; Dept. of Speculation",
-    music: "Bon Iver; Phoebe Bridgers; Sufjan Stevens",
-    films: "Aftersun; Moonlight; Past Lives",
-    genres: "literary fiction; poetry; essays",
-  },
-  {
-    email: "sofia.marchetti@example.com",
-    first_name: "Sofia",
-    last_name: "Marchetti",
-    city: "Manhattan",
-    age: 26,
-    gender: "female",
-    favourite_authors: "Sally Rooney; Ottessa Moshfegh; Elif Batuman",
-    favourite_books: "Conversations with Friends; My Year of Rest and Relaxation; The Idiot",
-    music: "Phoebe Bridgers; Mitski; Japanese Breakfast",
-    films: "Lady Bird; Frances Ha; The Worst Person in the World",
-    genres: "literary fiction; autofiction",
-  },
-  {
-    email: "tom.gallagher@example.com",
-    first_name: "Tom",
-    last_name: "Gallagher",
-    city: "Queens",
-    age: 35,
-    gender: "male",
-    favourite_authors: "Sally Rooney; Claire Keegan; Rachel Cusk",
-    favourite_books: "Normal People; Foster",
-    music: "Bon Iver; Big Thief; Nick Drake",
-    films: "Aftersun; Past Lives; The Banshees of Inisherin",
-    genres: "literary fiction; irish fiction",
-  },
-  {
-    email: "amara.diallo@example.com",
-    first_name: "Amara",
-    last_name: "Diallo",
-    city: "Brooklyn",
-    age: 30,
-    gender: "female",
-    favourite_authors: "Ocean Vuong; Zadie Smith; Ottessa Moshfegh",
-    favourite_books: "On Earth We're Briefly Gorgeous; Luster",
-    music: "Phoebe Bridgers; Mitski; Solange",
-    films: "Past Lives; Lady Bird; Moonlight",
-    genres: "literary fiction; poetry",
-  },
-  {
-    email: "grace.whitfield@example.com",
-    first_name: "Grace",
-    last_name: "Whitfield",
-    city: "Jersey City",
-    age: 24,
-    gender: "female",
-    favourite_authors: "Sally Rooney; Ocean Vuong; Annie Ernaux",
-    favourite_books: "Normal People; Conversations with Friends; The Years",
-    music: "Mitski; Phoebe Bridgers; Clairo",
-    films: "Lady Bird; Aftersun; Portrait of a Lady on Fire",
-    genres: "literary fiction; memoir; essays",
-  },
-  {
-    email: "isaac.feldman@example.com",
-    first_name: "Isaac",
-    last_name: "Feldman",
-    city: "Brooklyn",
-    age: 33,
-    gender: "male",
-    favourite_authors: "Rachel Cusk; Ocean Vuong; W. G. Sebald",
-    favourite_books: "On Earth We're Briefly Gorgeous; The Rings of Saturn",
-    music: "Big Thief; Bon Iver; Radiohead",
-    films: "Frances Ha; Aftersun; Paterson",
-    genres: "literary fiction; essays",
-  },
-  {
-    email: "lucia.romero@example.com",
-    first_name: "Lucía",
-    last_name: "Romero",
-    city: "Brooklyn",
-    age: 29,
-    gender: "female",
-    favourite_authors: "Ottessa Moshfegh; Rachel Cusk; Sheila Heti",
-    favourite_books: "My Year of Rest and Relaxation; Outline; Eileen",
-    music: "Mitski; Big Thief; Fiona Apple",
-    films: "Frances Ha; Past Lives; Zodiac",
-    genres: "literary fiction; autofiction; true crime",
-  },
-  {
-    email: "hannah.lee@example.com",
-    first_name: "Hannah",
-    last_name: "Lee",
-    city: "Hoboken",
-    age: 27,
-    gender: "female",
-    favourite_authors: "Ocean Vuong; Sally Rooney; Hanya Yanagihara",
-    favourite_books: "Normal People; A Little Life",
-    music: "Phoebe Bridgers; Bon Iver; boygenius",
-    films: "Past Lives; Lady Bird; Everything Everywhere All at Once",
-    genres: "literary fiction; poetry",
-  },
-];
-
-const speculative: FolioContact[] = [
-  {
-    email: "kai.nakamura@example.com",
-    first_name: "Kai",
-    last_name: "Nakamura",
-    city: "Brooklyn",
-    age: 29,
-    gender: "male",
-    favourite_authors: "Ursula K. Le Guin; Ted Chiang; Octavia E. Butler",
-    favourite_books: "The Left Hand of Darkness; Stories of Your Life and Others",
-    music: "Radiohead; Björk; Boards of Canada",
-    films: "Spirited Away; Arrival; Princess Mononoke",
-    genres: "science fiction; fantasy",
-  },
-  {
-    email: "jess.romano@example.com",
-    first_name: "Jess",
-    last_name: "Romano",
-    city: "Queens",
-    age: 34,
-    gender: "female",
-    favourite_authors: "N. K. Jemisin; Martha Wells; Ursula K. Le Guin",
-    favourite_books: "A Memory Called Empire; All Systems Red",
-    music: "Radiohead; Massive Attack; Grimes",
-    films: "Arrival; Blade Runner 2049; Annihilation",
-    genres: "science fiction; fantasy; speculative fiction",
-  },
-  {
-    email: "arjun.mehta@example.com",
-    first_name: "Arjun",
-    last_name: "Mehta",
-    city: "Brooklyn",
-    age: 27,
-    gender: "male",
-    favourite_authors: "Ursula K. Le Guin; Becky Chambers; Terry Pratchett",
-    favourite_books: "The Left Hand of Darkness; Good Omens",
-    music: "Radiohead; Björk; Joe Hisaishi",
-    films: "Spirited Away; Princess Mononoke; Howl's Moving Castle",
-    genres: "fantasy; science fiction; cozy fantasy",
-  },
-  {
-    email: "morgan.ellis@example.com",
-    first_name: "Morgan",
-    last_name: "Ellis",
-    city: "Brooklyn",
-    age: 38,
-    gender: "non-binary",
-    favourite_authors: "Octavia E. Butler; N. K. Jemisin; China Miéville",
-    favourite_books: "Parable of the Sower; Dune",
-    music: "Björk; Aphex Twin; Massive Attack",
-    films: "Blade Runner 2049; Arrival; Akira",
-    genres: "science fiction; speculative fiction; afrofuturism",
-  },
-  {
-    email: "lena.hoffmann@example.com",
-    first_name: "Lena",
-    last_name: "Hoffmann",
-    city: "Manhattan",
-    age: 41,
-    gender: "female",
-    favourite_authors: "Ted Chiang; Ursula K. Le Guin; Arkady Martine",
-    favourite_books: "A Memory Called Empire; Dune; Children of Time",
-    music: "Radiohead; Aphex Twin; Vangelis",
-    films: "Arrival; Blade Runner 2049; Interstellar",
-    genres: "science fiction; space opera; popular science",
-  },
-  {
-    email: "andre.wallace@example.com",
-    first_name: "Andre",
-    last_name: "Wallace",
-    city: "The Bronx",
-    age: 32,
-    gender: "male",
-    favourite_authors: "N. K. Jemisin; Octavia E. Butler; Nnedi Okorafor",
-    favourite_books: "Parable of the Sower; Binti",
-    music: "Massive Attack; Radiohead; Flying Lotus",
-    films: "Princess Mononoke; Spirited Away; Black Panther",
-    genres: "science fiction; fantasy; afrofuturism",
-  },
-  {
-    email: "riley.oconnor@example.com",
-    first_name: "Riley",
-    last_name: "O'Connor",
-    city: "Jersey City",
-    age: 23,
-    gender: "female",
-    favourite_authors: "Ursula K. Le Guin; N. K. Jemisin; Naomi Novik",
-    favourite_books: "The Left Hand of Darkness; Uprooted",
-    music: "Björk; Radiohead; Grimes",
-    films: "Spirited Away; Howl's Moving Castle; Pan's Labyrinth",
-    genres: "fantasy; fairy tales",
-  },
-  {
-    email: "ben.adler@example.com",
-    first_name: "Ben",
-    last_name: "Adler",
-    city: "Brooklyn",
-    age: 45,
-    gender: "male",
-    favourite_authors: "Ursula K. Le Guin; Ted Chiang; William Gibson",
-    favourite_books: "Dune; Neuromancer",
-    music: "Radiohead; Aphex Twin; Kraftwerk",
-    films: "Blade Runner 2049; Arrival; 2001: A Space Odyssey",
-    genres: "science fiction; climate fiction",
-  },
-  {
-    email: "yuki.tanaka@example.com",
-    first_name: "Yuki",
-    last_name: "Tanaka",
-    city: "Queens",
-    age: 26,
-    gender: "female",
-    favourite_authors: "Octavia E. Butler; Ted Chiang; Becky Chambers",
-    favourite_books: "A Memory Called Empire; Parable of the Sower",
-    music: "Björk; Massive Attack; Phoebe Bridgers",
-    films: "Spirited Away; Princess Mononoke; Kiki's Delivery Service",
-    genres: "science fiction; cozy fantasy",
-  },
+/** Three regulars kept as individual contacts, each with a shelf of their own. */
+export const FOLIO_INDIVIDUALS: FolioContact[] = [
+  { email: "maya.okafor@example.com", first_name: "Maya", last_name: "Okafor", neighborhood: "Carroll Gardens", city: "Brooklyn", age: 29, gender: "female", recent_purchases: "Intermezzo; Time Is a Mother; Western Lane" },
+  { email: "ruth.abramson@example.com", first_name: "Ruth", last_name: "Abramson", neighborhood: "Brooklyn Heights", city: "Brooklyn", age: 63, gender: "female", recent_purchases: "Braiding Sweetgrass; Devotions; Small Things Like These" },
+  { email: "daniel.reyes@example.com", first_name: "Daniel", last_name: "Reyes", neighborhood: "Park Slope", city: "Brooklyn", age: 38, gender: "male", recent_purchases: "Salt, Fat, Acid, Heat; Ottolenghi Simple; Kitchen" },
 ];
 
 const crime: FolioContact[] = [
-  {
-    email: "claire.donovan@example.com",
-    first_name: "Claire",
-    last_name: "Donovan",
-    city: "Brooklyn",
-    age: 39,
-    gender: "female",
-    favourite_authors: "Tana French; Gillian Flynn; Dennis Lehane",
-    favourite_books: "In the Woods; Gone Girl",
-    music: "Nick Cave & the Bad Seeds; The National; Portishead",
-    films: "Zodiac; Prisoners; Mindhunter",
-    genres: "crime; mystery; thrillers",
-  },
-  {
-    email: "mike.russo@example.com",
-    first_name: "Mike",
-    last_name: "Russo",
-    city: "Staten Island",
-    age: 47,
-    gender: "male",
-    favourite_authors: "Dennis Lehane; Patricia Highsmith; Michael Connelly",
-    favourite_books: "Mystic River; The Big Sleep",
-    music: "Nick Cave & the Bad Seeds; The National; Bruce Springsteen",
-    films: "Se7en; Zodiac; Heat",
-    genres: "crime; thrillers; true crime",
-  },
-  {
-    email: "anika.shah@example.com",
-    first_name: "Anika",
-    last_name: "Shah",
-    city: "Manhattan",
-    age: 33,
-    gender: "female",
-    favourite_authors: "Tana French; Patricia Highsmith; Ruth Ware",
-    favourite_books: "In the Woods; Strangers on a Train",
-    music: "Lana Del Rey; Portishead; The National",
-    films: "Mindhunter; Zodiac; Gone Girl",
-    genres: "psychological thrillers; true crime",
-  },
-  {
-    email: "sean.brady@example.com",
-    first_name: "Sean",
-    last_name: "Brady",
-    city: "Brooklyn",
-    age: 36,
-    gender: "male",
-    favourite_authors: "Tana French; Dennis Lehane; John le Carré",
-    favourite_books: "In the Woods; Tinker Tailor Soldier Spy",
-    music: "The National; Nick Cave & the Bad Seeds; Interpol",
-    films: "Prisoners; Se7en; Tinker Tailor Soldier Spy",
-    genres: "spy fiction; crime",
-  },
-  {
-    email: "natalie.brooks@example.com",
-    first_name: "Natalie",
-    last_name: "Brooks",
-    city: "Jersey City",
-    age: 29,
-    gender: "female",
-    favourite_authors: "Gillian Flynn; Tana French; Megan Abbott",
-    favourite_books: "Gone Girl; Sharp Objects",
-    music: "Lana Del Rey; Portishead; Fiona Apple",
-    films: "Mindhunter; Prisoners; Mare of Easttown",
-    genres: "crime; psychological thrillers",
-  },
-  {
-    email: "victor.alvarez@example.com",
-    first_name: "Victor",
-    last_name: "Alvarez",
-    city: "Queens",
-    age: 42,
-    gender: "male",
-    favourite_authors: "Patricia Highsmith; Dennis Lehane; Raymond Chandler",
-    favourite_books: "The Big Sleep; Mystic River",
-    music: "Nick Cave & the Bad Seeds; Lana Del Rey; Tom Waits",
-    films: "Se7en; Zodiac; Chinatown",
-    genres: "noir; crime; mystery",
-  },
-  {
-    email: "rachel.kim@example.com",
-    first_name: "Rachel",
-    last_name: "Kim",
-    city: "Brooklyn",
-    age: 31,
-    gender: "female",
-    favourite_authors: "Tana French; Gillian Flynn; Jo Nesbø",
-    favourite_books: "Gone Girl; In the Woods; The Snowman",
-    music: "The National; Portishead; Nine Inch Nails",
-    films: "Prisoners; Mindhunter; Memories of Murder",
-    genres: "crime; nordic noir; true crime",
-  },
-  {
-    email: "paul.becker@example.com",
-    first_name: "Paul",
-    last_name: "Becker",
-    city: "Philadelphia",
-    age: 52,
-    gender: "male",
-    favourite_authors: "Patricia Highsmith; Tana French; Agatha Christie",
-    favourite_books: "The Big Sleep; Mystic River",
-    music: "Nick Cave & the Bad Seeds; The National; Leonard Cohen",
-    films: "Zodiac; Se7en; Rear Window",
-    genres: "mystery; classic crime",
-  },
-  {
-    email: "tasha.greene@example.com",
-    first_name: "Tasha",
-    last_name: "Greene",
-    city: "Brooklyn",
-    age: 27,
-    gender: "female",
-    favourite_authors: "Gillian Flynn; Dennis Lehane; Attica Locke",
-    favourite_books: "Gone Girl; Bluebird, Bluebird",
-    music: "Lana Del Rey; Portishead; Nina Simone",
-    films: "Mindhunter; Se7en; Get Out",
-    genres: "crime; true crime; southern noir",
-  },
+  { email: "dana.whitfield@example.com", first_name: "Dana", last_name: "Whitfield", neighborhood: "Cobble Hill", city: "Brooklyn", age: 41, gender: "female", recent_purchases: "The Searcher; Slow Horses; The God of the Woods" },
+  { email: "theo.lang@example.com", first_name: "Theo", last_name: "Lang", neighborhood: "Red Hook", city: "Brooklyn", age: 52, gender: "male", recent_purchases: "Razorblade Tears; Slow Horses; The Talented Mr. Ripley" },
+  { email: "owen.brady@example.com", first_name: "Owen", last_name: "Brady", neighborhood: "Boerum Hill", city: "Brooklyn", age: 47, gender: "male", recent_purchases: "The God of the Woods; Razorblade Tears; The Searcher" },
 ];
 
-const ideas: FolioContact[] = [
-  {
-    email: "ezra.goldberg@example.com",
-    first_name: "Ezra",
-    last_name: "Goldberg",
-    city: "Brooklyn",
-    age: 44,
-    gender: "male",
-    favourite_authors: "Robert Macfarlane; Rebecca Solnit; Oliver Sacks",
-    favourite_books: "Underland; A Field Guide to Getting Lost",
-    music: "Brian Eno; Talking Heads; Max Richter",
-    films: "My Octopus Teacher; Free Solo; Honeyland",
-    genres: "nature writing; essays; science",
-  },
-  {
-    email: "laila.rahman@example.com",
-    first_name: "Laila",
-    last_name: "Rahman",
-    city: "Manhattan",
-    age: 37,
-    gender: "female",
-    favourite_authors: "Oliver Sacks; Michael Pollan; Siddhartha Mukherjee",
-    favourite_books: "The Emperor of All Maladies; Being Mortal",
-    music: "Khruangbin; Talking Heads; Vampire Weekend",
-    films: "Jiro Dreams of Sushi; Free Solo; My Octopus Teacher",
-    genres: "popular science; medicine; history",
-  },
-  {
-    email: "owen.price@example.com",
-    first_name: "Owen",
-    last_name: "Price",
-    city: "Brooklyn",
-    age: 50,
-    gender: "male",
-    favourite_authors: "Oliver Sacks; Robert Macfarlane; Bill Bryson",
-    favourite_books: "Sapiens; A Short History of Nearly Everything",
-    music: "Talking Heads; Brian Eno; Paul Simon",
-    films: "Planet Earth; Free Solo; Apollo 11",
-    genres: "history; popular science; big ideas",
-  },
-  {
-    email: "mei.chen@example.com",
-    first_name: "Mei",
-    last_name: "Chen",
-    city: "Queens",
-    age: 34,
-    gender: "female",
-    favourite_authors: "Michael Pollan; Robin Wall Kimmerer; Rebecca Solnit",
-    favourite_books: "The Sixth Extinction; The Omnivore's Dilemma",
-    music: "Khruangbin; Max Richter; Fleet Foxes",
-    films: "My Octopus Teacher; Planet Earth; Jiro Dreams of Sushi",
-    genres: "nature writing; science; food writing",
-  },
-  {
-    email: "jamal.carter@example.com",
-    first_name: "Jamal",
-    last_name: "Carter",
-    city: "Brooklyn",
-    age: 39,
-    gender: "male",
-    favourite_authors: "Rebecca Solnit; Michael Pollan; Isabel Wilkerson",
-    favourite_books: "Sapiens; The Warmth of Other Suns",
-    music: "Talking Heads; Khruangbin; Kendrick Lamar",
-    films: "Free Solo; Jiro Dreams of Sushi; 13th",
-    genres: "history; politics; narrative nonfiction",
-  },
-  {
-    email: "clara.lindgren@example.com",
-    first_name: "Clara",
-    last_name: "Lindgren",
-    city: "Brooklyn",
-    age: 29,
-    gender: "female",
-    favourite_authors: "Rebecca Solnit; Jenny Odell; Oliver Sacks",
-    favourite_books: "Underland; Trick Mirror",
-    music: "Khruangbin; Talking Heads; Vampire Weekend",
-    films: "My Octopus Teacher; Free Solo; Won't You Be My Neighbor?",
-    genres: "essays; culture; technology",
-  },
-  {
-    email: "david.mensah@example.com",
-    first_name: "David",
-    last_name: "Mensah",
-    city: "Jersey City",
-    age: 46,
-    gender: "male",
-    favourite_authors: "Michael Pollan; Oliver Sacks; Malcolm Gladwell",
-    favourite_books: "Sapiens; The Emperor of All Maladies",
-    music: "Brian Eno; Max Richter; Radiohead",
-    films: "Planet Earth; Free Solo; Cosmos",
-    genres: "psychology; popular science; economics",
-  },
-  {
-    email: "rosa.delgado@example.com",
-    first_name: "Rosa",
-    last_name: "Delgado",
-    city: "Brooklyn",
-    age: 58,
-    gender: "female",
-    favourite_authors: "Oliver Sacks; Robert Macfarlane; Rachel Carson",
-    favourite_books: "The Sixth Extinction; Musicophilia",
-    music: "Max Richter; Brian Eno; Joni Mitchell",
-    films: "Planet Earth; My Octopus Teacher; March of the Penguins",
-    genres: "science; nature writing",
-  },
-  {
-    email: "felix.novak@example.com",
-    first_name: "Felix",
-    last_name: "Novak",
-    city: "Boston",
-    age: 41,
-    gender: "male",
-    favourite_authors: "Robert Macfarlane; Michael Pollan; Robert Caro",
-    favourite_books: "Underland; The Power Broker",
-    music: "Talking Heads; Brian Eno; Bruce Springsteen",
-    films: "Free Solo; Planet Earth; Apollo 11",
-    genres: "history; narrative nonfiction; true crime",
-  },
+const speculative: FolioContact[] = [
+  { email: "lena.park@example.com", first_name: "Lena", last_name: "Park", neighborhood: "Gowanus", city: "Brooklyn", age: 27, gender: "female", recent_purchases: "The Fifth Season; Piranesi; A Psalm for the Wild-Built" },
+  { email: "iris.novak@example.com", first_name: "Iris", last_name: "Novak", neighborhood: "Prospect Heights", city: "Brooklyn", age: 24, gender: "female", recent_purchases: "The Ministry of Time; Piranesi; A Psalm for the Wild-Built" },
 ];
 
 /**
- * The groups the subscribers were written to fall into, for checking the
- * clustering and naming groups in the seed. Rows are interleaved below so the
- * list doesn't arrive sorted by taste.
+ * New prospects (newsletter sign-ups who haven't bought yet): only age,
+ * gender and city, so they join the group Qloo says people like them go for.
+ * Qloo's demographics for the groups' titles (2026-10-15): The Searcher
+ * skews +0.15 with 45 to 54s and +0.28 with women; Piranesi −0.29 with over
+ * 55s and even on gender. Nina should land in crime, Jordan in sci-fi.
  */
+const prospects: FolioContact[] = [
+  { email: "nina.castillo@example.com", first_name: "Nina", last_name: "Castillo", neighborhood: "Park Slope", city: "Brooklyn", age: 49, gender: "female", recent_purchases: "" },
+  { email: "jordan.ellis@example.com", first_name: "Jordan", last_name: "Ellis", neighborhood: "Windsor Terrace", city: "Brooklyn", age: 38, gender: "male", recent_purchases: "" },
+];
+
+/** The two groups the customers' purchases should make, for naming them after the import. */
 export const FOLIO_SUBSCRIBER_GROUPS = {
-  literary: { name: "Quiet literary readers", emails: literary.map((c) => c.email) },
-  speculative: { name: "Speculative fiction fans", emails: speculative.map((c) => c.email) },
   crime: { name: "Crime & suspense", emails: crime.map((c) => c.email) },
-  ideas: { name: "Ideas & nonfiction", emails: ideas.map((c) => c.email) },
+  speculative: { name: "Sci-fi & fantasy", emails: speculative.map((c) => c.email) },
 };
 
-/** 36 newsletter subscribers that cluster into four taste groups (with a little noise). */
-export const FOLIO_SUBSCRIBERS: FolioContact[] = literary.flatMap((_, i) => [literary[i], speculative[i], crime[i], ideas[i]]);
-
-/** Rows as a CSV file, the way a merchant would upload them. */
-export function folioCsv(rows: FolioContact[]): string {
-  const cell = (v: string | number) => {
-    const s = String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  return [FOLIO_CONTACT_COLUMNS.join(","), ...rows.map((r) => FOLIO_CONTACT_COLUMNS.map((k) => cell(r[k])).join(","))].join("\n") + "\n";
-}
-
-/* Campaigns ------------------------------------------------------------------------ */
-
-/** A doc without its theme: the seed sets `theme: themeFromKit(FOLIO_KIT)`. */
-export type FolioDoc = Omit<EmailDoc, "theme">;
-
-export interface FolioCampaign {
-  key: "literary-new" | "autumn-list" | "debut-night";
-  name: string;
-  /** Which audience it goes to: a subscriber group, the book club list, or none yet. */
-  audience: { kind: "group"; group: keyof typeof FOLIO_SUBSCRIBER_GROUPS } | { kind: "people"; list: "book-club" } | null;
-  /** "sent" gets simulated stats in the seed; "people" campaigns get real personalisation from the agent. */
-  status: "sent" | "draft";
-  /** Event template the draft started from (emailTemplates id), when there is one. */
-  templateId?: string;
-  doc: FolioDoc;
-}
-
-type Section = FolioDoc["sections"][number];
-
-function headerSection(p: string, site: string): Section {
-  return {
-    id: `${p}_header`,
-    label: "Header",
-    background: "surface",
-    padding: [28, 32, 20, 32],
-    columns: [{ id: `${p}_header_c`, width: 1, blocks: [{ id: `${p}_logo`, type: "logo", width: 168, align: "center", href: site }] }],
-    evidence: "Brand logo from the homepage header; links back to the shop.",
-  };
-}
-
-function footerSection(p: string, site: string, why: string): Section {
-  return {
-    id: `${p}_footer`,
-    label: "Footer",
-    background: "muted",
-    padding: [32, 32, 36, 32],
-    columns: [
-      {
-        id: `${p}_footer_c`,
-        width: 1,
-        blocks: [
-          {
-            id: `${p}_social`,
-            type: "social",
-            links: FOLIO_SHOP.socials.map((s) => ({ network: s.network, url: s.url })),
-            align: "center",
-            style: "brand",
-            size: 22,
-          },
-          {
-            id: `${p}_footer_text`,
-            type: "footer",
-            text: `${why} Open Mon–Thu 10am–8pm, Fri–Sat 10am–9pm, Sun 11am–7pm. <a href="${site}">Shop online</a>`,
-            address: `${FOLIO_SHOP.name}, ${ADDRESS}`,
-            align: "center",
-            unsubscribeLabel: "Unsubscribe",
-            viewOnline: true,
-          },
-        ],
-      },
-    ],
-    evidence: "Address, hours and socials from the brand footer; unsubscribe and view-online links are required.",
-  };
-}
-
-export function folioCampaigns(site = FOLIO_SITE): FolioCampaign[] {
-  const book = (slug: string) => `${site}/books/${slug}`;
-  const event = (slug: string) => `${site}/events#${slug}`;
-  const smallThings = FOLIO_BOOKS.find((b) => b.slug === "small-things-like-these")!;
-
-  // a. Sent to the quiet literary readers group.
-  const literaryNew: FolioDoc = {
-    kind: "email",
-    version: 1,
-    subject: "Four new novels for slow evenings",
-    preheader: "Erpenbeck, Maroo, van der Wouden and Harvey, for anyone still thinking about Aftersun.",
-    sections: [
-      headerSection("ln", site),
-      {
-        id: "ln_photo",
-        label: "Hero photo",
-        background: "surface",
-        padding: [0, 0, 0, 0],
-        columns: [
-          {
-            id: "ln_photo_c",
-            width: 1,
-            blocks: [{ id: "ln_photo_img", type: "image", src: FOLIO_PHOTOS.shopReading.src, alt: FOLIO_PHOTOS.shopReading.alt, href: `${site}/books#literary-fiction`, width: 100, align: "center", radius: 0, source: "pexels", credit: FOLIO_PHOTOS.shopReading.credit }],
-          },
-        ],
-        evidence: "Warm, quiet interior over a busy shelf shot: this group's films (Aftersun, Past Lives) are intimate and lamp-lit.",
-      },
-      {
-        id: "ln_hero",
-        label: "Hero",
-        background: "primary",
-        padding: [40, 44, 44, 44],
-        columns: [
-          {
-            id: "ln_hero_c",
-            width: 1,
-            blocks: [
-              { id: "ln_hero_label", type: "text", html: "<p>New in literary fiction</p>", align: "left", color: "accent", size: 15 },
-              { id: "ln_hero_h", type: "heading", text: "Four novels for the slow evenings ahead", level: 1, align: "left", size: 36 },
-              {
-                id: "ln_hero_text",
-                type: "text",
-                html: "<p>Hi {{first_name|there}}, the light goes earlier now and the reading room lamps are on by five. These are the new books our booksellers keep pressing into people's hands: small in scale, big in feeling, each one made for a long evening and a pot of tea.</p>",
-                align: "left",
-                size: 17,
-              },
-              { id: "ln_hero_btn", type: "button", label: "See all new fiction", href: `${site}/books#literary-fiction`, align: "left", color: "accent", size: "md" },
-            ],
-          },
-        ],
-        evidence:
-          "Group's strongest signals: Sally Rooney, Ocean Vuong and Phoebe Bridgers, with A24 dramas (Aftersun, Past Lives, Lady Bird). Copy leads with mood and attention, not plot.",
-      },
-      {
-        id: "ln_picks",
-        label: "Picks",
-        background: "surface",
-        padding: [40, 32, 16, 32],
-        columns: [
-          {
-            id: "ln_picks_c",
-            width: 1,
-            blocks: [
-              { id: "ln_picks_h", type: "heading", text: "This month's four", level: 2, align: "left" },
-              {
-                id: "ln_picks_items",
-                type: "items",
-                itemIds: [folioRef("kairos"), folioRef("western-lane"), folioRef("the-safekeep"), folioRef("orbital")],
-                pick: "manual",
-                count: 4,
-                columns: 2,
-                layout: "grid",
-                show: { image: true, subtitle: true, description: false, price: true, button: true, reason: true },
-                buttonLabel: "Read more",
-                reasons: {
-                  [folioRef("kairos")]: "For Normal People readers: the same close attention to two people talking past each other, with East Berlin coming apart around them.",
-                  [folioRef("western-lane")]: "Spare and aching, like a Phoebe Bridgers song: grief, sisters and the sound of a squash ball, in 160 pages.",
-                  [folioRef("the-safekeep")]: "If Portrait of a Lady on Fire is your film: a slow, sensual 1960s summer in a house full of secrets.",
-                  [folioRef("orbital")]: "Like Aftersun, it's built from small moments that quietly add up to something enormous.",
-                },
-              },
-            ],
-          },
-        ],
-        evidence:
-          "Picked for the group's taste: interior literary fiction (Rooney, Cusk, Offill), lyric poetry (Vuong), A24 films. Tag overlap: literary fiction, grief, love affair, debut.",
-      },
-      {
-        id: "ln_quote",
-        label: "Staff note",
-        background: "muted",
-        padding: [36, 48, 36, 48],
-        columns: [
-          {
-            id: "ln_quote_c",
-            width: 1,
-            blocks: [
-              {
-                id: "ln_quote_q",
-                type: "quote",
-                text: "The sound of a squash ball in an empty court has never been so sad. A debut that does more in 160 pages than most novels do in 400.",
-                author: "Theo Brandt",
-                role: "Fiction buyer, on Western Lane",
-                align: "center",
-              },
-            ],
-          },
-        ],
-        evidence: "A bookseller's voice carries this group (they read for sentences); Theo's note is on the pick closest to their taste.",
-      },
-      {
-        id: "ln_event",
-        label: "Event",
-        background: "surface",
-        padding: [36, 32, 40, 32],
-        gap: 24,
-        columns: [
-          {
-            id: "ln_event_img_c",
-            width: 0.45,
-            verticalAlign: "middle",
-            blocks: [{ id: "ln_event_img", type: "image", src: FOLIO_PHOTOS.authorTalk.src, alt: FOLIO_PHOTOS.authorTalk.alt, href: event("debut-night"), width: 100, align: "center", source: "pexels", credit: FOLIO_PHOTOS.authorTalk.credit }],
-          },
-          {
-            id: "ln_event_text_c",
-            width: 0.55,
-            verticalAlign: "middle",
-            blocks: [
-              { id: "ln_event_h", type: "heading", text: "Debut Night, Thursday, November 5", level: 3, align: "left" },
-              {
-                id: "ln_event_text",
-                type: "text",
-                html: "<p>Three first novelists, one long table and a glass of wine. Marisol Tran, Owen Achterberg and Ada Lindqvist read from their debuts and talk with Maeve about how a first book gets made. Free, but seats go quickly.</p>",
-                align: "left",
-                size: 16,
-              },
-              { id: "ln_event_btn", type: "button", label: "Save a seat", href: event("debut-night"), align: "left", variant: "outline", size: "sm" },
-            ],
-          },
-        ],
-        evidence: "Debut fiction overlaps two of the four picks (Western Lane, The Safekeep); most of the group lives in Brooklyn, a short walk from the reading room.",
-      },
-      footerSection("ln", site, "You're getting this because you signed up for the Fern Letter at Folio & Fern."),
-    ],
-  };
-
-  // b. The book club ("people"): personal hero heading, intro and picks, rewritten per member.
-  const autumnList: FolioDoc = {
-    kind: "email",
-    version: 1,
-    subject: "Your autumn reading list",
-    preheader: "Three books picked for you, plus October's book club pick and a seat at the table.",
-    sections: [
-      headerSection("al", site),
-      {
-        id: "al_hero",
-        label: "Hero",
-        background: "surface",
-        padding: [8, 32, 24, 32],
-        columns: [
-          {
-            id: "al_hero_c",
-            width: 1,
-            blocks: [
-              { id: "al_hero_img", type: "image", src: FOLIO_PHOTOS.bookClub.src, alt: FOLIO_PHOTOS.bookClub.alt, width: 100, align: "center", source: "pexels", credit: FOLIO_PHOTOS.bookClub.credit },
-              { id: "al_hero_h", type: "heading", personal: true, text: "Your autumn reading list, {{first_name|friend}}", level: 1, align: "left", padding: [28, 0, 8, 0] },
-              {
-                id: "al_hero_text",
-                type: "text",
-                personal: true,
-                html: "<p>We've read a lot together this year, from Irish novellas to East Berlin love affairs. For autumn we went back through what each of you has told us you love and pulled three books from our shelves we think you'll want next. Bring your verdicts to the reading room.</p>",
-                align: "left",
-                size: 17,
-              },
-            ],
-          },
-        ],
-        evidence:
-          "Written for the club as a whole: eight readers with eight distinct tastes (Zadie Smith, Cormac McCarthy, Murakami, Robert Caro, Emily Henry, Ted Chiang, Alice Munro, Agatha Christie). Each member's version rewrites the heading and intro from their own profile.",
-      },
-      {
-        id: "al_picks",
-        label: "Picks",
-        background: "surface",
-        padding: [8, 32, 32, 32],
-        columns: [
-          {
-            id: "al_picks_c",
-            width: 1,
-            blocks: [
-              { id: "al_picks_h", type: "heading", text: "Three for you", level: 2, align: "left" },
-              {
-                id: "al_picks_items",
-                type: "items",
-                personal: true,
-                itemIds: [folioRef("kairos"), folioRef("piranesi"), folioRef("the-god-of-the-woods")],
-                pick: "taste",
-                count: 3,
-                columns: 3,
-                layout: "grid",
-                show: { image: true, subtitle: true, description: false, price: true, button: true, reason: true },
-                buttonLabel: "Reserve a copy",
-                reasons: {
-                  [folioRef("kairos")]: "Short chapters and big questions about love and power: a lot to talk about.",
-                  [folioRef("piranesi")]: "A strange, kind puzzle box that even our fantasy skeptics have loved.",
-                  [folioRef("the-god-of-the-woods")]: "A long, absorbing mystery for the first properly cold weekend.",
-                },
-              },
-            ],
-          },
-        ],
-        evidence:
-          "Taste slot: replaced per member by emailItems:rank on their own profile (Ravi toward hard science fiction, Hana toward Japanese fiction, Marcus toward history). The defaults suit the club as a whole.",
-      },
-      {
-        id: "al_club",
-        label: "Book club pick",
-        background: "muted",
-        padding: [32, 32, 32, 32],
-        gap: 24,
-        columns: [
-          {
-            id: "al_club_img_c",
-            width: 0.3,
-            verticalAlign: "middle",
-            blocks: [{ id: "al_club_cover", type: "image", src: smallThings.cover, alt: "Small Things Like These by Claire Keegan, book cover", href: book(smallThings.slug), width: 100, align: "center", radius: 2, source: "item" }],
-          },
-          {
-            id: "al_club_text_c",
-            width: 0.7,
-            verticalAlign: "middle",
-            blocks: [
-              { id: "al_club_h", type: "heading", text: "October's book club pick", level: 3, align: "left" },
-              {
-                id: "al_club_text",
-                type: "text",
-                html: "<p><strong>Small Things Like These</strong> by Claire Keegan. A coal merchant, a convent and one December in 1985: 114 pages you can read in an evening and talk about for hours.</p><p>We meet <strong>Thursday, October 22 at 7pm</strong> in the reading room. Members get 10% off the pick, and there's always tea.</p>",
-                align: "left",
-                size: 16,
-              },
-              { id: "al_club_btn", type: "button", label: "Get your copy", href: book(smallThings.slug), align: "left", size: "md" },
-            ],
-          },
-        ],
-        evidence: "The same for every member: the club's monthly pick and meeting.",
-      },
-      {
-        id: "al_next",
-        label: "Next month",
-        background: "surface",
-        padding: [24, 32, 28, 32],
-        columns: [
-          {
-            id: "al_next_c",
-            width: 1,
-            blocks: [
-              {
-                id: "al_next_text",
-                type: "text",
-                html: "<p>November's pick is <a href=\"" +
-                  book("the-bee-sting") +
-                  "\">The Bee Sting</a> by Paul Murray. It's a big one, so we're meeting a week early for Thanksgiving: <strong>Thursday, November 19</strong>.</p>",
-                align: "left",
-                size: 15,
-                color: "text",
-              },
-            ],
-          },
-        ],
-        evidence: "A heads-up for the long November read keeps members on schedule.",
-      },
-      footerSection("al", site, "You're getting this because you're a member of the Folio & Fern Book Club."),
-    ],
-  };
-
-  // c. Event invite draft (fictional authors).
-  const debut = FOLIO_EVENTS.find((e) => e.slug === "debut-night")!;
-  const debutNight: FolioDoc = {
-    kind: "email",
-    version: 1,
-    subject: "Debut Night: three first novels, Nov 5",
-    preheader: "Three new novelists, one long table and a glass of wine. Free; RSVP to save a seat.",
-    sections: [
-      headerSection("dn", site),
-      {
-        id: "dn_photo",
-        label: "Hero photo",
-        background: "surface",
-        padding: [0, 0, 0, 0],
-        columns: [
-          {
-            id: "dn_photo_c",
-            width: 1,
-            blocks: [{ id: "dn_photo_img", type: "image", src: FOLIO_PHOTOS.authorTalk.src, alt: FOLIO_PHOTOS.authorTalk.alt, href: event("debut-night"), width: 100, align: "center", radius: 0, source: "pexels", credit: FOLIO_PHOTOS.authorTalk.credit }],
-          },
-        ],
-        evidence: "The reading room at an event: lamplight and a small crowd, so it reads as an evening in, not a lecture.",
-      },
-      {
-        id: "dn_hero",
-        label: "Hero",
-        background: "surface",
-        padding: [36, 40, 32, 40],
-        columns: [
-          {
-            id: "dn_hero_c",
-            width: 1,
-            blocks: [
-              { id: "dn_hero_when", type: "text", html: "<p><strong>Thursday, November 5 · 7pm · The reading room</strong></p>", align: "center", color: "accent", size: 15 },
-              { id: "dn_hero_h", type: "heading", text: "Debut Night: three first novels, one evening", level: 1, align: "center" },
-              {
-                id: "dn_hero_text",
-                type: "text",
-                html: "<p>Every bookseller remembers handing someone a first novel and watching them come back for the author's next. This is that feeling with the authors in the room: three readings, a conversation with Maeve, and time to get your copy signed.</p>",
-                align: "center",
-                size: 17,
-              },
-              { id: "dn_hero_btn", type: "button", label: "RSVP, it's free", href: event("debut-night"), align: "center", size: "lg" },
-            ],
-          },
-        ],
-        evidence: "Invite copy for the whole list; one primary action (RSVP), repeated at the end.",
-      },
-      {
-        id: "dn_readers",
-        label: "The authors",
-        background: "muted",
-        padding: [32, 28, 32, 28],
-        gap: 20,
-        columns: (debut.readers ?? []).map((r, i) => ({
-          id: `dn_reader_${i + 1}`,
-          width: 1 / 3,
-          blocks: [
-            { id: `dn_reader_${i + 1}_h`, type: "heading" as const, text: r.name, level: 3 as const, align: "left" as const, size: 20 },
-            { id: `dn_reader_${i + 1}_text`, type: "text" as const, html: `<p><strong>${r.book}</strong><br>${r.line}</p>`, align: "left" as const, size: 15 },
-          ],
-        })),
-        evidence: "Each debut gets one line: what it's about and who's in it, so readers find the one that's theirs.",
-      },
-      {
-        id: "dn_details",
-        label: "Details",
-        background: "surface",
-        padding: [32, 40, 16, 40],
-        columns: [
-          {
-            id: "dn_details_c",
-            width: 1,
-            blocks: [
-              { id: "dn_details_h", type: "heading", text: "The details", level: 2, align: "left" },
-              {
-                id: "dn_details_text",
-                type: "text",
-                html:
-                  `<ul><li><strong>When:</strong> Thursday, November 5. Doors at 6:30pm, readings at 7pm.</li>` +
-                  `<li><strong>Where:</strong> The reading room at Folio &amp; Fern, ${ADDRESS}.</li>` +
-                  `<li><strong>Cost:</strong> Free. Signed copies of all three books on sale on the night.</li>` +
-                  `<li><strong>Access:</strong> Step-free entrance on Court Street; the reading room is on the ground floor.</li></ul>`,
-                align: "left",
-                size: 16,
-              },
-            ],
-          },
-        ],
-        evidence: "Practical details people look for before saying yes.",
-      },
-      {
-        id: "dn_quote",
-        label: "Host",
-        background: "surface",
-        padding: [8, 48, 32, 48],
-        columns: [
-          {
-            id: "dn_quote_c",
-            width: 1,
-            blocks: [
-              {
-                id: "dn_quote_q",
-                type: "quote",
-                text: "All three of these books made me miss my subway stop. I can't wait for you to meet the people who wrote them.",
-                author: "Maeve Calloway",
-                role: "Owner, Folio & Fern",
-                align: "center",
-              },
-              { id: "dn_quote_btn", type: "button", label: "Save a seat", href: event("debut-night"), align: "center", size: "md", padding: [20, 0, 0, 0] },
-            ],
-          },
-        ],
-        evidence: "The owner's voice as host; the RSVP repeated once.",
-      },
-      footerSection("dn", site, "You're getting this because you signed up for the Fern Letter at Folio & Fern."),
-    ],
-  };
-
-  return [
-    { key: "literary-new", name: "New in literary fiction", audience: { kind: "group", group: "literary" }, status: "sent", doc: literaryNew },
-    { key: "autumn-list", name: "Your autumn reading list", audience: { kind: "people", list: "book-club" }, status: "draft", doc: autumnList },
-    { key: "debut-night", name: "Debut night at Folio & Fern", audience: null, status: "draft", doc: debutNight },
-  ];
-}
-
-export const FOLIO_CAMPAIGNS: FolioCampaign[] = folioCampaigns();
+/** Customers and prospects in one export: five sorted by what they bought, two by who they are. */
+export const FOLIO_SUBSCRIBERS: FolioContact[] = [crime[0], speculative[0], crime[1], prospects[0], speculative[1], crime[2], prospects[1]];

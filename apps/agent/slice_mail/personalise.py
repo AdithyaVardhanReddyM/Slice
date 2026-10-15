@@ -1,6 +1,6 @@
 """Per-person versions of a people campaign (POST /email/personalise).
 
-For each person on the campaign's customer list (or the contactIds given): rank the
+For each individual contact ticked for the campaign (or the contactIds given): rank the
 catalog for them (Convex `emailItems:rank` with their contactId), then one Gemini call
 rewrites the email's personal blocks for them, limited to the fields each block type
 may change, checked in Python (doc.clean_personalization) and saved as their
@@ -78,7 +78,7 @@ async def start_personalise(campaign_id: str, contact_ids: list[str] | None = No
     data = await store.load_campaign(campaign_id)
     audience = data["audience"]
     if not audience or audience.get("kind") != "people":
-        return {"ok": False, "error": "Personal versions are for campaigns sent to a customer list kept one by one."}
+        return {"ok": False, "error": "Personal versions are for campaigns sent to individual contacts."}
     doc = data["doc"]
     slots = D.personal_blocks(doc)
     if not slots:
@@ -88,7 +88,7 @@ async def start_personalise(campaign_id: str, contact_ids: list[str] | None = No
         wanted = set(contact_ids)
         people = [c for c in people if store.row_id(c) in wanted]
     if not people:
-        return {"ok": False, "error": "No one to personalise for on this list."}
+        return {"ok": False, "error": "Tick at least one individual contact first."}
     old = _runs.get(campaign_id)
     if old and not old.done():
         old.cancel()  # the doc or the list changed: the newer run wins
@@ -195,7 +195,7 @@ async def personalise_one(data: dict[str, Any], contact: dict[str, Any]) -> tupl
         reasons={p["id"]: p["evidence"] for p in picks if p.get("evidence")},
     )
     first = store.first_name(contact)
-    prompt = f"""You personalise one marketing email from {brand.get('name')} for one person on its customer list. The merchant wrote the base email for the whole list; its personal blocks (below) are rewritten for each person from their own taste, which comes from Qloo, the cultural taste graph. Everything else in the email stays as it is.
+    prompt = f"""You personalise one marketing email from {brand.get('name')} for one of its individual contacts. The merchant wrote the base email for the whole list; its personal blocks (below) are rewritten for each person from their own taste, which comes from Qloo, the cultural taste graph. Everything else in the email stays as it is.
 
 BRAND VOICE: {voice.get('summary', '')} Do: {'; '.join(voice.get('do') or [])}. Avoid: {'; '.join(voice.get('avoid') or [])}.
 THE EMAIL: subject "{doc.get('subject')}", preheader "{doc.get('preheader')}".

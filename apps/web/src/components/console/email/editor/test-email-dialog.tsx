@@ -93,7 +93,7 @@ export function TestEmailDialog({
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-muted-foreground">Their first name, city and, for a customer list, their own version.</p>
+              <p className="text-xs text-muted-foreground">Their first name, city and, for individual contacts, their own version.</p>
             </div>
           )}
           {state.kind === "sent" && (

@@ -3,7 +3,7 @@ EmailDoc of sections, columns and blocks) for one audience.
 
 State per session (one session per campaign), loaded fresh every turn from
 `emailCampaigns:getForAgent`: the brand (kit, about, voice, footer, sender), the
-audience (profile and brief; for a customer list kept one by one, its people), the
+audience (profile and brief; for individual contacts, the people ticked), the
 catalog items and the doc. New emails are built section by section (start_email,
 then add_section) so the editor's canvas fills as the merchant watches; edits are
 `edit_email` ops on block ids. Every doc change goes through Convex (/email/doc,
@@ -138,7 +138,7 @@ def _brand_block(brand: dict[str, Any]) -> str:
         f"headings in {(f.get('heading') or {}).get('family') or 'the theme font'}, body in {(f.get('body') or {}).get('family') or 'the theme font'}; {kit.get('buttonStyle') or 'rounded'} buttons, {kit.get('radius') or 'sm'} corners"
         + (", uppercase labels" if kit.get("uppercaseLabels") else "")
         + ".\n"
-        + (f"Logo: yes ({logo.get('alt') or 'logo'}{', a light mark for dark backgrounds' if logo.get('onDark') else ''}); the logo block draws it.\n" if logo.get("src") else f"Logo: none; the logo block shows the wordmark \"{kit.get('wordmark') or brand.get('name')}\".\n")
+        + (f"Logo: yes ({logo.get('alt') or 'logo'}{', a light mark for dark backgrounds' if logo.get('onDark') else ', with a light version the logo block uses on dark sections' if logo.get('light') else ''}); the logo block draws it.\n" if logo.get("src") else f"Logo: none; the logo block shows the wordmark \"{kit.get('wordmark') or brand.get('name')}\".\n")
         + f"Footer: {footer.get('address') or 'no address yet'}; socials: {socials}.\n"
         f"From: {(brand.get('sender') or {}).get('fromName') or brand.get('name')}"
     )
@@ -150,7 +150,7 @@ def _audience_block(state: dict[str, Any]) -> str:
         return "AUDIENCE: none chosen yet."
     profile = aud.get("profile") or {}
     lines = [
-        f"AUDIENCE: \"{aud.get('name')}\" ({'a taste group' if aud.get('kind') == 'group' else 'a customer list kept one by one'}, {aud.get('size') or len(state.get(PEOPLE) or [])} people).",
+        f"AUDIENCE: \"{aud.get('name')}\" ({'a taste group' if aud.get('kind') == 'group' else 'individual contacts, each gets their own version'}, {(aud.get('size') if aud.get('kind') == 'group' else len(state.get(PEOPLE) or [])) or 0} people).",
         "Qloo taste profile (summary; get_audience has the full lists):",
         json.dumps(profile_summary(profile, tags_per_type=6, brands=8, culture=6), ensure_ascii=False) if profile else "  (not compiled yet: write from the brand and the brief)",
         "Audience brief: " + (json.dumps(aud.get("brief"), ensure_ascii=False) if aud.get("brief") else "none written; derive the angle from the profile."),
@@ -192,7 +192,7 @@ def _audience_rules(state: dict[str, Any]) -> str:
 The merchant has not chosen who this goes to. Write for the brand's customers in general from the brand and the brief; skip taste claims and personal blocks. Say in your reply that choosing an audience in Recipients lets you tailor it."""
     if aud.get("kind") == "people":
         return f"""A CUSTOMER LIST, ONE BY ONE
-This campaign goes to "{aud.get('name')}", kept one by one. Every person gets their own version: Slice rewrites the email's personal blocks for each of them from their own taste profile when the merchant clicks Personalise in Recipients. So:
+This campaign goes to individual contacts the merchant ticked. Every person gets their own version: Slice rewrites the email's personal blocks for each of them from their own taste profile when the merchant clicks Personalise in Recipients. So:
 - Write the base email for the list as a whole, from the merged profile, as for its most typical member.
 - Mark as personal: the hero heading, the intro text under it, one items block (pick "taste", count 3 or 4, with the list's own picks from pick_items as itemIds) and, when it shows a pick, the hero image. Events, the brand's story and the footer stay shared.
 - Each personal block must stand on its own: its words have to work whatever the other personal blocks end up saying for one person.
@@ -290,7 +290,7 @@ Blocks (fields; omitted ones get sensible defaults):
 - divider: thickness, width, style; spacer: height
 - social: links [{{network, url}}] (omit links to use the brand's own)
 - video: thumbnail, href, alt (a poster linking to a video the merchant gave you)
-Heading, text, image, button, items and quote blocks can carry personal: true (customer lists only).
+Heading, text, image, button, items and quote blocks can carry personal: true (individual contacts only).
 
 Shapes (not copy to reuse):
 add_section(section={{"label": "Header", "padding": [24, 32, 8, 32], "columns": [{{"blocks": [{{"type": "logo", "width": 150, "align": "center", "href": "{site}"}}]}}]}})
@@ -353,7 +353,7 @@ async def get_audience(tool_context: ToolContext) -> dict:
     """The full Qloo taste profile of this campaign's audience: tags by type with affinity,
     brands with their style words, culture (authors and books, artists, films, places) with
     pictures, where they are, the demographic skew and the audience brief; for a customer
-    list kept one by one, every person with what they love. Call once before writing."""
+    the individual contacts ticked, every person with what they love. Call once before writing."""
     state = tool_context.state
     aud = state.get(AUDIENCE)
     if not aud:
@@ -444,7 +444,7 @@ async def pick_items(tool_context: ToolContext, count: int = 4, for_contact: str
 
     Args:
         count: How many (default 4, max 8).
-        for_contact: A person's id from a customer list, to see that one person's picks.
+        for_contact: A person's id from the individual contacts ticked, to see that one person's picks.
         exclude: Item ids already used elsewhere in the email.
     """
     state = tool_context.state

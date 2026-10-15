@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
 import { audienceNameOf, campaignAt, rates, statsOf, sumStats, type CampaignRow, type EmailItemRow } from "@/lib/email/types";
 import { Skeleton } from "@/components/console/primitives";
-import { EmailFan } from "@/components/console/email/brand-list";
+import { SampleComposeFrame } from "@/components/console/email/brand-list";
 import { EmailBrandGlyph, countsOf, type BrandRow } from "@/components/console/email/brand-shell";
 import { CampaignCard } from "@/components/console/email/overview";
 import { SectionHeader, Tile, TileHeader } from "./ui";
@@ -97,7 +97,7 @@ export function EmailSection({ days, className }: { days: number; className?: st
               <Plus className="size-4" /> Set up a brand
             </Link>
           </div>
-          <EmailFan className="aspect-[16/10] rounded-2xl ring-1 ring-black/[0.05]" />
+          <SampleComposeFrame className="rounded-2xl ring-1 ring-black/[0.05]" sizes="512px" />
         </Tile>
       ) : (
         <div className="grid gap-5 lg:grid-cols-12">

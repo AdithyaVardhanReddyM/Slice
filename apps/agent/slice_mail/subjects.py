@@ -33,7 +33,7 @@ async def suggest_subjects(campaign_id: str) -> dict[str, Any]:
     doc, brand, audience, items = data["doc"], data["brand"], data["audience"], data["items"]
     voice = (brand.get("kit") or {}).get("voice") or {}
     aud = (
-        f"\"{audience.get('name')}\" ({'one taste group' if audience.get('kind') == 'group' else 'a customer list, each person gets their own version'}). Brief: {json.dumps(audience.get('brief'), ensure_ascii=False)}. Taste: {json.dumps(profile_summary(audience.get('profile'), tags_per_type=4, brands=5, culture=4), ensure_ascii=False)}"
+        f"\"{audience.get('name')}\" ({'one taste group' if audience.get('kind') == 'group' else 'individual contacts, each gets their own version'}). Brief: {json.dumps(audience.get('brief'), ensure_ascii=False)}. Taste: {json.dumps(profile_summary(audience.get('profile'), tags_per_type=4, brands=5, culture=4), ensure_ascii=False)}"
         if audience
         else "not chosen yet: the brand's customers in general"
     )

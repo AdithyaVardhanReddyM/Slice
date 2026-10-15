@@ -1,7 +1,7 @@
 "use client";
 
-import { useAction, useMutation } from "convex/react";
-import { Boxes, Check, FileSpreadsheet, Upload as UploadIcon, UsersRound } from "lucide-react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { Boxes, Check, FileSpreadsheet, ShoppingBag, Upload as UploadIcon, UsersRound } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
 import { parseCsv, suggestMapping, type ParsedCsv } from "@/lib/pages/csv";
 import { postJson } from "@/lib/pages/stream";
-import { Field, Input, Select } from "@/components/console/form";
+import { Field, Select } from "@/components/console/form";
 import { ChoiceCard, ChoiceCardGroup, FieldGroup, Notice, Spinner } from "@/components/console/setup/atoms";
 import { errorText } from "@/lib/email/labels";
 import { useEmailBrand } from "@/components/console/email/brand-context";
@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CRMS, type CrmId } from "@/components/console/pages/crm-logos";
+import { CrmImport } from "./crm-import";
 import { Avatar } from "./shared";
 
 // Convex caps a mutation's arguments; 500 rows of a contact CSV stay well under it.
@@ -31,26 +33,34 @@ export interface EmailMapping {
   name?: string;
   firstName?: string;
   lastName?: string;
+  /** What they bought or booked. */
+  purchases: string[];
+  /** What they like, when the business knows it. */
   taste: string[];
+  neighborhood?: string;
   city?: string;
   country?: string;
   age?: string;
   gender?: string;
 }
 
-type Role = Exclude<keyof EmailMapping, "taste" | "email">;
+type Role = Exclude<keyof EmailMapping, "taste" | "purchases" | "email">;
 
 const ROLES: { key: Role; label: string }[] = [
   { key: "name", label: "Full name" },
   { key: "firstName", label: "First name" },
   { key: "lastName", label: "Last name" },
+  { key: "neighborhood", label: "Neighbourhood" },
   { key: "city", label: "City" },
   { key: "country", label: "Country" },
   { key: "age", label: "Age" },
   { key: "gender", label: "Gender" },
 ];
 
-/** The Pages guess (taste, place, age, gender) plus the columns email needs: the address and the name parts. */
+/** Columns that read as purchase history: orders, bookings, visits. */
+const PURCHASE_COLUMN = /purchase|order|bought|book(ed|ing)|reserv|visit|transaction|history|recent/i;
+
+/** The Pages guess (taste, place, age, gender) plus the columns email needs: the address, the name parts and purchases. */
 export function suggestEmailMapping(columns: string[]): EmailMapping {
   const base = suggestMapping(columns);
   const pick = (re: RegExp) => columns.find((c) => re.test(c.trim()));
@@ -59,14 +69,19 @@ export function suggestEmailMapping(columns: string[]): EmailMapping {
   const lastName = pick(/^(last|family)[\s_-]?name$|^surname$|^last$/i);
   // With first and last columns, a "name" guess is usually one of them.
   const name = pick(/^(full[\s_-]?)?name$/i) ?? (firstName ? undefined : base.name !== email ? base.name : undefined);
-  const taken = new Set([email, name, firstName, lastName, base.city, base.country, base.age, base.gender].filter(Boolean));
+  const neighborhood = pick(/neighbou?rhood|district|area|suburb/i);
+  const city = base.city !== neighborhood ? base.city : undefined;
+  const taken = new Set([email, name, firstName, lastName, neighborhood, city, base.country, base.age, base.gender].filter(Boolean));
+  const purchases = columns.filter((c) => !taken.has(c) && PURCHASE_COLUMN.test(c));
   return {
     email,
     name,
     firstName,
     lastName,
-    taste: base.taste.filter((c) => !taken.has(c)),
-    city: base.city,
+    purchases,
+    taste: base.taste.filter((c) => !taken.has(c) && !purchases.includes(c)),
+    neighborhood,
+    city,
     country: base.country,
     age: base.age,
     gender: base.gender,
@@ -81,11 +96,19 @@ function readRow(row: Record<string, string>, m: EmailMapping) {
   return {
     email,
     name,
-    where: [m.city && row[m.city], m.country && row[m.country]].filter(Boolean).join(", "),
+    where: [m.neighborhood && row[m.neighborhood], m.city && row[m.city], m.country && row[m.country]].filter(Boolean).join(", "),
     age: m.age ? row[m.age] : "",
+    bought: m.purchases.flatMap((c) => splitPurchases(row[c])),
     tastes: m.taste.flatMap((c) => splitTerms(row[c])),
   };
 }
+
+/** Purchases split like the backend's: ; | and new lines, never commas ("Salt, Fat, Acid, Heat" is one book). */
+const splitPurchases = (value: string | undefined) =>
+  (value ?? "")
+    .split(/[;|\n]/)
+    .map((x) => x.trim())
+    .filter((x) => x.length > 1);
 
 /** "newsletter-subscribers.csv" → "Newsletter subscribers". */
 const listName = (filename: string) => {
@@ -95,15 +118,58 @@ const listName = (filename: string) => {
 
 type Mode = "groups" | "people";
 
-/** Mapping, preview, the cluster-or-not choice and the upload. Remount it (key) when the file changes. */
+/** Columns as toggle chips: which hold purchases, which hold likes. */
+function ColumnPicker({
+  label,
+  hint,
+  optional,
+  columns,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  hint: string;
+  optional?: boolean;
+  columns: string[];
+  selected: string[];
+  onToggle: (column: string) => void;
+}) {
+  return (
+    <FieldGroup label={label} hint={hint} aside={selected.length ? `${selected.length} selected` : optional ? "Optional" : "None selected"}>
+      <div className="flex flex-wrap gap-1.5">
+        {columns.map((c) => {
+          const on = selected.includes(c);
+          return (
+            <button
+              key={c}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onToggle(c)}
+              className={cn(
+                "inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors",
+                on ? "border-neutral-900 bg-neutral-900 text-white" : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {on && <Check className="size-3" />}
+              {c}
+            </button>
+          );
+        })}
+      </div>
+    </FieldGroup>
+  );
+}
+
+/** Mapping, preview, the taste-groups-or-individuals choice and the upload. Remount it (key) when the file changes. */
 function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: string; onDone: (listId: Id<"emailLists">) => void }) {
   const brand = useEmailBrand();
+  const audiences = useQuery(api.emailAudiences.list, { brandId: brand._id });
+  const hasGroups = (audiences ?? []).some((a) => a.kind === "group");
   const create = useMutation(api.emailLists.create);
   const appendRows = useMutation(api.emailLists.appendRows);
   const process = useAction(api.emailLists.process);
   const rename = useMutation(api.emailAudiences.rename);
   const [mapping, setMapping] = useState<EmailMapping>(() => suggestEmailMapping(parsed.columns));
-  const [name, setName] = useState(() => listName(filename));
   const [k, setK] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,15 +193,20 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
   }, [parsed, mapping.email]);
   const over = Math.max(0, rows.length >= MAX_CONTACT_ROWS ? parsed.rows.length - skipped - duplicates - MAX_CONTACT_ROWS : 0);
 
-  // A short list reads best one by one; anything past the limit has to be grouped.
+  // A short list reads best as individual contacts; anything past the limit has to be grouped.
   const [mode, setMode] = useState<Mode>(() => (parsed.rows.length <= MAX_PEOPLE_LIST ? "people" : "groups"));
   const peopleAllowed = rows.length <= MAX_PEOPLE_LIST;
   const effectiveMode: Mode = peopleAllowed ? mode : "groups";
 
   const preview = useMemo(() => rows.slice(0, 5).map((r) => readRow(r, mapping)), [rows, mapping]);
-  const toggleTaste = (c: string) => setMapping((m) => ({ ...m, taste: m.taste.includes(c) ? m.taste.filter((x) => x !== c) : [...m.taste, c] }));
+  // A column is either purchases or likes, never both.
+  const toggleColumn = (kind: "purchases" | "taste", c: string) =>
+    setMapping((m) => {
+      const other = kind === "purchases" ? "taste" : "purchases";
+      return { ...m, [kind]: m[kind].includes(c) ? m[kind].filter((x) => x !== c) : [...m[kind], c], [other]: m[other].filter((x) => x !== c) };
+    });
   const setRole = (key: Role | "email", col: string) =>
-    setMapping((m) => ({ ...m, [key]: key === "email" ? col : col || undefined, taste: m.taste.filter((t) => t !== col) }));
+    setMapping((m) => ({ ...m, [key]: key === "email" ? col : col || undefined, taste: m.taste.filter((t) => t !== col), purchases: m.purchases.filter((t) => t !== col) }));
 
   async function submit() {
     setBusy("Uploading contacts");
@@ -143,7 +214,7 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
     try {
       const { id: listId } = await create({
         brandId: brand._id,
-        name: name.trim() || listName(filename),
+        name: listName(filename),
         filename,
         columns: parsed.columns,
         mapping,
@@ -155,9 +226,9 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
         await appendRows({ listId, rows: rows.slice(i, i + CHUNK) });
       }
       onDone(listId);
-      // The long part runs server-side and the list follows its own progress. Groups
+      // The long part runs server-side and the upload follows its own progress. New groups
       // come back named after their top entities; the agent then gives them human names.
-      process({ id: listId, ...(effectiveMode === "groups" && k ? { k: Number(k) } : {}) })
+      process({ id: listId, ...(effectiveMode === "groups" && k && !hasGroups ? { k: Number(k) } : {}) })
         .then(async () => {
           if (effectiveMode !== "groups") return;
           const res = await postJson<{ names?: { audienceId: string; name: string }[] }>("/api/email/name-groups", { listId });
@@ -199,34 +270,21 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
             </Field>
           ))}
         </div>
-        <FieldGroup
-          label="Taste columns"
-          hint="Favourite authors, books, artists, films, genres: anything people like. Cells can hold several, split by ; , or |."
-          aside={`${mapping.taste.length} selected`}
-        >
-          <div className="flex flex-wrap gap-1.5">
-            {parsed.columns
-              .filter((c) => c !== mapping.email)
-              .map((c) => {
-                const on = mapping.taste.includes(c);
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => toggleTaste(c)}
-                    className={cn(
-                      "inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs transition-colors",
-                      on ? "border-neutral-900 bg-neutral-900 text-white" : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    {on && <Check className="size-3" />}
-                    {c}
-                  </button>
-                );
-              })}
-          </div>
-        </FieldGroup>
+        <ColumnPicker
+          label="What they bought or booked"
+          hint="Recent orders, bookings or visits: titles, products, restaurants. Matched to your catalog first, then read by Qloo. Split several in a cell with ; or |."
+          columns={parsed.columns.filter((c) => c !== mapping.email)}
+          selected={mapping.purchases}
+          onToggle={(c) => toggleColumn("purchases", c)}
+        />
+        <ColumnPicker
+          label="What they like"
+          optional
+          hint="Only if you know it: favourite authors, artists, films or places. Split several with ; , or |."
+          columns={parsed.columns.filter((c) => c !== mapping.email)}
+          selected={mapping.taste}
+          onToggle={(c) => toggleColumn("taste", c)}
+        />
       </section>
 
       <section className="space-y-3">
@@ -249,7 +307,7 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-3">Contact</TableHead>
                 <TableHead>Where</TableHead>
-                <TableHead>Tastes</TableHead>
+                <TableHead>Bought, and likes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -267,13 +325,18 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
                   <TableCell className="text-xs text-muted-foreground">{[p.where, p.age].filter(Boolean).join(" · ") || "–"}</TableCell>
                   <TableCell>
                     <div className="flex max-w-64 flex-wrap gap-1">
-                      {p.tastes.slice(0, 4).map((t) => (
-                        <Badge key={t} variant="secondary" className="font-normal">
+                      {p.bought.slice(0, 3).map((t) => (
+                        <Badge key={`b-${t}`} variant="outline" className="font-normal">
+                          <ShoppingBag /> {t}
+                        </Badge>
+                      ))}
+                      {p.tastes.slice(0, 3).map((t) => (
+                        <Badge key={`t-${t}`} variant="secondary" className="font-normal">
                           {t}
                         </Badge>
                       ))}
-                      {p.tastes.length > 4 && <span className="text-xs text-muted-foreground">+{p.tastes.length - 4}</span>}
-                      {p.tastes.length === 0 && <span className="text-xs text-muted-foreground">None</span>}
+                      {p.bought.length + p.tastes.length > 6 && <span className="text-xs text-muted-foreground">+{p.bought.length + p.tastes.length - 6}</span>}
+                      {p.bought.length + p.tastes.length === 0 && <span className="text-xs text-muted-foreground">Nothing yet</span>}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -290,59 +353,60 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
         </div>
       </section>
 
-      <FieldGroup label="Cluster them into taste groups?">
-        <ChoiceCardGroup value={effectiveMode} onValueChange={setMode} className="sm:grid-cols-2" aria-label="Cluster them into taste groups?">
+      <FieldGroup label="How should they be kept?">
+        <ChoiceCardGroup value={effectiveMode} onValueChange={setMode} className="sm:grid-cols-2" aria-label="How should they be kept?">
           <ChoiceCard
             value="groups"
             icon={<Boxes className="size-4" />}
-            title="Yes, into taste groups"
-            description="People with similar taste are grouped into a few audiences. Each group gets one email written for its taste. Best for long lists."
+            title="Taste groups"
+            description={
+              hasGroups
+                ? "Each person joins the taste group that matches them best. Anyone who fits none starts a new group. Each group gets one email written for it."
+                : "People with similar taste are grouped together. Each group gets one email written for its taste. Best for long lists."
+            }
           />
           <ChoiceCard
             value="people"
             icon={<UsersRound className="size-4" />}
-            title="No, keep them one by one"
+            title="Individual contacts"
             description={
               peopleAllowed
-                ? "Each person gets their own taste profile, and a campaign writes a version of the email for each of them."
-                : `For lists of up to ${MAX_PEOPLE_LIST} people. This file has ${fmt.int(rows.length)}.`
+                ? "Each person gets their own taste profile. Tick them on a campaign and each gets a version written for them."
+                : `Up to ${MAX_PEOPLE_LIST} people at a time. This file has ${fmt.int(rows.length)}.`
             }
             disabled={!peopleAllowed}
           />
         </ChoiceCardGroup>
       </FieldGroup>
 
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
-        <Field label="List name">
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={listName(filename)} />
+      {effectiveMode === "groups" && !hasGroups && (
+        <Field label="How many groups" optional className="sm:max-w-56">
+          <Select value={k} onChange={(e) => setK(e.target.value)}>
+            <option value="">Decide for me</option>
+            {[2, 3, 4, 5, 6].map((n) => (
+              <option key={n} value={n}>
+                {n} groups
+              </option>
+            ))}
+          </Select>
         </Field>
-        {effectiveMode === "groups" && (
-          <Field label="Taste groups" optional>
-            <Select value={k} onChange={(e) => setK(e.target.value)}>
-              <option value="">Automatic</option>
-              {[2, 3, 4, 5, 6].map((n) => (
-                <option key={n} value={n}>
-                  {n} groups
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
-      </div>
+      )}
 
       <div className="sticky bottom-0 -mx-6 mt-auto flex items-center justify-between gap-4 border-t bg-popover px-6 py-4">
         <p className="text-xs text-muted-foreground">
           {error ? (
             <span className="text-destructive">{error}</span>
           ) : effectiveMode === "people" ? (
-            "Qloo reads one person at a time, about 15 seconds each. The list fills in as it goes."
+            "Qloo reads one person at a time, about 15 seconds each. They appear as it goes."
+          ) : hasGroups ? (
+            "Qloo reads everyone's tastes, then each person joins a group. About a minute."
           ) : (
-            "Qloo reads everyone's tastes, then the list splits into groups. About a minute."
+            "Qloo reads everyone's tastes, then splits them into groups. About a minute."
           )}
         </p>
         <Button onClick={submit} disabled={!!busy || !mapping.email || rows.length === 0}>
           {busy && <Spinner data-icon="inline-start" />}
-          {busy ?? (effectiveMode === "people" ? `Import ${peopleCountShort(rows.length)}` : "Import and group")}
+          {busy ?? (effectiveMode === "people" ? `Import ${peopleCountShort(rows.length)}` : "Import into taste groups")}
         </Button>
       </div>
     </>
@@ -353,8 +417,8 @@ const peopleCountShort = (n: number) => (n === 1 ? "1 person" : `${fmt.int(n)} p
 
 /**
  * Upload a contact CSV: map the columns (email required), check a preview,
- * choose taste groups or one by one, then import. Processing continues on the
- * server; the list shows its own progress.
+ * choose taste groups or individual contacts, then import. Processing
+ * continues on the server; Contacts shows its progress.
  */
 export function ImportContactsSheet({
   open,
@@ -366,6 +430,7 @@ export function ImportContactsSheet({
   onImported?: (listId: Id<"emailLists">) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [source, setSource] = useState<"csv" | CrmId>("csv");
   const [file, setFile] = useState<{ name: string; parsed: ParsedCsv } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -387,6 +452,7 @@ export function ImportContactsSheet({
         if (!o) {
           setFile(null);
           setError(null);
+          setSource("csv");
         }
       }}
     >
@@ -394,54 +460,82 @@ export function ImportContactsSheet({
         <SheetHeader className="gap-1.5 border-b p-6">
           <SheetTitle>Import contacts</SheetTitle>
           <SheetDescription>
-            A CSV with an email column and, ideally, what people like. Qloo reads each person&apos;s taste so every email can follow it.
+            Your customers with what they bought or booked, plus where they live and their age if you have it. Qloo reads each person&apos;s taste from it.
           </SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-6 px-6 pt-6 pb-6 has-[.sticky]:pb-0">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv,text/plain"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onFile(f);
-              e.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              const f = e.dataTransfer.files?.[0];
-              if (f) void onFile(f);
-            }}
-            className={cn(
-              "flex w-full items-center gap-4 rounded-2xl border border-dashed px-5 py-6 text-left transition-colors hover:bg-muted/50",
-              file && "border-solid bg-muted/30 py-4",
-            )}
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/[0.06]">
-              {file ? <FileSpreadsheet className="size-5 text-neutral-700" /> : <UploadIcon className="size-5 text-neutral-700" />}
-            </span>
-            {file ? (
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{file.name}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {fmt.int(file.parsed.rows.length)} rows · {file.parsed.columns.length} columns · click to replace
-                </span>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Where the contacts come from">
+            {[{ id: "csv" as const, name: "CSV file" }, ...CRMS].map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                role="radio"
+                aria-checked={source === o.id}
+                onClick={() => {
+                  setSource(o.id);
+                  setFile(null);
+                  setError(null);
+                }}
+                className={cn(
+                  "flex h-10 items-center justify-center gap-2 rounded-xl border text-sm transition-colors",
+                  source === o.id ? "border-neutral-900 bg-neutral-900 text-white" : "bg-white hover:bg-muted",
+                )}
+              >
+                {"logo" in o ? <o.logo className="size-4" /> : <FileSpreadsheet className="size-4" />}
+                {o.name}
+              </button>
+            ))}
+          </div>
+          {source === "csv" ? (
+            <>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onFile(f);
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const f = e.dataTransfer.files?.[0];
+                if (f) void onFile(f);
+              }}
+              className={cn(
+                "flex w-full items-center gap-4 rounded-2xl border border-dashed px-5 py-6 text-left transition-colors hover:bg-muted/50",
+                file && "border-solid bg-muted/30 py-4",
+              )}
+            >
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/[0.06]">
+                {file ? <FileSpreadsheet className="size-5 text-neutral-700" /> : <UploadIcon className="size-5 text-neutral-700" />}
               </span>
-            ) : (
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">Drop a CSV here or click to choose</span>
-                <span className="block text-xs text-muted-foreground">
-                  Read in your browser; only the rows you confirm are uploaded. Up to {fmt.int(MAX_CONTACT_ROWS)} contacts.
+              {file ? (
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{file.name}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {fmt.int(file.parsed.rows.length)} rows · {file.parsed.columns.length} columns · click to replace
+                  </span>
                 </span>
-              </span>
-            )}
-          </button>
+              ) : (
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">Drop a CSV here or click to choose</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Read in your browser; only the rows you confirm are uploaded. Up to {fmt.int(MAX_CONTACT_ROWS)} contacts.
+                  </span>
+                </span>
+              )}
+            </button>
+            </>
+          ) : (
+            <CrmImport key={source} crm={source} onPulled={(parsed, label) => setFile({ name: label, parsed })} />
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           {file && (
             <Mapper

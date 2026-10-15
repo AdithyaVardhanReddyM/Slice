@@ -12,9 +12,9 @@ not change a shape without updating this file and telling the other tracks).
 ## Running it
 
 - Apps: `pnpm dev` (or web on :3000, the agent on :8000, the stores on :3002
-  for the Folio & Fern site). Email lives at `/dashboard/email`.
+  for the Stackhouse Books site). Email lives at `/dashboard/email`.
 - Demo: `cd packages/backend && npx convex run emailSeed:run` rebuilds the
-  Folio & Fern master (~5 min cold, ~1 min warm; follow it with
+  Stackhouse Books master (~5 min cold, ~1 min warm; follow it with
   `emailSeed:status`). Then personalise the book-club campaign from its
   Recipients step (or `POST localhost:8000/email/personalise {campaignId}`).
   The account whose email is `PAGES_DEMO_OWNER_EMAIL` claims the master on
@@ -41,7 +41,7 @@ not change a shape without updating this file and telling the other tracks).
 - **Recipients**: CSV upload (map columns, then "Cluster them?" into taste groups
   or keep one by one, as in Pages) and adding contacts by hand. No CRM, no
   signup form.
-- **Demo brand**: a new independent bookshop, **Folio & Fern** (Brooklyn).
+- **Demo brand**: a new independent bookshop, **Stackhouse Books** (Brooklyn).
 - **Editor layout**: Wix-style. Icon rail on the left (AI chat, Add, Themes,
   Personalise, Layers) opening one panel at a time; the canvas in the middle
   (desktop/phone toggle); a toolbar floats over the selected block; an
@@ -508,12 +508,12 @@ bounced) with rates, opens/clicks over time (recharts via shadcn Chart),
 top links by clicks, for people campaigns a per-person table (subject,
 opened, clicked), the email itself.
 
-## Demo brand (track F): Folio & Fern
+## Demo brand (track F): Stackhouse Books
 
 An independent bookshop in Brooklyn.
-- Site in `apps/stores/src/app/folio/` (+ `components/folio`, `public/folio`):
+- Site in `apps/stores/src/app/stackhouse/` (+ `components/stackhouse`, `public/stackhouse`):
   homepage (logo, new arrivals, staff picks, events, newsletter, footer with
-  address and socials) and `/folio/books/[slug]` pages, so the brand setup reads
+  address and socials) and `/stackhouse/books/[slug]` pages, so the brand setup reads
   a real homepage and email links resolve. Its own look (warm paper, deep
   green, a serif display face, readable sans body); see
   `feedback-store-design`: a professional real retailer, no editorial gimmicks.
@@ -545,7 +545,7 @@ An independent bookshop in Brooklyn.
 | D editor | `apps/web/src/components/console/email/editor/**`, the campaign route `…/campaigns/[campaign]/page.tsx`, the `.email-canvas` rule in `globals.css`, web deps (`@dnd-kit/*`) | E's files |
 | E1 console shell | `lib/services.ts`, `widgets/shell.tsx` nav, home Email tile (`components/console/home/email.tsx` + its slot in `home-view.tsx`), `dashboard/email/page.tsx`, `dashboard/email/new/**`, `dashboard/email/[brand]/layout.tsx`, `[brand]/page.tsx` (overview), `[brand]/brand/**`, `[brand]/sending/**`; `components/console/email/{brand-list,brand-shell,brand-context,email-frame,overview}.tsx`, `components/console/email/{setup,kit,sending}/**`, `lib/email/**` | D's and E2's files |
 | E2 campaigns + contacts | `dashboard/email/[brand]/contacts/**`, `[brand]/campaigns/page.tsx`, `[brand]/campaigns/new/**`; `components/console/email/{contacts,campaigns,campaign}/**` (incl. `campaign/recipients-step.tsx`, `review-step.tsx`, `report.tsx`) | D's and E1's files |
-| F demo | `apps/stores/src/app/folio/**`, `apps/stores/src/components/folio/**`, `apps/stores/public/folio/**`, `convex/emailDemoData.ts`, `convex/emailSeed.ts` | everything else |
+| F demo | `apps/stores/src/app/stackhouse/**`, `apps/stores/src/components/stackhouse/**`, `apps/stores/public/stackhouse/**`, `convex/emailDemoData.ts`, `convex/emailSeed.ts` | everything else |
 
 Only track B runs `npx convex dev --once` / codegen (others typecheck with
 `pnpm --filter <pkg> typecheck` or `npx tsc --noEmit`). A track that needs

@@ -65,8 +65,8 @@ export function CampaignsScreen() {
         }
         description={
           campaigns && campaigns.length > 0
-            ? `${sent} sent, ${campaigns.length - sent} not sent yet. Each campaign goes to one audience: a taste group gets one email written for it, a list kept one by one gets a version per person.`
-            : "Each campaign goes to one audience: a taste group gets one email written for its taste, a list kept one by one gets a version per person."
+            ? `${sent} sent, ${campaigns.length - sent} not sent yet. Each goes to one taste group (one email written for it) or to individual contacts you tick (a version for each person).`
+            : "Each campaign goes to one taste group (one email written for its taste) or to individual contacts you tick (a version for each person)."
         }
         actions={
           <Link href={`${base}/new`} className={cn(buttonVariants(), "h-9 rounded-full px-4")}>

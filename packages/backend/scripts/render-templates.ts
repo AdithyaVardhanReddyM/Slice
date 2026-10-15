@@ -1,4 +1,4 @@
-// Renders every email template in three themes (a Folio & Fern brand theme,
+// Renders every email template in three themes (a Stackhouse Books brand theme,
 // Ink and Sunset), plus the section presets, single elements, layouts and
 // items variants, to HTML files for visual checks.
 //
@@ -22,7 +22,7 @@ mkdirSync(out, { recursive: true });
 /* The demo brand ------------------------------------------------------------- */
 
 const FOLIO_KIT: EmailKit = {
-  wordmark: "Folio & Fern",
+  wordmark: "Stackhouse Books",
   colors: {
     background: "#F6F1E7",
     foreground: "#1E2A22",
@@ -43,16 +43,16 @@ const FOLIO_KIT: EmailKit = {
 };
 
 const BRAND: RenderContext["brand"] = {
-  name: "Folio & Fern",
-  wordmark: "Folio & Fern",
+  name: "Stackhouse Books",
+  wordmark: "Stackhouse Books",
   footer: {
     address: "214 Court Street, Brooklyn, NY 11201",
-    website: "https://folioandfern.example",
+    website: "https://stackhousebooks.example",
     socials: [
-      { network: "instagram", url: "https://instagram.com/folioandfern" },
-      { network: "facebook", url: "https://facebook.com/folioandfern" },
-      { network: "tiktok", url: "https://tiktok.com/@folioandfern" },
-      { network: "website", url: "https://folioandfern.example" },
+      { network: "instagram", url: "https://instagram.com/stackhousebooks" },
+      { network: "facebook", url: "https://facebook.com/stackhousebooks" },
+      { network: "tiktok", url: "https://tiktok.com/@stackhousebooks" },
+      { network: "website", url: "https://stackhousebooks.example" },
     ],
   },
 };
@@ -66,7 +66,7 @@ const book = (id: string, name: string, subtitle: string, coverId: number, price
   description,
   price,
   image: cover(coverId),
-  url: `https://folioandfern.example/books/${id}`,
+  url: `https://stackhousebooks.example/books/${id}`,
   tags,
 });
 
@@ -80,13 +80,13 @@ const ITEMS: Record<string, EmailItem> = Object.fromEntries(
     book("station", "Station Eleven", "Emily St. John Mandel", 7369961, "$17.00", "A travelling theatre troupe keeps art alive after the end of the world.", ["speculative fiction"]),
     {
       id: "tote",
-      name: "Folio & Fern tote",
+      name: "Stackhouse Books tote",
       subtitle: "Heavy cotton canvas",
       kind: "product",
       description: "Holds six hardbacks and a baguette.",
       price: "$24.00",
       image: pexels(34800392, 600, 600),
-      url: "https://folioandfern.example/shop/tote",
+      url: "https://stackhousebooks.example/shop/tote",
       tags: [],
     },
     {
@@ -97,7 +97,7 @@ const ITEMS: Record<string, EmailItem> = Object.fromEntries(
       description: "Delivered by email in minutes.",
       price: "From $10",
       image: pexels(264745, 600, 600),
-      url: "https://folioandfern.example/gift-cards",
+      url: "https://stackhousebooks.example/gift-cards",
       tags: [],
     },
   ].map((it) => [it.id, it]),
@@ -143,8 +143,8 @@ const ctxFor = (mode: RenderContext["mode"]): RenderContext => ({
   merge: MERGE,
   mode,
   links: {
-    unsubscribe: "https://folioandfern.example/u?s=demo",
-    viewOnline: "https://folioandfern.example/v?s=demo",
+    unsubscribe: "https://stackhousebooks.example/u?s=demo",
+    viewOnline: "https://stackhousebooks.example/v?s=demo",
     track: (href, blockId) => `https://track.example/c?b=${encodeURIComponent(blockId)}&u=${encodeURIComponent(href)}`,
   },
 });

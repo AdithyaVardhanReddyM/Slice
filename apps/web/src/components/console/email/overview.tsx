@@ -307,7 +307,7 @@ function nextSteps(brand: EmailBrand, campaigns: CampaignRow[], items: EmailItem
       href: `${base}/sending`,
     });
   if (contacts === 0)
-    steps.push({ key: "contacts", icon: FileUp, title: "Import contacts", body: "Upload a CSV: Slice reads each person's taste and groups them, or keeps them one by one.", href: `${base}/contacts` });
+    steps.push({ key: "contacts", icon: FileUp, title: "Import contacts", body: "Upload a CSV: Slice reads each person's taste and sorts them into taste groups, or keeps them as individual contacts.", href: `${base}/contacts` });
   if (items.length === 0)
     steps.push({ key: "items", icon: Library, title: "Add what you sell", body: "Books, products or events. Taste picks in your emails come from this catalog.", href: `${base}/brand?tab=items` });
   const drafts = campaigns.filter((c) => c.status === "draft");
@@ -405,14 +405,14 @@ function LatestCampaigns({ brand, campaigns, items, wide }: { brand: EmailBrand;
 
 const AUDIENCE_KIND: Record<string, { label: string; icon: LucideIcon }> = {
   group: { label: "Taste group", icon: KIND_ICON.csv },
-  people: { label: "One by one", icon: UsersRound },
+  people: { label: "Individuals", icon: UsersRound },
 };
 
 function Audiences({ brand, audiences }: { brand: EmailBrand; audiences: AudienceRow[] | undefined }) {
   const base = `/dashboard/email/${brand.slug}`;
   return (
     <section>
-      <SectionHeading title="Audiences" description="Who your campaigns speak to: taste groups and customer lists, read through Qloo." href={`${base}/contacts`} linkLabel="All contacts" />
+      <SectionHeading title="Audiences" description="Who your campaigns speak to: taste groups and individual contacts, read through Qloo." href={`${base}/contacts`} linkLabel="All contacts" />
       {audiences === undefined ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
@@ -421,7 +421,7 @@ function Audiences({ brand, audiences }: { brand: EmailBrand; audiences: Audienc
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {audiences.slice(0, 7).map((a) => {
+          {[...audiences.filter((a) => a.kind === "group").sort((a, b) => b.size - a.size), ...audiences.filter((a) => a.kind === "people" && a.size > 0)].slice(0, 7).map((a) => {
             const kind = AUDIENCE_KIND[a.kind] ?? AUDIENCE_KIND.group;
             return (
               <Link
@@ -430,11 +430,11 @@ function Audiences({ brand, audiences }: { brand: EmailBrand; audiences: Audienc
                 className="group block overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow hover:shadow-lg"
               >
                 <TasteCover
-                  tiles={coverTiles(profileOf(a))}
+                  tiles={coverTiles(profileOf(a), 5, true)}
                   icon={kind.icon}
                   kindLabel={kind.label}
                   title={a.name}
-                  subtitle={`${fmt.int(a.size)} ${a.size === 1 ? "person" : "people"}${a.listName ? ` · ${a.listName}` : ""}`}
+                  subtitle={`${fmt.int(a.size)} ${a.size === 1 ? "person" : "people"}`}
                 />
                 <div className="truncate px-4 py-3 text-xs text-muted-foreground">
                   {a.status === "ready" ? (a.topEntities?.slice(0, 3).join(", ") || "Profile ready") : a.status === "failed" ? "Profile failed" : (a.progress?.label ?? "Reading their taste")}
