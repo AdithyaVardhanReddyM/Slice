@@ -4,8 +4,8 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server
 const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 // Published pages and their tracker never touch Clerk: they are anonymous and
-// served on brand subdomains.
-const isPagesPublic = createRouteMatcher(["/p(.*)", "/api/pages/track", "/api/pages/form"]);
+// served on brand subdomains. /render is the agent's export surface (Playwright).
+const isPagesPublic = createRouteMatcher(["/p(.*)", "/api/pages/track", "/api/pages/form", "/render(.*)"]);
 
 // Host that published pages live under: {brandSlug}.{PAGES_HOST}/{pageSlug}.
 // The port is ignored when comparing (pages.localhost:3000 → pages.localhost).

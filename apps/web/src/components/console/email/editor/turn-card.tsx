@@ -13,11 +13,25 @@ import { clock, cleanThought, turnLength, useNow, useTypewriter, type ThoughtSte
 import { Spinner } from "@/components/console/setup/atoms";
 import type { EmailLiveTurn } from "./use-email-agent";
 
-interface Phase {
+export interface Phase {
   id: string;
   label: string;
   tools: string[];
 }
+
+/** How a card names its work; Media passes its own. */
+export interface TurnCopy {
+  generating: string;
+  editing: string;
+  /** "Wrote the email" */
+  wrote: string;
+  /** "Worked on the email" */
+  worked: string;
+  /** Tools whose use means the turn wrote something. */
+  writeTools: string[];
+}
+
+const EMAIL_COPY: TurnCopy = { generating: "Writing your email", editing: "Working on your email", wrote: "Wrote the email", worked: "Worked on the email", writeTools: ["add_section", "start_email"] };
 
 /** What a generate turn does, in order (slice_mail's writing flow). */
 const PHASES: Phase[] = [
@@ -40,10 +54,9 @@ interface PhaseView {
   ms?: number;
 }
 
-const phaseOf = (name: string) => PHASES.findIndex((p) => p.tools.includes(name));
-
-function readPhases(steps: BuildStep[], live: boolean) {
-  const views: PhaseView[] = PHASES.map((phase) => ({ phase, status: "pending", tools: [], thoughts: [] }));
+function readPhases(steps: BuildStep[], live: boolean, list: Phase[]) {
+  const phaseOf = (name: string) => list.findIndex((p) => p.tools.includes(name));
+  const views: PhaseView[] = list.map((phase) => ({ phase, status: "pending", tools: [], thoughts: [] }));
   let waiting: ThoughtStep[] = [];
   for (const s of steps) {
     if (s.kind === "thought") waiting.push(s);
@@ -253,8 +266,8 @@ function PhaseRow({ view, last, live, now, startedAt, sections }: { view: PhaseV
   );
 }
 
-function PhaseList({ steps, live, now = 0, startedAt = 0, status, sections }: { steps: BuildStep[]; live: boolean; now?: number; startedAt?: number; status?: string | null; sections?: string[] }) {
-  const { phases, thinking, thinkingAfter } = readPhases(steps, live);
+function PhaseList({ steps, live, now = 0, startedAt = 0, status, sections, list = PHASES }: { steps: BuildStep[]; live: boolean; now?: number; startedAt?: number; status?: string | null; sections?: string[]; list?: Phase[] }) {
+  const { phases, thinking, thinkingAfter } = readPhases(steps, live, list);
   const idle = live && !phases.some((p) => p.status === "active");
   const label = thinking || steps.length ? "Thinking" : status || "Starting";
   const rows: ReactNode[] = [];
@@ -291,32 +304,32 @@ function StepList({ steps, live }: { steps: BuildStep[]; live: boolean }) {
 }
 
 /** The turn while it runs: phases for a generate turn, steps for an edit, a live clock. */
-export function LiveTurnCard({ live, sections }: { live: EmailLiveTurn; sections: string[] }) {
+export function LiveTurnCard({ live, sections, phases = PHASES, copy = EMAIL_COPY }: { live: Pick<EmailLiveTurn, "kind" | "status" | "error" | "steps" | "startedAt">; sections: string[]; phases?: Phase[]; copy?: TurnCopy }) {
   const running = live.status !== null && !live.error;
   const now = useNow(running);
   const generate = live.kind === "generate";
   return (
     <div className="w-full overflow-hidden rounded-xl border bg-background shadow-xs animate-in fade-in-0 slide-in-from-bottom-1 duration-300">
       <div className="flex items-center justify-between gap-3 border-b px-3.5 py-2.5">
-        <span className="text-sm font-medium">{generate ? "Writing your email" : "Working on your email"}</span>
+        <span className="text-sm font-medium">{generate ? copy.generating : copy.editing}</span>
         <span className="num text-xs text-muted-foreground">{clock(now - live.startedAt)}</span>
       </div>
       <div className="px-3.5 py-3">
-        {generate ? <PhaseList steps={live.steps} live={running} now={now} startedAt={live.startedAt} status={live.status} sections={sections} /> : <StepList steps={live.steps} live={running} />}
+        {generate ? <PhaseList steps={live.steps} live={running} now={now} startedAt={live.startedAt} status={live.status} sections={sections} list={phases} /> : <StepList steps={live.steps} live={running} />}
       </div>
     </div>
   );
 }
 
 /** A finished turn, folded to one line ("Wrote the email in 1m 12s"); opens to its steps. */
-export function DoneTurnCard({ steps }: { steps: BuildStep[] }) {
+export function DoneTurnCard({ steps, phases = PHASES, copy = EMAIL_COPY }: { steps: BuildStep[]; phases?: Phase[]; copy?: TurnCopy }) {
   const [open, setOpen] = useState(false);
   const tools = steps.filter((s): s is ToolStep => s.kind === "tool");
   if (tools.length === 0) return null;
-  const wrote = tools.some((t) => t.name === "add_section" || t.name === "start_email");
+  const wrote = tools.some((t) => copy.writeTools.includes(t.name));
   const total = turnLength(steps);
   const failed = tools.some((t) => t.status === "failed");
-  const label = wrote ? (total >= 1000 ? `Wrote the email in ${clock(total)}` : "Wrote the email") : total >= 1000 ? `Worked for ${clock(total)}` : "Worked on the email";
+  const label = wrote ? (total >= 1000 ? `${copy.wrote} in ${clock(total)}` : copy.wrote) : total >= 1000 ? `Worked for ${clock(total)}` : copy.worked;
   return (
     <div className="w-full overflow-hidden rounded-xl border bg-background/70">
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-muted-foreground hover:text-foreground" aria-expanded={open}>
@@ -328,7 +341,7 @@ export function DoneTurnCard({ steps }: { steps: BuildStep[] }) {
         </span>
         <ChevronDown className={cn("ml-auto size-3.5 transition-transform", open && "rotate-180")} />
       </button>
-      {open && <div className="border-t px-3.5 py-3">{wrote ? <PhaseList steps={steps} live={false} /> : <StepList steps={steps} live={false} />}</div>}
+      {open && <div className="border-t px-3.5 py-3">{wrote ? <PhaseList steps={steps} live={false} list={phases} /> : <StepList steps={steps} live={false} />}</div>}
     </div>
   );
 }
