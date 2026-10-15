@@ -77,7 +77,7 @@ function closeLast(steps: BuildStep[], t: number): BuildStep[] {
 }
 
 /** Append an event to the turn's timeline, merging consecutive thought and text deltas. */
-function withStep(steps: BuildStep[], ev: EmailAgentEvent, startedAt: number): BuildStep[] {
+export function withStep(steps: BuildStep[], ev: EmailAgentEvent, startedAt: number): BuildStep[] {
   const last = steps[steps.length - 1];
   const t = Date.now() - startedAt;
   if (ev.type === "thought") {

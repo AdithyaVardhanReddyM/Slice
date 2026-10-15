@@ -60,7 +60,7 @@ export const SERVICES: ServiceMeta[] = [
     label: "Media",
     segment: "media",
     icon: Clapperboard,
-    available: false,
+    available: true,
     clientNoun: "campaign",
     tagline: "Posters, creatives and short video, personalised per audience.",
     description:
