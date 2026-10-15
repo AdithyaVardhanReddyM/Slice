@@ -2,10 +2,12 @@
 
 // Choosing a picture for an image, a video poster, a section background or a
 // quote's avatar: Pexels photos, an upload (Convex storage), the brand's own
-// pictures (logo and item images), or a link.
+// pictures (logo and item images), posters exported from Media, or a link.
 
+import { useQuery } from "convex/react";
 import { ImageUp, Link as LinkIcon, Search } from "lucide-react";
 import { useState } from "react";
+import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { postJson } from "@/lib/pages/stream";
 import { errorText } from "@/lib/email/labels";
@@ -22,7 +24,7 @@ export interface PickedImage {
   credit?: string;
 }
 
-type Tab = "photos" | "upload" | "brand" | "link";
+type Tab = "photos" | "upload" | "brand" | "media" | "link";
 
 function Tile({ src, title, selected, onClick }: { src: string; title?: string; selected?: boolean; onClick: () => void }) {
   const [broken, setBroken] = useState(false);
@@ -50,6 +52,8 @@ export function ImagePicker({ current, onPick, query: initialQuery = "", landsca
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [link, setLink] = useState("");
+  const exported = useQuery(api.media.exports, tab === "media" ? {} : "skip");
+  const posters = (exported ?? []).filter((x) => x.mime.startsWith("image/"));
 
   async function search() {
     const q = query.trim();
@@ -92,6 +96,7 @@ export function ImagePicker({ current, onPick, query: initialQuery = "", landsca
     { id: "photos", label: "Photos" },
     { id: "upload", label: "Upload" },
     { id: "brand", label: "Brand" },
+    { id: "media", label: "Media" },
     { id: "link", label: "Link" },
   ];
 
@@ -159,6 +164,18 @@ export function ImagePicker({ current, onPick, query: initialQuery = "", landsca
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">The brand has no pictures yet. Add items with images in the brand kit.</p>
+        ))}
+      {tab === "media" &&
+        (exported === undefined ? (
+          <Spinner className="size-4" />
+        ) : posters.length ? (
+          <div className="grid grid-cols-4 gap-1.5">
+            {posters.map((r) => (
+              <Tile key={r.url} src={r.url} title={`${r.name} · ${r.campaign}`} selected={current === r.url} onClick={() => onPick({ src: r.url, alt: r.name, source: "media" })} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">Posters you export from Media show here.</p>
         ))}
       {tab === "link" && (
         <form
