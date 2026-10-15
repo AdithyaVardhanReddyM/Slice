@@ -100,20 +100,14 @@ async function storeAssets(ctx: ActionCtx, site: string): Promise<EmailKit> {
 /* Qloo tags ------------------------------------------------------------------------------ */
 
 /**
- * The tag types on a Qloo place that say something about taste. A place
- * carries 100 to 200 tags, most of them practical (payments, parking,
- * accessibility); these are the cuisine, the dishes, the style and the crowd.
+ * The tag types on a Qloo place that say what kind of restaurant it is. A
+ * place carries 100 to 200 tags, most of them practical (payments, parking,
+ * accessibility); dishes ("duck breast"), ambience ("sophisticated") and the
+ * crowd are shared by restaurants of every kind, so ranking on them drifted
+ * towards the grandest rooms (verified 2026-10-16). Cuisine and cooking style
+ * only.
  */
-const PLACE_TAG_TYPES = [
-  "urn:tag:cuisine:qloo",
-  "urn:tag:culinary_style:qloo",
-  "urn:tag:menu_highlight:qloo",
-  "urn:tag:ambience:qloo",
-  "urn:tag:decor:qloo",
-  "urn:tag:visit_intent:qloo",
-  "urn:tag:customer_identity:qloo",
-  "urn:tag:setting:qloo",
-];
+const PLACE_TAG_TYPES = ["urn:tag:cuisine:qloo", "urn:tag:culinary_style:qloo"];
 const BLAND = /^(place|restaurant|food|dining|casual|lively|locals|tourists|foodies|destination|special occasion)$/i;
 
 type Json = Record<string, unknown>;

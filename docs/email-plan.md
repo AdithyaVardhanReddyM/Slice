@@ -561,9 +561,18 @@ neighbourhood, coordinates and 100–200 tags).
   neighbourhood, located through Qloo localities), because Qloo's
   `signal.location.query` barely moves place affinity (Hackney and
   Kensington score the same; Dalston, Shoreditch and Peckham don't resolve).
-- Known gap for campaigns: `emailItems.rank` picks for restaurants lean on
-  popularity (the Small plates group's top picks are The Wolseley and
-  Scott's), and profile tags are lifestyle words rather than cuisine.
+- Ranking: Qloo's place affinity alone picked The Wolseley and Scott's for
+  the Small plates group, so `emailItems.rank` also scores likeness to what
+  the person or group bought or booked (idf-weighted tags, the merchant's own
+  tags and collections over Qloo's, 60% of the score). Restaurants keep only
+  Qloo's cuisine and cooking-style tags; dishes and ambience matched every
+  grand room. Picks now: Small plates → Jolene, Mangal 2, Peckham Bazaar;
+  Grand rooms → The Ledbury, Hawksmoor, The River Café; Olivia → The Ledbury,
+  A. Wong; Leo → Kricket, Rambutan, Darjeeling Express. Stackhouse improved
+  too (crime → The Secret History; Daniel → cookbooks).
+- The agent's personalise prompt says "booked" for a booking catalog, with
+  restaurant examples ("if Brat is your kind of room"); the builder's rules
+  name both kinds.
 
 ## Track ownership (who edits which files)
 

@@ -176,7 +176,7 @@ def _audience_block(state: dict[str, Any]) -> str:
             brief = g.get("brief") or {}
             loves = (g.get("summary") or {}).get("signals") or []
             lines.append(
-                f"  group {g['id']}: \"{g['name']}\" ({g['size']} people{', ' + str(g['new']) + ' not bought yet' if g.get('new') else ''}). Loves: {', '.join(loves[:6]) or 'not read yet'}."
+                f"  group {g['id']}: \"{g['name']}\" ({g['size']} people{', ' + str(g['new']) + ' with nothing bought or booked yet' if g.get('new') else ''}). Loves: {', '.join(loves[:6]) or 'not read yet'}."
                 + (f" Speak to them: {brief.get('speakTo')}" if brief.get("speakTo") else "")
             )
         for p in people[:12]:
@@ -228,7 +228,7 @@ The merchant has not chosen who this goes to. Write for the brand's customers in
         return f"""ONE EMAIL, A VERSION FOR EACH
 This campaign goes to {aud.get('name')}. Every taste group gets its own version, written for the group's taste, and every individual contact gets their own, written from their profile: Slice rewrites the email's personal blocks for each of them when the merchant clicks Personalise in Recipients. So:
 - Write the base email around the one shared idea (the brief's offer or news) for the brand's customers in general: it is what every version shares, and what anyone without a version gets.
-- Some people here may not have bought anything yet (RECIPIENTS says how many per group): nothing shared may thank them for shopping or assume they have read a book. Name books as hooks ("for readers of Tana French"), never as memories ("since you loved The Searcher").
+- Some people here may not have bought or booked anything yet (RECIPIENTS says how many per group): nothing shared may thank them for their custom or assume they have read, eaten at or used anything. Name favourites as hooks ("for readers of Tana French", "if Brat is your kind of room"), never as memories ("since you loved The Searcher", "after your dinner at Brat").
 - Mark as personal: the hero heading, the intro text under it, one items block (pick "taste", count 3 or 4) and, when it shows a pick, the hero image. The offer and its terms, events, the brand's story and the footer stay shared, word for word.
 - Each personal block must stand on its own: its words have to work whatever the other personal blocks end up saying for one group or one person.
 - Use {{{{first_name|there}}}} once, in the hero heading or the greeting; a group's version reaches many people, so the fallback has to read naturally.
@@ -292,7 +292,7 @@ WHAT A GREAT MARKETING EMAIL DOES
 - The first screen does the work, because most readers never scroll: the logo, then a hero with one strong picture or a confident colour band, a headline under 8 words, one or two sentences, and the primary button.
 - One primary call to action: a solid button with a verb and a payoff ("Find your next read", "Save my seat"), 2 to 4 words, to a real page. A long email may repeat the same destination once near the end; anything else is a quieter outline button or a text link.
 - Scannable: heading, a short paragraph (1 to 3 sentences, under 60 words), then the next thing. Live text for everything that matters (headlines, offers, dates); never words baked into pictures.
-- Picks: 2 to 4 items per block, each with its picture, name, subtitle and the catalog's price, and for taste picks a one-line reason in the reader's terms ("For readers of Sally Rooney"). Three across on desktop, stacked on phones.
+- Picks: 2 to 4 items per block, each with its picture, name, subtitle and the catalog's price, and for taste picks a one-line reason in the reader's terms ("For readers of Sally Rooney", "If Brawn is your kind of room"). Three across on desktop, stacked on phones.
 - Proof where it helps: a quote block with a real person's words (the merchant's or the brief's), a staff note. Never invent a quote, a review, a number, an award or a press mention.
 - Personal touches, lightly: a merge tag with a fallback in the greeting or the headline, at most twice in an email. The fallback shows whenever the name is missing, so it has to read naturally right where it stands: "Hi {{{{first_name|there}}}}," works, "{{{{first_name|there}}}}, your picks" and "Spring picks for you, there" do not. Never open a subject with a merge tag. Merge tags: first_name, last_name, name, email, city, brand.
 - Mobile first: body copy in one column; two or three columns only for picks, galleries or a picture beside a short text (they stack on phones, picture first). Buttons in narrow columns go full width.
@@ -304,7 +304,7 @@ TASTE, MADE CONCRETE
 - Read the audience first (get_audience) and lead with what is most distinctive about these people, not what is true of everyone who shops here.
 - Real names from the profile make the hooks: "If Normal People wrecked you in the best way" beats "for fans of literary fiction". Two or three such hooks across an email, not one in every line.
 - Qloo tags set the register: emotional tone and core values shape the headline's angle; aesthetic and personal style shape the pictures (quiet and muted, or bold and saturated); lifestyle shapes the length and the pace.
-- Cultural references are hooks, never claims about the reader: "for readers of X", "if X is on your shelf", never "you love X".
+- Cultural references are hooks, never claims about the reader: "for readers of X", "if X is on your shelf", "if X is your kind of place", never "you love X".
 - Every content section carries evidence: one sentence naming the Qloo signals or the part of the brief behind it ("Qloo: Sally Rooney and Ottessa Moshfegh lead the group's authors; tags 'introspective', 'dry wit'"). The merchant reads it in the editor; recipients never see it.
 - Taste picks are additive: never framed against bestsellers, trending or popular titles, and never those words.
 - A thin profile means leaning on the brand, the brief and the catalog. Never invent taste.
@@ -337,7 +337,7 @@ add_section(section={{"label": "Hero", "background": "accent", "padding": [40, 4
 add_section(section={{"label": "Author night", "evidence": "...", "columns": [
   {{"width": 0.45, "blocks": [{{"type": "image", "src": "...", "alt": "..."}}]}},
   {{"width": 0.55, "verticalAlign": "middle", "blocks": [{{"type": "heading", "text": "...", "level": 2}}, {{"type": "text", "html": "<p>...</p>"}}, {{"type": "button", "label": "Save my seat", "href": "...", "variant": "outline"}}]}}]}})
-An items block: {{"type": "items", "itemIds": ["<id>", "<id>", "<id>"], "pick": "taste", "count": 3, "columns": 3, "show": {{"description": false, "reason": true}}, "buttonLabel": "View", "reasons": {{"<id>": "For readers of <a name from the profile>"}}}}
+An items block: {{"type": "items", "itemIds": ["<id>", "<id>", "<id>"], "pick": "taste", "count": 3, "columns": 3, "show": {{"description": false, "reason": true}}, "buttonLabel": "View", "reasons": {{"<id>": "For fans of <a name from the profile>"}}}}
 edit_email(ops=[
   {{"op": "update_block", "id": "<block id>", "set": {{"text": "..."}}}},
   {{"op": "insert_block", "columnId": "<column id>", "index": 1, "block": {{"type": "text", "html": "<p>...</p>"}}}},
@@ -448,7 +448,7 @@ async def list_items(tool_context: ToolContext, query: str = "") -> dict:
     Returns ids, names, prices, pictures and links to use in items blocks.
 
     Args:
-        query: Words to match ("translated fiction", "cookbook"), or "" for everything.
+        query: Words to match ("translated fiction", "cookbook", "small plates"), or "" for everything.
     """
     items = list((tool_context.state.get(ITEMS) or {}).values())
     words = PB._words(query)

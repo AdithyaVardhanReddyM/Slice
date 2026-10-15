@@ -191,7 +191,19 @@ def _local(contact: dict[str, Any], items: dict[str, dict[str, Any]], take: int)
     return [{"id": i, "score": n, "evidence": ("shares " + ", ".join(ov[:3]) + " with what they love") if ov else "fills out the range"} for n, i, ov in scored[:take]]
 
 
-def _who(target: dict[str, Any]) -> str:
+# Kinds of item people book rather than buy (the console's historyWords uses the same list).
+BOOKED_KINDS = {"restaurant", "table", "hotel", "stay", "room", "experience", "class", "tour", "appointment"}
+
+
+def _history(items: dict[str, dict[str, Any]]) -> dict[str, str]:
+    """How the brand's customer history reads, with examples to match: books and products are bought, restaurants and stays booked."""
+    kinds = [str(it.get("kind") or "") for it in items.values()]
+    if kinds and sum(k in BOOKED_KINDS for k in kinds) > len(kinds) / 2:
+        return {"did": "booked", "hook": "if Brat is your kind of room", "memory": "after your dinner at Brat", "group_reason": "If Brat and Brawn are your kind of rooms", "person_reason": "Because you loved Kiln"}
+    return {"did": "bought", "hook": "for readers of Tana French", "memory": "since you loved The Searcher", "group_reason": "For readers of Tana French", "person_reason": "Because you loved Normal People"}
+
+
+def _who(target: dict[str, Any], h: dict[str, str]) -> str:
     """The reader, as the prompt describes them: a group's size, brief and members, or one person."""
     profile = target.get("profile") or {}
     taste = json.dumps(profile_summary(profile, tags_per_type=5, brands=6, culture=5), ensure_ascii=False) if profile else "not compiled; use what they love"
@@ -200,27 +212,27 @@ def _who(target: dict[str, Any]) -> str:
         members = []
         for m in (target.get("members") or [])[:8]:
             bought = ", ".join(str(x) for x in (m.get("purchases") or [])[:4])
-            members.append(f"  {m.get('name')}{' (' + str(m['neighborhood']) + ')' if m.get('neighborhood') else ''}: " + (f"bought {bought}" if bought else "no purchases yet") + (f"; likes {', '.join(m.get('interests') or [])}" if m.get("interests") else ""))
+            members.append(f"  {m.get('name')}{' (' + str(m['neighborhood']) + ')' if m.get('neighborhood') else ''}: " + (f"{h['did']} {bought}" if bought else f"nothing {h['did']} yet") + (f"; likes {', '.join(m.get('interests') or [])}" if m.get("interests") else ""))
         members_all = target.get("members") or []
         new = [m for m in members_all if not m.get("purchases")]
         newcomers = (
-            f"\n{len(new)} of {len(members_all)} have not bought from the shop yet (placed in the group by age, gender and neighbourhood), so never write as if the reader bought or read something: books are hooks (\"for readers of Tana French\"), never memories (\"since you loved The Searcher\"), and nothing thanks them for shopping."
+            f"\n{len(new)} of {len(members_all)} have not {h['did']} anything yet (placed in the group by age, gender and neighbourhood), so never write as if the reader {h['did']}, read or visited something: favourites are hooks (\"{h['hook']}\"), never memories (\"{h['memory']}\"), and nothing thanks them for their custom."
             if new
             else ""
         )
         return f"""THE GROUP: "{target.get('name')}", a taste group of {target.get('size') or len(members_all)} contacts. Their version goes to every one of them, so write to the group, never to one member: no member's name, no detail only one of them has.{newcomers}
 Who they are: {brief.get('summary') or 'not written'} Speak to them: {brief.get('speakTo') or 'in the brand voice'}. Lead with: {brief.get('leadWith') or 'their strongest shared taste'}.
 Hooks with evidence: {json.dumps(brief.get('hooks') or [], ensure_ascii=False)}
-Members (what they bought from the shop, for your understanding only):
+Members (what they {h['did']}, for your understanding only):
 {chr(10).join(members) or '  (none listed)'}
 The group's Qloo taste profile: {taste}"""
     loves = store.contact_names(target, 10)
     first = store.first_name(target)
     bought = ", ".join(str(x) for x in (target.get("purchases") or [])[:6])
     where = ", ".join(str(x) for x in (target.get("neighborhood"), target.get("city")) if x)
-    newcomer = "" if bought else "\nThey have not bought from the shop yet: welcome them, and never write as if they bought or read anything."
+    newcomer = "" if bought else f"\nThey have not {h['did']} anything yet: welcome them, and never write as if they {h['did']} or read anything."
     return f"""THE PERSON: {target.get('name')} (first name {first or 'unknown'}{', ' + where if where else ''}).{newcomer}
-What they bought from the shop: {bought or 'nothing yet'}.
+What they {h['did']}: {bought or 'nothing yet'}.
 What they told us they love: {', '.join(loves) or 'nothing listed'}.
 Their Qloo taste profile: {taste}"""
 
@@ -237,6 +249,7 @@ async def personalise_one(data: dict[str, Any], contact: dict[str, Any]) -> tupl
     loves = _loves(contact, 10)
     group = _is_group(contact)
     voice = (brand.get("kit") or {}).get("voice") or {}
+    history = _history(items)
     base_links = {b.get("href") for b, _ in slots if b.get("href")}
     allowed = D.Allowed(
         item_ids=[p["id"] for p in picks],
@@ -255,13 +268,13 @@ THE EMAIL: subject "{doc.get('subject')}", preheader "{doc.get('preheader')}".
 PERSONAL BLOCKS TO REWRITE (keep each one's role in the email; write only the listed fields):
 {json.dumps([_slot_view(b, s, items) for b, s in slots], ensure_ascii=False)}
 
-{_who(contact)}
+{_who(contact, history)}
 
 PICKS (the catalog ranked for {'this group' if group else 'this person'} by Qloo; the only items, pictures and links you may use, with the evidence that ranked each):
 {json.dumps(picks, ensure_ascii=False)}
 
 WRITE
-- blocks: one entry per personal block, by id, with only its fields. Items blocks: choose from PICKS (their order is a good default) and give each a reason in their terms that names something they love ("{'For readers of Tana French' if group else 'Because you loved Normal People'}"), never generic. Headings and text: speak to {'the group' if group else "this person"}'s taste with one or two concrete hooks from {'its profile and brief' if group else 'what they love or their profile'}, in the brand's voice; keep the length of the base copy. Use {{{{first_name|there}}}} at most once, and only where the base copy greets them.
+- blocks: one entry per personal block, by id, with only its fields. Items blocks: choose from PICKS (their order is a good default) and give each a reason in their terms that names something they love ("{history['group_reason'] if group else history['person_reason']}"), never generic. Headings and text: speak to {'the group' if group else "this person"}'s taste with one or two concrete hooks from {'its profile and brief' if group else 'what they love or their profile'}, in the brand's voice; keep the length of the base copy. Use {{{{first_name|there}}}} at most once, and only where the base copy greets them.
 - subject and preheader: only when a personal angle makes them clearly better for {'this group' if group else 'this person'}; the subject 45 characters or fewer. Otherwise leave them empty.
 - why: one or two sentences for the merchant: what changed for {first or ('this group' if group else 'this person')} and which of {'its' if group else 'their'} signals drove it, naming them.
 Sentence case, no em dashes, no exclamation marks. Never frame picks against bestsellers or trends. Never invent prices, facts or links."""
