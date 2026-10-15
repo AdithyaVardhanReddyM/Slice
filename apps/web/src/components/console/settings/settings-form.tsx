@@ -18,6 +18,7 @@ import {
   Textarea,
 } from "@/components/console/form";
 import type { Invite, Member, Role } from "@/lib/mock/team";
+import { deleteWidget } from "@/app/(app)/dashboard/concierge/actions";
 import { cn } from "@/lib/utils";
 import { ApiKeys, type KeyInfo } from "./api-keys";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -658,7 +659,7 @@ export function SettingsForm({
                   description="Every conversation, taste profile and API key for this widget is deleted, and the embed stops loading on your store. This can't be undone."
                   actionLabel="Delete permanently"
                   confirmText={context.widgetId}
-                  onConfirm={() => {}}
+                  onConfirm={() => deleteWidget(context.widgetId)}
                 />
               </div>
             </div>

@@ -19,9 +19,10 @@ import {
   UserRound,
   Wand2,
 } from "lucide-react";
-import type { ComponentType } from "react";
+import { useSyncExternalStore, type ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import { getWidget, widgets } from "@/lib/mock/widgets";
+import { removedFromCookieHeader } from "@/lib/concierge/removed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -239,8 +240,17 @@ function NavUser() {
   );
 }
 
+const noop = () => () => {};
+
 function WidgetSwitcher({ currentId }: { currentId: string }) {
   const current = getWidget(currentId) ?? widgets[0];
+  // Deleted widgets live in a cookie; the list only renders once the menu opens, so the server's empty value never shows.
+  const cookie = useSyncExternalStore(
+    noop,
+    () => document.cookie,
+    () => "",
+  );
+  const removed = new Set(removedFromCookieHeader(cookie));
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -260,7 +270,9 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
           <DropdownMenuContent className="w-60" align="start" sideOffset={6}>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Widgets</DropdownMenuLabel>
-              {widgets.map((w) => (
+              {widgets
+                .filter((w) => !removed.has(w.id))
+                .map((w) => (
                 <DropdownMenuItem
                   key={w.id}
                   render={<Link href={`/dashboard/concierge/${w.id}`} />}

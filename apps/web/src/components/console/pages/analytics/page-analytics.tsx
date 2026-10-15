@@ -227,9 +227,10 @@ export function MetricOverview({
       </div>
       <div className="relative px-2 pt-2 pb-3">
         {empty && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
-            <div className="max-w-sm rounded-2xl bg-white/95 px-6 py-5 text-center shadow-[0_12px_32px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/[0.06] backdrop-blur">
-              <span className="mx-auto flex size-10 items-center justify-center rounded-xl bg-orange-50 text-orange-700">
+          // Centred on the plot (above the date labels), on a soft white wash so the faded grid doesn't run through the text.
+          <div className="absolute inset-x-0 top-0 bottom-9 z-10 flex items-center justify-center bg-[radial-gradient(42%_60%_at_50%_50%,var(--card)_45%,transparent_100%)]">
+            <div className="flex max-w-sm flex-col items-center px-6 text-center">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-orange-50 text-orange-700 ring-1 ring-orange-100">
                 <ChartNoAxesColumn className="size-5" />
               </span>
               <p className="mt-3 text-sm font-semibold text-neutral-950">No visits in the last {range} days</p>

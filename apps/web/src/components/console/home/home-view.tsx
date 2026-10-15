@@ -71,7 +71,7 @@ function ServiceCard({
   service: ServiceId;
   title: string;
   description: string;
-  meta?: string;
+  meta?: ReactNode;
   art: ReactNode;
   delay: number;
   onWake: (x: number, y: number) => void;
@@ -122,7 +122,7 @@ const count = (rows: unknown[] | undefined, noun: string) =>
       : `${rows.length} ${rows.length === 1 ? noun : `${noun}s`}`;
 
 /** The console home: a way into each service, over a field of orange ripples. */
-export function HomeView({ liveWidgets }: { liveWidgets: number }) {
+export function HomeView({ liveWidgets }: { liveWidgets: ReactNode }) {
   const field = useRef<RippleFieldHandle>(null);
   const cards = useRef<HTMLDivElement>(null);
   const wake = (x: number, y: number) => field.current?.ripple(x, y, 0.9);
@@ -165,7 +165,7 @@ export function HomeView({ liveWidgets }: { liveWidgets: number }) {
             service="concierge"
             title="Concierge widget"
             description="A shopping assistant that picks from your catalog by taste."
-            meta={`${liveWidgets} live ${liveWidgets === 1 ? "widget" : "widgets"}`}
+            meta={liveWidgets}
             art={<Art src="/illustrations/widget-card.svg" />}
             delay={140}
             onWake={wake}

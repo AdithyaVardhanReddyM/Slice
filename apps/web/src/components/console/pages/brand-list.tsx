@@ -9,10 +9,24 @@ import { api } from "@slice/backend/convex/_generated/api";
 import { fmt } from "@/lib/format";
 import type { Brand } from "@/lib/pages/types";
 import { brandDomain, faviconOf, hostOf } from "@/lib/pages/urls";
+import { luminance } from "@/lib/pages/color";
 import { Badge, PageHeader, Skeleton } from "@/components/console/primitives";
 import { buttonVariants } from "@/components/ui/button";
 import { BrowserFrame } from "./browser-frame";
 import { StatusBadge } from "./shared";
+
+/** White blends into the frame's white page, so the hero block would vanish behind the logo. */
+const blank = (color: string | undefined) => !color || (luminance(color) ?? 0) > 0.94;
+
+/**
+ * The hero block behind the logo: the brand's foreground for a light logo, else its
+ * background, its surface when the background is white, or the frame's own grey.
+ */
+function heroBackgroundOf(kit: Brand["kit"]) {
+  if (!kit) return undefined;
+  if (kit.logo?.onDark) return kit.colors.foreground;
+  return [kit.colors.background, kit.colors.surface].find((c) => !blank(c));
+}
 
 /** The card artwork: the brand's domain in the address bar, its logo on the hero block. */
 function BrandPreview({ brand }: { brand: Brand }) {
@@ -24,7 +38,7 @@ function BrandPreview({ brand }: { brand: Brand }) {
       className="border-b"
       hoverZoom
       domain={brandDomain(brand.slug)}
-      heroBackground={kit ? (kit.logo?.onDark ? kit.colors.foreground : kit.colors.background) : undefined}
+      heroBackground={heroBackgroundOf(kit)}
       hero={
         logo && !broken ? (
           // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.

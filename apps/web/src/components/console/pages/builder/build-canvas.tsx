@@ -14,23 +14,13 @@ import type { BrandKit } from "@slice/backend/convex/pagesTypes";
 import { cn } from "@/lib/utils";
 import { kitOf, type Brand } from "@/lib/pages/types";
 import { googleFontsHref } from "@/components/pages/theme";
+import { luminance } from "@/lib/pages/color";
 import { clock, draftColors, draftFonts, ingredients, useNow } from "./build-steps";
 import type { Draft } from "./use-builder";
 
 export type CanvasMode = "sketch" | "draft" | "presence";
 
 /* Ink: the brand's colour for dots, cursor and sketch ------------------------------- */
-
-function luminance(color: string): number | null {
-  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color.trim());
-  if (!m) return null;
-  const hex = m[1].length === 3 ? [...m[1]].map((c) => c + c).join("") : m[1];
-  const [r, g, b] = [0, 2, 4].map((i) => {
-    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
 
 /** The brand's primary (or accent) when it reads on white; else Slice orange. */
 export function inkOf(brand: Brand | null | undefined): { ink: string; on: string } {

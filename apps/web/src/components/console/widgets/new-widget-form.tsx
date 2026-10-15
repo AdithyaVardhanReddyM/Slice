@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { Field, Input, Select } from "@/components/console/form";
+import { restoreWidget } from "@/app/(app)/dashboard/concierge/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -83,7 +84,9 @@ export function NewWidgetForm() {
     setSubmitting(true);
     // Mock: this will create the widget in Convex (name, host, vertical, market,
     // currency), mint a pk_test key, and route to the new widget's setup.
-    setTimeout(() => router.push("/dashboard/concierge/ostro/setup"), 700);
+    restoreWidget("ostro").then(() =>
+      setTimeout(() => router.push("/dashboard/concierge/ostro/setup"), 700),
+    );
   }
 
   return (

@@ -23,17 +23,6 @@ export interface ServiceMeta {
 
 export const SERVICES: ServiceMeta[] = [
   {
-    id: "concierge",
-    label: "Concierge",
-    segment: "concierge",
-    icon: MessagesSquare,
-    available: true,
-    clientNoun: "widget",
-    tagline: "A shopping assistant that knows each visitor's taste.",
-    description:
-      "An embeddable widget for storefronts. Shoppers answer a few taste questions, then get picks from the store's own catalog ranked by what they're into.",
-  },
-  {
     id: "pages",
     label: "Pages",
     segment: "pages",
@@ -43,6 +32,17 @@ export const SERVICES: ServiceMeta[] = [
     tagline: "Landing, sales and funnel pages that adapt to the visitor.",
     description:
       "One page, many versions. Headlines, imagery, featured offers and calls to action change with the visitor's taste profile, location and campaign.",
+  },
+  {
+    id: "concierge",
+    label: "Concierge",
+    segment: "concierge",
+    icon: MessagesSquare,
+    available: true,
+    clientNoun: "widget",
+    tagline: "A shopping assistant that knows each visitor's taste.",
+    description:
+      "An embeddable widget for storefronts. Shoppers answer a few taste questions, then get picks from the store's own catalog ranked by what they're into.",
   },
   {
     id: "email",
