@@ -25,6 +25,7 @@ import {
   ContactAvatar,
   aboutOf,
   briefOf,
+  historyWords,
   isBusy,
   peopleCount,
   statusLabel,
@@ -322,6 +323,9 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
   const items = useQuery(api.emailItems.list, { brandId: contact.brandId });
   const itemById = useMemo(() => new Map((items ?? []).map((i) => [i._id as string, i])), [items]);
   const bought = (contact.boughtItemIds ?? []).map((id) => itemById.get(id)).filter((i) => !!i);
+  const words = historyWords(items);
+  // Books show as covers; restaurants and products as photos.
+  const covers = bought.every((i) => i.kind === "book");
   // Purchases the catalog didn't have, as written.
   const named = new Set(bought.map((i) => i.name.toLowerCase()));
   const elsewhere = (contact.purchases ?? []).filter((p) => !named.has(p.toLowerCase()) && ![...named].some((n) => p.toLowerCase().startsWith(n)));
@@ -380,19 +384,19 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
             <MapPin className="size-4" />
           </span>
           <div className="min-w-0 text-sm">
-            <p className="font-medium">No purchases yet: placed by age and location</p>
+            <p className="font-medium">{words.none}: placed by age and location</p>
             <p className="mt-0.5 leading-relaxed text-muted-foreground">{contact.placement.note}</p>
           </div>
         </div>
       )}
 
-      <Panel title="What they bought" description="Recent orders or bookings, newest first. Items from the catalog link to it; Qloo reads their taste from them.">
+      <Panel title={words.heading} description="Recent orders or bookings, newest first. Items from the catalog link to it; Qloo reads their taste from them.">
         <div className="space-y-3 p-4">
           {bought.length > 0 && (
             <ul className="flex flex-wrap gap-3">
               {bought.map((i) => (
-                <li key={i._id} className="w-20">
-                  <Thumb src={i.image} alt={i.name} className="aspect-[2/3] w-20 ring-1 ring-black/10" rounded="rounded-md" />
+                <li key={i._id} className={covers ? "w-20" : "w-28"}>
+                  <Thumb src={i.image} alt={i.name} className={cn("ring-1 ring-black/10", covers ? "aspect-[2/3] w-20" : "aspect-[4/3] w-28")} rounded="rounded-md" />
                   <p className="mt-1.5 line-clamp-2 text-xs leading-snug font-medium">{i.name}</p>
                 </li>
               ))}
@@ -407,7 +411,7 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
               ))}
             </div>
           )}
-          {!bought.length && !elsewhere.length && <Hint>Nothing bought yet.</Hint>}
+          {!bought.length && !elsewhere.length && <Hint>{words.none}.</Hint>}
         </div>
       </Panel>
 
@@ -424,7 +428,7 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
       )}
 
       {contact.entities.length > 0 && (
-        <Panel title="How Qloo reads it" description="What they bought and like, as Qloo knows it">
+        <Panel title="How Qloo reads it" description={`What they ${words.did} and like, as Qloo knows it`}>
           <div className="p-4">
             <EntityStrip items={contact.entities} max={16} size="size-6" />
           </div>

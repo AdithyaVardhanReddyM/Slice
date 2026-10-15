@@ -19,6 +19,9 @@ not change a shape without updating this file and telling the other tracks).
   Recipients step (or `POST localhost:8000/email/personalise {campaignId}`).
   The account whose email is `PAGES_DEMO_OWNER_EMAIL` claims the master on
   first visit; every other account gets its own copy.
+- Second demo: `npx convex run emailSeedCovers:run` rebuilds **Covers**, a
+  London restaurant booking app (~1 min; `emailSeed:status '{"slug":"covers"}'`).
+  Site at `localhost:3002/covers`.
 - Real sending: `npx convex env set RESEND_API_KEY re_…`, then connect and
   verify a domain on the brand's Sending page. Demo brands always simulate.
 - Templates render to HTML for a visual check with
@@ -534,6 +537,33 @@ An independent bookshop in Brooklyn.
 - Seed: `packages/backend/convex/emailSeed.ts` (internal actions, data in
   `emailDemoData.ts`), `npx convex run emailSeed:run`, then mark the brand as a
   demo master.
+
+## Second demo brand: Covers
+
+A restaurant booking app for London (fictional) listing 48 real London
+restaurants, picked 2026-10-16 because Qloo's place data is deepest in big
+cities (every top-50 London restaurant has a photo, description,
+neighbourhood, coordinates and 100–200 tags).
+- Data: `convex/emailDemoCovers.ts` (restaurants with their Qloo place ids,
+  areas, collections, editors' notes, kit, contacts); its shared block is
+  copied to `apps/stores/src/lib/covers/restaurants.ts`. Seed:
+  `convex/emailSeedCovers.ts`. Site: `apps/stores/src/app/covers/`.
+- Photos: Qloo's CDN (`images.qloo.com/i/<key>-<width>x-outside.jpg`); five
+  originals carry a newspaper badge and are cropped through wsrv.nl (crop
+  only, no width: wsrv resizes before cropping). The seed copies all of them
+  into Convex storage.
+- Contacts: two regulars kept as individuals (tasting menus; spice) and eight
+  members in two taste groups, *Small plates & natural wine* (east London)
+  and *Grand rooms & big nights* (West End), each with three diners who
+  booked and one new member with only age, gender and neighbourhood.
+- New members are placed by `prospectFits`: for a group of places, being near
+  home counts (share of the group's restaurants within 3 km of their
+  neighbourhood, located through Qloo localities), because Qloo's
+  `signal.location.query` barely moves place affinity (Hackney and
+  Kensington score the same; Dalston, Shoreditch and Peckham don't resolve).
+- Known gap for campaigns: `emailItems.rank` picks for restaurants lean on
+  popularity (the Small plates group's top picks are The Wolseley and
+  Scott's), and profile tags are lifestyle words rather than cuisine.
 
 ## Track ownership (who edits which files)
 

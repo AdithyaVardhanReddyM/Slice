@@ -268,12 +268,61 @@ const signed = (x: number) => `${x >= 0 ? "+" : "−"}${Math.abs(x).toFixed(2)}`
 
 export type ProspectFit = { id: Id<"emailAudiences">; name: string; score: number; note: string };
 
+type Point = { lat: number; lon: number };
+
+/** A restaurant within this distance of someone's home is near them: a short walk or a few stops. */
+const NEAR_KM = 3;
+/** A neighbourhood Qloo finds further than this from the person's city is a namesake elsewhere. */
+const SAME_CITY_KM = 40;
+
+/** Great-circle distance in km. */
+function km(a: Point, b: Point): number {
+  const rad = Math.PI / 180;
+  const h = Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(((b.lon - a.lon) * rad) / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Where someone lives, as precisely as Qloo can place it: their neighbourhood
+ * in their city ("Haggerston, London"), else the city. A neighbourhood found
+ * far from the city is a namesake ("Holland Park, London" finds Belgium) and
+ * gives way to the city.
+ */
+async function homeOf(ctx: ActionCtx, trace: Span[], person: { city?: string; neighborhood?: string }): Promise<(Point & { name: string }) | null> {
+  const city = person.city ? await soft(trace, `Locate "${person.city}"`, () => locateCity(ctx, trace, person.city!), null) : null;
+  const where = locationOf(person);
+  if (person.neighborhood && where) {
+    const spot = await soft(trace, `Locate "${where}"`, () => locateCity(ctx, trace, where), null);
+    if (spot && (!city || km(spot, city) <= SAME_CITY_KM)) return { name: person.neighborhood, lat: spot.lat, lon: spot.lon };
+  }
+  return city ? { name: person.city!, lat: city.lat, lon: city.lon } : null;
+}
+
+/** Where Qloo puts each of these places (≤ 20 ids). */
+async function placeSpots(ctx: ActionCtx, ids: string[]): Promise<Map<string, Point>> {
+  const { body } = await paced([], () => cachedQlooGet(ctx, "/v2/insights", { "filter.type": "urn:entity:place", "filter.results.entities": ids.join(","), take: ids.length }), 120);
+  const out = new Map<string, Point>();
+  for (const e of (JSON.parse(body) as { results?: { entities?: Json[] } }).results?.entities ?? []) {
+    const loc = (e.location ?? {}) as Json;
+    const lat = Number(loc.lat);
+    const lon = Number(loc.lon);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) out.set(String(e.entity_id), { lat, lon });
+  }
+  return out;
+}
+
+/** What a group's favourites are called in a placement note. */
+const NOUN: Record<string, string> = { "urn:entity:book": "titles", "urn:entity:place": "restaurants" };
+
 /**
  * How someone with no purchases yet fits each taste group, from Qloo alone:
- * the group's demographic skew (Qloo's read of who loves its books, kept in
- * its profile) for their age and gender, plus how many of the group's books
- * land with people like them in their city (insights restricted to those
- * books, with their location and demographics as signals). Best first.
+ * the group's demographic skew (Qloo's read of who loves its favourites, kept
+ * in its profile) for their age and gender, plus where they live. For a group
+ * of places (restaurants) that is how many of them are near their home, the
+ * signal that matters when booking a table; for anything else, how many of
+ * the group's favourites land with people like them in their city (insights
+ * restricted to those favourites, with their location and demographics as
+ * signals). Best first.
  */
 export async function prospectFits(
   ctx: ActionCtx,
@@ -283,52 +332,68 @@ export async function prospectFits(
 ): Promise<ProspectFit[]> {
   const out: ProspectFit[] = [];
   const where = locationOf(person);
+  // Located once, the first time a group of places needs it.
+  let home: Promise<(Point & { name: string }) | null> | undefined;
   for (const g of groups) {
     const profile = g.profile as AudienceProfile | undefined;
     if (!profile) continue;
     const d = profile.demographics;
     const ageSkew = person.age ? (d?.age?.[person.age] ?? 0) : 0;
     const genderSkew = person.gender ? (d?.gender?.[person.gender] ?? 0) : 0;
+    const top = profile.entities.slice(0, 20);
+    const types = new Map<string, number>();
+    for (const e of top) types.set(e.type, (types.get(e.type) ?? 0) + 1);
+    const type = [...types].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const ids = top.filter((e) => e.type === type).map((e) => e.id);
+    const noun = (type && NOUN[type]) ?? "favourites";
     let local = 0;
     let localNote = "";
-    if (where) {
-      const top = profile.entities.slice(0, 20);
-      const types = new Map<string, number>();
-      for (const e of top) types.set(e.type, (types.get(e.type) ?? 0) + 1);
-      const type = [...types].sort((a, b) => b[1] - a[1])[0]?.[0];
-      const ids = top.filter((e) => e.type === type).map((e) => e.id);
-      if (type && ids.length) {
+    if (where && type === "urn:entity:place" && ids.length) {
+      home ??= homeOf(ctx, trace, person);
+      const at = await home;
+      if (at) {
         const t0 = Date.now();
-        try {
-          const { body, status } = await paced(
-            [],
-            () =>
-              cachedQlooGet(ctx, "/v2/insights", {
-                "filter.type": type,
-                "filter.results.entities": ids.join(","),
-                "signal.location.query": where,
-                ...demographicSignal({ age: person.age, gender: person.gender }),
-                take: ids.length,
-              }),
-            120,
-          );
-          const rows = (JSON.parse(body) as { results?: { entities?: Json[] } }).results?.entities ?? [];
-          local = rows.reduce((s, r) => s + Number(((r.query ?? {}) as Json).affinity ?? 0), 0) / ids.length;
-          // No rows means Qloo has little data there, not that they'd dislike it: say nothing.
-          if (rows.length) localNote = `${rows.length} of its ${ids.length} titles ${rows.length === 1 ? "is" : "are"} popular with people like them in ${where}`;
-          trace.push({ kind: "qloo", name: `How ${g.name} lands in ${where}`, path: "/v2/insights", cache: status, ms: Date.now() - t0, result: localNote || "no local data" });
-        } catch {
-          // No location read; the demographic skew decides.
-        }
+        const spots = await soft(trace, `Where ${g.name}'s restaurants are`, () => placeSpots(ctx, ids), new Map<string, Point>());
+        const near = ids.filter((id) => {
+          const spot = spots.get(id);
+          return spot && km(spot, at) <= NEAR_KM;
+        }).length;
+        local = near / ids.length;
+        localNote = `${near ? `${near} of its ${ids.length}` : `none of its ${ids.length}`} restaurants ${near === 1 ? "is" : "are"} within ${NEAR_KM} km of ${at.name}`;
+        trace.push({ kind: "slice", name: `How close ${g.name} is to ${at.name}`, ms: Date.now() - t0, result: localNote });
+      }
+    } else if (where && type && ids.length) {
+      const t0 = Date.now();
+      try {
+        const { body, status } = await paced(
+          [],
+          () =>
+            cachedQlooGet(ctx, "/v2/insights", {
+              "filter.type": type,
+              "filter.results.entities": ids.join(","),
+              "signal.location.query": where,
+              ...demographicSignal({ age: person.age, gender: person.gender }),
+              take: ids.length,
+            }),
+          120,
+        );
+        const rows = (JSON.parse(body) as { results?: { entities?: Json[] } }).results?.entities ?? [];
+        local = rows.reduce((s, r) => s + Number(((r.query ?? {}) as Json).affinity ?? 0), 0) / ids.length;
+        // No rows means Qloo has little data there, not that they'd dislike it: say nothing.
+        if (rows.length) localNote = `${rows.length} of its ${ids.length} ${noun} ${rows.length === 1 ? "is" : "are"} popular with people like them in ${where}`;
+        trace.push({ kind: "qloo", name: `How ${g.name} lands in ${where}`, path: "/v2/insights", cache: status, ms: Date.now() - t0, result: localNote || "no local data" });
+      } catch {
+        // No location read; the demographic skew decides.
       }
     }
     const skews = [
       person.age && d ? `${signed(ageSkew)} with ${AGE_WORDS[person.age] ?? person.age}` : "",
       person.gender && d ? `${signed(genderSkew)} with ${person.gender === "female" ? "women" : "men"}` : "",
     ].filter(Boolean);
-    const note = [skews.length ? `Qloo finds this group's titles skew ${skews.join(" and ")}` : "", localNote].filter(Boolean).join("; ");
-    // A city where most groups' titles land says less than who reads them: half weight.
-    out.push({ id: g._id, name: g.name, score: ageSkew + genderSkew + 0.5 * local, note: note ? `${note}.` : "" });
+    const note = [skews.length ? `Qloo finds this group's ${noun} skew ${skews.join(" and ")}` : "", localNote].filter(Boolean).join("; ");
+    // A city where most groups' favourites land says less than who loves them: half weight. Being
+    // near a group's restaurants is a share (0 to 1) and counts in full: people book near home.
+    out.push({ id: g._id, name: g.name, score: ageSkew + genderSkew + (type === "urn:entity:place" ? local : 0.5 * local), note: note ? `${note}.` : "" });
   }
   return out.sort((a, b) => b.score - a.score);
 }

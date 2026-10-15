@@ -19,7 +19,19 @@ import { Panel, Skeleton } from "@/components/console/primitives";
 import { Thumb } from "@/components/console/pages/shared";
 import { coverTiles } from "@/components/console/pages/taste-cover";
 import { Notice, Spinner } from "@/components/console/setup/atoms";
-import { Avatar, ContactAvatar, aboutOf, briefOf, faceOf, firstNameOf, peopleCount, type AudienceRow, type EmailContact } from "@/components/console/email/contacts/shared";
+import {
+  Avatar,
+  ContactAvatar,
+  aboutOf,
+  briefOf,
+  faceOf,
+  firstNameOf,
+  historyWords,
+  peopleCount,
+  type AudienceRow,
+  type EmailContact,
+  type HistoryWords,
+} from "@/components/console/email/contacts/shared";
 import { EmailPreviewDialog } from "@/components/console/email/campaigns/email-preview-dialog";
 import { useBrandItems } from "@/components/console/email/campaigns/shared";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -61,6 +73,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
   const contactIds = useMemo(() => new Set<string>(campaign.contactIds ?? []), [campaign.contactIds]);
   const byTarget = useMemo(() => new Map((versions ?? []).map((v) => [(v.group?._id ?? v.contact?._id) as string, v])), [versions]);
   const itemById = useMemo(() => new Map((items ?? []).map((i) => [i.id, i])), [items]);
+  const words = historyWords(items);
 
   const pickedGroups = groups.filter((g) => groupIds.has(g._id));
   const pickedPeople = (people ?? []).filter((c) => contactIds.has(c._id));
@@ -125,6 +138,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
         slots={slots.length}
         itemsBlockId={itemsBlock?.id}
         itemById={itemById}
+        words={words}
         writing={ticked && running && many && !byTarget.has(t.id)}
         locked={locked}
         onToggle={() => (t.kind === "group" ? toggleGroup(t.audience) : togglePerson(t.contact))}
@@ -294,7 +308,14 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
         </>
       )}
 
-      <VersionPreview campaign={campaign} brand={brand} target={previewing} version={previewing ? byTarget.get(previewing.id) : undefined} onClose={() => setPreviewing(null)} />
+      <VersionPreview
+        campaign={campaign}
+        brand={brand}
+        target={previewing}
+        version={previewing ? byTarget.get(previewing.id) : undefined}
+        words={words}
+        onClose={() => setPreviewing(null)}
+      />
     </div>
   );
 }
@@ -317,14 +338,14 @@ function GroupAvatar({ audience, className }: { audience: AudienceRow; className
 }
 
 /** What the row and the preview say about the reader. */
-function readerOf(t: Target) {
+function readerOf(t: Target, words: HistoryWords) {
   if (t.kind === "group") {
     const a = t.audience;
     const newcomers = a.newcomers ?? 0;
     return {
       name: a.name,
       first: a.name,
-      about: [peopleCount(a.size, "person"), newcomers ? (newcomers === 1 ? "1 hasn't bought yet" : `${newcomers} haven't bought yet`) : null].filter(Boolean).join(", "),
+      about: [peopleCount(a.size, "person"), newcomers ? (newcomers === 1 ? `1 ${words.hasnt}` : `${newcomers} ${words.havent}`) : null].filter(Boolean).join(", "),
       detail: a.status !== "ready" ? (a.status === "failed" ? "Couldn't be read" : "Still being read") : a.topEntities.length ? `Into ${a.topEntities.slice(0, 3).join(", ")}` : undefined,
       unsubscribed: false,
       avatar: (c: string) => <GroupAvatar audience={a} className={c} />,
@@ -336,7 +357,11 @@ function readerOf(t: Target) {
     name: c.name || c.email,
     first: firstNameOf(c),
     about: aboutOf(c) || c.email,
-    detail: c.unsubscribed ? "Unsubscribed" : bought ? `Bought ${bought.slice(0, 2).join(" and ")}${bought.length > 2 ? ` +${bought.length - 2}` : ""}` : "Hasn't bought yet",
+    detail: c.unsubscribed
+      ? "Unsubscribed"
+      : bought
+        ? `${words.Did} ${bought.slice(0, 2).join(" and ")}${bought.length > 2 ? ` +${bought.length - 2}` : ""}`
+        : `${words.hasnt.charAt(0).toUpperCase()}${words.hasnt.slice(1)}`,
     unsubscribed: !!c.unsubscribed,
     avatar: (cls: string) => <ContactAvatar contact={c} className={cls} />,
   };
@@ -354,6 +379,7 @@ function RecipientRow({
   slots,
   itemsBlockId,
   itemById,
+  words,
   writing,
   locked,
   onToggle,
@@ -367,13 +393,14 @@ function RecipientRow({
   slots: number;
   itemsBlockId?: string;
   itemById: Map<string, EmailItem>;
+  words: HistoryWords;
   writing: boolean;
   locked: boolean;
   onToggle: () => void;
   onPreview: () => void;
   onUpdate: () => void;
 }) {
-  const reader = readerOf(target);
+  const reader = readerOf(target, words);
   const group = target.kind === "group";
   const unavailable = reader.unsubscribed || (group && target.audience.status !== "ready" && !ticked);
   const p = version?.status === "ready" ? version.personalization : null;
@@ -467,12 +494,14 @@ function VersionPreview({
   brand,
   target,
   version,
+  words,
   onClose,
 }: {
   campaign: EmailCampaign;
   brand: EmailBrand;
   target: Target | null;
   version?: Version;
+  words: HistoryWords;
   onClose: () => void;
 }) {
   const render = useQuery(
@@ -480,7 +509,7 @@ function VersionPreview({
     !target ? "skip" : target.kind === "group" ? { id: campaign._id, audienceId: target.audience._id } : { id: campaign._id, contactId: target.contact._id },
   );
   const why = version?.status === "ready" ? version.personalization.why : undefined;
-  const reader = target ? readerOf(target) : null;
+  const reader = target ? readerOf(target, words) : null;
   const likes = !target ? [] : target.kind === "group" ? target.audience.topEntities.slice(0, 8) : target.contact.entities.slice(0, 8).map((e) => e.name);
   return (
     <EmailPreviewDialog

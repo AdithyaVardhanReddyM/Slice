@@ -95,7 +95,7 @@ async function storeAssets(ctx: ActionCtx, site: string): Promise<EmailKit> {
 }
 
 /** The storage files an earlier seed uploaded (their ids end the URLs). */
-async function dropAssets(ctx: ActionCtx, kit: EmailKit | undefined) {
+export async function dropAssets(ctx: ActionCtx, kit: EmailKit | undefined) {
   for (const url of [kit?.logo?.src, kit?.logo?.light, kit?.icon]) {
     const id = url?.match(/\/api\/storage\/([^/?#]+)/)?.[1];
     if (!id) continue;
@@ -107,7 +107,8 @@ async function dropAssets(ctx: ActionCtx, kit: EmailKit | undefined) {
   }
 }
 
-async function purge(ctx: ActionCtx, brandId: Id<"emailBrands">) {
+/** Deletes a brand and everything under it, a chunk at a time. */
+export async function purge(ctx: ActionCtx, brandId: Id<"emailBrands">) {
   for (let i = 0; i < 200; i++) {
     const { more } = await ctx.runMutation(internal.emailBrands.purgeChunk, { brandId, reschedule: false });
     if (!more) return;
@@ -320,7 +321,7 @@ const cultureNames = (profile: Profile, key: keyof AudienceProfile["culture"], n
     .join(", ");
 };
 
-function cite(parts: [string, string][]): string {
+export function cite(parts: [string, string][]): string {
   return parts
     .filter(([, value]) => value)
     .map(([label, value]) => `${label}: ${value}`)
@@ -478,7 +479,7 @@ export const mirrorCovers = internalAction({
 });
 
 /** Deletes the covers an earlier seed copied into storage. */
-async function dropCovers(ctx: ActionCtx, brandId: Id<"emailBrands">) {
+export async function dropCovers(ctx: ActionCtx, brandId: Id<"emailBrands">) {
   const refs: { image?: string }[] = await ctx.runQuery(internal.emailSeed.coverRefs, { brandId });
   for (const { image } of refs) {
     const id = storageIdOf(image);
@@ -493,13 +494,13 @@ async function dropCovers(ctx: ActionCtx, brandId: Id<"emailBrands">) {
 
 /* Status ---------------------------------------------------------------------------------- */
 
-/** What the seed made so far. */
+/** What the seed made so far; `slug` picks another demo master ("covers"). */
 export const status = internalQuery({
-  args: {},
-  handler: async (ctx) => {
+  args: { slug: v.optional(v.string()) },
+  handler: async (ctx, { slug = SLUG }) => {
     const brand = await ctx.db
       .query("emailBrands")
-      .withIndex("by_slug", (q) => q.eq("slug", SLUG))
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
       .unique();
     if (!brand) return null;
     const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", brand._id)).collect();
@@ -515,7 +516,7 @@ export const status = internalQuery({
       brand: { id: brand._id, slug: brand.slug, name: brand.name, status: brand.status, demo: brand.demo, owner: brand.owner ?? null, url: brand.url, logo: (brand.kit as EmailKit | undefined)?.logo?.src, copies: copies.length },
       items: {
         total: items.length,
-        books: items.filter((i) => i.kind === "book").length,
+        byKind: Object.fromEntries([...new Set(items.map((i) => i.kind))].map((k) => [k, items.filter((i) => i.kind === k).length])),
         qloo: items.filter((i) => i.qloo).length,
         unmatched: items.filter((i) => !i.qloo).map((i) => i.name),
       },

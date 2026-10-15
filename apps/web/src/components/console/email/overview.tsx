@@ -48,6 +48,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { KIND_ICON, TasteCover, coverTiles } from "@/components/console/pages/taste-cover";
 import { useEmailBrand } from "./brand-context";
 import { EmailBrandGlyph, countsOf, hostOf, type BrandRow } from "./brand-shell";
+import { historyWords } from "./contacts/shared";
 import { EmailFrame } from "./email-frame";
 
 /* Shared pieces: campaign thumbnails and cards (also used by the brand list and the home tile) */
@@ -242,7 +243,7 @@ function BrandHero({
               <span className="text-xs text-muted-foreground">Button</span>
               <span className="flex h-7 items-center">
                 <span className="truncate px-3 py-1 text-xs font-semibold" style={button}>
-                  Shop now
+                  {historyWords(items).did === "booked" ? "Book now" : "Shop now"}
                 </span>
               </span>
             </div>

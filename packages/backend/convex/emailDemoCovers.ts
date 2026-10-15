@@ -1,0 +1,1156 @@
+// Covers, the Email service's second demo brand: a restaurant booking app for
+// London (fictional) that lists real London restaurants. Everything the seed
+// (emailSeedCovers.ts) needs, as plain data: the restaurants, the app's kit,
+// about, footer and sender, and two uploads: eight diners for taste groups
+// (six with booking history, two new sign-ups with only age, gender and
+// neighbourhood) and two regulars kept as individual contacts.
+// No Convex imports.
+//
+// The app's site is apps/stores (/covers). The block between the "shared"
+// markers below is copied verbatim to apps/stores/src/lib/covers/restaurants.ts,
+// so the site and the emails list the same restaurants: edit it here, then
+// copy it over.
+//
+// Restaurant facts (address, coordinates, dishes, photo) come from Qloo's
+// place entities, read 2026-10-16; the copy is ours. London was picked for
+// its depth in Qloo: of a city's top 50 restaurants all 50 have a photo, a
+// description, a neighbourhood and 100 to 200 tags (cuisine, dishes,
+// ambience, who goes, age bands).
+
+import type { EmailAbout, EmailFooterInfo, EmailItem, EmailKit, EmailSender } from "./emailTypes";
+
+/* ---- shared with apps/stores/src/lib/covers/restaurants.ts ---- */
+
+export type CoversAreaId = "east" | "clerkenwell" | "soho" | "mayfair" | "covent-garden" | "marylebone" | "west" | "south";
+
+export interface CoversArea {
+  id: CoversAreaId;
+  name: string;
+  /** One line for the area's heading. */
+  blurb: string;
+}
+
+export const COVERS_AREAS: CoversArea[] = [
+  { id: "east", name: "Shoreditch & East", blurb: "Open fires, natural wine and the city's best small plates, from Redchurch Street to Dalston." },
+  { id: "clerkenwell", name: "Clerkenwell & Holborn", blurb: "Exmouth Market, Smithfield and a few dining rooms you'd never find on your own." },
+  { id: "soho", name: "Soho", blurb: "Counter seats, late tables and the most cooking per square foot in London." },
+  { id: "mayfair", name: "Mayfair & Piccadilly", blurb: "Grand rooms, oyster bars and white tablecloths that still feel like an occasion." },
+  { id: "covent-garden", name: "Covent Garden & Strand", blurb: "Theatre suppers, candlelit conservatories and London's oldest restaurant." },
+  { id: "marylebone", name: "Marylebone & Fitzrovia", blurb: "Quiet streets, serious kitchens and two of the city's most original tasting menus." },
+  { id: "west", name: "Notting Hill & West", blurb: "Neighbourhood fine dining and a long lunch by the river." },
+  { id: "south", name: "South of the river", blurb: "Borough Market's counters and Peckham's best tables." },
+];
+
+export type CoversCollectionId = "small-plates" | "grand-rooms" | "tasting-menus" | "spice" | "mezze" | "pasta" | "british" | "counter";
+
+export interface CoversCollection {
+  id: CoversCollectionId;
+  name: string;
+  blurb: string;
+}
+
+export const COVERS_COLLECTIONS: CoversCollection[] = [
+  { id: "small-plates", name: "Small plates & natural wine", blurb: "Short menus, open kitchens and a wine list you'll want to ask about." },
+  { id: "grand-rooms", name: "Grand rooms", blurb: "Big rooms, proper service and a reason to dress up a little." },
+  { id: "tasting-menus", name: "Tasting menus", blurb: "Hand the evening over to the kitchen. Worth every course." },
+  { id: "spice", name: "Spice & fire", blurb: "Charcoal, curry leaves and chilli: Thai grills, Sri Lankan kitchens and Bombay cafés." },
+  { id: "mezze", name: "Mezze & the Med", blurb: "Flatbreads, grills and sharing plates from Andalusia to Tehran." },
+  { id: "pasta", name: "Pasta & Italian", blurb: "Hand-rolled pasta, long lunches and a very good tiramisu." },
+  { id: "british", name: "Proper British", blurb: "Pies, game, roasts and the restaurants that made British food worth crossing town for." },
+  { id: "counter", name: "Counter seats", blurb: "For one or two: watch the kitchen, eat early or late, no fuss." },
+];
+
+export type CoversEditorId = "rosa" | "kwame" | "hattie";
+
+export interface CoversEditor {
+  id: CoversEditorId;
+  name: string;
+  role: string;
+}
+
+export const COVERS_EDITORS: CoversEditor[] = [
+  { id: "rosa", name: "Rosa Delgado", role: "Editor" },
+  { id: "kwame", name: "Kwame Asante", role: "Restaurants editor" },
+  { id: "hattie", name: "Hattie Moss", role: "Wine and bars" },
+];
+
+export interface CoversRestaurant {
+  slug: string;
+  name: string;
+  /** "Basque grill": what it cooks, in a few words. */
+  cuisine: string;
+  area: CoversAreaId;
+  /** The street-level neighbourhood, as people say it ("Shoreditch", "Exmouth Market"). */
+  neighbourhood: string;
+  address: string;
+  /** 1 (£) to 4 (££££). */
+  price: 1 | 2 | 3 | 4;
+  lat: number;
+  lon: number;
+  /** A few lowercase words that help match taste. */
+  tags: string[];
+  /** Our own words, one or two sentences. */
+  description: string;
+  /** Three dishes people book it for. */
+  dishes: string[];
+  /** Qloo's photo (images.qloo.com/i/<key>-<width>x-outside.jpg); `crop` (x, y, w, h on the 1200-wide original) cuts out a press badge. */
+  photo: { key: string; alt: string; crop?: [number, number, number, number] };
+  collections: CoversCollectionId[];
+  /** The matching Qloo place. */
+  qloo: { id: string; name: string };
+  note?: { by: CoversEditorId; text: string };
+  /** Joined Covers recently. */
+  isNew?: boolean;
+}
+
+export const COVERS_RESTAURANTS: CoversRestaurant[] = [
+  // Shoreditch & East
+  {
+    slug: "brat",
+    name: "Brat",
+    cuisine: "Basque grill",
+    area: "east",
+    neighbourhood: "Shoreditch",
+    address: "First floor, 4 Redchurch Street, London E1 6JL",
+    price: 3,
+    lat: 51.5242,
+    lon: -0.0767,
+    tags: ["basque", "open fire", "seafood", "natural wine", "small plates", "date night"],
+    description: "Tomos Parry's wood-panelled room above Redchurch Street, where nearly everything meets the open fire. Come for the whole turbot to share and stay for the burnt cheesecake.",
+    dishes: ["Whole grilled turbot", "Grilled bread with anchovies", "Basque cheesecake"],
+    photo: { key: "EF9D94EB-A0CF-4734-B443-555E8528467F-1UtTfp", alt: "Brat's dining room, wooden tables in front of the wood-fired oven", crop: [232, 0, 735, 490] },
+    collections: ["small-plates"],
+    qloo: { id: "EF9D94EB-A0CF-4734-B443-555E8528467F", name: "BRAT Restaurant" },
+    note: { by: "rosa", text: "Order the turbot before you sit down. It's for two, but nobody has ever regretted it as a party of one." },
+  },
+  {
+    slug: "brawn",
+    name: "Brawn",
+    cuisine: "Modern European small plates",
+    area: "east",
+    neighbourhood: "Columbia Road",
+    address: "49 Columbia Road, London E2 7RG",
+    price: 2,
+    lat: 51.529,
+    lon: -0.0702,
+    tags: ["small plates", "natural wine", "pork", "neighbourhood", "mediterranean", "sunday lunch"],
+    description: "A corner room on Columbia Road with a short, pork-loving menu and one of east London's great natural wine lists. Sunday lunch after the flower market is a ritual.",
+    dishes: ["Gougères", "Raw scallops", "Bavette"],
+    photo: { key: "423D5191-C5AF-4CE7-BA39-4B566B1CFBA3-2huqy8", alt: "Brawn's bar and dining room, wine bottles on the shelves and diners at the counter", crop: [180, 0, 682, 455] },
+    collections: ["small-plates"],
+    qloo: { id: "423D5191-C5AF-4CE7-BA39-4B566B1CFBA3", name: "Brawn" },
+    note: { by: "hattie", text: "Tell them what you usually drink and let them pour something else. That's the whole point of Brawn." },
+  },
+  {
+    slug: "cafe-cecilia",
+    name: "Cafe Cecilia",
+    cuisine: "Modern European",
+    area: "east",
+    neighbourhood: "Hackney",
+    address: "Canal Place, 32 Andrews Road, London E8 4FX",
+    price: 2,
+    lat: 51.5346,
+    lon: -0.0601,
+    tags: ["modern european", "irish", "canal side", "lunch", "small plates", "bright"],
+    description: "A bright, white room by the Regent's Canal with Max Rocha's short, generous menu. The sage and anchovy fritti are famous for good reason; leave room for the Guinness bread ice cream.",
+    dishes: ["Sage and anchovy fritti", "Onglet with peppercorn sauce", "Guinness bread ice cream"],
+    photo: { key: "8FFF6633-C2CB-4904-8E3A-EF2EDC31A4C8-1byDqz", alt: "A full lunch service at Cafe Cecilia, tall windows over the canal", crop: [120, 0, 682, 455] },
+    collections: ["small-plates"],
+    qloo: { id: "8FFF6633-C2CB-4904-8E3A-EF2EDC31A4C8", name: "Cafe Cecilia" },
+  },
+  {
+    slug: "rochelle-canteen",
+    name: "Rochelle Canteen",
+    cuisine: "Seasonal British",
+    area: "east",
+    neighbourhood: "Arnold Circus",
+    address: "16 Playground Gardens, London E2 7FA",
+    price: 2,
+    lat: 51.5258,
+    lon: -0.0743,
+    tags: ["seasonal british", "garden", "lunch", "pies", "secret", "small plates"],
+    description: "Margot Henderson's canteen in an old school bike shed, behind a door in a wall near Arnold Circus. Pies, terrines and long lunches in the walled garden.",
+    dishes: ["Chicken pot pie", "Pig's head terrine", "Ginger loaf"],
+    photo: { key: "53A21C26-D8A3-4134-AC01-F6517A173CB6-1Brh52", alt: "Rochelle Canteen's glass-roofed dining room with tables set for lunch" },
+    collections: ["small-plates", "british"],
+    qloo: { id: "53A21C26-D8A3-4134-AC01-F6517A173CB6", name: "Rochelle Canteen" },
+    note: { by: "kwame", text: "Ring the bell on the gate. The garden table in September is the best lunch in London." },
+  },
+  {
+    slug: "manteca",
+    name: "Manteca",
+    cuisine: "Nose-to-tail Italian",
+    area: "east",
+    neighbourhood: "Shoreditch",
+    address: "49–51 Curtain Road, London EC2A 3PT",
+    price: 2,
+    lat: 51.524,
+    lon: -0.0806,
+    tags: ["italian", "pasta", "nose to tail", "salumi", "lively", "natural wine"],
+    description: "Hand-rolled pasta, house-cured salumi and focaccia from the wood oven on Curtain Road. Loud, fun and best with a crowd.",
+    dishes: ["Pig skin ragù", "Brown crab cacio e pepe", "Rosemary focaccia"],
+    photo: { key: "8960B491-AB8E-40E7-933C-C4A3B202035F-0fCfT9", alt: "Manteca's long bar with hanging salumi and copper lights" },
+    collections: ["small-plates", "pasta"],
+    qloo: { id: "8960B491-AB8E-40E7-933C-C4A3B202035F", name: "manteca" },
+  },
+  {
+    slug: "smoking-goat",
+    name: "Smoking Goat",
+    cuisine: "Thai bar and grill",
+    area: "east",
+    neighbourhood: "Shoreditch",
+    address: "64 Shoreditch High Street, London E1 6JJ",
+    price: 2,
+    lat: 51.5242,
+    lon: -0.0769,
+    tags: ["thai", "barbecue", "spicy", "late night", "cocktails", "groups"],
+    description: "Bangkok late-night canteen cooking on Shoreditch High Street: fish sauce wings, lardo noodles and a lot of chilli. Big tables for groups, stools for two.",
+    dishes: ["Fish sauce chicken wings", "Lardo egg noodles", "Massaman short rib"],
+    photo: { key: "57A98CF0-FD87-432D-B973-D4DF454B7B4E-4hHSZm", alt: "Smoking Goat's dark wood dining room with tall windows onto the street" },
+    collections: ["spice", "counter"],
+    qloo: { id: "57A98CF0-FD87-432D-B973-D4DF454B7B4E", name: "Smoking Goat Shoreditch" },
+  },
+  {
+    slug: "dishoom-shoreditch",
+    name: "Dishoom Shoreditch",
+    cuisine: "Bombay café",
+    area: "east",
+    neighbourhood: "Shoreditch",
+    address: "7 Boundary Street, London E2 7JE",
+    price: 2,
+    lat: 51.5245,
+    lon: -0.0766,
+    tags: ["indian", "bombay", "breakfast", "groups", "lively", "comfort food"],
+    description: "The Irani café of old Bombay on Boundary Street. Black daal that cooks for a day, bacon naan rolls at breakfast and a room that always feels like a party.",
+    dishes: ["House black daal", "Gunpowder potatoes", "Bacon naan roll"],
+    photo: { key: "14BAC327-D468-4B60-84DC-78FF93F3BB71-3lW6sZ", alt: "Dishoom's busy dining room under industrial lamps" },
+    collections: ["spice"],
+    qloo: { id: "14BAC327-D468-4B60-84DC-78FF93F3BB71", name: "Dishoom Shoreditch" },
+  },
+  {
+    slug: "the-clove-club",
+    name: "The Clove Club",
+    cuisine: "Modern British tasting menu",
+    area: "east",
+    neighbourhood: "Shoreditch",
+    address: "Shoreditch Town Hall, 380 Old Street, London EC1V 9LT",
+    price: 4,
+    lat: 51.5271,
+    lon: -0.0793,
+    tags: ["tasting menu", "modern british", "fine dining", "seafood", "special occasion", "wine pairing"],
+    description: "A tasting menu in the old dining room of Shoreditch Town Hall, blue tiles and an open kitchen. It starts with buttermilk fried chicken in pine salt and gets more serious from there.",
+    dishes: ["Buttermilk fried chicken", "Orkney scallop", "Grilled habanero granita"],
+    photo: { key: "A6272150-9E2B-424D-9FB0-2A71247351EB-2HuZWT", alt: "The Clove Club's blue-tiled open kitchen and bare wooden tables" },
+    collections: ["tasting-menus"],
+    qloo: { id: "A6272150-9E2B-424D-9FB0-2A71247351EB", name: "The Clove Club" },
+  },
+  {
+    slug: "hawksmoor-spitalfields",
+    name: "Hawksmoor Spitalfields",
+    cuisine: "Steakhouse",
+    area: "east",
+    neighbourhood: "Spitalfields",
+    address: "157A Commercial Street, London E1 6BJ",
+    price: 3,
+    lat: 51.5214,
+    lon: -0.076,
+    tags: ["steak", "british", "sunday roast", "cocktails", "groups", "classic"],
+    description: "The first Hawksmoor: British beef cooked over charcoal, triple-cooked chips and one of London's best Sunday roasts, in a low-lit room built for groups.",
+    dishes: ["Bone-in sirloin", "Sunday roast beef", "Sticky toffee pudding"],
+    photo: { key: "F3D2E195-D3B7-4524-B5CF-FFB010C8E877-0cav8j", alt: "Hawksmoor's low-lit dining room with dark wood and brick" },
+    collections: ["british"],
+    qloo: { id: "F3D2E195-D3B7-4524-B5CF-FFB010C8E877", name: "Hawksmoor Spitalfields" },
+  },
+  {
+    slug: "ottolenghi-spitalfields",
+    name: "Ottolenghi Spitalfields",
+    cuisine: "Mediterranean",
+    area: "east",
+    neighbourhood: "Spitalfields",
+    address: "50 Artillery Lane, London E1 7LJ",
+    price: 2,
+    lat: 51.5182,
+    lon: -0.0772,
+    tags: ["mediterranean", "vegetables", "brunch", "sharing plates", "bakery", "bright"],
+    description: "Vegetables as the main event, a counter heaped with salads and cakes, and an all-day menu that works for brunch, lunch or dinner by candlelight.",
+    dishes: ["Roasted cauliflower with yoghurt and pine nuts", "Chicken shawarma with almond crumble", "Shakshuka"],
+    photo: { key: "BC781B0A-DB38-42C0-8EBE-DA4912E576FC-2khIYw", alt: "Ottolenghi's long communal tables, red curtains and flowers" },
+    collections: ["mezze"],
+    qloo: { id: "BC781B0A-DB38-42C0-8EBE-DA4912E576FC", name: "Ottolenghi Spitalfields" },
+  },
+  {
+    slug: "bubala",
+    name: "Bubala",
+    cuisine: "Vegetarian Middle Eastern",
+    area: "east",
+    neighbourhood: "Spitalfields",
+    address: "65 Commercial Street, London E1 6BD",
+    price: 2,
+    lat: 51.5178,
+    lon: -0.0741,
+    tags: ["vegetarian", "middle eastern", "sharing plates", "tel aviv", "lively", "date night"],
+    description: "Tel Aviv-style vegetarian sharing plates that never feel like you're missing anything. Order the halloumi with black seed honey and more laffa than you think.",
+    dishes: ["Halloumi with black seed honey", "Confit potato latkes", "Oyster mushroom skewers"],
+    photo: { key: "F87C7F2F-06B1-4750-8CB5-250D029882C9-3Z0uzh", alt: "Bubala's shopfront on Commercial Street at dusk" },
+    collections: ["mezze"],
+    qloo: { id: "F87C7F2F-06B1-4750-8CB5-250D029882C9", name: "Bubala Spitalfields" },
+  },
+  {
+    slug: "mangal-2",
+    name: "Mangal 2",
+    cuisine: "Modern Turkish",
+    area: "east",
+    neighbourhood: "Dalston",
+    address: "4 Stoke Newington Road, London N16 7XN",
+    price: 2,
+    lat: 51.5508,
+    lon: -0.0749,
+    tags: ["turkish", "charcoal grill", "natural wine", "small plates", "neighbourhood", "dalston"],
+    description: "A Dalston institution, rebuilt by the founder's sons around Anatolian small plates, the charcoal grill and natural wine. The homemade pide is non-negotiable.",
+    dishes: ["Homemade pide", "Grilled mackerel with bulgur", "Fig leaf baklava"],
+    photo: { key: "46D5B704-E741-400A-9C6E-DFEAEBD59C5D-483JOB", alt: "Mangal 2's dining room, a long table set by the window", crop: [100, 0, 735, 490] },
+    collections: ["small-plates", "mezze"],
+    qloo: { id: "46D5B704-E741-400A-9C6E-DFEAEBD59C5D", name: "Mangal 2 Restaurant" },
+  },
+  {
+    slug: "jolene",
+    name: "Jolene",
+    cuisine: "Bakery and restaurant",
+    area: "east",
+    neighbourhood: "Newington Green",
+    address: "21 Newington Green, London N16 9PU",
+    price: 2,
+    lat: 51.5513,
+    lon: -0.0844,
+    tags: ["bakery", "pasta", "seasonal", "brunch", "neighbourhood", "small plates"],
+    description: "A bakery-restaurant on Newington Green: cinnamon buns and sausage rolls at the counter, then a short, daily menu of pasta and seasonal plates.",
+    dishes: ["Rabbit ragù pappardelle", "Sausage roll", "Cinnamon bun"],
+    photo: { key: "F3572068-B461-4A4C-BAD0-F65A5BAED39A-4zJ7fe", alt: "Jolene's red brick corner front with tables on the pavement" },
+    collections: ["small-plates", "pasta"],
+    qloo: { id: "F3572068-B461-4A4C-BAD0-F65A5BAED39A", name: "Jolene Bakery & Restaurant" },
+    isNew: true,
+  },
+
+  // Clerkenwell & Holborn
+  {
+    slug: "sessions-arts-club",
+    name: "Sessions Arts Club",
+    cuisine: "Modern European",
+    area: "clerkenwell",
+    neighbourhood: "Clerkenwell",
+    address: "Old Sessions House, 24 Clerkenwell Green, London EC1R 0NA",
+    price: 3,
+    lat: 51.5226,
+    lon: -0.106,
+    tags: ["modern european", "candlelit", "date night", "art", "natural wine", "special occasion"],
+    description: "The old judges' dining room at the top of the Sessions House: peeling plaster, candles and a short European menu. Possibly the most beautiful room in London.",
+    dishes: ["Brown shrimp croquettes", "Smoked eel", "Chocolate tart"],
+    photo: { key: "3EACF8E5-FEBE-47E6-BBBF-2EEE3CB97A2D-0Uhoiv", alt: "Sessions Arts Club's high-ceilinged room with arched windows and velvet chairs" },
+    collections: ["small-plates"],
+    qloo: { id: "3EACF8E5-FEBE-47E6-BBBF-2EEE3CB97A2D", name: "Sessions Arts Club" },
+    note: { by: "rosa", text: "Book the last sitting and give yourself ten minutes just to look at the room." },
+  },
+  {
+    slug: "st-john",
+    name: "St. JOHN",
+    cuisine: "Nose-to-tail British",
+    area: "clerkenwell",
+    neighbourhood: "Smithfield",
+    address: "26 St John Street, London EC1M 4AY",
+    price: 3,
+    lat: 51.5205,
+    lon: -0.1014,
+    tags: ["british", "nose to tail", "offal", "classic", "white room", "madeleines"],
+    description: "Fergus Henderson's whitewashed former smokehouse, where nose-to-tail cooking began. Roast bone marrow and parsley salad, then madeleines warm from the oven.",
+    dishes: ["Roast bone marrow and parsley salad", "Welsh rarebit", "Madeleines"],
+    photo: { key: "28500B90-099D-4A83-AC5E-9C091B5C6A69-0qoQhb", alt: "St. JOHN's brick front on St John Street" },
+    collections: ["british"],
+    qloo: { id: "28500B90-099D-4A83-AC5E-9C091B5C6A69", name: "St. John" },
+  },
+  {
+    slug: "moro",
+    name: "Moro",
+    cuisine: "Spanish and North African",
+    area: "clerkenwell",
+    neighbourhood: "Exmouth Market",
+    address: "34–36 Exmouth Market, London EC1R 4QE",
+    price: 2,
+    lat: 51.5259,
+    lon: -0.109,
+    tags: ["spanish", "north african", "wood oven", "sherry", "classic", "groups"],
+    description: "Sam and Sam Clark's Exmouth Market dining room, cooking Spain and North Africa over a wood oven and charcoal since 1997. A zinc bar for sherry and tapas while you wait.",
+    dishes: ["Lamb with aubergine", "Grilled squid", "Málaga raisin ice cream"],
+    photo: { key: "82D4E3F0-6D6F-4193-A2AC-9482ED6A472C-0BKgaI", alt: "Moro's long zinc bar and open kitchen" },
+    collections: ["mezze"],
+    qloo: { id: "82D4E3F0-6D6F-4193-A2AC-9482ED6A472C", name: "Moro" },
+  },
+  {
+    slug: "morito",
+    name: "Morito",
+    cuisine: "Tapas and mezze",
+    area: "clerkenwell",
+    neighbourhood: "Exmouth Market",
+    address: "32 Exmouth Market, London EC1R 4QE",
+    price: 2,
+    lat: 51.5258,
+    lon: -0.1091,
+    tags: ["tapas", "mezze", "small plates", "counter", "casual", "wine"],
+    description: "Moro's little sister next door: crispy aubergine with date molasses, croquetas and a glass of something Spanish at the counter.",
+    dishes: ["Crispy aubergine", "Fried chickpeas", "Lamb chops"],
+    photo: { key: "18AF1CD4-FD3E-4644-839E-5083178D1A23-0v1I95", alt: "Morito's bright room with blue tiles and a long counter" },
+    collections: ["small-plates", "mezze", "counter"],
+    qloo: { id: "18AF1CD4-FD3E-4644-839E-5083178D1A23", name: "Morito" },
+  },
+  {
+    slug: "noble-rot",
+    name: "Noble Rot",
+    cuisine: "Wine bar and restaurant",
+    area: "clerkenwell",
+    neighbourhood: "Lamb's Conduit Street",
+    address: "51 Lamb's Conduit Street, London WC1N 3NB",
+    price: 3,
+    lat: 51.5219,
+    lon: -0.1187,
+    tags: ["wine bar", "british", "seasonal", "game", "cosy", "wine list"],
+    description: "A creaky, wood-panelled wine bar with a list that wine people travel for and a short, seasonal British menu. Slip sole, then pheasant in autumn.",
+    dishes: ["Slip sole", "Roast duck", "Comté tart"],
+    photo: { key: "557F1441-4171-4D86-8313-C6FDECE0B460-3Njwv2", alt: "A full, low-lit evening at Noble Rot's bar" },
+    collections: ["small-plates", "british"],
+    qloo: { id: "557F1441-4171-4D86-8313-C6FDECE0B460", name: "Noble Rot Lamb's Conduit" },
+    note: { by: "hattie", text: "Ask what's open by the glass that isn't on the list. There's always something." },
+  },
+
+  // Covent Garden & Strand
+  {
+    slug: "toklas",
+    name: "Toklas",
+    cuisine: "Mediterranean",
+    area: "covent-garden",
+    neighbourhood: "Strand",
+    address: "1 Surrey Street, London WC2R 2ND",
+    price: 3,
+    lat: 51.512,
+    lon: -0.1153,
+    tags: ["mediterranean", "terrace", "bakery", "seasonal", "wine", "lunch"],
+    description: "A sunny room and terrace off the Strand with its own bakery, cooking seasonal Mediterranean plates and wild fish to share.",
+    dishes: ["Mussel escabeche", "Wild sea bass to share", "Lemon tart"],
+    photo: { key: "F6FC9159-C87A-4355-8249-A901647EE6AB-2gVTLv", alt: "Toklas' dining room with green banquettes and big windows" },
+    collections: ["small-plates"],
+    qloo: { id: "F6FC9159-C87A-4355-8249-A901647EE6AB", name: "Toklas" },
+    isNew: true,
+  },
+  {
+    slug: "rules",
+    name: "Rules",
+    cuisine: "Classic British and game",
+    area: "covent-garden",
+    neighbourhood: "Covent Garden",
+    address: "35 Maiden Lane, London WC2E 7LB",
+    price: 3,
+    lat: 51.5108,
+    lon: -0.1232,
+    tags: ["british", "game", "pies", "historic", "classic", "theatre"],
+    description: "London's oldest restaurant, open on Maiden Lane since 1798: red banquettes, game from its own estate and steak and kidney pudding. A theatre supper the way it used to be.",
+    dishes: ["Steak and kidney pudding", "Braised venison", "Sticky toffee pudding"],
+    photo: { key: "3385DF58-D1A4-45BF-A256-6CFE1CFA55E7-23yFa7", alt: "Rules' red velvet banquettes, white tablecloths and paintings on every wall" },
+    collections: ["grand-rooms", "british"],
+    qloo: { id: "3385DF58-D1A4-45BF-A256-6CFE1CFA55E7", name: "Rules" },
+  },
+  {
+    slug: "clos-maggiore",
+    name: "Clos Maggiore",
+    cuisine: "French",
+    area: "covent-garden",
+    neighbourhood: "Covent Garden",
+    address: "33 King Street, London WC2E 8JD",
+    price: 3,
+    lat: 51.5117,
+    lon: -0.1247,
+    tags: ["french", "romantic", "conservatory", "wine list", "anniversary", "special occasion"],
+    description: "The flower-covered conservatory that half of London has proposed in. Provençal cooking, a vast wine list and a log fire in winter.",
+    dishes: ["Roast duck breast", "Crab tartlet", "Scottish halibut"],
+    photo: { key: "F683DA6C-0BDB-48F7-BE02-7A35F4F24C32-2sPDkL", alt: "Clos Maggiore's conservatory, its ceiling covered in blossom and fairy lights" },
+    collections: ["grand-rooms"],
+    qloo: { id: "F683DA6C-0BDB-48F7-BE02-7A35F4F24C32", name: "Clos Maggiore" },
+    note: { by: "kwame", text: "Ask for the conservatory when you book, and tell us if it's a big night. We pass it on." },
+  },
+  {
+    slug: "the-barbary",
+    name: "The Barbary",
+    cuisine: "North African and Levantine",
+    area: "covent-garden",
+    neighbourhood: "Neal's Yard",
+    address: "16 Neal's Yard, London WC2H 9DP",
+    price: 2,
+    lat: 51.5144,
+    lon: -0.1262,
+    tags: ["north african", "levantine", "counter", "grill", "lively", "date night"],
+    description: "A horseshoe counter in Neal's Yard, cooking the Barbary coast from Morocco to the Levant. Every seat is a front-row seat.",
+    dishes: ["Naan e barbari", "Octopus with chickpeas", "Black salmon dukkah"],
+    photo: { key: "AF873519-E102-4B03-9BF1-F37969B86A12-17Urpj", alt: "Cooks and diners around The Barbary's horseshoe counter", crop: [200, 0, 682, 455] },
+    collections: ["mezze", "counter"],
+    qloo: { id: "AF873519-E102-4B03-9BF1-F37969B86A12", name: "The Barbary" },
+  },
+
+  // Soho
+  {
+    slug: "bob-bob-ricard",
+    name: "Bob Bob Ricard",
+    cuisine: "Anglo-Russian brasserie",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "1 Upper James Street, London W1F 9DF",
+    price: 3,
+    lat: 51.5124,
+    lon: -0.1373,
+    tags: ["glamorous", "champagne", "booths", "art deco", "celebration", "beef wellington"],
+    description: "Art deco booths in blue and gold, each with its own 'Press for Champagne' button. Beef Wellington for two and a flaming crème brûlée to finish.",
+    dishes: ["Beef Wellington for two", "Truffle potato vareniki", "Signature chocolate glory"],
+    photo: { key: "AB05103A-360F-4F01-9034-A2E8C14511D5-1CSscI", alt: "Bob Bob Ricard's blue booths and brass-trimmed tables" },
+    collections: ["grand-rooms"],
+    qloo: { id: "AB05103A-360F-4F01-9034-A2E8C14511D5", name: "Bob Bob Ricard Soho" },
+  },
+  {
+    slug: "quo-vadis",
+    name: "Quo Vadis",
+    cuisine: "Modern British",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "26–29 Dean Street, London W1D 3LL",
+    price: 3,
+    lat: 51.5141,
+    lon: -0.1326,
+    tags: ["british", "seasonal", "pies", "classic", "stained glass", "theatre"],
+    description: "Jeremy Lee's dining room on Dean Street, stained glass and starched linen. Order the smoked eel sandwich, whatever pie is on and a pudding.",
+    dishes: ["Smoked eel sandwich", "Pie of the day", "Carlingford oysters"],
+    photo: { key: "7BB6A5DF-3754-4AF3-82EF-C226C799EECB-0HSPC1", alt: "Quo Vadis' black and gold front on Dean Street" },
+    collections: ["grand-rooms", "british"],
+    qloo: { id: "7BB6A5DF-3754-4AF3-82EF-C226C799EECB", name: "Quo Vadis" },
+  },
+  {
+    slug: "kiln",
+    name: "Kiln",
+    cuisine: "Thai grill",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "58 Brewer Street, London W1F 9TL",
+    price: 2,
+    lat: 51.5114,
+    lon: -0.1361,
+    tags: ["thai", "spicy", "counter", "clay pot", "grill", "solo"],
+    description: "A long counter in front of the grills and clay pots, cooking the food of Thailand's north and its borders. Fierce, fast and best on a stool.",
+    dishes: ["Clay pot glass noodles with pork belly and brown crab", "Aged lamb cumin skewers", "Beef shin curry"],
+    photo: { key: "8F6F1E9D-A09D-4953-9EA4-E05E2744E133-3LvRmB", alt: "Kiln's long steel counter and stools facing the grills" },
+    collections: ["spice", "counter"],
+    qloo: { id: "8F6F1E9D-A09D-4953-9EA4-E05E2744E133", name: "Kiln" },
+    note: { by: "kwame", text: "Sit at the counter, order the glass noodles and anything from the grill, and ask how hot they're cooking today." },
+  },
+  {
+    slug: "hoppers-soho",
+    name: "Hoppers",
+    cuisine: "Sri Lankan",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "49 Frith Street, London W1D 4SG",
+    price: 2,
+    lat: 51.5136,
+    lon: -0.1317,
+    tags: ["sri lankan", "south indian", "spicy", "curry", "cosy", "groups"],
+    description: "Sri Lankan and Tamil cooking on Frith Street: bowl-shaped hoppers with an egg in the middle, dosa and karis to tear into.",
+    dishes: ["Egg hopper", "Black pork kari", "Lamb kothu roti"],
+    photo: { key: "F0DB3C98-3B53-4E26-8B43-F1850F647FAD-4mIXIz", alt: "Hoppers' blue shopfront under a white awning on Frith Street" },
+    collections: ["spice"],
+    qloo: { id: "F0DB3C98-3B53-4E26-8B43-F1850F647FAD", name: "Hoppers Soho" },
+  },
+  {
+    slug: "kricket-soho",
+    name: "Kricket",
+    cuisine: "Modern Indian",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "12 Denman Street, London W1D 7HJ",
+    price: 2,
+    lat: 51.5108,
+    lon: -0.1352,
+    tags: ["indian", "small plates", "cocktails", "counter", "spicy", "lively"],
+    description: "Indian small plates and cocktails around an open kitchen near Piccadilly Circus. The Keralan fried chicken disappears first.",
+    dishes: ["Keralan fried chicken", "Samphire pakoras", "Date and pistachio kulcha"],
+    photo: { key: "6B34AF91-14DB-4554-8B22-35DD97D3200F-0GKuTe", alt: "Kricket's horseshoe bar with tiles and copper lamps" },
+    collections: ["spice", "counter"],
+    qloo: { id: "6B34AF91-14DB-4554-8B22-35DD97D3200F", name: "Kricket Soho" },
+  },
+  {
+    slug: "bao-soho",
+    name: "BAO",
+    cuisine: "Taiwanese",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "53 Lexington Street, London W1F 9AS",
+    price: 1,
+    lat: 51.5132,
+    lon: -0.1366,
+    tags: ["taiwanese", "bao", "counter", "quick", "solo", "casual"],
+    description: "The little wooden room on Lexington Street that started London's bao habit. Classic pork bao, lamb shoulder bao and sweet potato chips.",
+    dishes: ["Classic pork bao", "Lamb shoulder bao", "Sweet potato chips with plum pickle"],
+    photo: { key: "1AD97AE4-367A-47DE-8944-228C6B908E9F-4CJxRG", alt: "BAO's pale wood front and counter on Lexington Street" },
+    collections: ["counter"],
+    qloo: { id: "1AD97AE4-367A-47DE-8944-228C6B908E9F", name: "BAO Soho" },
+  },
+  {
+    slug: "darjeeling-express",
+    name: "Darjeeling Express",
+    cuisine: "Regional Indian",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "36–40 Rupert Street, London W1D 6DW",
+    price: 2,
+    lat: 51.5113,
+    lon: -0.1328,
+    tags: ["indian", "bengali", "home cooking", "biryani", "cheerful", "groups"],
+    description: "Asma Khan's home cooking from Bengal, Hyderabad and the Mughal kitchens, made by an all-women kitchen. The biryani is served with ceremony.",
+    dishes: ["Lamb dum biryani", "Methi chicken", "Puchkas"],
+    photo: { key: "823D055F-9B07-47C4-97C2-B9CF9851BC76-10D3t8", alt: "Darjeeling Express' light wood room with plants along the railings" },
+    collections: ["spice"],
+    qloo: { id: "823D055F-9B07-47C4-97C2-B9CF9851BC76", name: "Darjeeling Express" },
+  },
+  {
+    slug: "the-palomar",
+    name: "The Palomar",
+    cuisine: "Modern Jerusalem",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "34 Rupert Street, London W1D 6DN",
+    price: 3,
+    lat: 51.5112,
+    lon: -0.1327,
+    tags: ["middle eastern", "counter", "lively", "music", "sharing plates", "late"],
+    description: "Jerusalem cooking with the volume up: sit at the zinc counter, order the kubaneh bread and the Jerusalem polenta, and let the chefs steer.",
+    dishes: ["Baba ganoush", "Lamb rump mangal", "Jerusalem mess"],
+    photo: { key: "F7D7C143-66BA-43D2-B68B-4E32D0BFAF7D-1p5Maj", alt: "The Palomar's long counter with leather stools under warm lights" },
+    collections: ["mezze", "counter"],
+    qloo: { id: "F7D7C143-66BA-43D2-B68B-4E32D0BFAF7D", name: "The Palomar" },
+  },
+  {
+    slug: "berenjak-soho",
+    name: "Berenjak",
+    cuisine: "Persian",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "27 Romilly Street, London W1D 5AL",
+    price: 2,
+    lat: 51.513,
+    lon: -0.1308,
+    tags: ["persian", "kebab", "charcoal grill", "sharing plates", "cosy", "flatbread"],
+    description: "A Tehran hole-in-the-wall on Romilly Street: taftoon bread from the tanoor, kebabs from the coals and kashk-e bademjoon to drag it all through.",
+    dishes: ["Koobideh kebab", "Kashk-e bademjoon", "Taftoon bread"],
+    photo: { key: "4AF659D4-8545-4CCE-A24E-AFF2E9E46CEC-0QNgKA", alt: "Berenjak's dining room under a canopy of trailing plants" },
+    collections: ["mezze"],
+    qloo: { id: "4AF659D4-8545-4CCE-A24E-AFF2E9E46CEC", name: "Berenjak Soho" },
+  },
+  {
+    slug: "koya-soho",
+    name: "Koya",
+    cuisine: "Udon",
+    area: "soho",
+    neighbourhood: "Soho",
+    address: "50 Frith Street, London W1D 4SQ",
+    price: 1,
+    lat: 51.5136,
+    lon: -0.1317,
+    tags: ["japanese", "udon", "breakfast", "counter", "solo", "quick"],
+    description: "Handmade udon on Frith Street, hot or cold, with a Japanese breakfast in the mornings. The best quick supper in Soho.",
+    dishes: ["Buta miso udon", "Tempura udon", "Gyudon"],
+    photo: { key: "E39771F5-30B8-4E6F-99D1-DEFC0449BE26-3PnyWP", alt: "Koya's dark front with a noren curtain over the door" },
+    collections: ["counter"],
+    qloo: { id: "E39771F5-30B8-4E6F-99D1-DEFC0449BE26", name: "Koya Soho" },
+  },
+
+  // Mayfair & Piccadilly
+  {
+    slug: "the-wolseley",
+    name: "The Wolseley",
+    cuisine: "Grand café",
+    area: "mayfair",
+    neighbourhood: "Piccadilly",
+    address: "160 Piccadilly, London W1J 9EB",
+    price: 3,
+    lat: 51.5074,
+    lon: -0.1409,
+    tags: ["grand cafe", "breakfast", "afternoon tea", "classic", "people watching", "viennese"],
+    description: "A former car showroom on Piccadilly turned into a Viennese grand café. Breakfast is the best table in town; schnitzel and a glass of Grüner at night.",
+    dishes: ["Wiener schnitzel", "Eggs Benedict", "Cheese soufflé"],
+    photo: { key: "62EE4E62-ED08-4B1F-A33B-CAE3FFDF1BEE-3l7tmS", alt: "The Wolseley's soaring black and gold dining room under its vaulted ceiling" },
+    collections: ["grand-rooms"],
+    qloo: { id: "62EE4E62-ED08-4B1F-A33B-CAE3FFDF1BEE", name: "The Wolseley Piccadilly" },
+    note: { by: "rosa", text: "Breakfast here on a weekday is the most London thing you can do before 9am." },
+  },
+  {
+    slug: "scotts",
+    name: "Scott's",
+    cuisine: "Seafood",
+    area: "mayfair",
+    neighbourhood: "Mayfair",
+    address: "20 Mount Street, London W1K 2HE",
+    price: 4,
+    lat: 51.5099,
+    lon: -0.1508,
+    tags: ["seafood", "oysters", "champagne", "glamorous", "terrace", "special occasion"],
+    description: "Mount Street's oyster bar and dining room: Dover sole on the bone, lobster thermidor and a pavement terrace for watching Mayfair go by.",
+    dishes: ["Oysters on the half shell", "Dover sole meunière", "Lobster thermidor"],
+    photo: { key: "A7D3C871-6E02-45D6-914B-26EF64C141B6-2vtksj", alt: "Scott's awning and pavement terrace on Mount Street" },
+    collections: ["grand-rooms"],
+    qloo: { id: "A7D3C871-6E02-45D6-914B-26EF64C141B6", name: "Scott's" },
+  },
+  {
+    slug: "sketch",
+    name: "sketch",
+    cuisine: "Modern European",
+    area: "mayfair",
+    neighbourhood: "Mayfair",
+    address: "9 Conduit Street, London W1S 2XG",
+    price: 4,
+    lat: 51.5127,
+    lon: -0.1415,
+    tags: ["afternoon tea", "art", "glamorous", "cocktails", "tasting menu", "celebration"],
+    description: "An 18th-century townhouse turned into a set of very different rooms, from the pink Gallery for afternoon tea to the Lecture Room's tasting menu.",
+    dishes: ["Afternoon tea", "Steak tartare", "Caviar"],
+    photo: { key: "2796A94B-FC49-462F-B475-5079CE593CBE-2pIBhU", alt: "sketch's Gallery room in soft pink with curved velvet banquettes" },
+    collections: ["grand-rooms"],
+    qloo: { id: "2796A94B-FC49-462F-B475-5079CE593CBE", name: "sketch" },
+  },
+  {
+    slug: "brasserie-zedel",
+    name: "Brasserie Zédel",
+    cuisine: "Parisian brasserie",
+    area: "mayfair",
+    neighbourhood: "Piccadilly",
+    address: "20 Sherwood Street, London W1F 7ED",
+    price: 2,
+    lat: 51.5106,
+    lon: -0.1356,
+    tags: ["french", "brasserie", "art deco", "pre theatre", "jazz", "good value"],
+    description: "A gilded 1930s ballroom below Piccadilly Circus serving brasserie classics at prices that feel like a mistake. Steak haché, then jazz in the bar.",
+    dishes: ["Steak haché au poivre", "Choucroute Zédel", "Profiteroles"],
+    photo: { key: "50AB09A8-27EC-4A97-A84F-647580EFDA57-0GkI7F", alt: "Brasserie Zédel's gilded art deco ballroom with marble columns" },
+    collections: ["grand-rooms"],
+    qloo: { id: "50AB09A8-27EC-4A97-A84F-647580EFDA57", name: "Brasserie Zedel" },
+  },
+  {
+    slug: "gymkhana",
+    name: "Gymkhana",
+    cuisine: "Indian",
+    area: "mayfair",
+    neighbourhood: "Mayfair",
+    address: "42 Albemarle Street, London W1S 4JH",
+    price: 4,
+    lat: 51.5085,
+    lon: -0.1415,
+    tags: ["indian", "fine dining", "tandoor", "game", "clubby", "special occasion"],
+    description: "A colonial members' club of dark wood and ceiling fans, cooking tandoor and charcoal with real finesse. The wild muntjac biryani is the order.",
+    dishes: ["Wild muntjac biryani", "Butter chicken", "Aloo tikki chaat"],
+    photo: { key: "68711FCF-5825-4CB0-8A7D-C2438A6148C4-49lM0T", alt: "Gymkhana's dark wood dining room under brass lamps" },
+    collections: ["spice", "tasting-menus"],
+    qloo: { id: "68711FCF-5825-4CB0-8A7D-C2438A6148C4", name: "Gymkhana" },
+  },
+  {
+    slug: "a-wong",
+    name: "A. Wong",
+    cuisine: "Chinese",
+    area: "mayfair",
+    neighbourhood: "Mayfair",
+    address: "Mandarin Oriental Mayfair, 22 Hanover Square, London W1S 1JP",
+    price: 4,
+    lat: 51.5133,
+    lon: -0.144,
+    tags: ["chinese", "dim sum", "tasting menu", "fine dining", "special occasion", "regional"],
+    description: "Andrew Wong's tour of China's regions in dim sum and a ten-course tasting menu, as clever as it is delicious.",
+    dishes: ["Xiao long bao", "Steamed duck yolk custard bun", "Honey-roast Iberico croustade"],
+    photo: { key: "9B131590-B99D-44E6-9FFF-7F64CCF12A17-0O7crJ", alt: "A. Wong's dining room with green glass tables and rich purple chairs" },
+    collections: ["tasting-menus"],
+    qloo: { id: "9B131590-B99D-44E6-9FFF-7F64CCF12A17", name: "A Wong" },
+  },
+  {
+    slug: "sabor",
+    name: "Sabor",
+    cuisine: "Spanish",
+    area: "mayfair",
+    neighbourhood: "Mayfair",
+    address: "35–37 Heddon Street, London W1B 4BR",
+    price: 3,
+    lat: 51.5114,
+    lon: -0.1397,
+    tags: ["spanish", "tapas", "counter", "galician", "asador", "seafood"],
+    description: "Nieves Barragán's tapas counter downstairs and Galician asador upstairs, just off Regent Street. Pulpo a feira, then suckling pig from the wood oven.",
+    dishes: ["Pulpo a feira", "Arroz negro", "Prawn croquetas"],
+    photo: { key: "D3B48C0A-A97F-4D29-90C4-801CA4F6E8C8-3znS6j", alt: "Sabor's counter with diners and cooks under hanging lamps" },
+    collections: ["mezze", "counter"],
+    qloo: { id: "D3B48C0A-A97F-4D29-90C4-801CA4F6E8C8", name: "Sabor" },
+  },
+
+  // Marylebone & Fitzrovia
+  {
+    slug: "kol",
+    name: "KOL",
+    cuisine: "Mexican tasting menu",
+    area: "marylebone",
+    neighbourhood: "Marylebone",
+    address: "9 Seymour Street, London W1H 7BA",
+    price: 4,
+    lat: 51.5148,
+    lon: -0.1575,
+    tags: ["mexican", "tasting menu", "british produce", "mezcal", "fine dining", "special occasion"],
+    description: "Santiago Lastra cooks Mexico with British ingredients: sea buckthorn instead of lime, langoustine tacos, mole from blackcurrants. Go for the mezcal pairing.",
+    dishes: ["Langoustine taco", "Purple carrot cecina with blackcurrant mole", "Tamal de chocolate"],
+    photo: { key: "A505A3DB-B577-4AA3-81DA-59352CA6C039-36ciAB", alt: "KOL's warm dining room with wooden beams and leather chairs" },
+    collections: ["tasting-menus"],
+    qloo: { id: "A505A3DB-B577-4AA3-81DA-59352CA6C039", name: "KOL" },
+  },
+  {
+    slug: "akoko",
+    name: "Akoko",
+    cuisine: "West African tasting menu",
+    area: "marylebone",
+    neighbourhood: "Fitzrovia",
+    address: "21 Berners Street, London W1T 3LP",
+    price: 4,
+    lat: 51.5177,
+    lon: -0.1368,
+    tags: ["west african", "tasting menu", "fine dining", "jollof", "open kitchen", "special occasion"],
+    description: "West African cooking as a tasting menu, from smoked jollof rice to caviar pancakes. Warm, intimate and unlike anything else in London.",
+    dishes: ["Smoked jollof rice", "Caviar pancakes", "Grilled octopus"],
+    photo: { key: "F81DC626-0BF3-4F41-942E-9C40B43B0057-0snvpg", alt: "Akoko's calm dining room of pale wood and warm, low light" },
+    collections: ["tasting-menus"],
+    qloo: { id: "F81DC626-0BF3-4F41-942E-9C40B43B0057", name: "Akoko" },
+    isNew: true,
+  },
+
+  // Notting Hill & West
+  {
+    slug: "core-by-clare-smyth",
+    name: "Core by Clare Smyth",
+    cuisine: "Modern British tasting menu",
+    area: "west",
+    neighbourhood: "Notting Hill",
+    address: "92 Kensington Park Road, London W11 2PN",
+    price: 4,
+    lat: 51.5128,
+    lon: -0.2031,
+    tags: ["tasting menu", "modern british", "fine dining", "wine pairing", "special occasion", "seasonal"],
+    description: "Clare Smyth's celebration of British farms and fishermen, in a calm, bright room on Kensington Park Road. The Charlotte potato with roe is already a classic.",
+    dishes: ["Potato and roe", "Isle of Mull scallop tartare", "Lamb carrot"],
+    photo: { key: "AEA64D60-7158-427F-A729-64A6B3A543AC-1RIYdP", alt: "Core's bright dining room with a carved wooden centrepiece" },
+    collections: ["tasting-menus"],
+    qloo: { id: "AEA64D60-7158-427F-A729-64A6B3A543AC", name: "Core by Clare Smyth" },
+  },
+  {
+    slug: "the-ledbury",
+    name: "The Ledbury",
+    cuisine: "Modern European tasting menu",
+    area: "west",
+    neighbourhood: "Notting Hill",
+    address: "127 Ledbury Road, London W11 2AQ",
+    price: 4,
+    lat: 51.5167,
+    lon: -0.2001,
+    tags: ["tasting menu", "modern european", "fine dining", "game", "special occasion", "wine pairing"],
+    description: "Brett Graham's Notting Hill dining room, cooking game and British produce with rare precision. One of London's finest tasting menus.",
+    dishes: ["Chalk stream trout", "Cornish cod", "Brown sugar tart"],
+    photo: { key: "9CAF1D51-E08A-42E6-B11D-6674A0583574-1Y7TnV", alt: "The Ledbury's wooden doors and planted terrace at night" },
+    collections: ["tasting-menus"],
+    qloo: { id: "9CAF1D51-E08A-42E6-B11D-6674A0583574", name: "The Ledbury" },
+  },
+  {
+    slug: "the-river-cafe",
+    name: "The River Café",
+    cuisine: "Italian",
+    area: "west",
+    neighbourhood: "Hammersmith",
+    address: "Thames Wharf, Rainville Road, London W6 9HA",
+    price: 4,
+    lat: 51.484,
+    lon: -0.2242,
+    tags: ["italian", "riverside", "seasonal", "wood oven", "long lunch", "special occasion"],
+    description: "The riverside Italian that taught London to cook simply. Wood-oven fish, seasonal pasta and the Chocolate Nemesis, ideally on the terrace on a long summer lunch.",
+    dishes: ["Chocolate Nemesis", "Charcoal-grilled squid", "Wood-roasted turbot"],
+    photo: { key: "8D319110-A03B-43B9-ADE7-EBA0357E7F1F-0NRNjO", alt: "The River Café's long bright room and open kitchen" },
+    collections: ["grand-rooms", "pasta"],
+    qloo: { id: "8D319110-A03B-43B9-ADE7-EBA0357E7F1F", name: "The River Café" },
+  },
+
+  // South of the river
+  {
+    slug: "padella",
+    name: "Padella",
+    cuisine: "Pasta bar",
+    area: "south",
+    neighbourhood: "Borough Market",
+    address: "6 Southwark Street, London SE1 1TQ",
+    price: 1,
+    lat: 51.5052,
+    lon: -0.0899,
+    tags: ["pasta", "italian", "counter", "quick", "good value", "lunch"],
+    description: "Fresh pasta made by hand every morning next to Borough Market, at prices that make it a habit. Pici cacio e pepe and pappardelle with beef shin ragù.",
+    dishes: ["Pici cacio e pepe", "Pappardelle with beef shin ragù", "Burrata with Puglian olive oil"],
+    photo: { key: "D33140D7-51B9-4745-9EB1-F6951C980A19-41Gvzj", alt: "Diners at Padella's ground-floor counter under its striped awning" },
+    collections: ["pasta", "counter"],
+    qloo: { id: "D33140D7-51B9-4745-9EB1-F6951C980A19", name: "Padella Borough Market" },
+  },
+  {
+    slug: "rambutan",
+    name: "Rambutan",
+    cuisine: "Sri Lankan",
+    area: "south",
+    neighbourhood: "Borough Market",
+    address: "10 Stoney Street, London SE1 9AD",
+    price: 2,
+    lat: 51.5056,
+    lon: -0.0915,
+    tags: ["sri lankan", "spicy", "curry", "lively", "borough market", "groups"],
+    description: "Bold Sri Lankan cooking in Borough Market: crab curry, Jaffna mutton chops and gundu dosa, with an open kitchen and a buzz.",
+    dishes: ["Crab curry", "Jaffna mutton chops", "Fried aubergine moju"],
+    photo: { key: "02AC8B68-2A40-4EE6-9A58-7494A051F180-2PlQHF", alt: "Rambutan's corner front by Borough Market's iron arches" },
+    collections: ["spice"],
+    qloo: { id: "02AC8B68-2A40-4EE6-9A58-7494A051F180", name: "Rambutan" },
+    isNew: true,
+  },
+  {
+    slug: "ganapati",
+    name: "Ganapati",
+    cuisine: "South Indian",
+    area: "south",
+    neighbourhood: "Peckham",
+    address: "38 Holly Grove, London SE15 5DF",
+    price: 1,
+    lat: 51.4696,
+    lon: -0.073,
+    tags: ["south indian", "kerala", "vegetarian friendly", "neighbourhood", "home cooking", "terrace"],
+    description: "Home-style Keralan and Tamil cooking on a quiet Peckham corner. Masala dosa, Kerala parotta and a terrace in summer.",
+    dishes: ["Masala dosa", "Kerala parotta", "Kondotty lamb"],
+    photo: { key: "9C8C15AE-56A4-4600-9CBA-353732598DD2-3XuL82", alt: "Ganapati's blue and orange corner shopfront in Peckham" },
+    collections: ["spice"],
+    qloo: { id: "9C8C15AE-56A4-4600-9CBA-353732598DD2", name: "Ganapati" },
+  },
+  {
+    slug: "peckham-bazaar",
+    name: "Peckham Bazaar",
+    cuisine: "Balkan grill",
+    area: "south",
+    neighbourhood: "Peckham",
+    address: "119 Consort Road, London SE15 3RU",
+    price: 2,
+    lat: 51.4678,
+    lon: -0.0619,
+    tags: ["balkan", "charcoal grill", "mezze", "natural wine", "neighbourhood", "small plates"],
+    description: "A charcoal grill on a Peckham corner, cooking the Balkans and the eastern Mediterranean, with a list of Greek and Balkan wines you won't see elsewhere.",
+    dishes: ["Whipped cod roe", "Marinated chicken thigh", "Grilled brill"],
+    photo: { key: "3F9CD039-8B10-4E0F-8D95-4B532E420CDB-0BkI6n", alt: "Peckham Bazaar's corner building with a red phone box outside" },
+    collections: ["mezze", "small-plates"],
+    qloo: { id: "3F9CD039-8B10-4E0F-8D95-4B532E420CDB", name: "Peckham Bazaar" },
+  },
+];
+
+/** "£££" */
+export const priceLabel = (price: number) => "£".repeat(price);
+
+/**
+ * A restaurant's photo at a width. Qloo's CDN serves any width; a photo with a
+ * press badge in its corner is cropped first, through wsrv.nl.
+ */
+export function coversPhoto(r: Pick<CoversRestaurant, "photo">, width = 800): string {
+  const { key, crop } = r.photo;
+  if (!crop) return `https://images.qloo.com/i/${key}-${width}x-outside.jpg`;
+  const [cx, cy, cw, ch] = crop;
+  // No width: wsrv resizes before it crops, which would move the crop box. The crop is already ≤ 735 wide.
+  return `https://wsrv.nl/?url=images.qloo.com/i/${key}-1200x-outside.jpg&cx=${cx}&cy=${cy}&cw=${cw}&ch=${ch}&output=jpg`;
+}
+
+export const COVERS_APP = {
+  name: "Covers",
+  legalName: "Covers Technologies Ltd",
+  tagline: "Book London's best tables.",
+  founded: 2021,
+  street: "71 Leonard Street",
+  city: "London",
+  postalCode: "EC2A 4QS",
+  country: "GB",
+  email: "hello@covers.london",
+  socials: [
+    { network: "instagram", label: "Instagram", handle: "@covers.london", url: "https://www.instagram.com/covers.london" },
+    { network: "tiktok", label: "TikTok", handle: "@covers.london", url: "https://www.tiktok.com/@covers.london" },
+    { network: "threads", label: "Threads", handle: "@covers.london", url: "https://www.threads.net/@covers.london" },
+  ],
+} as const;
+
+/* ---- end shared ---- */
+
+/* Brand --------------------------------------------------------------------- */
+
+/** Where the site runs locally; the seed passes the deployed one when there is one. */
+export const COVERS_SITE = "http://localhost:3002/covers";
+
+export function coversKit(site = COVERS_SITE): EmailKit {
+  return {
+    logo: { src: `${site}/logo.png`, alt: "Covers", light: `${site}/logo-light.png` },
+    icon: `${site}/mark.png`,
+    wordmark: "Covers",
+    // From the logo: the plate's orange and the cutlery's brown. Brown text on the orange
+    // (7.6:1); white on it would fail contrast.
+    colors: {
+      background: "#FBF6EE",
+      foreground: "#35190B",
+      primary: "#FF9000",
+      primaryForeground: "#35190B",
+      accent: "#C25E00",
+      muted: "#F3E9DA",
+      surface: "#FFFFFF",
+    },
+    fonts: {
+      heading: { family: "Instrument Sans", fallback: "'Helvetica Neue', Helvetica, Arial, sans-serif", google: true, weights: [600, 700] },
+      body: { family: "Inter", fallback: "'Helvetica Neue', Helvetica, Arial, sans-serif", google: true, weights: [400, 600] },
+    },
+    buttonStyle: "pill",
+    radius: "lg",
+    uppercaseLabels: false,
+    voice: {
+      summary:
+        "Like a friend who always knows where to eat: quick, specific and warm. Name the room, the dish and the night it's right for, then make booking the obvious next step.",
+      do: [
+        "Name the restaurant, the neighbourhood and one dish worth crossing town for",
+        "Say who a table is right for: a date, a big birthday, one at the counter, a long Sunday lunch",
+        "Talk like a Londoner: \"we\", first names, plain words, a little dry humour",
+        "Give the practical bit: the day, the time, how many seats",
+        "Keep each restaurant to two sentences",
+      ],
+      avoid: [
+        "Hype words: iconic, hidden gem, must-try, foodie heaven",
+        "Framing picks against trending lists or what's popular",
+        "Fake urgency (\"only 2 tables left!\") unless it's true",
+        "Exclamation marks in every line",
+        "Discount-first selling; restaurants are never on sale",
+      ],
+    },
+  };
+}
+
+export const COVERS_KIT: EmailKit = coversKit();
+
+export const COVERS_ABOUT: EmailAbout = {
+  summary:
+    "Covers is a restaurant booking app for London. It lists around fifty restaurants its editors love, from east London wine bars and Soho counters to grand Mayfair dining rooms and tasting menus, with tables you can book in two taps, editors' notes and collections such as Small plates & natural wine, Grand rooms and Spice & fire.",
+  audience:
+    "Londoners who eat out often: people who book a wine bar on a Tuesday, a tasting menu for an anniversary or a counter seat for one, plus new members who signed up to find somewhere near home.",
+  categories: ["Restaurants", "Small plates & natural wine", "Grand rooms", "Tasting menus", "Spice & fire", "Mezze & the Med", "Pasta & Italian", "Proper British", "Counter seats"],
+  location: "London",
+};
+
+const ADDRESS = `${COVERS_APP.street}, ${COVERS_APP.city} ${COVERS_APP.postalCode}, United Kingdom`;
+
+export function coversFooter(site = COVERS_SITE): EmailFooterInfo {
+  return {
+    address: `${COVERS_APP.legalName}, ${ADDRESS}`,
+    website: site,
+    socials: COVERS_APP.socials.map((s) => ({ network: s.network, url: s.url })),
+  };
+}
+
+export const COVERS_SENDER: EmailSender = { fromName: "Covers", fromLocal: "tables", replyTo: COVERS_APP.email };
+
+/** The domain the app would verify with Resend. */
+export const COVERS_DOMAIN = "covers.london";
+
+/* Items ----------------------------------------------------------------------- */
+
+/** A ref the seed maps to an emailItems id. */
+export const coversRef = (slug: string) => `restaurant:${slug}`;
+
+/** The restaurants as email items, each with its Qloo place (tags are read from Qloo by the seed). */
+export function coversItems(site = COVERS_SITE): (Omit<EmailItem, "id"> & { ref: string })[] {
+  const collection = (id: CoversCollectionId) => COVERS_COLLECTIONS.find((c) => c.id === id)?.name.toLowerCase() ?? id;
+  return COVERS_RESTAURANTS.map((r) => ({
+    ref: coversRef(r.slug),
+    name: r.name,
+    subtitle: `${r.cuisine} · ${r.neighbourhood}`,
+    kind: "restaurant",
+    description: r.description,
+    price: priceLabel(r.price),
+    image: coversPhoto(r),
+    url: `${site}/restaurants/${r.slug}`,
+    tags: [...new Set([r.cuisine.toLowerCase(), ...r.collections.map(collection), ...r.tags])],
+    qloo: { id: r.qloo.id, name: r.qloo.name, type: "urn:entity:place" },
+  }));
+}
+
+/* Contacts ------------------------------------------------------------------------ */
+
+/**
+ * One row of the app's member export: who they are, where in London they
+ * live, and the restaurants they booked through Covers, newest first, split
+ * by semicolons (names as the app lists them). New members who haven't
+ * booked yet have an empty `recent_bookings`.
+ */
+export interface CoversContact {
+  email: string;
+  first_name: string;
+  last_name: string;
+  /** Where in London: the neighbourhood they gave when they signed up. */
+  neighborhood: string;
+  city: string;
+  age: number;
+  gender: string;
+  recent_bookings: string;
+}
+
+export const COVERS_CONTACT_COLUMNS: (keyof CoversContact)[] = ["email", "first_name", "last_name", "neighborhood", "city", "age", "gender", "recent_bookings"];
+
+/** The column mapping the import step would pick (emailLists.mapping). */
+export const COVERS_LIST_MAPPING = {
+  email: "email",
+  firstName: "first_name",
+  lastName: "last_name",
+  neighborhood: "neighborhood",
+  city: "city",
+  age: "age",
+  gender: "gender",
+  purchases: ["recent_bookings"],
+  taste: [] as string[],
+};
+
+/** Two regulars kept as individual contacts, each with a dining habit of their own. */
+export const COVERS_INDIVIDUALS: CoversContact[] = [
+  { email: "olivia.grant@example.com", first_name: "Olivia", last_name: "Grant", neighborhood: "Notting Hill", city: "London", age: 46, gender: "female", recent_bookings: "Core by Clare Smyth; The Clove Club; Akoko; KOL" },
+  { email: "leo.marchetti@example.com", first_name: "Leo", last_name: "Marchetti", neighborhood: "Peckham", city: "London", age: 36, gender: "male", recent_bookings: "Kiln; Hoppers; Smoking Goat; Ganapati" },
+];
+
+const smallPlates: CoversContact[] = [
+  { email: "hannah.okoro@example.com", first_name: "Hannah", last_name: "Okoro", neighborhood: "Dalston", city: "London", age: 31, gender: "female", recent_bookings: "Brat; Cafe Cecilia; Brawn; Rochelle Canteen" },
+  { email: "tom.whitaker@example.com", first_name: "Tom", last_name: "Whitaker", neighborhood: "Stoke Newington", city: "London", age: 34, gender: "male", recent_bookings: "Brawn; Rochelle Canteen; Noble Rot" },
+  { email: "ines.carvalho@example.com", first_name: "Inês", last_name: "Carvalho", neighborhood: "Bethnal Green", city: "London", age: 28, gender: "female", recent_bookings: "Sessions Arts Club; Manteca; Brat; Toklas" },
+];
+
+const grandRooms: CoversContact[] = [
+  { email: "richard.hale@example.com", first_name: "Richard", last_name: "Hale", neighborhood: "Marylebone", city: "London", age: 58, gender: "male", recent_bookings: "The Wolseley; Scott's; Rules" },
+  { email: "catherine.ashworth@example.com", first_name: "Catherine", last_name: "Ashworth", neighborhood: "Chelsea", city: "London", age: 63, gender: "female", recent_bookings: "Clos Maggiore; The Wolseley; Bob Bob Ricard" },
+  { email: "anil.mehta@example.com", first_name: "Anil", last_name: "Mehta", neighborhood: "Belsize Park", city: "London", age: 54, gender: "male", recent_bookings: "Scott's; sketch; Brasserie Zédel; Quo Vadis" },
+];
+
+/**
+ * New members who signed up but haven't booked yet: only age, gender and
+ * neighbourhood, so they join the group whose restaurants suit people like
+ * them and sit near where they live. Chloe (27, Haggerston) is a short walk
+ * from Brawn, Brat and Cafe Cecilia and should land in Small plates; James
+ * (57, Pimlico) is closest to Piccadilly and Mayfair and should land in
+ * Grand rooms.
+ */
+const newMembers: CoversContact[] = [
+  { email: "chloe.bennett@example.com", first_name: "Chloe", last_name: "Bennett", neighborhood: "Haggerston", city: "London", age: 27, gender: "female", recent_bookings: "" },
+  { email: "james.thornton@example.com", first_name: "James", last_name: "Thornton", neighborhood: "Pimlico", city: "London", age: 57, gender: "male", recent_bookings: "" },
+];
+
+/** The two groups the diners' bookings should make, for naming them after the import. */
+export const COVERS_DINER_GROUPS = {
+  smallPlates: { name: "Small plates & natural wine", emails: smallPlates.map((c) => c.email) },
+  grandRooms: { name: "Grand rooms & big nights", emails: grandRooms.map((c) => c.email) },
+};
+
+/** Diners and new members in one export: six sorted by what they booked, two by who and where they are. */
+export const COVERS_DINERS: CoversContact[] = [smallPlates[0], grandRooms[0], smallPlates[1], newMembers[0], grandRooms[1], smallPlates[2], newMembers[1], grandRooms[2]];

@@ -45,6 +45,12 @@ const stores = [
     kind: "Independent bookshop · Brooklyn, 43 books, 5 events",
     note: "Brand site for the Email service: the brand setup reads its homepage, and campaign picks and links point at its book pages.",
   },
+  {
+    href: "/covers",
+    name: "Covers",
+    kind: "Restaurant booking app · London, 48 restaurants",
+    note: "Brand site for the Email service: campaign picks and links point at its restaurant pages.",
+  },
 ];
 
 export default function Index() {

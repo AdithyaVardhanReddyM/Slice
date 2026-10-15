@@ -51,6 +51,18 @@ export function faceOf(c: Pick<EmailContact, "entities"> & { profile?: unknown }
   return coverTiles(profileOf(c), 1, true)[0]?.image ?? c.entities.find((e) => e.image)?.image;
 }
 
+/** Kinds of item people book rather than buy. */
+const BOOKED_KINDS = new Set(["restaurant", "table", "hotel", "stay", "room", "experience", "class", "tour", "appointment"]);
+
+/** How a brand's customer history reads: books and products are bought, restaurants and stays booked. */
+export function historyWords(items: { kind: string }[] | undefined) {
+  const booked = !!items?.length && items.filter((i) => BOOKED_KINDS.has(i.kind)).length > items.length / 2;
+  return booked
+    ? { did: "booked", Did: "Booked", heading: "What they booked", none: "No bookings yet", hasnt: "hasn't booked yet", havent: "haven't booked yet" }
+    : { did: "bought", Did: "Bought", heading: "What they bought", none: "No purchases yet", hasnt: "hasn't bought yet", havent: "haven't bought yet" };
+}
+export type HistoryWords = ReturnType<typeof historyWords>;
+
 /** "25 to 29 · Brooklyn". */
 export function aboutOf(c: Pick<EmailContact, "age" | "city" | "neighborhood">) {
   return [c.age ? (AGE_LABEL[c.age] ?? c.age) : null, c.neighborhood ?? c.city].filter(Boolean).join(" · ");
