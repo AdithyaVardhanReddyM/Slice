@@ -2,7 +2,7 @@
 
 POST /email/setup        {brandId, url}                                           {ok, error?}
 POST /email/build        {campaignId, kind, message?, history?, attachments?, blocks?, model?}   NDJSON stream
-POST /email/personalise  {campaignId, contactIds?}                                {ok, total}
+POST /email/personalise  {campaignId, contactIds?, audienceIds?}                  {ok, total}
 POST /email/subjects     {campaignId}                                             {options}
 POST /email/name-groups  {listId}                                                 {names}
 
@@ -50,6 +50,8 @@ sessions = InMemorySessionService()
 runners = {key: Runner(app_name=APP_NAME, agent=a, session_service=sessions) for key, a in B.agents.items()}
 # The doc version each campaign's conversation last saw, to notice the merchant's hand edits.
 _seen_version: dict[str, int] = {}
+# The reply each campaign's conversation last gave, to notice a saved chat rewritten outside it.
+_last_reply: dict[str, str] = {}
 
 
 def _error(err: Exception) -> str:
@@ -74,15 +76,18 @@ async def setup(req: SetupRequest) -> dict[str, Any]:
 
 
 class PersonaliseRequest(BaseModel):
+    """Every group and person ticked, or only the ones named."""
+
     campaignId: str
     contactIds: list[str] | None = None
+    audienceIds: list[str] | None = None
 
 
 @router.post("/personalise")
 async def personalise(req: PersonaliseRequest) -> dict[str, Any]:
     start_turn()
     try:
-        return await start_personalise(req.campaignId, req.contactIds)
+        return await start_personalise(req.campaignId, req.contactIds, req.audienceIds)
     except Exception as err:
         return {"ok": False, "error": _error(err)}
 
@@ -223,6 +228,8 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
         return f"{resp.get('total', 0)} items"
     if name == "search_images":
         return f"{len(resp.get('images') or [])} photos" + (f" for \"{a.get('query')}\"" if a.get("query") else "")
+    if name == "get_audience" and resp.get("kind") == "versions":
+        return f"{len(resp.get('groups') or [])} taste groups, {len(resp.get('people') or [])} people"
     if name == "get_audience":
         tags = resp.get("tags") or {}
         return f"{sum(len(v) for v in tags.values())} tags, {len(resp.get('brands') or [])} brands, {sum(len(v) for v in (resp.get('culture') or {}).values())} culture refs" + (f", {len(resp['people'])} people" if resp.get("people") else "")
@@ -279,6 +286,12 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         emitted += 1
 
     session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=cid)
+    saved_reply = next((m.text.strip() for m in reversed(req.history) if m.role == "agent" and m.text.strip()), "")
+    if session is not None and _last_reply.get(cid, "") != saved_reply:
+        # The saved chat isn't the one this session lived (rewritten or replaced outside it): what the
+        # session remembers doing is no longer true, so start again from the saved chat and the email as it is.
+        await sessions.delete_session(app_name=APP_NAME, user_id=cid, session_id=cid)
+        session = None
     fresh_session = session is None
     version = int(state.get(B.DOC_VERSION) or 0)
     # Links the merchant gave (brief, messages) are real links the email may use.
@@ -451,6 +464,7 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         if "ms" not in st:
             st["ms"] = max(0, total_ms - st.get("t", total_ms))
     _seen_version[cid] = doc_version
+    _last_reply[cid] = full_text.strip()
     yield _ndjson({"type": "done", "messageId": message_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": doc_version})
     asyncio.create_task(_persist(req, message_id, merchant_text, full_text, spans, steps))
 

@@ -2,8 +2,8 @@
 
 // Preview: the real email HTML (rendered on the server the way it is sent,
 // without tracking) at desktop and phone width, under its inbox line, as
-// anyone or as one person of the audience (their merge values and, for a
-// individual contact, their own version).
+// anyone or as one recipient (their merge values and the version they get:
+// their taste group's, or their own).
 
 import { useQuery } from "convex/react";
 import { Monitor, Smartphone } from "lucide-react";
@@ -13,8 +13,10 @@ import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/console/setup/atoms";
 import { EmailFrame } from "@/components/console/email/email-frame";
+import { PhoneEmail } from "@/components/console/email/phone";
+import { SenderMark } from "@/components/console/email/sender-mark";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { fieldClass } from "./fields";
+import { ChevronSelect } from "./fields";
 
 type Device = "desktop" | "phone" | "both";
 
@@ -24,10 +26,12 @@ interface Rendered {
   preheader: string;
 }
 
-function Inbox({ from, subject, preheader, width }: { from: string; subject: string; preheader: string; width: number }) {
+function Inbox({ from, mark, color, subject, preheader, width }: { from: string; mark?: string; color?: string; subject: string; preheader: string; width: number }) {
   return (
     <div className="mx-auto mb-3 flex items-start gap-3 rounded-xl bg-white px-3.5 py-2.5 shadow-sm ring-1 ring-black/[0.05]" style={{ maxWidth: width }}>
-      <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white">{from.charAt(0).toUpperCase()}</span>
+      <span className="mt-0.5">
+        <SenderMark name={from} mark={mark} color={color} size={28} />
+      </span>
       <div className="min-w-0 flex-1 text-sm">
         <div className="truncate text-xs font-semibold text-neutral-950">{from}</div>
         <div className="truncate font-medium text-neutral-950">{subject || <span className="text-muted-foreground">No subject yet</span>}</div>
@@ -37,11 +41,11 @@ function Inbox({ from, subject, preheader, width }: { from: string; subject: str
   );
 }
 
-function Frame({ html, width, phone }: { html: string | undefined; width: number; phone?: boolean }) {
+function Frame({ html, width }: { html: string | undefined; width: number }) {
   return (
-    <div className={cn("mx-auto overflow-hidden bg-white shadow-sm ring-1 ring-black/[0.06]", phone ? "rounded-[28px] ring-[6px] ring-neutral-900" : "rounded-lg")} style={{ maxWidth: width }}>
+    <div className="mx-auto overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-black/[0.06]" style={{ maxWidth: width }}>
       {html ? (
-        <EmailFrame key={width} html={html} width={width} scale="fit" lazy={false} title={phone ? "Phone preview" : "Desktop preview"} />
+        <EmailFrame html={html} width={width} scale="fit" lazy={false} title="Desktop preview" />
       ) : (
         <div className="flex h-96 items-center justify-center gap-2 text-sm text-muted-foreground">
           <Spinner className="size-4" /> Rendering
@@ -51,25 +55,45 @@ function Frame({ html, width, phone }: { html: string | undefined; width: number
   );
 }
 
+/** Recipients for an "as" picker: under their taste group's name, then the individual contacts. */
+export function RecipientOptions({ people }: { people: { _id: Id<"emailContacts">; name: string; group?: string }[] }) {
+  const groups = [...new Set(people.map((p) => p.group ?? ""))].sort((a, b) => Number(!a) - Number(!b));
+  return groups.map((g) => (
+    <optgroup key={g || "people"} label={g ? `${g} (the group's version)` : "Individual contacts (their own version)"}>
+      {people
+        .filter((p) => (p.group ?? "") === g)
+        .map((c) => (
+          <option key={c._id} value={c._id}>
+            {c.name}
+          </option>
+        ))}
+    </optgroup>
+  ));
+}
+
 export function PreviewDialog({
   open,
   onOpenChange,
   campaignId,
-  audienceId,
   from,
+  mark,
+  color,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campaignId: Id<"emailCampaigns">;
-  audienceId?: Id<"emailAudiences">;
   /** The sender name the inbox line shows. */
   from: string;
+  /** The brand's icon or logo and colour, for the sender's circle on the phone. */
+  mark?: string;
+  color?: string;
 }) {
   const [device, setDevice] = useState<Device>("both");
   const [contactId, setContactId] = useState<Id<"emailContacts"> | "">("");
   const rendered = useQuery(api.emailCampaigns.renderFor, open ? { id: campaignId, mode: "preview", ...(contactId ? { contactId } : {}) } : "skip") as Rendered | undefined;
-  const contacts = useQuery(api.emailContacts.byAudience, open && audienceId ? { audienceId } : "skip") as { _id: Id<"emailContacts">; name: string; email: string; unsubscribed?: boolean }[] | undefined;
+  const contacts = useQuery(api.emailCampaigns.recipients, open ? { id: campaignId } : "skip");
   const people = (contacts ?? []).filter((c) => !c.unsubscribed);
+  const mail = { from, mark, color, subject: rendered?.subject ?? "", preheader: rendered?.preheader ?? "" };
 
   const options: { value: Device; label: string; icon?: typeof Monitor }[] = [
     { value: "desktop", label: "Desktop", icon: Monitor },
@@ -88,14 +112,10 @@ export function PreviewDialog({
           {people.length > 0 && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
               As
-              <select value={contactId} onChange={(e) => setContactId(e.target.value as Id<"emailContacts"> | "")} className={cn(fieldClass, "h-8 w-48 text-sm")}>
+              <ChevronSelect value={contactId} onChange={(e) => setContactId(e.target.value as Id<"emailContacts"> | "")} className="h-8 w-52">
                 <option value="">Anyone (sample values)</option>
-                {people.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <RecipientOptions people={people} />
+              </ChevronSelect>
             </label>
           )}
           <div role="radiogroup" aria-label="Device" className="inline-flex h-8 items-center rounded-full bg-neutral-100 p-0.5">
@@ -118,17 +138,21 @@ export function PreviewDialog({
           {device === "both" ? (
             <div className="mx-auto grid max-w-5xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
               <div>
-                <Inbox from={from} subject={rendered?.subject ?? ""} preheader={rendered?.preheader ?? ""} width={600} />
+                <Inbox from={from} mark={mark} color={color} subject={rendered?.subject ?? ""} preheader={rendered?.preheader ?? ""} width={600} />
                 <Frame html={rendered?.html} width={600} />
               </div>
-              <div className="hidden lg:block">
-                <Frame html={rendered?.html} width={375} phone />
+              <div className="hidden lg:sticky lg:top-0 lg:block">
+                <PhoneEmail width={320} mail={mail} html={rendered?.html} />
               </div>
+            </div>
+          ) : device === "phone" ? (
+            <div className="flex min-h-full items-center justify-center">
+              <PhoneEmail width={340} mail={mail} html={rendered?.html} />
             </div>
           ) : (
             <>
-              <Inbox from={from} subject={rendered?.subject ?? ""} preheader={rendered?.preheader ?? ""} width={device === "phone" ? 375 : 600} />
-              <Frame html={rendered?.html} width={device === "phone" ? 375 : 600} phone={device === "phone"} />
+              <Inbox from={from} mark={mark} color={color} subject={rendered?.subject ?? ""} preheader={rendered?.preheader ?? ""} width={600} />
+              <Frame html={rendered?.html} width={600} />
             </>
           )}
         </div>

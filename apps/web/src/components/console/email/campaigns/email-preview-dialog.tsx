@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { PillTabs } from "@/components/console/home/ui";
 import { Spinner } from "@/components/console/setup/atoms";
 import { EmailFrame } from "@/components/console/email/email-frame";
+import { PhoneEmail } from "@/components/console/email/phone";
+import { SenderMark } from "@/components/console/email/sender-mark";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 /**
@@ -22,6 +24,8 @@ export function EmailPreviewDialog({
   subject,
   preheader,
   from,
+  mark,
+  color,
   aside,
   footer,
 }: {
@@ -33,12 +37,15 @@ export function EmailPreviewDialog({
   subject?: string;
   preheader?: string;
   from?: string;
+  /** The brand's icon or logo and colour, for the sender's circle on the phone. */
+  mark?: string;
+  color?: string;
   /** Beside the email on wide screens: who it is for, why it changed. */
   aside?: ReactNode;
   footer?: ReactNode;
 }) {
   const [device, setDevice] = useState<"desktop" | "phone">("desktop");
-  const width = device === "desktop" ? 600 : 375;
+  const width = 600;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[calc(100dvh-3rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
@@ -73,17 +80,29 @@ export function EmailPreviewDialog({
           />
         </div>
         <div className={cn("grid min-h-0 flex-1 overflow-hidden", aside && "lg:grid-cols-[minmax(0,1fr)_18rem]")}>
+          {device === "phone" ? (
+            <div className="flex min-h-0 items-center justify-center overflow-y-auto bg-neutral-100 px-4 py-6">
+              <PhoneEmail width={300} mail={{ from: from ?? "", mark, color, subject: subject ?? "", preheader: preheader ?? "" }} html={html} />
+            </div>
+          ) : (
           <div className="min-h-0 overflow-y-auto bg-neutral-100 px-4 py-6">
             {(subject || preheader) && (
-              <div className="mx-auto mb-4 rounded-xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-black/[0.05]" style={{ maxWidth: width }}>
-                {from && <div className="truncate text-xs font-semibold text-neutral-950">{from}</div>}
-                <div className="truncate font-medium text-neutral-950">{subject || "No subject"}</div>
-                {preheader && <div className="truncate text-muted-foreground">{preheader}</div>}
+              <div className="mx-auto mb-4 flex items-start gap-3 rounded-xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-black/[0.05]" style={{ maxWidth: width }}>
+                {from && (
+                  <span className="mt-0.5">
+                    <SenderMark name={from} mark={mark} color={color} size={28} />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  {from && <div className="truncate text-xs font-semibold text-neutral-950">{from}</div>}
+                  <div className="truncate font-medium text-neutral-950">{subject || "No subject"}</div>
+                  {preheader && <div className="truncate text-muted-foreground">{preheader}</div>}
+                </div>
               </div>
             )}
-            <div className={cn("mx-auto overflow-hidden bg-white shadow-sm ring-1 ring-black/[0.05]", device === "phone" ? "rounded-[28px]" : "rounded-lg")} style={{ maxWidth: width }}>
+            <div className="mx-auto overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-black/[0.05]" style={{ maxWidth: width }}>
               {html ? (
-                <EmailFrame key={device} html={html} width={width} scale={1} lazy={false} title="Email preview" />
+                <EmailFrame html={html} width={width} scale={1} lazy={false} title="Email preview" />
               ) : (
                 <div className="flex h-96 items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Spinner className="size-4" /> Rendering
@@ -91,6 +110,7 @@ export function EmailPreviewDialog({
               )}
             </div>
           </div>
+          )}
           {aside && <aside className="hidden min-h-0 overflow-y-auto border-l p-5 lg:block">{aside}</aside>}
         </div>
         {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t px-5 py-3">{footer}</div>}

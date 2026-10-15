@@ -276,14 +276,18 @@ emailRoute("/email/chat", async (ctx, { campaignId, messages }) => {
   return json({ ok: true });
 });
 
-/** One person's version of a people campaign. */
+/** One group's or one person's version of a campaign. */
 emailRoute("/email/version", async (ctx, body) => {
   const campaignId = asId<"emailCampaigns">(body.campaignId);
   const contactId = asId<"emailContacts">(body.contactId);
-  if (!campaignId || !contactId || typeof body.docVersion !== "number") return json({ error: "expected { campaignId, contactId, docVersion, personalization }" }, 400);
+  const audienceId = asId<"emailAudiences">(body.audienceId);
+  if (!campaignId || !contactId === !audienceId || typeof body.docVersion !== "number") {
+    return json({ error: "expected { campaignId, contactId or audienceId, docVersion, personalization }" }, 400);
+  }
   await ctx.runMutation(internal.emailCampaigns.saveVersion, {
     campaignId,
-    contactId,
+    ...(contactId ? { contactId } : {}),
+    ...(audienceId ? { audienceId } : {}),
     docVersion: body.docVersion,
     personalization: body.personalization ?? { blocks: {} },
     ...(body.status === "ready" || body.status === "failed" ? { status: body.status } : {}),

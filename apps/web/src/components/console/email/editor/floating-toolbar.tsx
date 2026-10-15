@@ -191,7 +191,7 @@ function BlockTools({ block, theme }: { block: EmailBlock; theme: EmailTheme }) 
 
   return (
     <>
-      <TB label="Edit with AI" icon={MessagesSquare} onClick={() => editWithAI({ kind: "block", id: block.id })} className="gap-1.5 pr-2.5 font-medium text-neutral-900">
+      <TB label="Edit with AI" icon={MessagesSquare} onClick={() => editWithAI({ kind: "block", id: block.id })} className="gap-1.5 px-2.5 font-medium text-neutral-900">
         <span className="text-[13px]">Edit with AI</span>
       </TB>
       <Sep />
@@ -312,7 +312,7 @@ function BlockTools({ block, theme }: { block: EmailBlock; theme: EmailTheme }) 
       <PaddingControl value={block.padding} fallback={[0, 0, 16, 0]} onChange={(b) => set({ padding: b ?? null }, "padding")} />
       {PERSONAL_TYPES.has(block.type) && (
         <TB
-          label={block.personal ? "Taste slot: written for each person" : audience?.kind === "people" ? "Write it for each person" : "Make it a taste slot"}
+          label={block.personal ? "Taste slot: written for each version" : audience?.kind === "versions" ? "Write it for each version" : "Make it a taste slot"}
           icon={UserStar}
           pressed={!!block.personal}
           onClick={() => set({ personal: block.personal ? null : true })}
@@ -343,7 +343,7 @@ function SectionTools({ section, theme }: { section: EmailSection; theme: EmailT
   const set = (fields: Record<string, unknown>, coalesce?: string) => editor.apply([{ op: "update_section", id: section.id, set: fields as Partial<EmailSection> }], { coalesce: coalesce ? `${section.id}:${coalesce}` : undefined });
   return (
     <>
-      <TB label="Edit with AI" icon={MessagesSquare} onClick={() => editWithAI({ kind: "section", id: section.id })} className="gap-1.5 pr-2.5 font-medium text-neutral-900">
+      <TB label="Edit with AI" icon={MessagesSquare} onClick={() => editWithAI({ kind: "section", id: section.id })} className="gap-1.5 px-2.5 font-medium text-neutral-900">
         <span className="text-[13px]">Edit with AI</span>
       </TB>
       <Sep />

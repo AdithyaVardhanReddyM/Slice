@@ -131,7 +131,7 @@ export function CampaignsScreen() {
                   campaign={c}
                   brand={brand}
                   items={items}
-                  audience={c.audienceId ? byAudience.get(c.audienceId) : undefined}
+                  audience={c.groupIds?.length ? byAudience.get(c.groupIds[0]) : undefined}
                   href={`${base}/${c._id}`}
                   onOpen={() => router.push(`${base}/${c._id}`)}
                 />
@@ -188,7 +188,7 @@ function CampaignCard({
   const stats = statsOf(campaign);
   const r = rates(stats);
   const out = campaign.status !== "draft" && campaign.status !== "scheduled";
-  const AudienceIcon = KIND_ICON[audience?.kind ?? campaign.audienceKind ?? ""] ?? UsersRound;
+  const AudienceIcon = (campaign.groupCount ?? 0) > 0 && !campaign.peopleCount ? KIND_ICON.group : UsersRound;
   const date =
     campaign.status === "sent" && campaign.sentAt
       ? `Sent ${relativeTime(campaign.sentAt)}`
@@ -240,7 +240,7 @@ function CampaignCard({
               {audience || campaign.audienceName ? (
                 <>
                   <span className="text-muted-foreground">For </span>
-                  <span className="font-medium">{audience?.name ?? campaign.audienceName}</span>
+                  <span className="font-medium">{campaign.audienceName ?? audience?.name}</span>
                 </>
               ) : (
                 <span className="text-muted-foreground">No audience yet</span>

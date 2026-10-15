@@ -6,7 +6,7 @@
 
 import { createContext, useContext, type RefObject } from "react";
 import type { EmailItem, EmailTheme, Personalization } from "@slice/backend/convex/emailTypes";
-import type { EmailAudience, EmailBrand, EmailCampaign } from "@/lib/email/types";
+import type { AudienceRow, EmailBrand, EmailCampaign } from "@/lib/email/types";
 import type { EmailAgent } from "./use-email-agent";
 import type { EmailEditor } from "./use-email-editor";
 import type { ChatComposerHandle } from "./chat-composer";
@@ -25,9 +25,23 @@ export interface ChatMessage {
   blocks?: { id: string; label: string; type: string }[];
 }
 
-/** Showing one person's version on the canvas (Personalise → Preview as). */
+/**
+ * Who the campaign goes to, as the editor needs it. "group": one taste group
+ * alone, and the email is written for it; "versions": several groups or any
+ * individual contacts (or taste slots), each getting their own version.
+ */
+export interface Recipients {
+  /** "Crime & suspense, Sci-fi & fantasy and 3 individual contacts". */
+  name: string;
+  kind: "group" | "versions";
+  groups: AudienceRow[];
+  contactIds: string[];
+}
+
+/** Showing one version on the canvas (Personalise → Preview as): a taste group's or a person's. */
 export interface PreviewAs {
-  contactId: string;
+  /** The group's audience id or the person's contact id. */
+  key: string;
   name: string;
   merge: Record<string, string | undefined>;
   personalization: Personalization | null;
@@ -43,7 +57,7 @@ export interface EditorEnv {
   theme: EmailTheme;
   items: EmailItem[];
   itemMap: Record<string, EmailItem>;
-  audience: EmailAudience | null;
+  audience: Recipients | null;
   messages: ChatMessage[];
   panel: PanelId | null;
   setPanel: (p: PanelId | null) => void;

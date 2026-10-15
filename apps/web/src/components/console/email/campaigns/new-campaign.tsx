@@ -43,14 +43,17 @@ export function NewCampaignScreen() {
   const audiences = useQuery(api.emailAudiences.list, { brandId: brand._id });
   const items = useBrandItems(brand._id);
   const [prompt, setPrompt] = useState("");
-  const [audienceId, setAudienceId] = useState<Id<"emailAudiences"> | null>(null);
+  // Audiences ticked for "For": taste groups, and the individual contacts (everyone of them).
+  const [picked, setPicked] = useState<Id<"emailAudiences">[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<TemplateCategory | "all">("all");
   const [previewing, setPreviewing] = useState<EmailTemplate | null>(null);
 
-  const ready = (audiences ?? []).filter((a) => a.status === "ready");
-  const audience = ready.find((a) => a._id === audienceId) ?? null;
+  const ready = (audiences ?? []).filter((a) => a.status === "ready" && (a.kind === "group" || a.size > 0));
+  const chosen = ready.filter((a) => picked.includes(a._id));
+  const individuals = chosen.find((a) => a.kind === "people");
+  const people = useQuery(api.emailContacts.byAudience, individuals ? { audienceId: individuals._id } : "skip");
   const categories = CATEGORY_ORDER.filter((c) => EMAIL_TEMPLATES.some((t) => t.category === c));
   const templates = EMAIL_TEMPLATES.filter((t) => category === "all" || t.category === category);
   const typed = prompt.trim();
@@ -64,7 +67,8 @@ export function NewCampaignScreen() {
         brandId: brand._id,
         ...(template && template !== "blank" ? { templateId: template.id, name: template.name } : {}),
         ...(typed ? { prompt: typed } : {}),
-        ...(audienceId ? { audienceId } : {}),
+        ...(chosen.some((a) => a.kind === "group") ? { groupIds: chosen.filter((a) => a.kind === "group").map((a) => a._id) } : {}),
+        ...(individuals && people?.length ? { contactIds: people.filter((c) => !c.unsubscribed).map((c) => c._id) } : {}),
       });
       router.push(`/dashboard/email/${brand.slug}/campaigns/${id}${typed ? "?generate=1" : ""}`);
     } catch (err) {
@@ -107,7 +111,13 @@ export function NewCampaignScreen() {
               aria-label="What do you want to send?"
             />
             <div className="flex flex-wrap items-center gap-2 pt-2">
-              <AudiencePicker audiences={ready} loading={audiences === undefined} value={audience} onChange={setAudienceId} />
+              <AudiencePicker
+                audiences={ready}
+                loading={audiences === undefined}
+                value={chosen}
+                onToggle={(id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))}
+                onClear={() => setPicked([])}
+              />
               <Button type="submit" disabled={!typed || !!busy} className="ml-auto h-9 rounded-full px-4">
                 {busy === "prompt" ? <Spinner data-icon="inline-start" /> : <ArrowUp data-icon="inline-start" />}
                 Create
@@ -182,18 +192,22 @@ export function NewCampaignScreen() {
   );
 }
 
-/** Optional "For": one of the brand's audiences, shown by its face. */
+/** Optional "For": any taste groups and the individual contacts, each shown by its face. */
 function AudiencePicker({
   audiences,
   loading,
   value,
-  onChange,
+  onToggle,
+  onClear,
 }: {
   audiences: AudienceRow[];
   loading: boolean;
-  value: AudienceRow | null;
-  onChange: (id: Id<"emailAudiences"> | null) => void;
+  value: AudienceRow[];
+  onToggle: (id: Id<"emailAudiences">) => void;
+  onClear: () => void;
 }) {
+  const first = value[0];
+  const label = value.map((a) => (a.kind === "people" ? "individual contacts" : a.name)).join(", ").replace(/, ([^,]*)$/, " and $1");
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -204,8 +218,8 @@ function AudiencePicker({
           />
         }
       >
-        {value ? (
-          <Avatar name={value.name} image={coverTiles(profileOf(value), 1)[0]?.image} className="size-6" />
+        {first ? (
+          <Avatar name={first.name} image={coverTiles(profileOf(first), 1)[0]?.image} className="size-6" />
         ) : (
           <span className="flex size-6 items-center justify-center rounded-full bg-white text-neutral-500">
             <UsersRound className="size-3.5" />
@@ -213,7 +227,7 @@ function AudiencePicker({
         )}
         <span className="truncate">
           <span className="text-muted-foreground">For </span>
-          <span className="font-medium text-neutral-900">{value ? value.name : "choose later"}</span>
+          <span className="font-medium text-neutral-900">{value.length ? label : "choose later"}</span>
         </span>
         <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -226,7 +240,7 @@ function AudiencePicker({
           <div className="px-2 py-3 text-sm text-muted-foreground">No audiences yet. Import contacts first, or choose them in the Recipients step.</div>
         ) : (
           audiences.map((a) => (
-            <DropdownMenuItem key={a._id} onClick={() => onChange(a._id)} className="gap-2.5 py-1.5">
+            <DropdownMenuItem key={a._id} closeOnClick={false} onClick={() => onToggle(a._id)} className="gap-2.5 py-1.5">
               <Avatar name={a.name} image={coverTiles(profileOf(a), 1)[0]?.image} className="size-8 rounded-lg" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{a.name}</span>
@@ -234,14 +248,14 @@ function AudiencePicker({
                   {KIND_LABEL[a.kind]} · {peopleCount(a.size, a.kind === "people" ? "person" : "contact")}
                 </span>
               </span>
-              {value?._id === a._id && <Check className="size-4" />}
+              {value.some((v) => v._id === a._id) && <Check className="size-4" />}
             </DropdownMenuItem>
           ))
         )}
-        {value && (
+        {value.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onChange(null)}>Choose later</DropdownMenuItem>
+            <DropdownMenuItem onClick={onClear}>Choose later</DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>

@@ -535,7 +535,7 @@ export const status = internalQuery({
         .filter((c) => c.profileStatus)
         .map((c) => ({ id: c._id, name: c.name, status: c.profileStatus, entities: c.entities.length, error: c.profileError })),
       contactsWithEntities: `${contacts.filter((c) => c.entities.length).length} of ${contacts.length}`,
-      campaigns: campaigns.map((c) => ({ id: c._id, name: c.name, status: c.status, audienceId: c.audienceId ?? null, templateId: c.templateId ?? null, stats: c.stats, sentAt: c.sentAt ?? null })),
+      campaigns: campaigns.map((c) => ({ id: c._id, name: c.name, status: c.status, groupIds: c.groupIds ?? [], contactIds: c.contactIds ?? [], templateId: c.templateId ?? null, stats: c.stats, sentAt: c.sentAt ?? null })),
     };
   },
 });

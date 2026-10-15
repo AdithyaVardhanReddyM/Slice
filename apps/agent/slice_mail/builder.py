@@ -1,10 +1,11 @@
 """The email builder: an ADK agent that writes and edits one marketing email (an
-EmailDoc of sections, columns and blocks) for one audience.
+EmailDoc of sections, columns and blocks) for whoever the campaign goes to.
 
 State per session (one session per campaign), loaded fresh every turn from
 `emailCampaigns:getForAgent`: the brand (kit, about, voice, footer, sender), the
-audience (profile and brief; for individual contacts, the people ticked), the
-catalog items and the doc. New emails are built section by section (start_email,
+taste groups and individual contacts ticked (one group alone: the email is
+written for it; several, or any people: a shared base whose personal blocks
+each gets a version of), the catalog items and the doc. New emails are built section by section (start_email,
 then add_section) so the editor's canvas fills as the merchant watches; edits are
 `edit_email` ops on block ids. Every doc change goes through Convex (/email/doc,
 /email/ops), which validates it and bumps the version; the server streams a `doc`
@@ -42,9 +43,10 @@ MAX_REVIEWS_PER_TURN = 1
 # --- state keys --------------------------------------------------------------------
 CAMPAIGN = "em_campaign"  # the campaign row without its doc
 BRAND = "em_brand"
-AUDIENCE = "em_audience"  # emailAudiences row (profile, brief) or None
+AUDIENCE = "em_audience"  # the one taste group, a "versions" stand-in for everyone ticked (store.audience_of), or None
+GROUPS = "em_groups"  # taste groups ticked, compact: {id, name, size, brief, summary, members}
 ITEMS = "em_items"  # {id: EmailItem}
-PEOPLE = "em_people"  # a people list's members, compact: {id, name, firstName, city, loves}
+PEOPLE = "em_people"  # individual contacts ticked, compact: {id, name, firstName, city, loves}
 DOC = "em_doc"
 DOC_VERSION = "em_doc_version"
 KIND = "em_kind"  # "generate" | "adapt" | "edit" for the current turn
@@ -67,22 +69,41 @@ def _lock(campaign_id: str) -> asyncio.Lock:
 
 def _person(c: dict[str, Any]) -> dict[str, Any]:
     out = {"id": store.row_id(c), "name": str(c.get("name") or c.get("email") or ""), "firstName": store.first_name(c), "loves": store.contact_names(c, 6)}
-    if c.get("city"):
-        out["city"] = c["city"]
+    where = ", ".join(str(x) for x in (c.get("neighborhood"), c.get("city")) if x)
+    if where:
+        out["city"] = where
     return out
+
+
+def _group(g: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": store.row_id(g),
+        "name": str(g.get("name") or ""),
+        "size": int(g.get("size") or 0),
+        "brief": g.get("brief"),
+        "summary": profile_summary(g.get("profile"), tags_per_type=4, brands=4, culture=4),
+        "members": [_person(m) for m in g.get("members") or []][:8],
+        # Placed by age, gender and neighbourhood, with nothing bought yet.
+        "new": sum(1 for m in g.get("members") or [] if not m.get("purchases")),
+    }
+
+
+def is_versions(state: dict[str, Any]) -> bool:
+    """Several groups, or any individual contacts: a shared base with a version for each."""
+    return (state.get(AUDIENCE) or {}).get("kind") == "versions"
 
 
 async def load_state(campaign_id: str) -> dict[str, Any]:
     data = await store.load_campaign(campaign_id)
     campaign, audience, doc = data["campaign"], data["audience"], data["doc"]
-    people = [_person(c) for c in data["contacts"] if not c.get("unsubscribed")] if audience and audience.get("kind") == "people" else []
     links = set(D.urls_in(campaign.get("prompt") or ""))
     return {
         CAMPAIGN: {k: v for k, v in campaign.items() if k != "doc"},
         BRAND: data["brand"],
         AUDIENCE: audience,
+        GROUPS: [_group(g) for g in data["groups"]],
         ITEMS: data["items"],
-        PEOPLE: people,
+        PEOPLE: [_person(c) for c in data["contacts"] if not c.get("unsubscribed")],
         DOC: doc,
         DOC_VERSION: int(doc.get("version") or 0),
         REVIEWS: 0,
@@ -148,6 +169,19 @@ def _audience_block(state: dict[str, Any]) -> str:
     aud = state.get(AUDIENCE)
     if not aud:
         return "AUDIENCE: none chosen yet."
+    if is_versions(state):
+        groups, people = state.get(GROUPS) or [], state.get(PEOPLE) or []
+        lines = [f"RECIPIENTS: {aud.get('name')}: {len(groups) + len(people)} versions, about {aud.get('size') or 0} people. get_audience has each one's taste in full."]
+        for g in groups:
+            brief = g.get("brief") or {}
+            loves = (g.get("summary") or {}).get("signals") or []
+            lines.append(
+                f"  group {g['id']}: \"{g['name']}\" ({g['size']} people{', ' + str(g['new']) + ' not bought yet' if g.get('new') else ''}). Loves: {', '.join(loves[:6]) or 'not read yet'}."
+                + (f" Speak to them: {brief.get('speakTo')}" if brief.get("speakTo") else "")
+            )
+        for p in people[:12]:
+            lines.append(f"  person {p['id']}: {p['name']}{' (' + p['city'] + ')' if p.get('city') else ''}: {', '.join(p.get('loves') or []) or 'no taste data'}")
+        return "\n".join(lines)
     profile = aud.get("profile") or {}
     lines = [
         f"AUDIENCE: \"{aud.get('name')}\" ({'a taste group' if aud.get('kind') == 'group' else 'individual contacts, each gets their own version'}, {(aud.get('size') if aud.get('kind') == 'group' else len(state.get(PEOPLE) or [])) or 0} people).",
@@ -189,15 +223,16 @@ def _audience_rules(state: dict[str, Any]) -> str:
     aud = state.get(AUDIENCE)
     if not aud:
         return """NO AUDIENCE YET
-The merchant has not chosen who this goes to. Write for the brand's customers in general from the brand and the brief; skip taste claims and personal blocks. Say in your reply that choosing an audience in Recipients lets you tailor it."""
-    if aud.get("kind") == "people":
-        return f"""A CUSTOMER LIST, ONE BY ONE
-This campaign goes to individual contacts the merchant ticked. Every person gets their own version: Slice rewrites the email's personal blocks for each of them from their own taste profile when the merchant clicks Personalise in Recipients. So:
-- Write the base email for the list as a whole, from the merged profile, as for its most typical member.
-- Mark as personal: the hero heading, the intro text under it, one items block (pick "taste", count 3 or 4, with the list's own picks from pick_items as itemIds) and, when it shows a pick, the hero image. Events, the brand's story and the footer stay shared.
-- Each personal block must stand on its own: its words have to work whatever the other personal blocks end up saying for one person.
-- Use {{{{first_name|there}}}} once, in the hero heading or the greeting.
-- When the merchant asks what someone would get, pick_items(for_contact=<their id>) shows it."""
+The merchant has not chosen who this goes to. Write for the brand's customers in general from the brand and the brief; skip taste claims and personal blocks. Say in your reply that choosing who it goes to in Recipients lets you tailor it."""
+    if is_versions(state):
+        return f"""ONE EMAIL, A VERSION FOR EACH
+This campaign goes to {aud.get('name')}. Every taste group gets its own version, written for the group's taste, and every individual contact gets their own, written from their profile: Slice rewrites the email's personal blocks for each of them when the merchant clicks Personalise in Recipients. So:
+- Write the base email around the one shared idea (the brief's offer or news) for the brand's customers in general: it is what every version shares, and what anyone without a version gets.
+- Some people here may not have bought anything yet (RECIPIENTS says how many per group): nothing shared may thank them for shopping or assume they have read a book. Name books as hooks ("for readers of Tana French"), never as memories ("since you loved The Searcher").
+- Mark as personal: the hero heading, the intro text under it, one items block (pick "taste", count 3 or 4) and, when it shows a pick, the hero image. The offer and its terms, events, the brand's story and the footer stay shared, word for word.
+- Each personal block must stand on its own: its words have to work whatever the other personal blocks end up saying for one group or one person.
+- Use {{{{first_name|there}}}} once, in the hero heading or the greeting; a group's version reaches many people, so the fallback has to read naturally.
+- When the merchant asks what one of them would get, pick_items(for_contact=<a group or person id>) shows it."""
     return f"""ONE TASTE GROUP
 This campaign goes to one taste group, "{aud.get('name')}": one email written for this group's taste. The angle, the picks (pick_items), the hooks and the imagery all come from their profile and brief, concretely enough that another group would get a visibly different email. No personal blocks; merge tags are fine."""
 
@@ -290,7 +325,7 @@ Blocks (fields; omitted ones get sensible defaults):
 - divider: thickness, width, style; spacer: height
 - social: links [{{network, url}}] (omit links to use the brand's own)
 - video: thumbnail, href, alt (a poster linking to a video the merchant gave you)
-Heading, text, image, button, items and quote blocks can carry personal: true (individual contacts only).
+Heading, text, image, button, items and quote blocks can carry personal: true (only when each group and person gets a version).
 
 Shapes (not copy to reuse):
 add_section(section={{"label": "Header", "padding": [24, 32, 8, 32], "columns": [{{"blocks": [{{"type": "logo", "width": 150, "align": "center", "href": "{site}"}}]}}]}})
@@ -352,12 +387,17 @@ async def get_brand(tool_context: ToolContext) -> dict:
 async def get_audience(tool_context: ToolContext) -> dict:
     """The full Qloo taste profile of this campaign's audience: tags by type with affinity,
     brands with their style words, culture (authors and books, artists, films, places) with
-    pictures, where they are, the demographic skew and the audience brief; for a customer
-    the individual contacts ticked, every person with what they love. Call once before writing."""
+    pictures, where they are, the demographic skew and the audience brief. Sent to several
+    groups or to individual contacts: each group (brief, taste, members) and each person with
+    what they love, plus everyone's taste merged. Call once before writing."""
     state = tool_context.state
     aud = state.get(AUDIENCE)
     if not aud:
         return {"ok": False, "note": "No audience chosen yet: write for the brand's customers in general."}
+    if is_versions(state):
+        groups, people = state.get(GROUPS) or [], state.get(PEOPLE) or []
+        record("slice", "Read who it goes to", f"{len(groups)} taste groups, {len(people)} individual contacts", ms=0)
+        return {"ok": True, "name": aud.get("name"), "kind": "versions", "size": aud.get("size"), "groups": groups, "people": people, "everyone": profile_summary(aud.get("profile"), tags_per_type=5, brands=6, culture=5)}
     profile = aud.get("profile") or {}
     tags: dict[str, list[dict[str, Any]]] = {}
     for t in profile.get("tags") or []:
@@ -444,7 +484,7 @@ async def pick_items(tool_context: ToolContext, count: int = 4, for_contact: str
 
     Args:
         count: How many (default 4, max 8).
-        for_contact: A person's id from the individual contacts ticked, to see that one person's picks.
+        for_contact: A taste group's or a person's id (or name) from get_audience, to see the picks their version would lead with.
         exclude: Item ids already used elsewhere in the email.
     """
     state = tool_context.state
@@ -455,11 +495,18 @@ async def pick_items(tool_context: ToolContext, count: int = 4, for_contact: str
     args: dict[str, Any] = {"brandId": campaign.get("brandId"), "take": count}
     who = aud.get("name") or "everyone"
     if for_contact:
+        group = next((g for g in state.get(GROUPS) or [] if for_contact in (g["id"], g["name"])), None)
         person = next((p for p in state.get(PEOPLE) or [] if for_contact in (p["id"], p["name"])), None)
-        if person is None:
-            return {"ok": False, "error": f"no person {for_contact} in this list; use an id from get_audience"}
-        args["contactId"] = person["id"]
-        who = person["name"]
+        if group:
+            args["audienceId"] = group["id"]
+            who = group["name"]
+        elif person:
+            args["contactId"] = person["id"]
+            who = person["name"]
+        else:
+            return {"ok": False, "error": f"no group or person {for_contact} on this campaign; use an id from get_audience"}
+    elif is_versions(state):
+        args["profile"] = aud.get("profile") or {}
     elif aud:
         args["audienceId"] = store.row_id(aud)
     if skip:
@@ -863,7 +910,7 @@ def turn_message(state: dict[str, Any], kind: str, note: str | None) -> str:
     """The user turn for a generate or adapt turn (an edit turn is the merchant's own message)."""
     campaign = state.get(CAMPAIGN) or {}
     aud = state.get(AUDIENCE) or {}
-    who = f"the audience \"{aud.get('name')}\"" if aud else "the brand's customers (no audience chosen yet)"
+    who = (f"{aud.get('name')} (one base email, a version for each)" if is_versions(state) else f"the audience \"{aud.get('name')}\"") if aud else "the brand's customers (no audience chosen yet)"
     if kind == "adapt":
         text = f"[Adapt the template in this email for {who} now. Follow THIS TURN.]"
     else:

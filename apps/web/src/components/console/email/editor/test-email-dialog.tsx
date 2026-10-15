@@ -1,8 +1,8 @@
 "use client";
 
 // Test email: send the email as it stands to an inbox (the merchant's own by
-// default), optionally as one person of the audience so their merge values and
-// version show.
+// default), optionally as one recipient so their merge values and the version
+// they get (their taste group's, or their own) show.
 
 import { useUser } from "@clerk/nextjs";
 import { useAction, useQuery } from "convex/react";
@@ -16,7 +16,8 @@ import { Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { fieldClass } from "./fields";
+import { ChevronSelect, fieldClass } from "./fields";
+import { RecipientOptions } from "./preview-dialog";
 
 type State = { kind: "idle" } | { kind: "sending" } | { kind: "sent"; to: string; from: string } | { kind: "error"; message: string };
 
@@ -24,13 +25,11 @@ export function TestEmailDialog({
   open,
   onOpenChange,
   campaignId,
-  audienceId,
   beforeSend,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campaignId: Id<"emailCampaigns">;
-  audienceId?: Id<"emailAudiences">;
   /** Save pending edits first, so the test is the email on screen. */
   beforeSend?: () => Promise<void>;
 }) {
@@ -40,7 +39,7 @@ export function TestEmailDialog({
   const [contactId, setContactId] = useState<Id<"emailContacts"> | "">("");
   const [state, setState] = useState<State>({ kind: "idle" });
   const sendTest = useAction(api.emailSend.sendTest);
-  const contacts = useQuery(api.emailContacts.byAudience, open && audienceId ? { audienceId } : "skip") as { _id: Id<"emailContacts">; name: string; unsubscribed?: boolean }[] | undefined;
+  const contacts = useQuery(api.emailCampaigns.recipients, open ? { id: campaignId } : "skip");
   const people = (contacts ?? []).filter((c) => !c.unsubscribed);
   const address = (to || mine).trim();
 
@@ -85,15 +84,11 @@ export function TestEmailDialog({
           {people.length > 0 && (
             <div className="space-y-1.5">
               <Label htmlFor="test-as">Send it as</Label>
-              <select id="test-as" value={contactId} onChange={(e) => setContactId(e.target.value as Id<"emailContacts"> | "")} className={cn(fieldClass, "h-9 text-sm")}>
+              <ChevronSelect id="test-as" value={contactId} onChange={(e) => setContactId(e.target.value as Id<"emailContacts"> | "")} className="h-9 w-full">
                 <option value="">Anyone (sample values)</option>
-                {people.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">Their first name, city and, for individual contacts, their own version.</p>
+                <RecipientOptions people={people} />
+              </ChevronSelect>
+              <p className="text-xs text-muted-foreground">Their first name, city and the version they get: their taste group&apos;s, or their own.</p>
             </div>
           )}
           {state.kind === "sent" && (

@@ -487,8 +487,8 @@ class Checker:
                     break
                 if not self.link_ok(str(link.get("url") or "")):
                     problems.append(f"{label}: {link.get('url')} is not one of the brand's own links")
-        if b.get("personal") and self.audience_kind != "people" and (only is None or "personal" in only):
-            warnings.append(f"{label}: personal is ignored unless the campaign goes to individual contacts")
+        if b.get("personal") and self.audience_kind != "versions" and (only is None or "personal" in only):
+            warnings.append(f"{label}: personal is ignored unless each group and person gets a version (several groups, or individual contacts)")
         if b.get("personal") and t not in PERSONAL_FIELDS:
             warnings.append(f"{label}: only heading, text, image, button, items and quote blocks can be personal")
         return problems, warnings
@@ -598,7 +598,7 @@ def prepare_ops(
             if isinstance(op["set"].get("reasons"), list):
                 op["set"]["reasons"] = reasons_dict(op["set"]["reasons"])
             dashed |= clean_copy_fields(op["set"])
-            if block.get("personal") and op["set"].get("personal") is False and checker.audience_kind == "people":
+            if block.get("personal") and op["set"].get("personal") is False and checker.audience_kind == "versions":
                 warnings.append(f"{where}: {block.get('id')} is no longer a taste slot, so it will read the same for everyone; keep personal: true unless the merchant asked")
             merged = {**block, **op["set"]}
             p, w = checker.check_block(merged, only=set(op["set"]), where=f"{where} ")

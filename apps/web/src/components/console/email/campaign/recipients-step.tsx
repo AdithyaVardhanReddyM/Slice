@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { AlertCircle, Boxes, Check, Eye, Fingerprint, MailX, RefreshCw, Upload, UserPlus, UserStar, UsersRound } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, Fingerprint, RefreshCw, UserStar, UsersRound } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { personalBlocks } from "@slice/backend/convex/emailDoc";
@@ -14,307 +14,97 @@ import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
 import { errorText } from "@/lib/email/labels";
 import { postJson } from "@/lib/pages/stream";
-import { docOf, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
+import { docOf, kitOf, profileOf, targetsName, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
 import { Panel, Skeleton } from "@/components/console/primitives";
 import { Thumb } from "@/components/console/pages/shared";
+import { coverTiles } from "@/components/console/pages/taste-cover";
 import { Notice, Spinner } from "@/components/console/setup/atoms";
-import { AddContactSheet } from "@/components/console/email/contacts/add-contact-sheet";
-import { ImportContactsSheet } from "@/components/console/email/contacts/import-sheet";
-import { AudienceCard, ContactAvatar, aboutOf, briefOf, firstNameOf, peopleCount, type AudienceRow, type EmailContact } from "@/components/console/email/contacts/shared";
+import { Avatar, ContactAvatar, aboutOf, briefOf, faceOf, firstNameOf, peopleCount, type AudienceRow, type EmailContact } from "@/components/console/email/contacts/shared";
 import { EmailPreviewDialog } from "@/components/console/email/campaigns/email-preview-dialog";
 import { useBrandItems } from "@/components/console/email/campaigns/shared";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 
-/** One person's version, with `stale` when it was written against an older doc. */
+/** A group's or a person's version, with `stale` when it was written against an older doc. */
 type Version = FunctionReturnType<typeof api.emailCampaigns.versions>[number];
 
+/** Someone the campaign can go to: a taste group, or one of the brand's individual contacts. */
+type Target = { kind: "group"; id: string; audience: AudienceRow } | { kind: "person"; id: string; contact: EmailContact };
+
 /**
- * Step 2: who the campaign goes to. One taste group (one email written for
- * its taste), or individual contacts ticked one by one, where every ticked
- * person gets their own version of the personal blocks.
+ * Step 2: who the campaign goes to, as one list: the brand's taste groups and
+ * its individual contacts, each ticked in or out, each with the version it
+ * gets. One group alone gets the email as written for it; anything more (or
+ * an email with taste slots) gets a version each, written by Personalise.
+ * New people are added on Contacts, before the email is written for them.
  */
 export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; brand: EmailBrand }) {
   const audiences = useQuery(api.emailAudiences.list, { brandId: brand._id });
-  const setAudience = useMutation(api.emailCampaigns.setAudience);
-  const [sheet, setSheet] = useState<"import" | "add" | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const locked = campaign.status !== "draft";
-
-  const all = audiences ?? [];
-  const selected = all.find((a) => a._id === campaign.audienceId) ?? null;
-  const groups = all.filter((a) => a.kind === "group").sort((a, b) => b.size - a.size);
-  const individuals = all.find((a) => a.kind === "people" && a.size > 0) ?? null;
-
-  /** Aims the campaign at a group, or at the individual contacts (no one ticked yet). */
-  async function pick(a: AudienceRow) {
-    if (locked || a._id === campaign.audienceId || (a.kind === "group" && a.status !== "ready")) return true;
-    setError(null);
-    try {
-      await setAudience({ id: campaign._id, audienceId: a._id });
-      return true;
-    } catch (err) {
-      setError(errorText(err));
-      return false;
-    }
-  }
-
-  const grid = (list: AudienceRow[]) => (
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {list.map((a) => (
-        <AudienceCard
-          key={a._id}
-          audience={a}
-          selected={a._id === campaign.audienceId}
-          onClick={() => void pick(a)}
-          className={cn((locked || a.status !== "ready") && a._id !== campaign.audienceId && "cursor-not-allowed opacity-60 hover:translate-y-0 hover:shadow-none")}
-        />
-      ))}
-    </div>
-  );
-
-  return (
-    // The campaign shell gives the step its page width and padding.
-    <div className="w-full space-y-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 space-y-1.5">
-          <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">Who is it for?</h1>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Pick one taste group, or tick individual contacts. A taste group gets one email written for its taste; each person you tick gets their own version, written from their profile.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="h-9 rounded-full bg-white px-3.5" onClick={() => setSheet("add")}>
-            <UserPlus data-icon="inline-start" /> Add by hand
-          </Button>
-          <Button variant="outline" className="h-9 rounded-full bg-white px-3.5" onClick={() => setSheet("import")}>
-            <Upload data-icon="inline-start" /> Import contacts
-          </Button>
-        </div>
-      </div>
-
-      {locked && <Notice>This campaign has left the drafts, so who it goes to is fixed.</Notice>}
-      {error && <Notice tone="bad">{error}</Notice>}
-
-      {audiences === undefined ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-72 rounded-2xl" />
-          ))}
-        </div>
-      ) : all.length === 0 ? (
-        <Panel className="flex flex-col items-center px-6 py-14 text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-neutral-100">
-            <UsersRound className="size-5 text-neutral-700" />
-          </span>
-          <h2 className="mt-4 font-semibold">No contacts yet</h2>
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            Import a CSV and sort it into taste groups, or add people as individual contacts. Qloo reads what each person likes so the email can follow it.
-          </p>
-          <div className="mt-5 flex gap-2">
-            <Button className="h-9 rounded-full px-4" onClick={() => setSheet("import")}>
-              <Upload data-icon="inline-start" /> Import contacts
-            </Button>
-            <Button variant="outline" className="h-9 rounded-full px-4" onClick={() => setSheet("add")}>
-              <UserPlus data-icon="inline-start" /> Add by hand
-            </Button>
-          </div>
-        </Panel>
-      ) : (
-        <>
-          {groups.length > 0 && (
-            <section className="space-y-4">
-              <SectionTitle icon={Boxes} title="Taste groups" hint="One email, written for the group's taste" />
-              {grid(groups)}
-            </section>
-          )}
-          {individuals && (
-            <section className="space-y-4">
-              <SectionTitle icon={UsersRound} title="Individual contacts" hint="Tick who gets it: each person gets a version written for them" />
-              <PickPeople campaign={campaign} audience={individuals} locked={locked} onUse={() => pick(individuals)} />
-            </section>
-          )}
-        </>
-      )}
-
-      {selected?.kind === "group" && <GroupNote audience={selected} />}
-      {selected?.kind === "people" && (campaign.contactIds?.length ?? 0) > 0 && <Personalise campaign={campaign} brand={brand} audience={selected} />}
-
-      <ImportContactsSheet open={sheet === "import"} onOpenChange={(o) => setSheet(o ? "import" : null)} />
-      <AddContactSheet open={sheet === "add"} onOpenChange={(o) => setSheet(o ? "add" : null)} />
-    </div>
-  );
-}
-
-/** The individual contacts as a tick list; ticking someone also aims the campaign at the individuals. */
-function PickPeople({ campaign, audience, locked, onUse }: { campaign: EmailCampaign; audience: AudienceRow; locked: boolean; onUse: () => Promise<boolean> }) {
-  const contacts = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
-  const setContacts = useMutation(api.emailCampaigns.setContacts);
-  const [error, setError] = useState<string | null>(null);
-  const active = campaign.audienceId === audience._id;
-  const ticked = useMemo(() => new Set<string>(active ? (campaign.contactIds ?? []) : []), [active, campaign.contactIds]);
-  const reachable = (contacts ?? []).filter((c) => !c.unsubscribed);
-
-  async function save(ids: string[]) {
-    if (locked) return;
-    setError(null);
-    try {
-      if (!active && !(await onUse())) return;
-      await setContacts({ id: campaign._id, contactIds: ids as Id<"emailContacts">[] });
-    } catch (err) {
-      setError(errorText(err));
-    }
-  }
-  const toggle = (id: string) => void save(ticked.has(id) ? [...ticked].filter((x) => x !== id) : [...ticked, id]);
-
-  return (
-    <Panel className={cn("overflow-visible", active && "ring-2 ring-neutral-900")}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.05] px-5 py-3.5">
-        <p className="text-sm">
-          {active && ticked.size ? (
-            <span className="font-medium text-neutral-950">
-              {fmt.int(ticked.size)} of {peopleCount(reachable.length, "person")} ticked
-            </span>
-          ) : (
-            <span className="text-muted-foreground">{peopleCount(audience.size, "person")}. Tick the ones this campaign is for.</span>
-          )}
-        </p>
-        {!locked && (
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" disabled={!reachable.length || ticked.size === reachable.length} onClick={() => void save(reachable.map((c) => c._id))}>
-              Tick everyone
-            </Button>
-            {ticked.size > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => void save([])}>
-                Clear
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-      {error && <p className="px-5 pt-3 text-sm text-destructive">{error}</p>}
-      {contacts === undefined ? (
-        <div className="grid gap-2 p-3 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-14 rounded-xl" />
-          ))}
-        </div>
-      ) : (
-        <ul className="grid gap-1 p-2 sm:grid-cols-2 xl:grid-cols-3">
-          {contacts.map((c) => {
-            const on = ticked.has(c._id);
-            return (
-              <li key={c._id}>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={on}
-                  disabled={locked || !!c.unsubscribed}
-                  onClick={() => toggle(c._id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-                    on && "bg-neutral-100",
-                    c.unsubscribed && "opacity-60",
-                  )}
-                >
-                  <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-md border", on ? "border-neutral-900 bg-neutral-900 text-white" : "border-black/20 bg-white")}>
-                    {on && <Check className="size-3.5" />}
-                  </span>
-                  <ContactAvatar contact={c} className="size-8" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-neutral-950">{c.name || c.email}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{c.unsubscribed ? "Unsubscribed" : aboutOf(c) || c.entities[0]?.name || c.email}</span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </Panel>
-  );
-}
-
-function SectionTitle({ icon: Icon, title, hint }: { icon: typeof Boxes; title: string; hint: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.06]">
-        <Icon className="size-[18px] text-neutral-800" />
-      </span>
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight text-neutral-950">{title}</h2>
-        <p className="text-sm text-muted-foreground">{hint}</p>
-      </div>
-    </div>
-  );
-}
-
-/** For a group: how the builder writes to them, from the brief. */
-function GroupNote({ audience }: { audience: AudienceRow }) {
-  const brief = briefOf(audience);
-  if (!brief) return null;
-  return (
-    <Panel className="grid gap-6 p-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
-      <div className="space-y-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <Fingerprint className="size-3.5" /> Written for {audience.name}
-        </span>
-        <p className="text-[15px] leading-relaxed text-neutral-900">{brief.summary}</p>
-      </div>
-      <dl className="grid gap-4 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-muted-foreground">Speak to them</dt>
-          <dd className="mt-1 leading-relaxed">{brief.speakTo}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Lead with</dt>
-          <dd className="mt-1 leading-relaxed">{brief.leadWith}</dd>
-        </div>
-        {brief.hooks.slice(0, 2).map((h, i) => (
-          <div key={i}>
-            <dt className="text-muted-foreground">Hook {i + 1}</dt>
-            <dd className="mt-1 leading-relaxed">
-              {h.text} <span className="text-xs text-muted-foreground">({h.evidence})</span>
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </Panel>
-  );
-}
-
-/** For the individuals ticked: write everyone's version, watch it fill, check each person's. */
-function Personalise({ campaign, brand, audience }: { campaign: EmailCampaign; brand: EmailBrand; audience: AudienceRow }) {
-  const pathname = usePathname();
-  const everyone = useQuery(api.emailContacts.byAudience, { audienceId: audience._id });
-  const contacts = useMemo(() => {
-    const picked = new Set<string>(campaign.contactIds ?? []);
-    return everyone?.filter((c) => picked.has(c._id));
-  }, [everyone, campaign.contactIds]);
+  const individuals = (audiences ?? []).find((a) => a.kind === "people" && a.size > 0) ?? null;
+  const people = useQuery(api.emailContacts.byAudience, individuals ? { audienceId: individuals._id } : "skip");
   const versions = useQuery(api.emailCampaigns.versions, { id: campaign._id });
+  const readiness = useQuery(api.emailSend.readiness, { campaignId: campaign._id });
+  const setTargets = useMutation(api.emailCampaigns.setTargets);
   const items = useBrandItems(brand._id);
+  const pathname = usePathname();
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewing, setPreviewing] = useState<EmailContact | null>(null);
+  const [previewing, setPreviewing] = useState<Target | null>(null);
 
+  const locked = campaign.status !== "draft";
   const doc = docOf(campaign);
   const slots = doc ? personalBlocks(doc) : [];
   const itemsBlock = slots.find((b): b is ItemsBlock => b.type === "items");
+  const groups = useMemo(() => (audiences ?? []).filter((a) => a.kind === "group").sort((a, b) => b.size - a.size), [audiences]);
+  const groupIds = useMemo(() => new Set<string>(campaign.groupIds ?? []), [campaign.groupIds]);
+  const contactIds = useMemo(() => new Set<string>(campaign.contactIds ?? []), [campaign.contactIds]);
+  const byTarget = useMemo(() => new Map((versions ?? []).map((v) => [(v.group?._id ?? v.contact?._id) as string, v])), [versions]);
+  const itemById = useMemo(() => new Map((items ?? []).map((i) => [i.id, i])), [items]);
+
+  const pickedGroups = groups.filter((g) => groupIds.has(g._id));
+  const pickedPeople = (people ?? []).filter((c) => contactIds.has(c._id));
+  // One group alone gets the email written for it, unless the email has taste slots; anything more gets a version each.
+  const many = pickedGroups.length > 1 || pickedPeople.length > 0 || (pickedGroups.length > 0 && slots.length > 0);
+  const targets: Target[] = [
+    ...pickedGroups.map((a) => ({ kind: "group" as const, id: a._id as string, audience: a })),
+    ...pickedPeople.filter((c) => !c.unsubscribed).map((c) => ({ kind: "person" as const, id: c._id as string, contact: c })),
+  ];
   const state = campaign.personalization;
   const running = starting || state?.status === "running";
-  const byContact = useMemo(() => new Map((versions ?? []).map((v) => [v.contact._id as string, v])), [versions]);
-  const itemById = useMemo(() => new Map((items ?? []).map((i) => [i.id, i])), [items]);
-  const active = (contacts ?? []).filter((c) => !c.unsubscribed);
-  const stale = active.filter((c) => byContact.get(c._id)?.stale);
-  const missing = active.filter((c) => !byContact.has(c._id) || byContact.get(c._id)?.status === "failed");
-  const done = active.length - missing.length;
+  const stale = targets.filter((t) => byTarget.get(t.id)?.stale);
+  const missing = targets.filter((t) => !byTarget.has(t.id) || byTarget.get(t.id)?.status === "failed");
+  const done = targets.length - missing.length;
 
-  async function run(contactIds?: Id<"emailContacts">[]) {
+  async function save(next: { groupIds?: string[]; contactIds?: string[] }) {
+    if (locked) return;
+    setError(null);
+    try {
+      await setTargets({
+        id: campaign._id,
+        ...(next.groupIds ? { groupIds: next.groupIds as Id<"emailAudiences">[] } : {}),
+        ...(next.contactIds ? { contactIds: next.contactIds as Id<"emailContacts">[] } : {}),
+      });
+    } catch (err) {
+      setError(errorText(err));
+    }
+  }
+  const toggleGroup = (a: AudienceRow) => {
+    if (a.status !== "ready" && !groupIds.has(a._id)) return;
+    void save({ groupIds: groupIds.has(a._id) ? [...groupIds].filter((id) => id !== a._id) : [...groupIds, a._id] });
+  };
+  const togglePerson = (c: EmailContact) => void save({ contactIds: contactIds.has(c._id) ? [...contactIds].filter((id) => id !== c._id) : [...contactIds, c._id] });
+
+  async function run(only?: Target[]) {
     setStarting(true);
     setError(null);
     try {
+      const ids = only && {
+        audienceIds: only.filter((t) => t.kind === "group").map((t) => t.id),
+        contactIds: only.filter((t) => t.kind === "person").map((t) => t.id),
+      };
       // The agent answers 200 with ok: false when it cannot start (no versions to write, campaign gone).
-      const res = await postJson<{ ok: boolean; total?: number; error?: string }>("/api/email/personalise", { campaignId: campaign._id, ...(contactIds ? { contactIds } : {}) });
+      const res = await postJson<{ ok: boolean; total?: number; error?: string }>("/api/email/personalise", { campaignId: campaign._id, ...(ids ?? {}) });
       if (!res.ok) throw new Error(res.error ?? "Personalising could not start.");
     } catch (err) {
       setError(errorText(err));
@@ -323,217 +113,395 @@ function Personalise({ campaign, brand, audience }: { campaign: EmailCampaign; b
     }
   }
 
-  const locked = campaign.status !== "draft";
+  const row = (t: Target) => {
+    const ticked = t.kind === "group" ? groupIds.has(t.id) : contactIds.has(t.id);
+    return (
+      <RecipientRow
+        key={t.id}
+        target={t}
+        ticked={ticked}
+        many={many}
+        version={ticked ? byTarget.get(t.id) : undefined}
+        slots={slots.length}
+        itemsBlockId={itemsBlock?.id}
+        itemById={itemById}
+        writing={ticked && running && many && !byTarget.has(t.id)}
+        locked={locked}
+        onToggle={() => (t.kind === "group" ? toggleGroup(t.audience) : togglePerson(t.contact))}
+        onPreview={() => setPreviewing(t)}
+        onUpdate={() => void run([t])}
+      />
+    );
+  };
+
+  const loading = audiences === undefined || (individuals !== null && people === undefined);
+  const contactsHref = `/dashboard/email/${brand.slug}/contacts`;
+  const reachable = (people ?? []).filter((c) => !c.unsubscribed);
+  const avatars = [
+    ...pickedGroups.map((g) => ({ key: g._id as string, name: g.name, image: coverTiles(profileOf(g), 1, true)[0]?.image, group: true })),
+    ...pickedPeople.map((c) => ({ key: c._id as string, name: c.name || c.email, image: faceOf(c), group: false })),
+  ];
 
   return (
-    <section className="space-y-5">
-      <Panel className="overflow-visible">
-        <div className="flex flex-wrap items-center gap-4 p-6">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-neutral-900 text-white">
-            <UserStar className="size-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold tracking-tight text-neutral-950">Personalise for each person</h2>
-            <p className="text-sm text-muted-foreground">
-              {slots.length
-                ? `The builder rewrites the ${slots.length === 1 ? "taste slot" : `${slots.length} taste slots`} for each of the ${peopleCount(active.length, "person")} from their own profile, and picks their items by taste.`
-                : "This email has no taste slots yet, so everyone would get the same words. Mark blocks as personal in the editor first."}
-            </p>
-          </div>
-          {!locked &&
-            (stale.length > 0 && !running ? (
-              <Button className="h-9 rounded-full px-4" onClick={() => void run(stale.map((c) => c._id))}>
-                <RefreshCw data-icon="inline-start" /> Update {stale.length} changed
-              </Button>
-            ) : (
-              <Button className="h-9 rounded-full px-4" disabled={running || !slots.length || active.length === 0} onClick={() => void run(missing.length && done ? missing.map((c) => c._id) : undefined)}>
-                {running ? <Spinner data-icon="inline-start" /> : <UserStar data-icon="inline-start" />}
-                {running ? "Personalising" : done === 0 ? "Personalise for each person" : missing.length ? `Write the other ${missing.length}` : "Write them again"}
-              </Button>
-            ))}
-        </div>
-        {!slots.length && (
-          <div className="border-t border-black/[0.05] px-6 py-3 text-sm">
-            <Link href={pathname} className="font-medium underline-offset-4 hover:underline">
-              Back to the editor
-            </Link>
-            <span className="text-muted-foreground"> and use the personal toggle on the hero, intro and picks, or ask the builder to mark them.</span>
-          </div>
-        )}
-        {(running || state?.status === "failed" || error) && (
-          <div className="space-y-2 border-t border-black/[0.05] px-6 py-4">
-            {error || state?.status === "failed" ? (
-              <p className="text-sm text-destructive">{error ?? state?.error ?? "Personalising stopped."}</p>
-            ) : (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Writing each person&apos;s version</span>
-                  <span className="num text-xs text-muted-foreground">
-                    {fmt.int(state?.done ?? 0)} of {fmt.int(state?.total || active.length)}
-                  </span>
-                </div>
-                <Progress value={state?.total ? Math.round((state.done / state.total) * 100) : 4} />
-              </>
-            )}
-          </div>
-        )}
-      </Panel>
+    // The campaign shell gives the step its page width and padding.
+    <div className="w-full space-y-8">
+      <div className="space-y-1.5">
+        <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">Who is it for?</h1>
+        <p className="max-w-2xl text-sm text-muted-foreground">
+          Tick the taste groups and people this goes to. Each gets a version of the email written from their own taste. To add people, import them on{" "}
+          <Link href={contactsHref} className="font-medium text-neutral-900 underline-offset-4 hover:underline">
+            Contacts
+          </Link>{" "}
+          before you write the email.
+        </p>
+      </div>
 
-      {contacts === undefined ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-44 rounded-2xl" />
-          ))}
+      {locked && <Notice>This campaign has left the drafts, so who it goes to is fixed.</Notice>}
+      {error && <Notice tone="bad">{error}</Notice>}
+
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-28 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
+      ) : !groups.length && !individuals ? (
+        <Panel className="flex flex-col items-center px-6 py-14 text-center">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-neutral-100">
+            <UsersRound className="size-5 text-neutral-700" />
+          </span>
+          <h2 className="mt-4 font-semibold">No contacts yet</h2>
+          <p className="mt-1 max-w-md text-sm text-muted-foreground">
+            Import a CSV on Contacts and sort it into taste groups, or keep people as individual contacts. Then come back and tick who this goes to.
+          </p>
+          <Link href={contactsHref} className={cn(buttonVariants(), "mt-5 h-9 rounded-full px-4")}>
+            Go to Contacts <ArrowRight data-icon="inline-end" />
+          </Link>
+        </Panel>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {contacts.map((c) => (
-            <PersonCard
-              key={c._id}
-              contact={c}
-              version={byContact.get(c._id)}
-              baseSubject={doc?.subject ?? ""}
-              itemsBlockId={itemsBlock?.id}
-              itemById={itemById}
-              writing={running && !byContact.has(c._id)}
-              locked={locked}
-              onPreview={() => setPreviewing(c)}
-              onUpdate={() => void run([c._id])}
-            />
-          ))}
-        </ul>
+        <>
+          <Panel>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4 p-5 sm:p-6">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
+                {avatars.length > 0 ? (
+                  <div className="flex shrink-0 -space-x-2">
+                    {avatars.slice(0, 5).map((a) => (
+                      <Avatar key={a.key} name={a.name} image={a.image} className={cn("size-10 ring-2 ring-white", a.group && "rounded-xl")} />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+                    <UsersRound className="size-[18px] text-neutral-500" />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="text-lg font-semibold tracking-tight text-neutral-950">
+                    {targets.length ? (
+                      <>
+                        {peopleCount(readiness?.recipients ?? 0, "person")}
+                        <span className="font-normal text-muted-foreground"> · {many ? (targets.length === 1 ? "1 version" : `${targets.length} versions`) : "1 email"}</span>
+                      </>
+                    ) : (
+                      "No one yet"
+                    )}
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {targets.length
+                      ? `${targetsName(pickedGroups, pickedPeople.length)}${readiness?.excluded ? `, ${fmt.int(readiness.excluded)} unsubscribed left out` : ""}`
+                      : "Tick a taste group or a person below."}
+                  </p>
+                </div>
+              </div>
+              {many && !locked && (
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="text-sm text-muted-foreground">
+                    {running ? `Writing ${fmt.int(state?.done ?? 0)} of ${fmt.int(state?.total || targets.length)}` : slots.length ? `${done} of ${targets.length} written` : "No taste slots yet"}
+                  </span>
+                  {stale.length > 0 && !running ? (
+                    <Button className="h-9 rounded-full px-4" onClick={() => void run(stale)}>
+                      <RefreshCw data-icon="inline-start" /> Update {stale.length} changed
+                    </Button>
+                  ) : (
+                    <Button
+                      // Every version written: writing them again replaces them, so it is the quiet option.
+                      variant={!running && done > 0 && !missing.length ? "outline" : "default"}
+                      className={cn("h-9 rounded-full px-4", !running && done > 0 && !missing.length && "bg-white")}
+                      disabled={running || !slots.length || targets.length === 0}
+                      onClick={() => void run(missing.length && done ? missing : undefined)}
+                    >
+                      {running ? <Spinner data-icon="inline-start" /> : <UserStar data-icon="inline-start" />}
+                      {running ? "Personalising" : done === 0 ? `Personalise ${targets.length === 1 ? "it" : `all ${targets.length}`}` : missing.length ? `Write the other ${missing.length}` : "Write them again"}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+            {running && (
+              <div className="border-t border-black/[0.05] px-6 py-3">
+                <Progress value={state?.total ? Math.round((state.done / state.total) * 100) : 4} />
+              </div>
+            )}
+            {state?.status === "failed" && !running && <p className="border-t border-black/[0.05] px-6 py-3 text-sm text-destructive">{state.error ?? "Personalising stopped."}</p>}
+            {many && !slots.length && (
+              <p className="border-t border-black/[0.05] px-6 py-3 text-sm text-muted-foreground">
+                Everyone would get the same words.{" "}
+                <Link href={pathname} className="font-medium text-neutral-900 underline-offset-4 hover:underline">
+                  Back to the editor
+                </Link>{" "}
+                to mark the hero, intro and picks as taste slots, or ask the builder to.
+              </p>
+            )}
+          </Panel>
+
+          {groups.length > 0 && (
+            <section className="space-y-3">
+              <ListTitle title="Taste groups" hint="One version per group, written for what its members share" />
+              <Panel>
+                <ul className="divide-y divide-black/[0.05]">{groups.map((a) => row({ kind: "group", id: a._id, audience: a }))}</ul>
+              </Panel>
+            </section>
+          )}
+
+          {individuals && (
+            <section className="space-y-3">
+              <ListTitle
+                title="Individual contacts"
+                hint="A version each, written from their own profile"
+                actions={
+                  !locked && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={!reachable.length || reachable.every((c) => contactIds.has(c._id))}
+                        onClick={() => void save({ contactIds: reachable.map((c) => c._id) })}
+                      >
+                        Tick everyone
+                      </Button>
+                      {contactIds.size > 0 && (
+                        <Button variant="ghost" size="sm" onClick={() => void save({ contactIds: [] })}>
+                          Clear
+                        </Button>
+                      )}
+                    </>
+                  )
+                }
+              />
+              <Panel>
+                <ul className="divide-y divide-black/[0.05]">{(people ?? []).map((c) => row({ kind: "person", id: c._id, contact: c }))}</ul>
+              </Panel>
+            </section>
+          )}
+        </>
       )}
 
-      <PersonPreview campaign={campaign} brand={brand} contact={previewing} version={previewing ? byContact.get(previewing._id) : undefined} onClose={() => setPreviewing(null)} />
-    </section>
+      <VersionPreview campaign={campaign} brand={brand} target={previewing} version={previewing ? byTarget.get(previewing.id) : undefined} onClose={() => setPreviewing(null)} />
+    </div>
   );
 }
 
-function PersonCard({
-  contact,
+function ListTitle({ title, hint, actions }: { title: string; hint: string; actions?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-2 px-1">
+      <div>
+        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-950">{title}</h2>
+        <p className="text-[13px] text-muted-foreground">{hint}</p>
+      </div>
+      {actions && <div className="flex items-center gap-1">{actions}</div>}
+    </div>
+  );
+}
+
+/** A taste group's face: the first picture from its taste. */
+function GroupAvatar({ audience, className }: { audience: AudienceRow; className?: string }) {
+  return <Avatar name={audience.name} image={coverTiles(profileOf(audience), 1, true)[0]?.image} className={cn("rounded-xl", className)} />;
+}
+
+/** What the row and the preview say about the reader. */
+function readerOf(t: Target) {
+  if (t.kind === "group") {
+    const a = t.audience;
+    const newcomers = a.newcomers ?? 0;
+    return {
+      name: a.name,
+      first: a.name,
+      about: [peopleCount(a.size, "person"), newcomers ? (newcomers === 1 ? "1 hasn't bought yet" : `${newcomers} haven't bought yet`) : null].filter(Boolean).join(", "),
+      detail: a.status !== "ready" ? (a.status === "failed" ? "Couldn't be read" : "Still being read") : a.topEntities.length ? `Into ${a.topEntities.slice(0, 3).join(", ")}` : undefined,
+      unsubscribed: false,
+      avatar: (c: string) => <GroupAvatar audience={a} className={c} />,
+    };
+  }
+  const c = t.contact;
+  const bought = c.purchases?.length ? c.purchases : null;
+  return {
+    name: c.name || c.email,
+    first: firstNameOf(c),
+    about: aboutOf(c) || c.email,
+    detail: c.unsubscribed ? "Unsubscribed" : bought ? `Bought ${bought.slice(0, 2).join(" and ")}${bought.length > 2 ? ` +${bought.length - 2}` : ""}` : "Hasn't bought yet",
+    unsubscribed: !!c.unsubscribed,
+    avatar: (cls: string) => <ContactAvatar contact={c} className={cls} />,
+  };
+}
+
+/**
+ * One group or person: ticked in or out on the left, the version they get on
+ * the right (subject, picks and why), with a preview.
+ */
+function RecipientRow({
+  target,
+  ticked,
+  many,
   version,
-  baseSubject,
+  slots,
   itemsBlockId,
   itemById,
   writing,
   locked,
+  onToggle,
   onPreview,
   onUpdate,
 }: {
-  contact: EmailContact;
+  target: Target;
+  ticked: boolean;
+  many: boolean;
   version?: Version;
-  baseSubject: string;
+  slots: number;
   itemsBlockId?: string;
   itemById: Map<string, EmailItem>;
   writing: boolean;
   locked: boolean;
+  onToggle: () => void;
   onPreview: () => void;
   onUpdate: () => void;
 }) {
+  const reader = readerOf(target);
+  const group = target.kind === "group";
+  const unavailable = reader.unsubscribed || (group && target.audience.status !== "ready" && !ticked);
   const p = version?.status === "ready" ? version.personalization : null;
-  const stale = !!version?.stale;
   const picks = ((itemsBlockId && (p?.blocks[itemsBlockId] as Partial<ItemsBlock> | undefined)?.itemIds) || [])
     .map((id) => itemById.get(id))
     .filter((i): i is EmailItem => !!i)
-    .slice(0, 4);
+    .slice(0, 3);
 
-  return (
-    <li className={cn("flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(20,20,20,0.04)] ring-1 ring-black/[0.06]", contact.unsubscribed && "opacity-60")}>
-      <div className="flex items-center gap-3">
-        <ContactAvatar contact={contact} className="size-10" />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium text-neutral-950">{contact.name || contact.email}</div>
-          <div className="truncate text-xs text-muted-foreground">{aboutOf(contact) || contact.email}</div>
-        </div>
-        {contact.unsubscribed ? (
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <MailX className="size-3.5" /> Unsubscribed
-          </span>
-        ) : writing ? (
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Spinner className="size-3.5" /> Writing
-          </span>
-        ) : stale && !locked ? (
-          <Button variant="outline" size="xs" onClick={onUpdate} title="The email changed after this version was written">
-            <RefreshCw data-icon="inline-start" /> Update
-          </Button>
-        ) : null}
-      </div>
-
-      {contact.unsubscribed ? (
-        <p className="text-sm text-muted-foreground">Left out of sends.</p>
-      ) : version?.status === "failed" ? (
-        <p className="flex items-start gap-1.5 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 size-4 shrink-0" /> {version.error ?? `${firstNameOf(contact)}'s version could not be written.`}
-        </p>
-      ) : p ? (
-        <>
-          <div className="rounded-xl bg-neutral-50 px-3 py-2.5">
-            <div className="truncate text-sm font-medium text-neutral-950">{p.subject || baseSubject || "No subject"}</div>
-            {p.preheader && <div className="truncate text-xs text-muted-foreground">{p.preheader}</div>}
+  let gets: ReactNode;
+  if (!ticked) gets = <p className="text-sm text-muted-foreground">{reader.unsubscribed ? "Unsubscribed, left out of sends" : "Not in this campaign"}</p>;
+  else if (!many)
+    gets = (
+      <p className="line-clamp-2 text-sm text-neutral-700">
+        <Fingerprint className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
+        {group ? (briefOf(target.audience)?.summary ?? "One email, written for this group's taste.") : "The email as written, with their name merged in."}
+      </p>
+    );
+  else if (!slots) gets = <p className="text-sm text-muted-foreground">The shared email, with their name merged in.</p>;
+  else if (writing)
+    gets = (
+      <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+        <Spinner className="size-3.5" /> Reading {group ? "the group's" : `${reader.first}'s`} taste and picking for {group ? "it" : "them"}
+      </p>
+    );
+  else if (version?.status === "failed")
+    gets = (
+      <p className="flex items-start gap-1.5 text-sm text-destructive">
+        <AlertCircle className="mt-0.5 size-4 shrink-0" /> {version.error ?? "This version could not be written."}
+      </p>
+    );
+  else if (p)
+    gets = (
+      <div className="flex min-w-0 items-center gap-3.5">
+        {picks.length > 0 && (
+          <div className="flex shrink-0 gap-1">
+            {picks.map((i) => (
+              <Thumb key={i.id} src={i.image} alt={i.name} className="aspect-[2/3] w-8 ring-1 ring-black/10" rounded="rounded-[3px]" />
+            ))}
           </div>
-          {picks.length > 0 && (
-            <div className="flex gap-2">
-              {picks.map((i) => (
-                <Thumb key={i.id} src={i.image} alt={i.name} className="aspect-[2/3] w-12 ring-1 ring-black/10" rounded="rounded-md" />
-              ))}
-            </div>
-          )}
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-neutral-950">{p.subject || "Shared subject line"}</p>
           {p.why && (
-            <p className="line-clamp-3 text-sm leading-relaxed text-neutral-700">
-              <Fingerprint className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
+            <p className="line-clamp-2 text-[13px] leading-snug text-muted-foreground" title={p.why}>
               {p.why}
             </p>
           )}
-          {stale && <p className="text-xs text-amber-700">Written for an earlier draft of the email.</p>}
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">{writing ? `Reading ${firstNameOf(contact)}'s taste and picking for them.` : "Not personalised yet."}</p>
-      )}
+          {version?.stale && <p className="text-xs text-amber-700">Written for an earlier draft of the email</p>}
+        </div>
+      </div>
+    );
+  else gets = <p className="text-sm text-muted-foreground">Not personalised yet</p>;
 
-      {!contact.unsubscribed && (
-        <Button variant="ghost" size="sm" className="mt-auto self-start" onClick={onPreview}>
-          <Eye data-icon="inline-start" /> Preview {p ? `${firstNameOf(contact)}'s version` : "as them"}
-        </Button>
-      )}
+  return (
+    <li className={cn("grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 px-5 py-4 md:grid-cols-[auto_minmax(0,17rem)_minmax(0,1fr)_auto]", !ticked && "bg-neutral-50/60")}>
+      <Checkbox
+        checked={ticked}
+        disabled={locked || unavailable}
+        onCheckedChange={onToggle}
+        aria-label={`${ticked ? "Leave out" : "Send to"} ${reader.name}`}
+        className="size-[18px] rounded-[5px] border-neutral-300 bg-white data-checked:border-neutral-900 data-checked:bg-neutral-900 data-checked:text-white"
+      />
+      <button type="button" disabled={locked || unavailable} onClick={onToggle} className="flex min-w-0 items-center gap-3 text-left disabled:cursor-not-allowed">
+        {reader.avatar(cn("size-10", !ticked && "opacity-60 grayscale"))}
+        <span className="min-w-0">
+          <span className={cn("block truncate text-sm font-medium", ticked ? "text-neutral-950" : "text-neutral-600")}>{reader.name}</span>
+          <span className="block truncate text-xs text-muted-foreground">{reader.about}</span>
+          {reader.detail && <span className="block truncate text-xs text-muted-foreground">{reader.detail}</span>}
+        </span>
+      </button>
+      <div className="col-span-2 min-w-0 md:col-span-1">{gets}</div>
+      <div className="col-span-2 flex items-center justify-end gap-1 md:col-span-1">
+        {ticked && version?.stale && !locked && !writing && (
+          <Button variant="outline" size="sm" className="rounded-full" onClick={onUpdate} title="The email changed after this version was written">
+            <RefreshCw data-icon="inline-start" /> Update
+          </Button>
+        )}
+        {ticked && !reader.unsubscribed && (
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={onPreview}>
+            <Eye data-icon="inline-start" /> Preview
+          </Button>
+        )}
+      </div>
     </li>
   );
 }
 
-/** One person's email, as the send renders it (personalised and merged). */
-function PersonPreview({
+/** One version as the send renders it: a group's (merge tags show their fallbacks) or a person's (their name merged). */
+function VersionPreview({
   campaign,
   brand,
-  contact,
+  target,
   version,
   onClose,
 }: {
   campaign: EmailCampaign;
   brand: EmailBrand;
-  contact: EmailContact | null;
+  target: Target | null;
   version?: Version;
   onClose: () => void;
 }) {
-  const render = useQuery(api.emailCampaigns.renderFor, contact ? { id: campaign._id, contactId: contact._id } : "skip");
+  const render = useQuery(
+    api.emailCampaigns.renderFor,
+    !target ? "skip" : target.kind === "group" ? { id: campaign._id, audienceId: target.audience._id } : { id: campaign._id, contactId: target.contact._id },
+  );
   const why = version?.status === "ready" ? version.personalization.why : undefined;
+  const reader = target ? readerOf(target) : null;
+  const likes = !target ? [] : target.kind === "group" ? target.audience.topEntities.slice(0, 8) : target.contact.entities.slice(0, 8).map((e) => e.name);
   return (
     <EmailPreviewDialog
-      open={!!contact}
+      open={!!target}
       onOpenChange={(o) => !o && onClose()}
-      title={contact ? `${contact.name || contact.email}'s version` : ""}
-      description={contact ? [contact.email, aboutOf(contact)].filter(Boolean).join(" · ") : undefined}
+      title={!target || !reader ? "" : target.kind === "group" ? `${reader.name}: the group's version` : `${reader.name}'s version`}
+      description={!target ? undefined : target.kind === "group" ? reader?.about : [target.contact.email, aboutOf(target.contact)].filter(Boolean).join(" · ")}
       html={render?.html}
       subject={render?.subject}
       preheader={render?.preheader}
       from={brand.sender?.fromName ?? brand.name}
+      mark={kitOf(brand)?.icon ?? kitOf(brand)?.logo?.src}
+      color={kitOf(brand)?.colors.primary}
       aside={
-        contact ? (
+        target && reader ? (
           <div className="space-y-4 text-sm">
             <div className="flex items-center gap-3">
-              <ContactAvatar contact={contact} className="size-11" />
+              {reader.avatar("size-11")}
               <div className="min-w-0">
-                <div className="truncate font-medium">{contact.name}</div>
-                <div className="truncate text-xs text-muted-foreground">{aboutOf(contact) || contact.email}</div>
+                <div className="truncate font-medium">{reader.name}</div>
+                <div className="truncate text-xs text-muted-foreground">{reader.about}</div>
               </div>
             </div>
             {why ? (
@@ -542,15 +510,18 @@ function PersonPreview({
                 {why}
               </p>
             ) : (
-              <p className="text-muted-foreground">Not personalised yet: this is the shared email with their name merged in.</p>
+              <p className="text-muted-foreground">
+                {target.kind === "group" ? "Not personalised yet: this is the shared email." : "Not personalised yet: this is the shared email with their name merged in."}
+              </p>
             )}
-            {contact.entities.length > 0 && (
+            {target.kind === "group" && briefOf(target.audience)?.summary && <p className="leading-relaxed text-muted-foreground">{briefOf(target.audience)?.summary}</p>}
+            {likes.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs text-muted-foreground">What they like</p>
+                <p className="text-xs text-muted-foreground">{target.kind === "group" ? "What they share" : "What they like"}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {contact.entities.slice(0, 8).map((e) => (
-                    <span key={e.id} className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs">
-                      {e.name}
+                  {likes.map((name) => (
+                    <span key={name} className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs">
+                      {name}
                     </span>
                   ))}
                 </div>

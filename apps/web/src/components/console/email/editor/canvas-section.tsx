@@ -139,7 +139,7 @@ function CanvasBlock({
 
   const style: CSSProperties = { transform: CSS.Translate.toString(transform), transition, opacity: isDragging ? 0.35 : undefined };
   const dropHere = target?.kind === "block" && target.anchor === block.id && target.edge !== "inside" ? target.edge : null;
-  const personal = block.personal && audience?.kind === "people";
+  const personal = block.personal && audience?.kind === "versions";
 
   return (
     <div

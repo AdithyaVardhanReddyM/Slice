@@ -21,8 +21,15 @@ export type EmailCampaign = Doc<"emailCampaigns">;
 export type EmailAudience = Doc<"emailAudiences">;
 export type EmailBrandId = Id<"emailBrands">;
 
-/** A row from emailCampaigns.list: the campaign with its audience's name and kind. */
-export type CampaignRow = EmailCampaign & { audienceName?: string; audienceKind?: "group" | "people" };
+/** A row from emailCampaigns.list: the campaign with who it goes to, in words and counts. */
+export type CampaignRow = EmailCampaign & { audienceName?: string; groupCount?: number; peopleCount?: number };
+
+/** "Crime & suspense, Sci-fi & fantasy and 3 individual contacts" (as emailCampaigns.targetsName says it). */
+export function targetsName(groups: { name: string }[], people: number): string | undefined {
+  const parts = [...groups.map((g) => g.name), ...(people ? [people === 1 ? "1 individual contact" : `${people} individual contacts`] : [])];
+  if (parts.length < 2) return parts[0];
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
 
 export const audienceNameOf = (c: CampaignRow) => c.audienceName;
 
@@ -30,7 +37,7 @@ export const audienceNameOf = (c: CampaignRow) => c.audienceName;
 export const campaignAt = (c: EmailCampaign) => c.sentAt ?? c.scheduledAt ?? c.updatedAt;
 
 /** A row from emailAudiences.list: the audience with its list's name and how many members opted out. */
-export type AudienceRow = EmailAudience & { listName?: string; unsubscribed?: number };
+export type AudienceRow = EmailAudience & { listName?: string; unsubscribed?: number; newcomers?: number };
 
 /** Anything with a name and the brand's look: a stored brand, or the setup draft being edited. */
 export interface BrandLike {

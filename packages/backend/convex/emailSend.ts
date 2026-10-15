@@ -2,9 +2,9 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalAction, internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { membersFor, unsubscribedEmails } from "./emailAudiences";
+import { unsubscribedEmails } from "./emailAudiences";
 import { editableBrand, formatFrom, hostOf, RESEND_MISSING, sendingInfoFor } from "./emailBrands";
-import { docFor, itemsRecord, mergeFor, renderContextFor, renderOne } from "./emailCampaigns";
+import { docFor, itemsRecord, mergeFor, recipientsOf, renderContextFor, renderOne, targetsOf, versionFor } from "./emailCampaigns";
 import { unsubscribeEmail } from "./emailContacts";
 import { allBlocks, personalBlocks } from "./emailDoc";
 import { resend, ResendError } from "./emailDomains";
@@ -77,7 +77,6 @@ type SendContext = {
   campaign: Doc<"emailCampaigns">;
   brand: Doc<"emailBrands">;
   items: Doc<"emailItems">[];
-  people: boolean;
   contact: Doc<"emailContacts"> | null;
   version: Doc<"emailVersions"> | null;
 } | null;
@@ -93,15 +92,9 @@ export const sendContext = internalQuery({
     const brand = await ctx.db.get(campaign.brandId);
     if (!brand) return null;
     const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect();
-    const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
     const contact = contactId ? await ctx.db.get(contactId) : null;
-    const version = contact
-      ? await ctx.db
-          .query("emailVersions")
-          .withIndex("by_campaign_contact", (q) => q.eq("campaignId", campaignId).eq("contactId", contact._id))
-          .unique()
-      : null;
-    return { campaign, brand, items, people: audience?.kind === "people", contact, version };
+    const version = await versionFor(ctx, campaign, contact);
+    return { campaign, brand, items, contact, version };
   },
 });
 
@@ -126,14 +119,14 @@ export const sendTest = action({
   handler: async (ctx, { campaignId, to, contactId }): Promise<{ id: string; from: string }> => {
     const data: SendContext = await ctx.runQuery(internal.emailSend.sendContext, { campaignId, contactId });
     if (!data) throw new Error("Unknown campaign");
-    const { campaign, brand, items, people, contact, version } = data;
+    const { campaign, brand, items, contact, version } = data;
     if (brand.owner && (await ctx.auth.getUserIdentity())?.subject !== brand.owner) throw new Error("Unknown campaign");
     const address = to.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(address)) throw new Error(`"${to}" isn't an email address`);
     if (!process.env.RESEND_API_KEY) throw new Error(RESEND_MISSING);
     const info = sendingInfoFor(brand);
     const from = info.mode === "domain" || info.mode === "shared" ? info.from : formatFrom(brand.sender?.fromName?.trim() || brand.name, "onboarding@resend.dev");
-    const doc = docFor(campaign, version, people);
+    const doc = docFor(campaign, version);
     const rendered = renderOne(
       doc,
       renderContextFor(brand, itemsRecord(items), {
@@ -171,21 +164,15 @@ async function blocker(ctx: { db: QueryCtx["db"] }, campaign: Doc<"emailCampaign
   const doc = campaign.doc as EmailDoc;
   if (!doc.subject?.trim()) return "Add a subject line";
   if (!allBlocks(doc).some((x) => x.block.type === "footer")) return "Add a footer with an unsubscribe link";
-  if (!campaign.audienceId) return "Choose who it goes to";
-  const audience = await ctx.db.get(campaign.audienceId);
-  if (!audience) return "Choose who it goes to";
-  if (audience.kind === "people" && !campaign.contactIds?.length) return "Tick who gets it";
-  if (audience.status !== "ready" && audience.kind === "group") {
-    return audience.status === "failed" ? `${audience.name} couldn't be read: ${audience.error ?? "try again"}` : `${audience.name} is still being read`;
-  }
-  if (audience.kind === "people") {
-    const picked = await membersFor(ctx, campaign, audience);
-    if (picked.some((m) => m.profileStatus === "pending" || m.profileStatus === "compiling")) return "Some of the people ticked are still being read";
-  }
-  if (audience.kind === "people" && personalBlocks(doc).length) {
+  const { groups, people } = await targetsOf(ctx, campaign);
+  if (!groups.length && !people.length) return "Choose who it goes to";
+  const unread = groups.find((g) => g.status !== "ready");
+  if (unread) return unread.status === "failed" ? `${unread.name} couldn't be read: ${unread.error ?? "try again"}` : `${unread.name} is still being read`;
+  if (people.some((m) => m.profileStatus === "pending" || m.profileStatus === "compiling")) return "Some of the people ticked are still being read";
+  if (personalBlocks(doc).length) {
     if (campaign.personalization?.status === "running") return "The personal versions are still being written";
     const versions = await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id)).collect();
-    if (!versions.some((r) => r.status === "ready")) return "Personalise it for each person first";
+    if (!versions.some((r) => r.status === "ready")) return "Personalise it first";
   }
   const info = sendingInfoFor(brand);
   if (info.mode === "none") return info.reason ?? "Connect a domain to send";
@@ -203,8 +190,7 @@ export const readiness = query({
     if (!brand) throw new Error("Unknown brand");
     const reason = await blocker(ctx, campaign, brand);
     const { mode, from } = sendingInfoFor(brand);
-    const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
-    const members = await membersFor(ctx, campaign, audience);
+    const members = await recipientsOf(ctx, await targetsOf(ctx, campaign));
     const out = await unsubscribedEmails(ctx, campaign.brandId);
     const emails = new Set(members.map((m) => m.email));
     const recipients = [...emails].filter((e) => !out.has(e)).length;
@@ -213,21 +199,21 @@ export const readiness = query({
 });
 
 /**
- * One queued send per recipient: the group's members or the individuals
- * ticked, opted-out people left out, one email per address. A failed
- * campaign sent again starts from a clean slate.
+ * One queued send per recipient: the members of each group ticked and the
+ * individuals ticked, opted-out people left out, one email per address. A
+ * failed campaign sent again starts from a clean slate.
  */
-async function queueRecipients(ctx: MutationCtx, campaign: Doc<"emailCampaigns">, audience: Doc<"emailAudiences">, simulated: boolean) {
+async function queueRecipients(ctx: MutationCtx, campaign: Doc<"emailCampaigns">, simulated: boolean) {
   for (const s of await ctx.db.query("emailSends").withIndex("by_campaign", (q) => q.eq("campaignId", campaign._id)).collect()) await ctx.db.delete(s._id);
   const out = await unsubscribedEmails(ctx, campaign.brandId);
-  const members = await membersFor(ctx, campaign, audience);
+  const members = await recipientsOf(ctx, await targetsOf(ctx, campaign));
   const seen = new Set<string>();
   const recipients = members.filter((m) => {
     if (m.unsubscribed || out.has(m.email) || seen.has(m.email)) return false;
     seen.add(m.email);
     return true;
   });
-  if (!recipients.length) throw new Error(audience.kind === "people" ? "No one to send to: everyone ticked opted out" : `No one to send to: everyone in ${audience.name} opted out`);
+  if (!recipients.length) throw new Error("No one to send to: everyone ticked opted out");
   const now = Date.now();
   const subject = (campaign.doc as EmailDoc).subject;
   for (const m of recipients) {
@@ -250,7 +236,7 @@ async function queueRecipients(ctx: MutationCtx, campaign: Doc<"emailCampaigns">
 
 /**
  * Sends now, or at `at`. Checks the campaign can go (subject, footer,
- * audience ready, personal versions for a people list, a way to send),
+ * groups and people read, personal versions written, a way to send),
  * freezes the recipients (opted-out people left out, one email per address)
  * and the sending mode, and schedules the send.
  */
@@ -263,12 +249,13 @@ export const start = mutation({
     const brand = await editableBrand(ctx, campaign.brandId);
     const reason = await blocker(ctx, campaign, brand);
     if (reason) throw new Error(reason);
-    const audience = (await ctx.db.get(campaign.audienceId!))!;
     const { mode } = sendingInfoFor(brand);
 
-    const recipients = await queueRecipients(ctx, campaign, audience, mode === "demo");
-    const versions = audience.kind === "people" ? await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect() : [];
-    const ready = new Set(versions.filter((r) => r.status === "ready").map((r) => r.contactId));
+    const recipients = await queueRecipients(ctx, campaign, mode === "demo");
+    let withoutVersion = 0;
+    if (personalBlocks(campaign.doc as EmailDoc).length) {
+      for (const m of recipients) if ((await versionFor(ctx, campaign, m))?.status !== "ready") withoutVersion++;
+    }
     const now = Date.now();
     const scheduledAt = at && at > now + 30_000 ? at : undefined;
     const job =
@@ -288,7 +275,7 @@ export const start = mutation({
       recipients: recipients.length,
       mode,
       ...(scheduledAt ? { scheduledAt } : {}),
-      withoutVersion: audience.kind === "people" && personalBlocks(campaign.doc as EmailDoc).length ? recipients.filter((m) => !ready.has(m._id)).length : 0,
+      withoutVersion,
     };
   },
 });
@@ -324,6 +311,8 @@ export const cancel = mutation({
 export const nextBatch = internalQuery({
   args: { campaignId: v.id("emailCampaigns"), take: v.number() },
   handler: async (ctx, { campaignId, take }): Promise<BatchRow[]> => {
+    const campaign = await ctx.db.get(campaignId);
+    if (!campaign) return [];
     const sends = await ctx.db
       .query("emailSends")
       .withIndex("by_campaign", (q) => q.eq("campaignId", campaignId))
@@ -332,11 +321,7 @@ export const nextBatch = internalQuery({
     return Promise.all(
       sends.map(async (send) => {
         const contact = await ctx.db.get(send.contactId);
-        const version = await ctx.db
-          .query("emailVersions")
-          .withIndex("by_campaign_contact", (q) => q.eq("campaignId", campaignId).eq("contactId", send.contactId))
-          .unique();
-        return { send, contact, version };
+        return { send, contact, version: await versionFor(ctx, campaign, contact) };
       }),
     );
   },
@@ -425,7 +410,7 @@ export const run = internalAction({
   handler: async (ctx, { campaignId }): Promise<null> => {
     const data: SendContext = await ctx.runQuery(internal.emailSend.sendContext, { campaignId });
     if (!data) return null;
-    const { campaign, brand, items, people } = data;
+    const { campaign, brand, items } = data;
     if (campaign.status !== "scheduled" && campaign.status !== "sending") return null;
     await ctx.runMutation(internal.emailSend.markSending, { campaignId });
     const info = sendingInfoFor(brand);
@@ -442,7 +427,7 @@ export const run = internalAction({
         return null;
       }
       const emails = batch.map(({ send, contact, version }) => {
-        const doc = docFor(campaign, version, people);
+        const doc = docFor(campaign, version);
         const rendered = renderOne(
           doc,
           renderContextFor(brand, itemMap, { mode: "send", merge: mergeFor(contact ?? { name: send.email, email: send.email }, brand), links: linksForSend(send._id) }),
@@ -591,13 +576,10 @@ async function addStats(ctx: MutationCtx, campaignId: Id<"emailCampaigns">, delt
 async function allowedHosts(ctx: MutationCtx, campaign: Doc<"emailCampaigns">, send: Doc<"emailSends">): Promise<Set<string>> {
   const brand = await ctx.db.get(campaign.brandId);
   const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect();
-  const version = await ctx.db
-    .query("emailVersions")
-    .withIndex("by_campaign_contact", (q) => q.eq("campaignId", campaign._id).eq("contactId", send.contactId))
-    .unique();
+  const version = await versionFor(ctx, campaign, await ctx.db.get(send.contactId));
   const urls = [
     ...clickableLinks(campaign.doc as EmailDoc, itemsRecord(items)).map((l) => l.url),
-    ...(version ? clickableLinks(docFor(campaign, version, true), itemsRecord(items)).map((l) => l.url) : []),
+    ...(version ? clickableLinks(docFor(campaign, version), itemsRecord(items)).map((l) => l.url) : []),
     ...items.map((i) => i.url),
     brand?.url,
     (brand?.footer as EmailFooterInfo | undefined)?.website,
@@ -687,12 +669,7 @@ export const viewHtml = internalQuery({
     if (!campaign || !brand) return null;
     const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect();
     const contact = await ctx.db.get(send.contactId);
-    const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
-    const version = await ctx.db
-      .query("emailVersions")
-      .withIndex("by_campaign_contact", (q) => q.eq("campaignId", campaign._id).eq("contactId", send.contactId))
-      .unique();
-    const doc = docFor(campaign, version, audience?.kind === "people");
+    const doc = docFor(campaign, await versionFor(ctx, campaign, contact));
     return renderOne(
       doc,
       renderContextFor(brand, itemsRecord(items), {
@@ -734,19 +711,17 @@ export const simulate = internalMutation({
 });
 
 /**
- * Seeds: a campaign "sent" to its audience at `sentAt` (in the past), with
- * the whole simulated history written at once. Skips `start`'s checks and
- * owner; the campaign needs an audience.
+ * Seeds: a campaign "sent" to whoever is ticked at `sentAt` (in the past),
+ * with the whole simulated history written at once. Skips `start`'s checks
+ * and owner.
  */
 export const seedSent = internalMutation({
   args: { campaignId: v.id("emailCampaigns"), sentAt: v.number() },
   returns: v.object({ delivered: v.number(), opens: v.number(), clicks: v.number() }),
   handler: async (ctx, { campaignId, sentAt }) => {
     const campaign = await ctx.db.get(campaignId);
-    if (!campaign?.audienceId) throw new Error("The campaign needs an audience");
-    const audience = await ctx.db.get(campaign.audienceId);
-    if (!audience) throw new Error("Unknown audience");
-    const recipients = await queueRecipients(ctx, campaign, audience, true);
+    if (!campaign) throw new Error("Unknown campaign");
+    const recipients = await queueRecipients(ctx, campaign, true);
     await ctx.db.patch(campaignId, { status: "sending", sendingMode: "demo", stats: { ...emptyStats(), recipients: recipients.length } });
     return simulateSend(ctx, campaignId, sentAt);
   },
@@ -758,8 +733,6 @@ async function simulateSend(ctx: MutationCtx, campaignId: Id<"emailCampaigns">, 
   const now = Date.now();
   const past = sentAt !== undefined && sentAt < now - 5 * 60_000;
   const base = past ? sentAt! : now;
-  const audience = campaign.audienceId ? await ctx.db.get(campaign.audienceId) : null;
-  const people = audience?.kind === "people";
   const items = itemsRecord(await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect());
   const brand = await ctx.db.get(campaign.brandId);
   const sends = (await ctx.db.query("emailSends").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect()).filter((s) => s.status === "queued");
@@ -768,14 +741,8 @@ async function simulateSend(ctx: MutationCtx, campaignId: Id<"emailCampaigns">, 
   for (const [i, send] of sends.entries()) {
     const sentTime = base + i * 40;
     // The email this person got: their version's subject and links, their name in the merge tags.
-    const version = people
-      ? await ctx.db
-          .query("emailVersions")
-          .withIndex("by_campaign_contact", (q) => q.eq("campaignId", campaignId).eq("contactId", send.contactId))
-          .unique()
-      : null;
-    const doc = docFor(campaign, version, people);
     const contact = await ctx.db.get(send.contactId);
+    const doc = docFor(campaign, await versionFor(ctx, campaign, contact));
     const subject = brand ? fillMerge(doc.subject, mergeFor(contact ?? { name: send.email, email: send.email }, brand), "send").replace(/<[^>]+>/g, "") : send.subject;
     if (sends.length >= 20 && Math.random() < 0.012) {
       await ctx.db.patch(send._id, { status: "bounced", subject, sentAt: sentTime, bouncedAt: sentTime + 2000, simulated: true });

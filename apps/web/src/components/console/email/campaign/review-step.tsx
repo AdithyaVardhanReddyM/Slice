@@ -4,20 +4,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowRight, CalendarClock, CircleAlert, CircleCheck, CircleX, ListChecks, MessagesSquare, Send, TriangleAlert, type LucideIcon } from "lucide-react";
+import type { FunctionReturnType } from "convex/server";
+import { CalendarClock, CircleAlert, CircleCheck, CircleX, Mail, MessagesSquare, Send, Smartphone, type LucideIcon } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
+import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { allBlocks, personalBlocks, safeHref } from "@slice/backend/convex/emailDoc";
 import type { EmailDoc, SendingMode } from "@slice/backend/convex/emailTypes";
 import { cn } from "@/lib/utils";
 import { SENDING_MODE, errorText } from "@/lib/email/labels";
 import { postJson } from "@/lib/pages/stream";
-import { docOf, footerOf, kitOf, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
+import { docOf, footerOf, kitOf, profileOf, targetsName, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
 import { Panel, PanelHeader, Skeleton } from "@/components/console/primitives";
-import { Notice, Spinner } from "@/components/console/setup/atoms";
+import { coverTiles } from "@/components/console/pages/taste-cover";
+import { Spinner } from "@/components/console/setup/atoms";
 import { ConfirmDialog } from "@/components/console/settings/confirm-dialog";
-import { peopleCount } from "@/components/console/email/contacts/shared";
+import { Avatar, peopleCount, type AudienceRow } from "@/components/console/email/contacts/shared";
+import { PhoneEmail } from "@/components/console/email/phone";
 import { CampaignStatusLabel, when } from "@/components/console/email/campaigns/shared";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type Level = "ok" | "warn" | "bad";
@@ -96,8 +100,12 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
   const cancel = useMutation(api.emailSend.cancel);
 
   const doc = docOf(campaign);
-  const audience = (audiences ?? []).find((a) => a._id === campaign.audienceId) ?? null;
-  const versions = useQuery(api.emailCampaigns.versions, audience?.kind === "people" ? { id: campaign._id } : "skip");
+  const groups = useMemo(() => (audiences ?? []).filter((a) => campaign.groupIds?.includes(a._id)), [audiences, campaign.groupIds]);
+  const people = campaign.contactIds?.length ?? 0;
+  const targets = groups.length + people;
+  // One group alone gets the email written for it (unless it has taste slots); otherwise each group and person gets a version.
+  const many = groups.length > 1 || people > 0 || (groups.length > 0 && !!doc && personalBlocks(doc).length > 0);
+  const versions = useQuery(api.emailCampaigns.versions, many ? { id: campaign._id } : "skip");
   const recipients = readiness?.recipients ?? 0;
   const recipientsHref = `${pathname}?step=recipients`;
   const sendingHref = `/dashboard/email/${brand.slug}/sending`;
@@ -106,12 +114,13 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
     if (!doc) return [];
     const out: Check[] = [];
     const excluded = readiness?.excluded ?? 0;
+    const unread = groups.find((g) => g.status !== "ready");
     out.push(
-      !audience
+      !targets
         ? { key: "audience", level: "bad", title: "Audience", detail: "Pick who it goes to.", fix: { label: "Choose recipients", href: recipientsHref } }
-        : audience.status !== "ready"
-          ? { key: "audience", level: "bad", title: "Audience", detail: audience.status === "failed" ? `${audience.name} could not be read.` : `${audience.name} is still being read.`, fix: { label: "Recipients", href: recipientsHref } }
-          : { key: "audience", level: "ok", title: "Audience", detail: `${audience.name}: ${peopleCount(recipients, audience.kind === "people" ? "person" : "contact")}${excluded ? `, ${excluded} unsubscribed left out` : ""}.` },
+        : unread
+          ? { key: "audience", level: "bad", title: "Audience", detail: unread.status === "failed" ? `${unread.name} could not be read.` : `${unread.name} is still being read.`, fix: { label: "Recipients", href: recipientsHref } }
+          : { key: "audience", level: "ok", title: "Audience", detail: `${targetsName(groups, people)}: ${peopleCount(recipients, "person")}${excluded ? `, ${excluded} unsubscribed left out` : ""}.` },
     );
     if (info)
       out.push(
@@ -120,7 +129,7 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
           : { key: "sender", level: "ok", title: "Sender", detail: `${info.from} · ${SENDING_MODE[info.mode].label}` },
       );
     out.push(...docChecks(doc, brand, pathname));
-    if (audience?.kind === "people") {
+    if (many) {
       const p = campaign.personalization;
       const written = (versions ?? []).filter((v) => v.status === "ready");
       const stale = written.filter((v) => v.stale);
@@ -132,103 +141,275 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
           : p?.status === "running"
             ? { key: "personal", level: "bad", title, detail: `Writing them now: ${p.done} of ${p.total}.`, fix }
             : !written.length
-              ? { key: "personal", level: "bad", title, detail: "Each person's version has not been written yet.", fix: { ...fix, label: "Personalise" } }
-              : written.length < recipients
-                ? { key: "personal", level: "warn", title, detail: `${written.length} of ${recipients} written; the others get the shared version.`, fix }
+              ? { key: "personal", level: "bad", title, detail: "The versions have not been written yet.", fix: { ...fix, label: "Personalise" } }
+              : written.length < targets
+                ? { key: "personal", level: "warn", title, detail: `${written.length} of ${targets} written; the others get the shared version.`, fix }
                 : stale.length
                   ? { key: "personal", level: "warn", title, detail: `${stale.length} ${stale.length === 1 ? "was" : "were"} written before the email last changed; update them so everyone gets the latest.`, fix: { ...fix, label: "Update them" } }
-                  : { key: "personal", level: "ok", title, detail: `Written for ${peopleCount(written.length, "person")}.` },
+                  : { key: "personal", level: "ok", title, detail: `Written for ${targetsName(groups, people) ?? "everyone ticked"}.` },
       );
     }
     return out;
-  }, [doc, audience, recipients, readiness, versions, info, brand, pathname, campaign.personalization, recipientsHref, sendingHref]);
+  }, [doc, groups, people, targets, many, recipients, readiness, versions, info, brand, pathname, campaign.personalization, recipientsHref, sendingHref]);
 
   const blockers = checks.filter((c) => c.level === "bad");
   // Anything the backend refuses that the checklist did not spell out.
   const serverReason = readiness && !readiness.ok && !blockers.length ? readiness.reason : undefined;
   const warnings = checks.filter((c) => c.level === "warn");
+  const [editingSubject, setEditingSubject] = useState(false);
+  const [showing, setShowing] = useState<Showing>({ kind: "shared" });
 
   if (!doc) return null;
+  const check = (key: string) => checks.find((c) => c.key === key);
+  const worst = (...cs: (Check | undefined)[]): Level => (cs.some((c) => c?.level === "bad") ? "bad" : cs.some((c) => c?.level === "warn") ? "warn" : "ok");
+  const audience = check("audience");
+  const personal = check("personal");
+  const sender = check("sender");
+  const contentChecks = ["footer", "alt", "links"].map(check);
+  const blocks = allBlocks(doc).map((x) => x.block);
+  const sectionCount = doc.sections.filter((s) => !s.columns.some((c) => c.blocks.some((b) => b.type === "footer"))).length;
+  const imageCount = blocks.filter((b) => b.type === "image").length;
+  const linkCount = blocks.filter((b) => b.type === "button" || (b.type === "image" && !!b.href)).length;
+  const loading = info === undefined || audiences === undefined || readiness === undefined;
+  const versionCount = many ? targets : 0;
+  const editorHref = pathname;
 
   return (
-    <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+    <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
       <div className="min-w-0 space-y-6">
         <div className="space-y-1.5">
           <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">Review and send</h1>
           <p className="text-sm text-muted-foreground">
-            {blockers.length
-              ? `${blockers.length} ${blockers.length === 1 ? "thing needs" : "things need"} fixing before it can go out.`
-              : warnings.length
-                ? `Ready to send, with ${warnings.length} ${warnings.length === 1 ? "thing" : "things"} worth a look.`
-                : "Everything checks out."}
+            {loading
+              ? "Checking the email"
+              : blockers.length
+                ? `${blockers.length} ${blockers.length === 1 ? "thing needs" : "things need"} fixing before it can go out.`
+                : warnings.length
+                  ? `Ready to send, with ${warnings.length} ${warnings.length === 1 ? "thing" : "things"} worth a look.`
+                  : "Everything checks out. Have a last look, then send it."}
           </p>
         </div>
 
         <Panel>
-          <PanelHeader title="Checklist" hint="Checked against the email and the brand as they are now" actions={<ListChecks className="size-4 text-muted-foreground" />} />
-          {info === undefined || audiences === undefined ? (
+          {loading ? (
             <div className="space-y-3 p-5">
               {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-10" />
+                <Skeleton key={i} className="h-12" />
               ))}
             </div>
           ) : (
             <ul className="divide-y divide-black/[0.05]">
-              {checks.map((c) => {
-                const Icon = LEVEL_ICON[c.level];
-                return (
-                  <li key={c.key} className="flex items-start gap-3 px-5 py-3.5">
-                    <Icon className={cn("mt-0.5 size-[18px] shrink-0", LEVEL_TONE[c.level])} />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-neutral-950">{c.title}</div>
-                      <div className="text-sm text-muted-foreground">{c.detail}</div>
-                    </div>
-                    {c.fix && c.level !== "ok" && (
-                      <Link href={c.fix.href} className="inline-flex shrink-0 items-center gap-1 pt-0.5 text-sm font-medium text-neutral-900 hover:underline">
-                        {c.fix.label} <ArrowRight className="size-3.5" />
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
+              <ReviewRow
+                level={worst(audience, personal)}
+                label="To"
+                title={targets ? `${peopleCount(recipients, "person")}${versionCount ? ` in ${versionCount} versions` : ""}` : "No one yet"}
+                lines={[
+                  audience?.level === "ok" ? `${targetsName(groups, people)}${readiness?.excluded ? `, ${readiness.excluded} unsubscribed left out` : ""}` : audience?.detail,
+                  personal && (personal.level === "ok" ? (personalBlocks(doc).length ? "Every version is written and up to date." : personal.detail) : personal.detail),
+                ]}
+                action={<RowLink href={(personal?.level !== "ok" && personal?.fix?.href) || recipientsHref}>{personal?.level !== "ok" && personal?.fix ? personal.fix.label : "Edit"}</RowLink>}
+              />
+              <ReviewRow
+                level={sender?.level ?? "ok"}
+                label="From"
+                title={info?.from ?? ""}
+                lines={[
+                  sender?.level === "bad" ? sender.detail : `Replies go to ${brand.sender?.replyTo ?? "the from address"}`,
+                  info && info.mode === "demo" ? "Demo brand: the send is simulated and nothing leaves Slice." : info ? SENDING_MODE[info.mode].label : undefined,
+                ]}
+                action={<RowLink href={sendingHref}>{sender?.level === "bad" ? "Set up sending" : "Change"}</RowLink>}
+              />
+              <ReviewRow
+                level={worst(check("subject"), check("preheader"))}
+                label="Subject"
+                title={doc.subject || "No subject yet"}
+                lines={[
+                  doc.preheader || "No preview text",
+                  ...[check("subject"), check("preheader")].filter((c) => c && c.level !== "ok").map((c) => c!.detail),
+                  versionCount ? "Each version can have its own; see them beside the phone." : undefined,
+                ]}
+                action={
+                  campaign.status === "draft" ? (
+                    <Button variant="ghost" size="sm" className="rounded-full" onClick={() => setEditingSubject((v) => !v)}>
+                      {editingSubject ? "Done" : "Edit"}
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {editingSubject && <SubjectEditor campaign={campaign} doc={doc} onApply={(subject, preheader) => applyOps({ id: campaign._id, ops: [{ op: "set_subject", subject, preheader }] })} />}
+              </ReviewRow>
+              <ReviewRow
+                level={worst(...contentChecks)}
+                label="Content"
+                title={`${sectionCount} ${sectionCount === 1 ? "section" : "sections"} · ${imageCount} ${imageCount === 1 ? "image" : "images"} · ${linkCount} ${linkCount === 1 ? "link" : "links"}`}
+                lines={
+                  contentChecks.every((c) => c?.level === "ok")
+                    ? ["Unsubscribe and your address in the footer, alt text on every image, and every link goes somewhere."]
+                    : contentChecks.filter((c) => c && c.level !== "ok").map((c) => c!.detail)
+                }
+                action={<RowLink href={editorHref}>Open the editor</RowLink>}
+              />
             </ul>
           )}
+          <SendBar
+            campaign={campaign}
+            mode={info?.mode}
+            recipients={recipients}
+            blocked={loading || blockers.length > 0 || !readiness?.ok}
+            reason={serverReason ?? (blockers.length ? "Fix what's marked in red first." : undefined)}
+            onStart={(at) => start({ campaignId: campaign._id, ...(at ? { at } : {}) })}
+            onCancel={() => cancel({ campaignId: campaign._id })}
+          />
         </Panel>
 
-        <InboxLine campaign={campaign} doc={doc} onApply={(subject, preheader) => applyOps({ id: campaign._id, ops: [{ op: "set_subject", subject, preheader }] })} />
-
-        <SendPanel
-          campaign={campaign}
-          mode={info?.mode}
-          recipients={recipients}
-          blocked={blockers.length > 0 || !readiness?.ok}
-          reason={serverReason}
-          sendingHref={sendingHref}
-          onStart={(at) => start({ campaignId: campaign._id, ...(at ? { at } : {}) })}
-          onCancel={() => cancel({ campaignId: campaign._id })}
-        />
+        {many && versions && versions.length > 0 && (
+          <InboxLines campaign={campaign} doc={doc} versions={versions} groups={groups} showing={showing} onShow={setShowing} />
+        )}
       </div>
 
-      <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
-        <InboxMock brand={brand} from={info?.from} subject={doc.subject} preheader={doc.preheader} />
-        <Panel>
-          <PanelHeader title="Sender" actions={<Link href={sendingHref} className="text-sm text-muted-foreground hover:text-foreground">Change</Link>} />
-          <dl className="divide-y divide-black/[0.05] text-sm">
-            <Row label="From">{info ? info.from : <Skeleton className="h-4 w-40" />}</Row>
-            <Row label="Reply to">{brand.sender?.replyTo ?? <span className="text-muted-foreground">Not set, replies go to the from address</span>}</Row>
-            <Row label="Sending">{info ? SENDING_MODE[info.mode].label : <Skeleton className="h-4 w-24" />}</Row>
-          </dl>
-        </Panel>
+      <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
+        <PhonePreview campaign={campaign} brand={brand} from={brand.sender?.fromName || brand.name} showing={showing} versions={versions} />
       </aside>
     </div>
   );
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+/** Which version the phone shows: the shared email, a taste group's or a person's. */
+type Showing = { kind: "shared" } | { kind: "group"; id: Id<"emailAudiences"> } | { kind: "person"; id: Id<"emailContacts"> };
+type Version = FunctionReturnType<typeof api.emailCampaigns.versions>[number];
+
+function RowLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-3 px-5 py-3">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="min-w-0 truncate">{children}</dd>
+    <Link href={href} className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-full")}>
+      {children}
+    </Link>
+  );
+}
+
+/** One line of the review: its state, what it is, the facts, and where to change it. */
+function ReviewRow({ level, label, title, lines, action, children }: { level: Level; label: string; title: ReactNode; lines: (string | undefined | false | null)[]; action?: ReactNode; children?: ReactNode }) {
+  const Icon = LEVEL_ICON[level];
+  const shown = lines.filter((l): l is string => !!l);
+  return (
+    <li className="px-5 py-4">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-4 sm:grid-cols-[auto_6rem_minmax(0,1fr)_auto]">
+        <Icon className={cn("mt-0.5 size-5 shrink-0", LEVEL_TONE[level])} />
+        <span className="hidden pt-px text-sm text-muted-foreground sm:block">{label}</span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium text-neutral-950">
+            <span className="text-muted-foreground sm:hidden">{label}: </span>
+            {title}
+          </p>
+          {shown.map((l, i) => (
+            <p key={i} className={cn("text-sm", level !== "ok" && i > 0 ? "text-neutral-700" : "text-muted-foreground")}>
+              {l}
+            </p>
+          ))}
+        </div>
+        {action && <div className="-my-1 shrink-0">{action}</div>}
+      </div>
+      {children && <div className="mt-4 sm:ml-[8.25rem]">{children}</div>}
+    </li>
+  );
+}
+
+/** Each version's inbox line, picked to show on the phone. */
+function InboxLines({
+  campaign,
+  doc,
+  versions,
+  groups,
+  showing,
+  onShow,
+}: {
+  campaign: EmailCampaign;
+  doc: EmailDoc;
+  versions: Version[];
+  groups: AudienceRow[];
+  showing: Showing;
+  onShow: (s: Showing) => void;
+}) {
+  const rows: { key: string; show: Showing; name: string; note: string; image?: string; group?: boolean; subject: string; preheader: string }[] = [
+    { key: "shared", show: { kind: "shared" }, name: "The shared email", note: "Anyone without a version", subject: doc.subject, preheader: doc.preheader },
+    ...versions.map((v) => {
+      const p = v.status === "ready" ? v.personalization : null;
+      const group = v.group ? groups.find((g) => g._id === v.group!._id) : undefined;
+      return v.group
+        ? {
+            key: v.group._id as string,
+            show: { kind: "group" as const, id: v.group._id },
+            name: v.group.name,
+            note: `Taste group · ${peopleCount(v.group.size, "person")}`,
+            image: group ? coverTiles(profileOf(group), 1, true)[0]?.image : undefined,
+            group: true,
+            subject: p?.subject || doc.subject,
+            preheader: p?.preheader || doc.preheader,
+          }
+        : {
+            key: v.contact!._id as string,
+            show: { kind: "person" as const, id: v.contact!._id },
+            name: v.contact!.name,
+            note: ["Individual contact", v.contact!.neighborhood ?? v.contact!.city].filter(Boolean).join(" · "),
+            image: v.contact!.entities.find((e) => e.image)?.image,
+            subject: p?.subject || doc.subject,
+            preheader: p?.preheader || doc.preheader,
+          };
+    }),
+  ];
+  const current = showing.kind === "shared" ? "shared" : showing.id;
+  return (
+    <Panel>
+      <PanelHeader title="Inbox lines" hint={`What each of the ${versions.length} versions shows before it's opened. Pick one to see it on the phone.`} />
+      <ul className="divide-y divide-black/[0.05]">
+        {rows.map((r) => (
+          <li key={r.key}>
+            <button
+              type="button"
+              onClick={() => onShow(r.show)}
+              aria-pressed={current === r.key}
+              disabled={campaign.status === "sending"}
+              className={cn("grid w-full grid-cols-[auto_minmax(0,11rem)_minmax(0,1fr)] items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-neutral-50", current === r.key && "bg-neutral-50")}
+            >
+              {r.key === "shared" ? (
+                <span className="flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
+                  <Mail className="size-4" />
+                </span>
+              ) : (
+                <Avatar name={r.name} image={r.image} className={cn("size-9", r.group && "rounded-xl")} />
+              )}
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium text-neutral-950">{r.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">{r.note}</span>
+              </span>
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-neutral-950">{r.subject}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{r.preheader}</span>
+                </span>
+                {current === r.key && <Smartphone className="size-4 shrink-0 text-neutral-500" aria-label="On the phone" />}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+/** The chosen version opened in Mail on an iPhone. */
+function PhonePreview({ campaign, brand, from, showing, versions }: { campaign: EmailCampaign; brand: EmailBrand; from: string; showing: Showing; versions?: Version[] }) {
+  const render = useQuery(
+    api.emailCampaigns.renderFor,
+    showing.kind === "group" ? { id: campaign._id, audienceId: showing.id } : showing.kind === "person" ? { id: campaign._id, contactId: showing.id } : { id: campaign._id },
+  );
+  const kit = kitOf(brand);
+  const mail = { from, subject: render?.subject ?? "", preheader: render?.preheader ?? "", mark: kit?.icon ?? kit?.logo?.src, color: kit?.colors.primary };
+  const v = showing.kind === "shared" ? null : versions?.find((x) => (x.group?._id ?? x.contact?._id) === showing.id);
+  const who = showing.kind === "shared" ? "the shared email" : `${v?.group?.name ?? v?.contact?.name ?? "their"}'s version`;
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <PhoneEmail width={300} mail={mail} html={render?.html} />
+      <p className="max-w-[300px] truncate text-center text-xs text-muted-foreground">Showing {who}</p>
     </div>
   );
 }
@@ -236,7 +417,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 type Option = { subject: string; preheader: string; angle: string };
 
 /** Subject and preview text, edited in place, with five suggestions from the agent. */
-function InboxLine({ campaign, doc, onApply }: { campaign: EmailCampaign; doc: EmailDoc; onApply: (subject: string, preheader: string) => Promise<unknown> }) {
+function SubjectEditor({ campaign, doc, onApply }: { campaign: EmailCampaign; doc: EmailDoc; onApply: (subject: string, preheader: string) => Promise<unknown> }) {
   // Drafts exist only while typing, so an agent edit elsewhere shows through when the field is idle.
   const [subject, setSubject] = useState<string | null>(null);
   const [preheader, setPreheader] = useState<string | null>(null);
@@ -282,67 +463,55 @@ function InboxLine({ campaign, doc, onApply }: { campaign: EmailCampaign; doc: E
   }
 
   return (
-    <Panel>
-      <PanelHeader
-        title="Subject and preview text"
-        hint="What people see in their inbox before they open it"
-        actions={
-          !locked && (
-            <Button variant="outline" size="sm" onClick={() => void suggest()} disabled={suggesting}>
-              {suggesting ? <Spinner data-icon="inline-start" /> : <MessagesSquare data-icon="inline-start" />}
-              Suggest subject lines
-            </Button>
-          )
-        }
-      />
-      <div className="space-y-4 p-5">
-        <label className="block space-y-1.5">
-          <span className="flex items-baseline justify-between text-sm font-medium">
-            Subject
-            <span className={cn("num text-xs font-normal", s.length > 60 ? "text-amber-700" : "text-muted-foreground")}>
-              {s.length}/{SUBJECT_IDEAL}
-            </span>
+    <div className="space-y-4 rounded-xl bg-neutral-50 p-4 ring-1 ring-black/[0.04]">
+      <label className="block space-y-1.5">
+        <span className="flex items-baseline justify-between text-sm font-medium">
+          Subject
+          <span className={cn("num text-xs font-normal", s.length > 60 ? "text-amber-700" : "text-muted-foreground")}>
+            {s.length}/{SUBJECT_IDEAL}
           </span>
-          <Input value={s} disabled={locked} onChange={(e) => setSubject(e.target.value)} onBlur={() => void commit()} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="Write the subject line" />
-        </label>
-        <label className="block space-y-1.5">
-          <span className="flex items-baseline justify-between text-sm font-medium">
-            Preview text
-            <span className={cn("num text-xs font-normal", p.length && (p.length < PREHEADER_RANGE[0] || p.length > PREHEADER_RANGE[1]) ? "text-amber-700" : "text-muted-foreground")}>
-              {p.length} · {PREHEADER_RANGE[0]} to {PREHEADER_RANGE[1]} reads best
-            </span>
+        </span>
+        <Input value={s} disabled={locked} onChange={(e) => setSubject(e.target.value)} onBlur={() => void commit()} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="Write the subject line" className="bg-white" />
+      </label>
+      <label className="block space-y-1.5">
+        <span className="flex items-baseline justify-between text-sm font-medium">
+          Preview text
+          <span className={cn("num text-xs font-normal", p.length && (p.length < PREHEADER_RANGE[0] || p.length > PREHEADER_RANGE[1]) ? "text-amber-700" : "text-muted-foreground")}>
+            {p.length} · {PREHEADER_RANGE[0]} to {PREHEADER_RANGE[1]} reads best
           </span>
-          <Input value={p} disabled={locked} onChange={(e) => setPreheader(e.target.value)} onBlur={() => void commit()} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="The line after the subject" />
-        </label>
-        {saving && <p className="text-xs text-muted-foreground">Saving</p>}
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {options && (
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">{options.length ? "Written from the email and its audience. Use one, then edit it if you like." : "No suggestions came back."}</p>
-            <ul className="grid gap-2">
-              {options.map((o, i) => (
-                <li key={i} className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 ring-1 ring-black/[0.04]">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-neutral-950">{o.subject}</div>
-                    <div className="text-sm text-muted-foreground">{o.preheader}</div>
-                    {o.angle && <div className="mt-1 text-xs text-muted-foreground">{o.angle}</div>}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="shrink-0 bg-white"
-                    disabled={saving || (o.subject === doc.subject && o.preheader === doc.preheader)}
-                    onClick={() => void commit(o.subject, o.preheader)}
-                  >
-                    {o.subject === doc.subject && o.preheader === doc.preheader ? "In use" : "Use"}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
+        </span>
+        <Input value={p} disabled={locked} onChange={(e) => setPreheader(e.target.value)} onBlur={() => void commit()} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="The line after the subject" className="bg-white" />
+      </label>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-muted-foreground">{saving ? "Saving" : "This is the shared line; versions with their own keep theirs."}</span>
+        {!locked && (
+          <Button variant="outline" size="sm" className="bg-white" onClick={() => void suggest()} disabled={suggesting}>
+            {suggesting ? <Spinner data-icon="inline-start" /> : <MessagesSquare data-icon="inline-start" />}
+            Suggest subject lines
+          </Button>
         )}
       </div>
-    </Panel>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      {options && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{options.length ? "Written from the email and who it goes to. Use one, then edit it if you like." : "No suggestions came back."}</p>
+          <ul className="grid gap-2">
+            {options.map((o, i) => (
+              <li key={i} className="flex items-start gap-3 rounded-xl bg-white p-3 ring-1 ring-black/[0.05]">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-neutral-950">{o.subject}</div>
+                  <div className="text-sm text-muted-foreground">{o.preheader}</div>
+                  {o.angle && <div className="mt-1 text-xs text-muted-foreground">{o.angle}</div>}
+                </div>
+                <Button size="sm" variant="outline" className="shrink-0" disabled={saving || (o.subject === doc.subject && o.preheader === doc.preheader)} onClick={() => void commit(o.subject, o.preheader)}>
+                  {o.subject === doc.subject && o.preheader === doc.preheader ? "In use" : "Use"}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -359,13 +528,12 @@ function toLocalInput(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function SendPanel({
+function SendBar({
   campaign,
   mode,
   recipients,
   blocked,
   reason,
-  sendingHref,
   onStart,
   onCancel,
 }: {
@@ -374,7 +542,6 @@ function SendPanel({
   recipients: number;
   blocked: boolean;
   reason?: string;
-  sendingHref: string;
   onStart: (at?: number) => Promise<unknown>;
   onCancel: () => Promise<unknown>;
 }) {
@@ -409,18 +576,19 @@ function SendPanel({
     }
   }
 
+  const bar = "border-t border-black/[0.05] bg-neutral-50/70 px-5 py-4";
+
   if (campaign.status === "scheduled")
     return (
-      <Panel className="flex flex-wrap items-center gap-4 p-5">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
-          <CalendarClock className="size-5" />
-        </span>
+      <div className={cn(bar, "flex flex-wrap items-center gap-4")}>
+        <CalendarClock className="size-5 shrink-0 text-sky-700" />
         <div className="min-w-0 flex-1">
           <CampaignStatusLabel status="scheduled" scheduledAt={campaign.scheduledAt} />
           <p className="text-sm text-muted-foreground">Cancel to make changes; it goes back to the drafts.</p>
         </div>
         <Button
           variant="outline"
+          className="rounded-full bg-white"
           disabled={busy}
           onClick={async () => {
             setBusy(true);
@@ -437,71 +605,48 @@ function SendPanel({
           Cancel the schedule
         </Button>
         {error && <p className="w-full text-sm text-destructive">{error}</p>}
-      </Panel>
+      </div>
     );
 
   // A failed send can go again; anything else past the drafts only shows where it is.
   if (campaign.status !== "draft" && campaign.status !== "failed")
     return (
-      <Panel className="p-5">
+      <div className={bar}>
         <CampaignStatusLabel status={campaign.status} sentAt={campaign.sentAt} />
-      </Panel>
+      </div>
     );
 
   return (
-    <Panel>
-      <PanelHeader title="Send" hint={`To ${who}`} />
-      <div className="space-y-4 p-5">
-        {mode === "demo" && <Notice>{SENDING_MODE.demo.summary}</Notice>}
-        {mode === "none" && (
-          <Notice tone="warn" icon={<TriangleAlert />}>
-            {SENDING_MODE.none.summary}{" "}
-            <Link href={sendingHref} className="font-medium underline underline-offset-4">
-              Set up sending
-            </Link>
-          </Notice>
-        )}
-        <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="When">
+    <div className={cn(bar, "space-y-3")}>
+      <div className="flex flex-wrap items-center gap-3">
+        <div role="radiogroup" aria-label="When" className="inline-flex h-9 items-center rounded-full bg-white p-1 ring-1 ring-black/[0.08]">
           {(
             [
-              ["now", Send, "Send now", "It starts going out right away."],
-              ["later", CalendarClock, "Schedule", "Pick a day and time."],
+              ["now", Send, "Send now"],
+              ["later", CalendarClock, "Schedule"],
             ] as const
-          ).map(([value, Icon, title, body]) => (
+          ).map(([value, Icon, label]) => (
             <button
               key={value}
               type="button"
               role="radio"
               aria-checked={timing === value}
               onClick={() => setTiming(value)}
-              className={cn(
-                "flex items-start gap-3 rounded-xl p-3.5 text-left ring-1 ring-black/[0.08] transition-colors hover:bg-neutral-50",
-                timing === value && "bg-neutral-50 ring-2 ring-neutral-900 hover:bg-neutral-50",
-              )}
+              className={cn("inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-sm text-neutral-600 transition-colors", timing === value && "bg-neutral-900 text-white")}
             >
-              <Icon className="mt-0.5 size-4 shrink-0" />
-              <span>
-                <span className="block text-sm font-medium">{title}</span>
-                <span className="block text-xs text-muted-foreground">{body}</span>
-              </span>
+              <Icon className="size-3.5" /> {label}
             </button>
           ))}
         </div>
-        {timing === "later" && (
-          <label className="block space-y-1.5">
-            <span className="text-sm font-medium">Day and time</span>
-            <Input type="datetime-local" value={at} min={minAt} onChange={(e) => setAt(e.target.value)} className="max-w-64" />
-          </label>
-        )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <div className="flex items-center justify-end gap-3 border-t border-black/[0.05] pt-4">
-          {blocked && <span className="text-sm text-muted-foreground">{reason ?? "Fix the checklist first."}</span>}
-          <Button className="h-10 rounded-full px-5" disabled={blocked || busy || recipients === 0} onClick={ask}>
-            {busy ? <Spinner data-icon="inline-start" /> : timing === "now" ? <Send data-icon="inline-start" /> : <CalendarClock data-icon="inline-start" />}
-            {timing === "now" ? `Send to ${who}` : "Schedule"}
-          </Button>
-        </div>
+        {timing === "later" && <Input type="datetime-local" value={at} min={minAt} onChange={(e) => setAt(e.target.value)} className="h-9 w-56 bg-white" aria-label="Day and time" />}
+        <Button className="ml-auto h-10 rounded-full px-5" disabled={blocked || busy || recipients === 0} onClick={ask}>
+          {busy ? <Spinner data-icon="inline-start" /> : timing === "now" ? <Send data-icon="inline-start" /> : <CalendarClock data-icon="inline-start" />}
+          {timing === "now" ? `Send to ${who}` : `Schedule for ${who}`}
+        </Button>
       </div>
+      {(error || (blocked && reason) || mode === "none") && (
+        <p className={cn("text-sm", error ? "text-destructive" : "text-muted-foreground")}>{error ?? (mode === "none" ? SENDING_MODE.none.summary : reason)}</p>
+      )}
       <ConfirmDialog
         open={confirm}
         onOpenChange={setConfirm}
@@ -517,61 +662,6 @@ function SendPanel({
         actionLabel={timing === "now" ? "Send now" : "Schedule"}
         onConfirm={() => void go()}
       />
-    </Panel>
-  );
-}
-
-/** The email as it lands: a phone inbox with this campaign on top. */
-function InboxMock({ brand, from, subject, preheader }: { brand: EmailBrand; from?: string; subject: string; preheader: string }) {
-  const kit = kitOf(brand);
-  const name = brand.sender?.fromName || brand.name;
-  const mark = kit?.icon ?? kit?.logo?.src;
-  const [broken, setBroken] = useState(false);
-  return (
-    <div className="overflow-hidden rounded-[2rem] bg-neutral-900 p-2.5 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.45)]">
-      <div className="overflow-hidden rounded-[1.6rem] bg-white">
-        <div className="flex items-center justify-between px-5 pt-3 pb-2 text-[11px] font-semibold text-neutral-900">
-          <span>9:41</span>
-          <span className="h-4 w-16 rounded-full bg-neutral-900" />
-          <span className="num">100%</span>
-        </div>
-        <div className="px-5 pb-2">
-          <div className="text-xl font-bold tracking-tight text-neutral-950">Inbox</div>
-        </div>
-        <div className="flex gap-3 border-y border-black/[0.06] bg-sky-50/60 px-4 py-3">
-          <span
-            className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold"
-            style={{ background: kit?.colors.primary ?? "#171717", color: kit?.colors.primaryForeground ?? "#fff" }}
-          >
-            {mark && !broken ? (
-              // The brand's own logo host; next/image would need it allow-listed.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mark} alt="" className="size-full bg-white object-contain p-1" onError={() => setBroken(true)} />
-            ) : (
-              name.charAt(0)
-            )}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="truncate text-sm font-semibold text-neutral-950">{name}</span>
-              <span className="shrink-0 text-xs text-sky-700">Now</span>
-            </div>
-            <div className="truncate text-sm font-medium text-neutral-950">{subject || "No subject"}</div>
-            <div className="line-clamp-2 text-sm text-neutral-500">{preheader || "The first words of the email show here."}</div>
-          </div>
-        </div>
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="flex gap-3 border-b border-black/[0.04] px-4 py-3 opacity-50">
-            <span className="size-9 shrink-0 rounded-full bg-neutral-200" />
-            <div className="flex-1 space-y-1.5 pt-0.5">
-              <span className="block h-2.5 w-24 rounded-full bg-neutral-200" />
-              <span className="block h-2.5 w-44 rounded-full bg-neutral-200" />
-              <span className="block h-2.5 w-36 rounded-full bg-neutral-100" />
-            </div>
-          </div>
-        ))}
-        <div className="truncate px-5 py-3 text-center text-[11px] text-muted-foreground">{from ? `From ${from}` : " "}</div>
-      </div>
     </div>
   );
 }

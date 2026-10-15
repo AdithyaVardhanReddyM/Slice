@@ -31,12 +31,12 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
-import { findBlock, findSection } from "@slice/backend/convex/emailDoc";
-import type { EmailItem, EmailTheme } from "@slice/backend/convex/emailTypes";
+import { findBlock, findSection, personalBlocks } from "@slice/backend/convex/emailDoc";
+import type { EmailDoc, EmailItem, EmailTheme } from "@slice/backend/convex/emailTypes";
 import { cn } from "@/lib/utils";
 import { usePagesModel } from "@/lib/pages/models";
 import { CAMPAIGN_STATUS } from "@/lib/email/labels";
-import { docOf, senderOf, type EmailAudience, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
+import { docOf, kitOf, senderOf, targetsName, type EmailBrand, type EmailCampaign } from "@/lib/email/types";
 import { useAppSurface } from "@/components/console/pages/builder/editor-shell";
 import { Badge } from "@/components/console/primitives";
 import { ConsolePage } from "@/components/console/shell-ui";
@@ -53,7 +53,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { duplicate, remove } from "./actions";
 import { Canvas } from "./canvas";
 import type { ChatComposerHandle } from "./chat-composer";
-import { EditorProvider, useEditorEnv, type ChatMessage, type EditorEnv, type PanelId, type PreviewAs } from "./context";
+import { EditorProvider, useEditorEnv, type ChatMessage, type EditorEnv, type PanelId, type PreviewAs, type Recipients } from "./context";
 import { EditorDnd } from "./dnd";
 import { Inspector } from "./inspector";
 import { blockLabel, blockText, isMac, sectionName, typingTarget, type Selection } from "./model";
@@ -161,7 +161,7 @@ function Steps({ step, onGo }: { step: Step; onGo: (s: Step) => void }) {
               aria-current={current ? "step" : undefined}
               onClick={() => !current && onGo(s.id)}
               className={cn(
-                "flex h-8 items-center gap-2 rounded-full pr-3 pl-1.5 text-sm transition-colors",
+                "flex h-8 items-center gap-2 rounded-full px-1.5 text-sm transition-colors lg:pr-3",
                 current ? "bg-neutral-900 font-medium text-white" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950",
               )}
             >
@@ -341,7 +341,17 @@ function Workspace({ campaign, brand }: { campaign: EmailCampaign; brand: EmailB
   const items = useBrandItems(brand._id);
   const itemList = useMemo(() => items ?? [], [items]);
   const itemMap = useMemo(() => Object.fromEntries(itemList.map((i) => [i.id, i])) as Record<string, EmailItem>, [itemList]);
-  const audience = useQuery(api.emailAudiences.get, campaign.audienceId ? { id: campaign.audienceId } : "skip") as EmailAudience | null | undefined;
+  const audiences = useQuery(api.emailAudiences.list, campaign.groupIds?.length ? { brandId: brand._id } : "skip");
+  // Who it goes to: one taste group alone (written for it), or a version for each group and person.
+  const audience = useMemo((): Recipients | null | undefined => {
+    const ids = campaign.groupIds ?? [];
+    const people = campaign.contactIds ?? [];
+    if (ids.length && audiences === undefined) return undefined;
+    const groups = (audiences ?? []).filter((a) => ids.includes(a._id));
+    if (!groups.length && !people.length) return null;
+    const slots = personalBlocks(campaign.doc as EmailDoc).length > 0;
+    return { name: targetsName(groups, people.length) ?? "", kind: groups.length > 1 || people.length > 0 || slots ? "versions" : "group", groups, contactIds: people };
+  }, [audiences, campaign.groupIds, campaign.contactIds, campaign.doc]);
   const [model] = usePagesModel();
 
   // The agent saves the merchant's edits first; the editor exists after it, so it is reached through a ref.
@@ -393,7 +403,7 @@ function Workspace({ campaign, brand }: { campaign: EmailCampaign; brand: EmailB
   const kicked = useRef(false);
   useEffect(() => {
     if (kicked.current || params.get("generate") !== "1" || !doc || chat === undefined) return;
-    if (campaign.audienceId && audience === undefined) return;
+    if (audience === undefined) return;
     kicked.current = true;
     const rest = new URLSearchParams(params.toString());
     rest.delete("generate");
@@ -509,8 +519,8 @@ function Workspace({ campaign, brand }: { campaign: EmailCampaign; brand: EmailB
             <ConsolePage className="pt-6">{step === "recipients" ? <RecipientsStep campaign={campaign} brand={brand} /> : <ReviewStep campaign={campaign} brand={brand} />}</ConsolePage>
           </div>
         )}
-        <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} campaignId={campaign._id} audienceId={campaign.audienceId} from={senderName(brand)} />
-        <TestEmailDialog open={testOpen} onOpenChange={setTestOpen} campaignId={campaign._id} audienceId={campaign.audienceId} beforeSend={editor.flush} />
+        <PreviewDialog open={previewOpen} onOpenChange={setPreviewOpen} campaignId={campaign._id} from={senderName(brand)} mark={kitOf(brand)?.icon ?? kitOf(brand)?.logo?.src} color={kitOf(brand)?.colors.primary} />
+        <TestEmailDialog open={testOpen} onOpenChange={setTestOpen} campaignId={campaign._id} beforeSend={editor.flush} />
       </div>
     </EditorProvider>
   );
@@ -556,7 +566,7 @@ function ReportView({ campaign, brand }: { campaign: EmailCampaign; brand: Email
           <CampaignReport campaign={campaign} brand={brand} />
         </ConsolePage>
       </div>
-      <PreviewDialog open={open} onOpenChange={setOpen} campaignId={campaign._id} audienceId={campaign.audienceId} from={senderName(brand)} />
+      <PreviewDialog open={open} onOpenChange={setOpen} campaignId={campaign._id} from={senderName(brand)} mark={kitOf(brand)?.icon ?? kitOf(brand)?.logo?.src} color={kitOf(brand)?.colors.primary} />
     </div>
   );
 }

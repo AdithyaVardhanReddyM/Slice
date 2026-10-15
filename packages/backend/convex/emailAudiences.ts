@@ -48,11 +48,13 @@ export const list = query({
     const optedOut = await unsubscribedEmails(ctx, brandId);
     return Promise.all(
       audiences.map(async (a) => {
-        const members = optedOut.size ? await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", a._id)).collect() : [];
+        const members = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", a._id)).collect();
         return {
           ...a,
           listName: (a.listId && lists.find((l) => l._id === a.listId)?.name) || "",
           unsubscribed: members.filter((m) => optedOut.has(m.email)).length,
+          /** Members with nothing bought yet (placed by age, gender and neighbourhood). */
+          newcomers: members.filter((m) => !m.purchases?.length).length,
         };
       }),
     );
@@ -99,13 +101,16 @@ export const rename = mutation({
   },
 });
 
-/** Draft campaigns aimed at a removed audience lose their audience (and their now meaningless versions). */
+/** Draft campaigns that went to a removed group stop going to it, and its now meaningless version goes. */
 async function detachCampaigns(ctx: MutationCtx, brandId: Id<"emailBrands">, audienceIds: Set<string>) {
   const campaigns = await ctx.db.query("emailCampaigns").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
   for (const c of campaigns) {
-    if (!c.audienceId || !audienceIds.has(c.audienceId) || c.status !== "draft") continue;
-    for (const ver of await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).collect()) await ctx.db.delete(ver._id);
-    await ctx.db.patch(c._id, { audienceId: undefined, personalization: undefined, updatedAt: Date.now() });
+    if (c.status !== "draft" || !c.groupIds?.some((g) => audienceIds.has(g))) continue;
+    for (const ver of await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).collect()) {
+      if (ver.audienceId && audienceIds.has(ver.audienceId)) await ctx.db.delete(ver._id);
+    }
+    const groupIds = c.groupIds.filter((g) => !audienceIds.has(g));
+    await ctx.db.patch(c._id, { groupIds: groupIds.length ? groupIds : undefined, updatedAt: Date.now() });
   }
 }
 

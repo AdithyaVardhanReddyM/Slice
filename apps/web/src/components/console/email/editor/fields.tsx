@@ -5,8 +5,8 @@
 // padding boxes, alignment and sizes. Generic rows and fields come from the
 // Pages visual editor's controls.
 
-import { AlignCenter, AlignLeft, AlignRight, Check, Link2, Link2Off, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { AlignCenter, AlignLeft, AlignRight, Check, ChevronDown, Link2, Link2Off, RotateCcw } from "lucide-react";
+import { useState, type ComponentProps } from "react";
 import { isColorValue, normalizeHex, resolveColor } from "@slice/backend/convex/emailThemes";
 import type { Align, Box, ColorRef, EmailTheme } from "@slice/backend/convex/emailTypes";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,21 @@ import { COLOR_TOKENS } from "./model";
 
 export const fieldClass =
   "h-7 w-full min-w-0 rounded-md border border-input bg-transparent px-2 text-xs tabular-nums outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40";
+
+/**
+ * A native select with its chevron inside the padding: the browser's own
+ * arrow sits against the edge. `className` sizes the box (height, width).
+ */
+export function ChevronSelect({ className, children, ...props }: ComponentProps<"select">) {
+  return (
+    <span className={cn("relative inline-flex", className)}>
+      <select {...props} className={cn(fieldClass, "h-full cursor-pointer appearance-none bg-white pr-8 pl-2.5 text-sm")}>
+        {children}
+      </select>
+      <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+    </span>
+  );
+}
 
 export function Swatch({ color, className }: { color: string | undefined; className?: string }) {
   return (

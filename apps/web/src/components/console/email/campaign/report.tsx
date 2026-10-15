@@ -61,12 +61,12 @@ function shortUrl(url: string) {
 
 /**
  * What happened to a sent campaign: who got it, opened and clicked, over
- * time, which links pulled, and per person for individual contacts. The
- * report query is reactive, so a demo send fills in while you watch.
+ * time, which links pulled, and with personal versions how each version did
+ * and each person's result. The report query is reactive, so a demo send
+ * fills in while you watch.
  */
 export function CampaignReport({ campaign, brand }: { campaign: EmailCampaign; brand: EmailBrand }) {
   const report = useQuery(api.emailCampaigns.report, { id: campaign._id });
-  const audience = useQuery(api.emailAudiences.get, campaign.audienceId ? { id: campaign.audienceId } : "skip");
   const items = useBrandItems(brand._id);
   const doc = docOf(campaign);
   const html = useMemo(() => (items ? renderDocFor(brand, doc, items) : null), [brand, doc, items]);
@@ -87,7 +87,7 @@ export function CampaignReport({ campaign, brand }: { campaign: EmailCampaign; b
           </div>
           <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">{campaign.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {[doc?.subject && `“${doc.subject}”`, audience && `to ${audience.name}`, campaign.sentAt && `sent ${when(campaign.sentAt)}`].filter(Boolean).join(" · ")}
+            {[doc?.subject && `“${doc.subject}”`, report?.to && `to ${report.to}`, campaign.sentAt && `sent ${when(campaign.sentAt)}`].filter(Boolean).join(" · ")}
           </p>
           {campaign.status === "sending" && stats && stats.recipients > 0 && (
             <div className="max-w-md space-y-1.5 pt-1">
@@ -108,12 +108,13 @@ export function CampaignReport({ campaign, brand }: { campaign: EmailCampaign; b
           <TopLinks links={report?.links} loading={report === undefined} clicked={stats?.clicked ?? 0} />
           <Rates stats={stats} />
         </div>
+        {report?.versions && <Versions versions={report.versions} />}
         {report?.people && <People people={report.people} />}
       </div>
 
       <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
         <Panel>
-          <PanelHeader title="The email" hint={audience?.kind === "people" ? "The shared design; each person got their own version" : "As it was sent"} />
+          <PanelHeader title="The email" hint={report?.versions ? "The shared design; each group and person got their own version" : "As it was sent"} />
           <div className="max-h-[calc(100svh-10rem)] overflow-y-auto bg-neutral-100 p-3">
             {html ? <EmailFrame html={html} thumbnail /> : <Skeleton className="h-[32rem] w-full" />}
           </div>
@@ -297,9 +298,47 @@ function Rates({ stats }: { stats: CampaignStats | null }) {
   );
 }
 
-type PersonRow = { contactId: string; name: string; email: string; status: SendStatus | string; opened: unknown; clicked: unknown; subject: string };
+type VersionRow = { key: string; label: string; kind: "group" | "person"; sent: number; opened: number; clicked: number };
 
-/** Individual contacts: each person's own subject line and what they did with it. */
+/** How each version did: every taste group's, and the individual contacts' own versions together. */
+function Versions({ versions }: { versions: VersionRow[] }) {
+  return (
+    <Panel>
+      <PanelHeader title="By version" hint="Opens and clicks for each group's version, and for the people who got their own" />
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="pl-5">Version</TableHead>
+            <TableHead className="text-right">Sent</TableHead>
+            <TableHead className="text-right">Opened</TableHead>
+            <TableHead className="pr-5 text-right">Clicked</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {versions.map((v) => (
+            <TableRow key={v.key}>
+              <TableCell className="py-2.5 pl-5">
+                <div className="font-medium">{v.label}</div>
+                <div className="text-xs text-muted-foreground">{v.kind === "group" ? "One version for the group" : "A version each"}</div>
+              </TableCell>
+              <TableCell className="num text-right">{fmt.int(v.sent)}</TableCell>
+              <TableCell className="num text-right">
+                {fmt.int(v.opened)} <span className="text-muted-foreground">({pct(v.opened, v.sent)})</span>
+              </TableCell>
+              <TableCell className="num pr-5 text-right">
+                {fmt.int(v.clicked)} <span className="text-muted-foreground">({pct(v.clicked, v.sent)})</span>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Panel>
+  );
+}
+
+type PersonRow = { contactId: string; name: string; email: string; status: SendStatus | string; opened: unknown; clicked: unknown; subject: string; version?: string };
+
+/** Each person: the version they got, their subject line and what they did with it. */
 function People({ people }: { people: PersonRow[] }) {
   const [q, setQ] = useState("");
   const needle = q.trim().toLowerCase();
@@ -321,6 +360,7 @@ function People({ people }: { people: PersonRow[] }) {
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="pl-5">Person</TableHead>
+            <TableHead>Version</TableHead>
             <TableHead>Their subject line</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-center">Opened</TableHead>
@@ -339,6 +379,7 @@ function People({ people }: { people: PersonRow[] }) {
                   </div>
                 </div>
               </TableCell>
+              <TableCell className="max-w-40 truncate text-muted-foreground">{p.version}</TableCell>
               <TableCell className="max-w-72 truncate" title={p.subject}>
                 {p.subject}
               </TableCell>
@@ -349,7 +390,7 @@ function People({ people }: { people: PersonRow[] }) {
           ))}
           {shown.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="py-6 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={6} className="py-6 text-center text-sm text-muted-foreground">
                 Nobody matches.
               </TableCell>
             </TableRow>

@@ -884,8 +884,9 @@ export default defineSchema({
     /** The name is cut from the first prompt; the builder's first subject line replaces it. */
     nameFromPrompt: v.optional(v.boolean()),
     status: campaignStatusValidator,
-    audienceId: v.optional(v.id("emailAudiences")),
-    /** Sent to individual contacts: the people ticked for this campaign. */
+    /** The taste groups ticked: each gets one version, written for the group's taste. */
+    groupIds: v.optional(v.array(v.id("emailAudiences"))),
+    /** The individual contacts ticked: each gets their own version. */
     contactIds: v.optional(v.array(v.id("emailContacts"))),
     /** EmailDoc */
     doc: v.any(),
@@ -914,10 +915,11 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
 
-  /** One person's version of a people campaign. */
+  /** One recipient's version of a campaign: a taste group's (`audienceId`) or one person's (`contactId`). */
   emailVersions: defineTable({
     campaignId: v.id("emailCampaigns"),
-    contactId: v.id("emailContacts"),
+    contactId: v.optional(v.id("emailContacts")),
+    audienceId: v.optional(v.id("emailAudiences")),
     /** The doc version it was written against (stale when lower). */
     docVersion: v.number(),
     /** Personalization */
@@ -928,7 +930,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_campaign", ["campaignId"])
-    .index("by_campaign_contact", ["campaignId", "contactId"]),
+    .index("by_campaign_contact", ["campaignId", "contactId"])
+    .index("by_campaign_audience", ["campaignId", "audienceId"]),
 
   emailSends: defineTable({
     campaignId: v.id("emailCampaigns"),

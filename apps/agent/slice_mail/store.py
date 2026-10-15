@@ -1,8 +1,8 @@
 """Reading the Email service's data from Convex, normalised for the agent.
 
-`emailCampaigns:getForAgent` bundles a campaign with its brand, audience, items and
-(for individual contacts) the people ticked. Rows come back with Convex `_id`s;
-the agent works with `id`s, as emailTypes.ts does.
+`emailCampaigns:getForAgent` bundles a campaign with its brand, items, the taste
+groups ticked (with their members) and the individual contacts ticked. Rows come
+back with Convex `_id`s; the agent works with `id`s, as emailTypes.ts does.
 """
 
 from __future__ import annotations
@@ -68,23 +68,64 @@ def contact_names(contact: dict[str, Any], n: int = 8) -> list[str]:
     return names[:n]
 
 
+def targets_name(groups: list[dict[str, Any]], people: int) -> str:
+    """"Crime & suspense, Sci-fi & fantasy and 3 individual contacts", as the console says it."""
+    parts = [str(g.get("name")) for g in groups] + ([f"{people} individual contact{'s' if people != 1 else ''}"] if people else [])
+    return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1] if parts else "no one yet"
+
+
+def merged_profile(profiles: list[dict[str, Any] | None]) -> dict[str, Any]:
+    """Everyone ticked as one profile: each one's leading signals, tags and brands, interleaved."""
+    profiles = [p for p in profiles if isinstance(p, dict) and p]
+    out: dict[str, Any] = {"entities": [], "tags": [], "brands": [], "geo": [], "culture": {"artists": [], "films": [], "places": [], "books": []}, "demographics": None}
+
+    def weave(lists: list[list[Any]], key: str, n: int) -> list[Any]:
+        seen: set[str] = set()
+        woven: list[Any] = []
+        for i in range(max((len(x) for x in lists), default=0)):
+            for x in lists:
+                if i < len(x) and isinstance(x[i], dict) and str(x[i].get(key)) not in seen:
+                    seen.add(str(x[i].get(key)))
+                    woven.append(x[i])
+        return woven[:n]
+
+    out["entities"] = weave([p.get("entities") or [] for p in profiles], "id", 24)
+    out["tags"] = weave([p.get("tags") or [] for p in profiles], "id", 40)
+    out["brands"] = weave([p.get("brands") or [] for p in profiles], "name", 16)
+    out["geo"] = weave([p.get("geo") or [] for p in profiles], "name", 8)
+    for k in out["culture"]:
+        out["culture"][k] = weave([(p.get("culture") or {}).get(k) or [] for p in profiles], "name", 10)
+    return out
+
+
+def audience_of(groups: list[dict[str, Any]], contacts: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Who the email is written for: the one taste group when it goes only to that group,
+    else a stand-in for everyone ticked (kind "versions", their profiles merged), None when
+    no one is ticked."""
+    if not groups and not contacts:
+        return None
+    if len(groups) == 1 and not contacts:
+        return groups[0]
+    return {
+        "name": targets_name(groups, len(contacts)),
+        "kind": "versions",
+        "size": sum(int(g.get("size") or 0) for g in groups) + len(contacts),
+        "profile": merged_profile([g.get("profile") for g in groups] + [c.get("profile") for c in contacts]),
+    }
+
+
 async def load_campaign(campaign_id: str) -> dict[str, Any]:
-    """{campaign, brand, audience, items: {id: item}, contacts: [...], doc}."""
+    """{campaign, brand, groups, contacts, audience (see audience_of), items: {id: item}, doc}."""
     data = await read("emailCampaigns:getForAgent", {"id": campaign_id})
     if not data or not data.get("campaign"):
         raise ValueError(f"campaign {campaign_id} not found")
     campaign = dict(data["campaign"])
     doc = campaign.get("doc") if isinstance(campaign.get("doc"), dict) else {}
     brand = data.get("brand") or {}
-    audience = data.get("audience") or None
-    items = {r["id"]: r for r in (item_row(i) for i in data.get("items") or [] if isinstance(i, dict)) if r["id"]}
+    groups = [g for g in data.get("groups") or [] if isinstance(g, dict)]
     contacts = [c for c in data.get("contacts") or [] if isinstance(c, dict)]
-    if audience and audience.get("kind") == "people" and not contacts:
-        try:
-            contacts = [c for c in await read("emailContacts:byAudience", {"audienceId": row_id(audience)}) or [] if isinstance(c, dict)]
-        except Exception:
-            contacts = []
-    return {"campaign": campaign, "brand": brand, "audience": audience, "items": items, "contacts": contacts, "doc": doc}
+    items = {r["id"]: r for r in (item_row(i) for i in data.get("items") or [] if isinstance(i, dict)) if r["id"]}
+    return {"campaign": campaign, "brand": brand, "groups": groups, "contacts": contacts, "audience": audience_of(groups, contacts), "items": items, "doc": doc}
 
 
 def brand_site(brand: dict[str, Any]) -> str | None:

@@ -165,8 +165,8 @@ function ItemsFields({ block, set }: { block: ItemsBlock; set: SetFields }) {
               <SliderField value={block.count} fallback={3} min={1} max={6} onChange={(v) => v && set({ count: v }, "count")} />
             </PropRow>
             <p className="text-[11px] leading-4 text-muted-foreground">
-              {audience?.kind === "people"
-                ? "Each person gets their own picks from their taste profile. Mark the block as a taste slot below."
+              {audience?.kind === "versions"
+                ? "Each taste group and each person gets their own picks from their taste. Mark the block as a taste slot below."
                 : "Picked from the catalogue for this audience's taste. Ask the AI chat to choose again."}
             </p>
           </>
@@ -595,12 +595,12 @@ function CommonFields({ block, set }: { block: EmailBlock; set: SetFields }) {
           <label className="flex items-start justify-between gap-3">
             <span className="min-w-0">
               <span className="flex items-center gap-1.5 text-xs font-medium">
-                <UserStar className="size-3.5 text-blue-700" /> Write it for each person
+                <UserStar className="size-3.5 text-blue-700" /> Write it for each version
               </span>
               <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
-                {audience?.kind === "people"
-                  ? "When you personalise, each person's version rewrites this block from their own taste."
-                  : "Used when the campaign goes to individual contacts. Taste groups get one email."}
+                {audience?.kind === "versions"
+                  ? "When you personalise, each group's and each person's version rewrites this block from their own taste."
+                  : "Each taste group and person ticked gets a version of this block, written from their own taste."}
               </span>
             </span>
             <Switch size="sm" checked={!!block.personal} onCheckedChange={(on) => set({ personal: on || null })} aria-label="Taste slot" />

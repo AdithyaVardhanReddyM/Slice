@@ -12,6 +12,8 @@ import { applyPersonalization, DEFAULT_HEADING_SIZE } from "@slice/backend/conve
 import type { EmailDoc } from "@slice/backend/convex/emailTypes";
 import { cn } from "@/lib/utils";
 import { renderContextFor } from "@/lib/email/render-context";
+import { kitOf } from "@/lib/email/types";
+import { SenderMark } from "@/components/console/email/sender-mark";
 import { Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
 import { CanvasSection, useRevealSelection } from "./canvas-section";
@@ -19,6 +21,7 @@ import { useEditorEnv } from "./context";
 import { useDrag } from "./dnd";
 import { FloatingToolbar } from "./floating-toolbar";
 import { isFooterSection, PHONE_WIDTH } from "./model";
+import { ViewAsPicker } from "./view-as";
 
 const lineHeight = (size: number) => (size >= 44 ? 1.08 : size >= 32 ? 1.15 : size >= 24 ? 1.22 : 1.3);
 
@@ -64,7 +67,9 @@ function InboxLine({ doc, width, readOnly }: { doc: EmailDoc; width: number; rea
   const field = "w-full min-w-0 truncate rounded-md bg-transparent px-1.5 py-0.5 outline-none transition-colors hover:bg-neutral-100 focus:bg-neutral-50 focus:ring-2 focus:ring-blue-600/25 disabled:hover:bg-transparent";
   return (
     <div className="mb-4 flex items-start gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.06]" style={{ width }} onClick={(e) => e.stopPropagation()}>
-      <span className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-semibold text-white">{brand.name.charAt(0).toUpperCase()}</span>
+      <span className="mt-1">
+        <SenderMark name={brand.name} mark={kitOf(brand)?.icon ?? kitOf(brand)?.logo?.src} color={kitOf(brand)?.colors.primary} size={32} />
+      </span>
       <div className="min-w-0 flex-1 -space-y-0.5">
         <div className="flex items-center justify-between gap-2 px-1.5">
           <span className="truncate text-[13px] font-medium text-neutral-900">{brand.name}</span>
@@ -153,7 +158,9 @@ function useHandScroll(on: boolean): RefObject<HTMLDivElement | null> {
 }
 
 export function Canvas() {
-  const { editor, brand, itemMap, agent, previewAs, setPreviewAs } = useEditorEnv();
+  const { editor, brand, itemMap, agent, previewAs, setPreviewAs, audience } = useEditorEnv();
+  // With a version for each group and person, a picker over the canvas switches between them.
+  const versions = audience?.kind === "versions";
   const { dragDoc } = useDrag();
   const layer = useRef<HTMLDivElement>(null);
   const base = (dragDoc ?? editor.doc) as EmailDoc;
@@ -221,7 +228,8 @@ export function Canvas() {
           </div>
         </div>
       )}
-      {previewAs && (
+      {versions && !agent.busy && <ViewAsPicker />}
+      {previewAs && !versions && (
         <div className="absolute inset-x-0 top-3 z-40 flex justify-center px-4">
           <div className="flex max-w-full items-center gap-2.5 rounded-full bg-white py-1.5 pr-1.5 pl-3 text-sm shadow-lg ring-1 ring-black/10 animate-in fade-in-0 slide-in-from-top-2">
             <Eye className="size-4 shrink-0 text-blue-700" />
