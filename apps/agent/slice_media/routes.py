@@ -35,6 +35,7 @@ from slice_agent.trace import Span, start_turn
 from slice_pages.routes import _image_part, _ndjson, _preview as pages_preview, _safe
 
 from . import builder as B
+from . import insights as I
 from . import render
 from . import store
 
@@ -357,6 +358,8 @@ ACTIONS: dict[str, tuple[Any, tuple[str, ...]]] = {
     "add_voiceover": (B.add_voiceover, ("creative_id", "script", "voice", "style", "start")),
     "generate_image": (B.generate_image, ("prompt", "format", "reference_urls", "quality")),
     "resize_creative": (B.resize_creative, ("creative_id", "formats")),
+    "pretest": (I.pretest, ("creative_id", "audience_id")),
+    "taste_map": (I.taste_map, ("audience_id", "region")),
 }
 
 

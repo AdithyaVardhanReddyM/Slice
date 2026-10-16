@@ -145,6 +145,76 @@ export interface MediaAudience {
   summary?: string;
 }
 
+/* Insights (mediaInsights rows) ---------------------------------------------------------- */
+
+export type PretestAction = "scroll_past" | "pause" | "tap" | "save_or_share";
+
+export interface PretestPersona {
+  name: string;
+  age: number;
+  city: string;
+  bio: string;
+  /** Their tastes, named from the audience's Qloo profile. */
+  tastes: string[];
+  firstGlance: string;
+  reaction: string;
+  /** 1..10 */
+  score: number;
+  action: PretestAction;
+  likes: string[];
+  dislikes: string[];
+}
+
+export interface MediaPretest {
+  creativeId: string;
+  /** The creative's version that was tested. */
+  version: number;
+  audienceKey: string;
+  audienceName: string;
+  /** 0..100 */
+  score: number;
+  /** Share of the panel that would stop scrolling, 0..100. */
+  stopRate: number;
+  verdict: string;
+  personas: PretestPersona[];
+  fixes: { what: string; why: string; layer: string; impact: "high" | "medium" | "low" }[];
+  /** Qloo's age and gender skew for the audience, -1..1 per bucket. */
+  demographics?: { age: Record<string, number>; gender: Record<string, number> } | null;
+  screenshot?: string;
+  at: number;
+}
+
+export interface TasteHotspot {
+  name: string;
+  /** The wider area, e.g. "California, United States". */
+  detail: string;
+  lat: number;
+  lon: number;
+  /** 0..1 how strongly the taste over-indexes here. */
+  affinity: number;
+  /** 0..1 how much activity there is here. */
+  popularity: number;
+}
+
+export interface MediaTasteMap {
+  audienceKey: string;
+  audienceName: string;
+  /** What was mapped, as the merchant typed it, and what Qloo resolved it to. */
+  region: string;
+  resolved: string;
+  /** The Qloo signals the map was built from. */
+  signals: string[];
+  /** Grid cell size in degrees [lon, lat]. */
+  cell: [number, number];
+  /** [lat, lon, affinity, popularity], strongest first, capped. */
+  cells: [number, number, number, number][];
+  /** Bounding box of every cell: [west, south, east, north]. */
+  bbox: [number, number, number, number];
+  hotspots: TasteHotspot[];
+  demographics?: { age: Record<string, number>; gender: Record<string, number> } | null;
+  at: number;
+}
+
 export interface MediaConcept {
   audienceKey: string;
   title: string;

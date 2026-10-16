@@ -420,6 +420,14 @@ emailRoute("/media/export", async (ctx, body) => {
   return json({ ok: true });
 });
 
+/** A pre-test (key: creative id) or taste map (key: audience id). */
+emailRoute("/media/insight", async (ctx, { campaignId, kind, key, data }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id || (kind !== "pretest" && kind !== "map") || typeof key !== "string" || !key || !data) return json({ error: "expected { campaignId, kind, key, data }" }, 400);
+  await ctx.runMutation(internal.media.putInsight, { campaignId: id, kind, key, data });
+  return json({ ok: true });
+});
+
 emailRoute("/media/chat", async (ctx, { campaignId, messages }) => {
   const id = asId<"mediaCampaigns">(campaignId);
   if (!id || !Array.isArray(messages)) return json({ error: "expected { campaignId, messages }" }, 400);
