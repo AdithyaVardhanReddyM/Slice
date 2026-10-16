@@ -268,8 +268,21 @@ export const remove = mutation({
     for (const j of await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(j._id);
     const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
     if (chat) await ctx.db.delete(chat._id);
+    for (const i of await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(i._id);
     await ctx.db.delete(id);
     return null;
+  },
+});
+
+/** Pre-tests or taste maps for a campaign, newest first. */
+export const insights = query({
+  args: { id: v.id("mediaCampaigns"), kind: v.union(v.literal("pretest"), v.literal("map")) },
+  handler: async (ctx, { id, kind }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const campaign = await ctx.db.get(id);
+    if (!campaign || identity?.subject !== campaign.owner) return [];
+    const rows = await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", id).eq("kind", kind)).collect();
+    return rows.sort((a, b) => b.createdAt - a.createdAt).map((r) => ({ _id: r._id, key: r.key, data: r.data as unknown, createdAt: r.createdAt }));
   },
 });
 
@@ -353,8 +366,10 @@ export const removeCreative = mutation({
   args: { id: v.id("mediaCreatives") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    await ownCreative(ctx, id);
+    const { creative } = await ownCreative(ctx, id);
     for (const x of await ctx.db.query("mediaVersions").withIndex("by_creative", (q) => q.eq("creativeId", id)).collect()) await ctx.db.delete(x._id);
+    const pretest = await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", creative.campaignId).eq("kind", "pretest").eq("key", id)).unique();
+    if (pretest) await ctx.db.delete(pretest._id);
     await ctx.db.delete(id);
     return null;
   },
@@ -457,6 +472,19 @@ export const readForAgent = internalQuery({
     }
     const committed = jobs.filter((j) => j.status === "queued" || j.status === "running").reduce((s, j) => s + j.estimate, 0);
     return { campaign: { ...campaign, audiences }, brand, creatives, assets, jobs, committed };
+  },
+});
+
+/** The latest pre-test or taste map for a creative or audience replaces the one before. */
+export const putInsight = internalMutation({
+  args: { campaignId: v.id("mediaCampaigns"), kind: v.union(v.literal("pretest"), v.literal("map")), key: v.string(), data: v.any() },
+  returns: v.null(),
+  handler: async (ctx, { campaignId, kind, key, data }) => {
+    if (!(await ctx.db.get(campaignId))) throw new Error("Unknown campaign");
+    const old = await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId).eq("kind", kind).eq("key", key)).unique();
+    if (old) await ctx.db.delete(old._id);
+    await ctx.db.insert("mediaInsights", { campaignId, kind, key: key.slice(0, 80), data, createdAt: Date.now() });
+    return null;
   },
 });
 

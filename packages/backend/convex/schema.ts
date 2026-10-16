@@ -1081,4 +1081,20 @@ export default defineSchema({
     messages: v.array(emailChatMessageValidator),
     updatedAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
+
+  /**
+   * What the agent learned about a campaign, latest per key: a pre-test (a
+   * creative judged by a panel of personas grounded in its audience's Qloo
+   * taste; MediaPretest) or a taste map (where an audience's taste is
+   * strongest, from Qloo heatmaps; MediaTasteMap).
+   */
+  mediaInsights: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    /** "pretest" | "map" */
+    kind: v.string(),
+    /** The creative (pretest) or audience (map) it is about. */
+    key: v.string(),
+    data: v.any(),
+    createdAt: v.number(),
+  }).index("by_campaign", ["campaignId", "kind", "key"]),
 });
