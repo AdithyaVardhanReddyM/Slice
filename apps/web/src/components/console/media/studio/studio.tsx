@@ -7,7 +7,7 @@
 // directly with an estimate on each, so only chat turns use the LLM.
 
 import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, Clapperboard, Download, Film, Image as ImageIcon, Loader2, QrCode, Redo2, RectangleHorizontal, SquareMousePointer, Type, Undo2 } from "lucide-react";
+import { ArrowLeft, Clapperboard, Download, Film, Image as ImageIcon, Loader2, Map as MapIcon, QrCode, Redo2, RectangleHorizontal, SquareMousePointer, Type, Undo2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +30,7 @@ import { MediaChat } from "./chat";
 import { StudioContext, useStudio, type ChatMessage, type Selection, type StudioEnv } from "./context";
 import { committed } from "./costs";
 import { Inspector } from "./inspector";
+import { PretestPanel, TasteMapView } from "./insights";
 import { newLayer, type NewLayerKind } from "./layers";
 import { CreativesTab, HistoryTab, JobsTab, LibraryTab, WhyTab } from "./rail";
 import { Timeline } from "./timeline";
@@ -88,7 +89,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const [selection, select] = useState<Selection>({ kind: "none" });
   const [muted, setMuted] = useState(false);
   const autostart = params.get("generate") === "1";
-  const [right, setRight] = useState<"design" | "chat">(autostart && !creatives.length ? "chat" : "design");
+  const [right, setRight] = useState<"design" | "test" | "chat">(autostart && !creatives.length ? "chat" : "design");
+  const [view, setView] = useState<"canvas" | "map">("canvas");
   const [pending, setPending] = useState<string[]>([]);
   const [notice, setNotice] = useState<{ tone: "ok" | "bad"; text: string } | null>(null);
   const composer = useRef<ChatComposerHandle | null>(null);
@@ -144,6 +146,13 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     setRight("chat");
     composer.current?.addBlock(block);
     requestAnimationFrame(() => composer.current?.focus());
+  };
+
+  /** A chat turn from a panel button (pre-test fixes, a taste-map hotspot). */
+  const send = (text: string) => {
+    setRight("chat");
+    setView("canvas");
+    void agent.send(text);
   };
 
   const selectedLayers = selection.kind === "layers" && doc ? selection.ids.filter((id) => doc.layers.some((l) => l.id === id)) : [];
@@ -239,7 +248,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     <StudioContext.Provider value={env}>
       <KitFonts kit={kit} />
       <div className="fixed inset-0 flex min-h-0 flex-col overflow-hidden overscroll-none bg-white">
-        <TopBar />
+        <TopBar view={view} onView={setView} />
         <div className="flex min-h-0 flex-1">
           <aside className="flex w-72 shrink-0 flex-col border-r">
             <Tabs defaultValue="creatives" className="flex min-h-0 flex-1 flex-col gap-0">
@@ -269,7 +278,9 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
           </aside>
 
           <main className="relative flex min-w-0 flex-1 flex-col bg-neutral-100">
-            {doc && creative ? (
+            {view === "map" ? (
+              <TasteMapView onClose={() => setView("canvas")} onSend={send} />
+            ) : doc && creative ? (
               <>
                 <div className="flex h-11 shrink-0 items-center gap-1 border-b bg-white px-3">
                   <ToolButton label="Headline" onClick={() => add("headline")}>
@@ -325,15 +336,18 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
 
           <aside className="flex w-[360px] shrink-0 flex-col border-l">
             <div className="flex h-11 shrink-0 items-center gap-1 border-b px-2">
-              {(["design", "chat"] as const).map((t) => (
+              {(["design", "test", "chat"] as const).map((t) => (
                 <button key={t} type="button" onClick={() => setRight(t)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", right === t && "bg-neutral-100 text-foreground")}>
-                  {t === "design" ? "Design" : "AI Chat"}
+                  {t === "design" ? "Design" : t === "test" ? "Pre-test" : "AI Chat"}
                   {t === "chat" && agent.busy && <Loader2 className="ml-1.5 inline size-3 animate-spin" />}
                 </button>
               ))}
             </div>
             <div className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto", right !== "design" && "hidden")}>
               <Inspector />
+            </div>
+            <div className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto", right !== "test" && "hidden")}>
+              <PretestPanel key={creative?._id ?? "none"} onSend={send} />
             </div>
             <div className={cn("min-h-0 flex-1", right !== "chat" && "hidden")}>
               <MediaChat />
@@ -377,7 +391,7 @@ function EmptyCanvas() {
 
 /* Top bar ------------------------------------------------------------------------- */
 
-function TopBar() {
+function TopBar({ view, onView }: { view: "canvas" | "map"; onView: (v: "canvas" | "map") => void }) {
   const { campaign, jobs, creative, editor, agent, campaignId } = useStudio();
   const update = useMutation(api.media.update);
   const [name, setName] = useState(campaign.name);
@@ -479,6 +493,9 @@ function TopBar() {
           </div>
           <Meter value={ratio} tone={ratio > 0.9 ? "warn" : "ink"} />
         </div>
+        <Button variant={view === "map" ? "secondary" : "outline"} size="sm" aria-pressed={view === "map"} onClick={() => onView(view === "map" ? "canvas" : "map")} title="Where each audience's taste is strongest (Qloo)">
+          <MapIcon /> Taste map
+        </Button>
         <Button variant="outline" size="sm" disabled={agent.busy} onClick={() => void agent.generate()}>
           {agent.busy ? <Loader2 className="animate-spin" /> : <Clapperboard />} Generate
         </Button>
