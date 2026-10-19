@@ -1,7 +1,7 @@
 "use client";
 
 // A campaign's workspace: the infinite canvas with everything made for it, the
-// prompt bar, the sidebar (chat and assets) and the focus editors. The prompt
+// toolbar, the prompt bar, the sidebar (chat and assets) and the focus editors. The prompt
 // bar starts big at the bottom of the canvas; once a conversation is going it
 // glides into the sidebar and the chat continues above it. Closing the
 // sidebar sends it back.
@@ -13,7 +13,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
-import { boardWidth, type MediaKit } from "@slice/backend/convex/mediaTypes";
+import { AUDIO_NODE, boardWidth, type MediaKit } from "@slice/backend/convex/mediaTypes";
 import { postJson } from "@/lib/pages/stream";
 import { usePagesModel } from "@/lib/pages/models";
 import { useMediaUpload } from "@/lib/media/upload";
@@ -29,10 +29,11 @@ import { ChatThread } from "../sidebar/chat";
 import { KitFonts } from "../stage";
 import { Board, type BoardHandle, type Viewport } from "./board";
 import { EmptyHero, TopBar, ZoomControl } from "./chrome";
-import { CanvasContext, type CanvasEnv, type ChatMessage, type SidebarTab } from "./context";
-import { buildNodes, refOf, type BoardNode, type CampaignData, type NodeKey } from "./model";
+import { CanvasContext, type CanvasEnv, type CanvasTool, type ChatMessage, type SidebarTab } from "./context";
+import { bounds, buildNodes, keyOf, openSpot, refOf, type BoardNode, type CampaignData, type NodeKey } from "./model";
 import { NodeToolbar } from "./node-toolbar";
 import { NodeView } from "./nodes";
+import { CanvasToolbar, TOOLBAR_ROOM } from "./toolbar";
 import { mediaAction, useMediaAgent } from "./use-media-agent";
 
 const SIDEBAR_W = 400;
@@ -101,6 +102,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const [confirm, setConfirm] = useState<NodeKey[] | null>(null);
   const [playing, setPlaying] = useState<NodeKey | null>(null);
   const [zoom, setZoom] = useState(campaign.viewport?.zoom ?? 1);
+  const [tool, setTool] = useState<CanvasTool>("select");
   const board = useRef<BoardHandle>(null);
   const bar = useRef<PromptBarHandle>(null);
   const area = useRef<HTMLDivElement>(null);
@@ -152,6 +154,18 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   }, [notice]);
   const notify = useCallback((text: string, tone: "ok" | "bad" = "ok") => setNotice({ text, tone, at: Date.now() }), []);
 
+  const docked = sidebar.open;
+  // Wholly in view, clear of the sidebar, the toolbar and the prompt bar.
+  const inView = useCallback(
+    (n: Pick<BoardNode, "x" | "y" | "w" | "h">) => {
+      const v = board.current?.viewport();
+      const el = area.current;
+      if (!v || !el) return true;
+      return n.x * v.zoom + v.x >= (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= 0 && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
+    },
+    [docked, dockH],
+  );
+
   const act: CanvasEnv["act"] = useCallback(
     async (action, args, label) => {
       setPending((p) => [...p, label]);
@@ -173,7 +187,6 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     [campaignId, notify],
   );
 
-  const docked = sidebar.open;
   const openChat = () => setSidebar({ open: true, tab: "chat" });
 
   const sendPrompt: CanvasEnv["sendPrompt"] = (text, overrides) => {
@@ -223,6 +236,46 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     }
   };
 
+  // Files from the computer (dropped, or picked in the toolbar) join the library
+  // and land side by side, the first aimed at `at` (else the middle of the
+  // view), each in the nearest free spot; then they are selected.
+  const placeFiles: CanvasEnv["placeFiles"] = async (files, at) => {
+    if (!files.length) return;
+    const c = at ?? board.current?.center() ?? { x: 0, y: 0 };
+    const taken: Pick<BoardNode, "x" | "y" | "w" | "h">[] = [...nodes];
+    const placed: NodeKey[] = [];
+    const spots: Pick<BoardNode, "x" | "y" | "w" | "h">[] = [];
+    let left: number | null = null;
+    setPending((p) => [...p, "upload"]);
+    try {
+      for (const f of files.slice(0, 12)) {
+        try {
+          const up = await upload(f);
+          if (!up.assetId) continue;
+          const w = up.kind === "audio" ? AUDIO_NODE.w : boardWidth(up.w ?? 1, up.h ?? 1);
+          const h = up.kind === "audio" ? AUDIO_NODE.h : (w * (up.h ?? 1)) / (up.w ?? 1);
+          const spot = openSpot(taken, { w, h }, { x: left ?? c.x - w / 2, y: c.y - h / 2 });
+          await placeAsset({ id: up.assetId, board: { ...spot, w } });
+          taken.push({ ...spot, w, h });
+          spots.push({ ...spot, w, h });
+          placed.push(keyOf({ kind: "asset", id: up.assetId }));
+          left = spot.x + w + 40;
+        } catch (err) {
+          notify((err as Error).message, "bad");
+        }
+      }
+    } finally {
+      setPending((p) => {
+        const i = p.indexOf("upload");
+        return i < 0 ? p : [...p.slice(0, i), ...p.slice(i + 1)];
+      });
+    }
+    if (placed.length) setSelected(placed);
+    // The nearest free spot can be out of view: glide to the new files.
+    const box = bounds(spots);
+    if (box && !spots.every(inView)) board.current?.fitBox(box, { maxZoom: board.current.viewport().zoom });
+  };
+
   const env: CanvasEnv = {
     campaignId,
     campaign,
@@ -243,6 +296,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     closeFocus: () => setFocus(null),
     agent,
     board,
+    tool,
+    setTool,
     sidebar,
     setSidebar,
     audienceId,
@@ -253,6 +308,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     compose: (text) => {
       bar.current?.set(text);
     },
+    focusPrompt: () => bar.current?.focus(),
+    placeFiles,
     sendPrompt,
     remove,
     download,
@@ -288,7 +345,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       } else if (e.key === "/") {
         e.preventDefault();
         bar.current?.focus();
-      }
+      } else if (!mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "v") setTool("select");
+      else if (!mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "h") setTool("hand");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -311,23 +369,18 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     const keys = new Set(nodes.map((n) => n.key));
     if (known.current) {
       const fresh = nodes.filter((n) => !known.current!.has(n.key) && n.ref.kind !== "asset");
-      if (fresh.length && board.current) {
-        const v = board.current.viewport();
-        const el = area.current;
-        // Wholly in view, clear of the sidebar and the prompt bar.
-        const inView = (n: BoardNode) => el && n.x * v.zoom + v.x >= (docked ? SIDEBAR_W : 0) && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= 0 && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
-        if (!fresh.every(inView)) board.current.fit(fresh.map((n) => n.key), { maxZoom: v.zoom });
-      }
+      if (fresh.length && board.current && !fresh.every(inView)) board.current.fit(fresh.map((n) => n.key), { maxZoom: board.current.viewport().zoom });
     }
     known.current = keys;
-  }, [nodes, docked, dockH]);
+  }, [nodes, inView]);
 
   const onDrop = async (e: DragEvent, at: { x: number; y: number }) => {
     const raw = e.dataTransfer?.getData(MEDIA_DRAG);
     if (raw) {
       const item = JSON.parse(raw) as DragItem;
-      const w = item.kind === "audio" ? 360 : boardWidth(item.w ?? 1, item.h ?? 1);
-      const spot = { x: Math.round(at.x - w / 2), y: Math.round(at.y - 40), w };
+      const w = item.kind === "audio" ? AUDIO_NODE.w : boardWidth(item.w ?? 1, item.h ?? 1);
+      const h = item.kind === "audio" ? AUDIO_NODE.h : (w * (item.h ?? 1)) / (item.w ?? 1);
+      const spot = { ...openSpot(nodes.filter((n) => n.ref.id !== item.assetId), { w, h }, { x: at.x - w / 2, y: at.y - h / 2 }), w };
       if (item.assetId) await placeAsset({ id: item.assetId as Id<"mediaAssets">, board: spot });
       else {
         const existing = assets.find((a) => a.url === item.url);
@@ -339,20 +392,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       }
       return;
     }
-    const files = Array.from(e.dataTransfer?.files ?? []);
-    let x = at.x;
-    for (const f of files.slice(0, 12)) {
-      try {
-        const up = await upload(f);
-        if (up.assetId) {
-          const w = up.kind === "audio" ? 360 : boardWidth(up.w ?? 1, up.h ?? 1);
-          await placeAsset({ id: up.assetId, board: { x: Math.round(x - w / 2), y: Math.round(at.y - 40), w } });
-          x += w + 40;
-        }
-      } catch (err) {
-        notify((err as Error).message, "bad");
-      }
-    }
+    await placeFiles(Array.from(e.dataTransfer?.files ?? []), at);
   };
 
   const barW = docked ? SIDEBAR_W - 24 : Math.min(780, Math.max(320, areaW - 48));
@@ -376,7 +416,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             onDrop={(e, at) => void onDrop(e, at)}
             onViewport={onViewport}
             initial={campaign.viewport ?? null}
-            inset={{ left: docked ? SIDEBAR_W : 0, bottom: docked ? 0 : dockH + 32, top: 0 }}
+            tool={tool}
+            inset={{ left: (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: 0 }}
             renderNode={(n, ctx) => <NodeView node={n} kit={kit} zoom={ctx.zoom} hovered={ctx.hovered} playing={playing === n.key} onPlay={(on) => setPlaying(on ? n.key : null)} />}
             overlay={({ rect, dragging }) => (rect && !dragging && !focus ? <NodeToolbar rect={rect} /> : null)}
           />
@@ -405,6 +446,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             </div>
             {sidebar.tab === "chat" ? <ChatThread /> : <AssetsPanel />}
           </aside>
+
+          <CanvasToolbar left={(docked ? SIDEBAR_W : 0) + 12} />
 
           {!sidebar.open && messages.length > 0 && (
             <button

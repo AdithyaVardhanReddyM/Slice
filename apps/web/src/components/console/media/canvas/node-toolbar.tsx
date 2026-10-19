@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { usd, usePromptPicks } from "../prompt/options";
 import { useCanvas } from "./context";
 import type { BoardNode } from "./model";
+import { TOOLBAR_ROOM } from "./toolbar";
 import { WhyButton } from "./why";
 
 const btn = "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:pointer-events-none disabled:opacity-50 data-popup-open:bg-neutral-100 [&_svg]:size-4 [&_svg]:shrink-0";
@@ -171,8 +172,8 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
   if (!sel.length) return null;
   const one = sel.length === 1 ? sel[0] : null;
   const above = rect.y > 84;
-  // Centred over the selection, but kept inside the canvas (clear of the sidebar).
-  const minLeft = (sidebar.open ? 400 : 0) + 10;
+  // Centred over the selection, but kept inside the canvas (clear of the sidebar and the toolbar).
+  const minLeft = (sidebar.open ? 400 : 0) + TOOLBAR_ROOM;
   const left = size.w && size.room ? Math.min(Math.max(rect.x + rect.w / 2 - size.w / 2, minLeft), size.room - size.w - 10) : rect.x + rect.w / 2 - size.w / 2;
 
   let body: ReactNode;

@@ -2,8 +2,9 @@
 
 // The infinite canvas. Board units map to the screen as screen = board × zoom +
 // offset. Trackpad scroll pans, pinch or ⌘/Ctrl + scroll zooms around the
-// pointer, Space-drag or the middle button pans, dragging empty space draws a
-// selection box, dragging a node moves the selection (committed on release).
+// pointer, Space-drag, the middle button or the hand tool pans; with the select
+// tool, dragging empty space draws a selection box and dragging a node moves
+// the selection (committed on release).
 // Node content lives in the scaled world; names, outlines and the toolbar are
 // drawn in screen space so they stay crisp at any zoom.
 
@@ -19,6 +20,8 @@ export interface Viewport {
 
 export interface BoardHandle {
   fit(keys?: NodeKey[], opts?: { maxZoom?: number; animate?: boolean }): void;
+  /** Fit a box in board units (for things placed but not drawn yet). */
+  fitBox(box: { x: number; y: number; w: number; h: number }, opts?: { maxZoom?: number; animate?: boolean }): void;
   zoomBy(factor: number): void;
   zoomTo(zoom: number): void;
   /** Board point under a screen point (drops). */
@@ -49,6 +52,8 @@ export interface BoardProps {
   onDrop?: (e: DragEvent, at: { x: number; y: number }) => void;
   onViewport?: (v: Viewport) => void;
   initial?: Viewport | null;
+  /** "hand": a plain drag pans, wherever it starts. */
+  tool?: "select" | "hand";
   /** Leave this much room on the left (the sidebar) and bottom (the prompt bar) when fitting. */
   inset?: { left: number; bottom: number; top: number };
   /** Node content, drawn in board units. */
@@ -59,7 +64,7 @@ export interface BoardProps {
   className?: string;
 }
 
-export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes, selected, onSelect, onOpen, onMove, onDrop, onViewport, initial, inset = { left: 0, bottom: 0, top: 0 }, renderNode, overlay, children, className }, ref) {
+export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes, selected, onSelect, onOpen, onMove, onDrop, onViewport, initial, tool = "select", inset = { left: 0, bottom: 0, top: 0 }, renderNode, overlay, children, className }, ref) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [view, setView] = useState<Viewport>(initial ?? { x: 0, y: 0, zoom: 1 });
@@ -95,10 +100,8 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
     return () => ro.disconnect();
   }, []);
 
-  const fit = useCallback(
-    (keys?: NodeKey[], opts: { maxZoom?: number; animate?: boolean } = {}) => {
-      const list = keys?.length ? nodes.filter((n) => keys.includes(n.key)) : nodes;
-      const b = bounds(list);
+  const fitBox = useCallback(
+    (b: { x: number; y: number; w: number; h: number } | null, opts: { maxZoom?: number; animate?: boolean } = {}) => {
       const W = size.w - inset.left;
       const H = size.h - inset.bottom - inset.top;
       if (!W || !H) return;
@@ -110,7 +113,12 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
       const zoom = clampZoom(Math.min((W - pad * 2) / Math.max(1, b.w), (H - pad * 2) / Math.max(1, b.h), opts.maxZoom ?? 1));
       apply({ x: inset.left + (W - b.w * zoom) / 2 - b.x * zoom, y: inset.top + (H - b.h * zoom) / 2 - b.y * zoom, zoom }, opts.animate ?? true);
     },
-    [nodes, size, inset.left, inset.bottom, inset.top, apply],
+    [size, inset.left, inset.bottom, inset.top, apply],
+  );
+
+  const fit = useCallback(
+    (keys?: NodeKey[], opts: { maxZoom?: number; animate?: boolean } = {}) => fitBox(bounds(keys?.length ? nodes.filter((n) => keys.includes(n.key)) : nodes), opts),
+    [nodes, fitBox],
   );
 
   // First look: fit everything once the box has a size.
@@ -134,6 +142,7 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
     ref,
     () => ({
       fit,
+      fitBox,
       zoomBy: (f) => zoomAround(f, inset.left + (size.w - inset.left) / 2, size.h / 2, true),
       zoomTo: (z) => zoomAround(z / viewRef.current.zoom, inset.left + (size.w - inset.left) / 2, size.h / 2, true),
       toBoard: (cx, cy) => {
@@ -147,7 +156,7 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
       },
       viewport: () => viewRef.current,
     }),
-    [fit, zoomAround, size, inset.left],
+    [fit, fitBox, zoomAround, size, inset.left],
   );
 
   // Wheel: pan, or zoom with pinch / ⌘. Non-passive so the page itself never zooms.
@@ -202,7 +211,8 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
     const p = local(e);
     const nodeEl = (e.target as HTMLElement).closest<HTMLElement>("[data-node]");
     e.currentTarget.setPointerCapture(e.pointerId);
-    if (e.button === 1 || space || (e.button === 0 && e.altKey && !nodeEl)) {
+    const hand = space || tool === "hand";
+    if (e.button === 1 || (e.button === 0 && (hand || (e.altKey && !nodeEl)))) {
       e.preventDefault();
       const v = viewRef.current;
       startGesture({ kind: "pan", x0: p.x, y0: p.y, vx: v.x, vy: v.y });
@@ -278,7 +288,7 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
   return (
     <div
       ref={box}
-      className={cn("relative size-full touch-none overflow-hidden bg-[#f6f5f3] select-none", space || gesture?.kind === "pan" ? "cursor-grab" : "", gesture?.kind === "pan" && "cursor-grabbing", className)}
+      className={cn("relative size-full touch-none overflow-hidden bg-[#f6f5f3] select-none", (space || tool === "hand") && "cursor-grab", gesture?.kind === "pan" && "cursor-grabbing", className)}
       style={{
         backgroundImage: "radial-gradient(circle at 1px 1px, rgb(0 0 0 / 0.13) 1px, transparent 0)",
         backgroundSize: `${step}px ${step}px`,
@@ -344,7 +354,7 @@ export const Board = forwardRef<BoardHandle, BoardProps>(function Board({ nodes,
                   {w > 170 && <span className="min-w-0 truncate text-neutral-400">{n.meta}</span>}
                 </div>
               )}
-              {(isSel || hover === n.key) && <div className={cn("absolute rounded-[3px]", isSel ? "ring-2 ring-blue-500" : "ring-1 ring-blue-400/70")} style={{ left, top, width: w, height: h }} />}
+              {(isSel || (hover === n.key && tool === "select" && !space)) && <div className={cn("absolute rounded-[3px]", isSel ? "ring-2 ring-blue-500" : "ring-1 ring-blue-400/70")} style={{ left, top, width: w, height: h }} />}
             </div>
           );
         })}

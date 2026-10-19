@@ -22,6 +22,9 @@ export interface ChatMessage {
 
 export type SidebarTab = "chat" | "assets";
 
+/** What a drag on the canvas does: select and move, or pan. */
+export type CanvasTool = "select" | "hand";
+
 export interface CanvasEnv {
   campaignId: Id<"mediaCampaigns">;
   campaign: Doc<"mediaCampaigns">;
@@ -40,6 +43,8 @@ export interface CanvasEnv {
   closeFocus: () => void;
   agent: MediaAgent;
   board: RefObject<BoardHandle | null>;
+  tool: CanvasTool;
+  setTool: (tool: CanvasTool) => void;
   sidebar: { open: boolean; tab: SidebarTab };
   setSidebar: (s: { open: boolean; tab?: SidebarTab }) => void;
   /** Audience the next prompts are for ("all" for everyone). */
@@ -52,6 +57,10 @@ export interface CanvasEnv {
   notify: (text: string, tone?: "ok" | "bad") => void;
   /** Ask the prompt bar to take this text (and focus). */
   compose: (text: string) => void;
+  /** Put the cursor in the prompt bar, keeping what is typed. */
+  focusPrompt: () => void;
+  /** Upload files into the library and onto the canvas, the first centred on `at` (else the view). */
+  placeFiles: (files: File[], at?: { x: number; y: number }) => Promise<void>;
   /** Send a prompt-bar turn now, with the current picks and selection. */
   sendPrompt: (text: string, overrides?: { output?: string }) => void;
   /** Delete or take off the canvas, after asking when it can't be undone. */

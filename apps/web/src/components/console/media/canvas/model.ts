@@ -138,6 +138,26 @@ export function bounds(nodes: Pick<BoardNode, "x" | "y" | "w" | "h">[]) {
   return { x, y, w: r - x, h: b - y };
 }
 
+/**
+ * Top-left for a w×h node as near as possible to `target` (its top-left)
+ * without covering anything, names included. Searches outward in 40-unit
+ * steps; falls back to the target when the area is packed.
+ */
+export function openSpot(taken: Pick<BoardNode, "x" | "y" | "w" | "h">[], size: { w: number; h: number }, target: { x: number; y: number }) {
+  const GAP = 32;
+  const NAME = 34;
+  const STEP = 40;
+  const free = (x: number, y: number) => taken.every((n) => x + size.w + GAP <= n.x || x - GAP >= n.x + n.w || y + size.h + GAP <= n.y - NAME || y - NAME - GAP >= n.y + n.h);
+  for (let k = 0; k <= 40; k++) {
+    const ring: { x: number; y: number; d: number }[] = [];
+    for (let i = -k; i <= k; i++)
+      for (const [dx, dy] of k ? [[i, -k], [i, k], [-k, i], [k, i]] : [[0, 0]]) ring.push({ x: target.x + dx * STEP, y: target.y + dy * STEP, d: dx * dx + dy * dy });
+    const hit = ring.sort((a, b) => a.d - b.d).find((p) => free(p.x, p.y));
+    if (hit) return { x: Math.round(hit.x), y: Math.round(hit.y) };
+  }
+  return { x: Math.round(target.x), y: Math.round(target.y) };
+}
+
 export type CampaignData = {
   campaign: Doc<"mediaCampaigns">;
   brand: Doc<"mediaBrands"> | null;
