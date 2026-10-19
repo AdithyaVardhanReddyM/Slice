@@ -1,8 +1,8 @@
 "use client";
 
-// The Media home: every campaign as a card on the Media artwork (its latest
-// picture and its brand's logo on the phone screen), and "New campaign",
-// which opens a fresh canvas straight away.
+// The Media home: every campaign as a card headed by the plain Media artwork
+// (nothing laid over it), and "New campaign", which opens a fresh canvas
+// straight away.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,36 +29,6 @@ const ago = (at: number) => {
   if (s < 86400 * 7) return `${Math.round(s / 86400)} d ago`;
   return new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
-
-function Art({ row }: { row: Row }) {
-  const kit = row.kit as MediaKit | undefined;
-  const logo = kit?.logo?.src;
-  const [broken, setBroken] = useState<string | null>(null);
-  return (
-    <MediaFrame
-      className="border-b border-black/[0.05]"
-      hoverZoom
-      cover={
-        row.cover ? (
-          // Generated and uploaded media live on Convex storage and brand hosts.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={row.cover} alt="" className="size-full object-cover" />
-        ) : undefined
-      }
-      logoBackground={kit ? (kit.logo?.onDark ? kit.colors.foreground : kit.colors.background) : undefined}
-      logo={
-        logo && broken !== logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt="" className="max-h-[62%] max-w-[78%] object-contain" onError={() => setBroken(logo)} />
-        ) : (
-          <span className="truncate px-[6%] text-[1.6cqw] font-semibold" style={{ color: kit?.colors.foreground, fontFamily: kit?.fonts?.heading?.family }}>
-            {kit?.wordmark ?? kit?.name ?? row.name}
-          </span>
-        )
-      }
-    />
-  );
-}
 
 function CampaignMenu({ row }: { row: Row }) {
   const remove = useMutation(api.media.remove);
@@ -118,7 +88,7 @@ function CampaignCard({ row }: { row: Row }) {
         href={`/dashboard/media/${row._id}`}
         className="flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow hover:shadow-lg"
       >
-        <Art row={row} />
+        <MediaFrame className="border-b border-black/[0.05]" hoverZoom />
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">{row.name}</h3>

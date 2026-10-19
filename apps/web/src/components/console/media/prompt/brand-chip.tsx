@@ -1,7 +1,8 @@
 "use client";
 
-// The brand the agent designs for, as a chip in the prompt bar: switch to
-// another brand, edit this one's guidelines, or add a new one.
+// The brand the agent designs for, as a pill in the prompt bar (or just its
+// logo, in the sidebar's header): switch to another brand, edit this one's
+// guidelines, or add a new one.
 
 import { useMutation, useQuery } from "convex/react";
 import { Check, ChevronDown, PenLine, Plus } from "lucide-react";
@@ -33,7 +34,7 @@ export function BrandMark({ kit, name, className }: { kit: MediaKit | undefined;
   );
 }
 
-export function BrandChip() {
+export function BrandChip({ compact, side = "top" }: { compact?: boolean; side?: "top" | "bottom" }) {
   const { brand, campaignId } = useCanvas();
   const brands = useQuery(api.mediaBrands.list, {});
   const setBrand = useMutation(api.media.setBrand);
@@ -48,12 +49,18 @@ export function BrandChip() {
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger className={cn(chipClass, "pl-1.5", none && "bg-orange-50 text-orange-800 ring-orange-200 hover:bg-orange-50")} title="Brand">
-          {brand ? <BrandMark kit={brand.kit as MediaKit} name={brand.name} className="h-5 w-7" /> : <Plus className="ml-1" />}
-          <span className="max-w-32 truncate @max-[520px]:hidden">{brand?.name ?? "Add your brand"}</span>
-          <ChevronDown className="text-neutral-400 @max-[520px]:hidden" />
-        </PopoverTrigger>
-        <PopoverContent side="top" align="start" className="w-80 gap-1 p-1.5">
+        {compact ? (
+          <PopoverTrigger className={cn("flex h-8 shrink-0 items-center justify-center rounded-lg px-1 transition-colors hover:bg-neutral-100 data-popup-open:bg-neutral-100", none && "text-orange-700")} title={brand ? `Designing for ${brand.name}` : "Add your brand"}>
+            {brand ? <BrandMark kit={brand.kit as MediaKit} name={brand.name} className="h-6 w-9" /> : <Plus className="size-4" />}
+          </PopoverTrigger>
+        ) : (
+          <PopoverTrigger className={cn(chipClass, "pl-1", none && "bg-orange-50 text-orange-900 hover:bg-orange-100 [&_svg]:text-orange-700")} title="Brand">
+            {brand ? <BrandMark kit={brand.kit as MediaKit} name={brand.name} className="h-6 w-9 rounded-full" /> : <Plus className="ml-1.5" />}
+            <span className="max-w-32 truncate">{brand?.name ?? "Add your brand"}</span>
+            <ChevronDown className="-mr-0.5 size-3.5! text-neutral-400" />
+          </PopoverTrigger>
+        )}
+        <PopoverContent side={side} align="start" sideOffset={8} className="w-80 gap-1 p-1.5">
           <p className="px-2 pt-1 pb-1.5 text-xs font-medium text-muted-foreground">Designing for</p>
           {(brands ?? []).map((b) => (
             <button key={b._id} type="button" onClick={() => pick(b)} className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-neutral-100">

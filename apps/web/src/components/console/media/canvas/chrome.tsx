@@ -1,87 +1,146 @@
 "use client";
 
-// The canvas's chrome: the top bar (back, campaign name, panels, spend), the
-// zoom control, and the welcome that sits on an empty canvas.
+// The canvas's chrome, floating on the canvas (there is no header): top left,
+// back to the campaigns, the campaign's name and the panel toggle (this group
+// moves into the sidebar's head while the sidebar is open, with the brand);
+// top right, spend and Assets; the zoom control; and the welcome that sits
+// on an empty canvas.
 
 import { useMutation } from "convex/react";
-import { ArrowLeft, Clapperboard, Film, Image as ImageIcon, LayoutTemplate, Maximize, Minus, Music, PanelLeft, Plus } from "lucide-react";
+import { ArrowLeft, Clapperboard, Film, Image as ImageIcon, LayoutTemplate, Loader2, Maximize, Minus, Music, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState, type ReactElement, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { MediaKit, MediaOutput } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { BrandMark } from "../prompt/brand-chip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { BrandChip, BrandMark } from "../prompt/brand-chip";
 import { usePromptPicks } from "../prompt/options";
 import { useCanvas } from "./context";
 import { SpendPill } from "./spend";
 
-export function TopBar() {
-  const { campaign, campaignId, sidebar, setSidebar } = useCanvas();
-  const update = useMutation(api.media.update);
-  const [name, setName] = useState<string | null>(null);
+/** The white surface every floating control on the canvas sits on. */
+export const FLOAT = "rounded-xl bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_20px_-10px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.07]";
+
+const iconButton = "relative flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 [&_svg]:size-4";
+
+const Divider = () => <span className="mx-0.5 h-5 w-px shrink-0 bg-neutral-200" />;
+
+function Tip({ label, side = "bottom", children }: { label: string; side?: "bottom" | "right"; children: ReactElement }) {
   return (
-    <header className="relative z-30 flex h-12 shrink-0 items-center gap-2 border-b border-black/[0.06] bg-white px-2.5">
-      <Link href="/dashboard/media" className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950">
-        <ArrowLeft className="size-4" /> Media
-      </Link>
-      <span className="text-neutral-300">/</span>
-      <input
-        value={name ?? campaign.name}
-        aria-label="Campaign name"
-        onChange={(e) => setName(e.target.value)}
-        onFocus={(e) => {
-          setName(campaign.name);
-          e.currentTarget.select();
-        }}
-        onBlur={() => {
-          const n = name?.trim();
-          if (n && n !== campaign.name) void update({ id: campaignId, name: n });
-          setName(null);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") e.currentTarget.blur();
-          if (e.key === "Escape") {
-            setName(null);
-            e.currentTarget.blur();
-          }
-        }}
-        className="h-8 w-[min(28rem,40vw)] min-w-0 truncate rounded-lg px-2 text-[13px] font-semibold text-neutral-950 outline-none hover:bg-neutral-50 focus:bg-white focus:ring-2 focus:ring-blue-500/40"
-      />
-      <div className="ml-auto flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => setSidebar({ open: !(sidebar.open && sidebar.tab === "assets"), tab: "assets" })}
-          className={cn("flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950", sidebar.open && sidebar.tab === "assets" && "bg-neutral-100 text-neutral-950")}
-        >
-          <ImageIcon className="size-4" /> Assets
-        </button>
-        <span className="mx-1 h-5 w-px bg-neutral-200" />
-        <SpendPill />
-      </div>
-    </header>
+    <Tooltip>
+      <TooltipTrigger render={children} />
+      <TooltipContent side={side} sideOffset={8}>
+        {label}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
-export function SidebarToggle() {
-  const { sidebar, setSidebar } = useCanvas();
+function BackButton() {
   return (
-    <button
-      type="button"
-      onClick={() => setSidebar({ open: !sidebar.open })}
-      aria-label={sidebar.open ? "Hide the panel" : "Show the chat"}
-      title={sidebar.open ? "Hide the panel" : "Show the chat"}
-      className="flex size-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
-    >
-      <PanelLeft className="size-4" />
-    </button>
+    <Tip label="All campaigns">
+      <Link href="/dashboard/media" aria-label="All campaigns" className={iconButton}>
+        <ArrowLeft />
+      </Link>
+    </Tip>
+  );
+}
+
+/** The campaign's name, renamed in place; `fit` sizes it to the words. */
+function CampaignName({ fit, className }: { fit?: boolean; className?: string }) {
+  const { campaign, campaignId } = useCanvas();
+  const update = useMutation(api.media.update);
+  const [name, setName] = useState<string | null>(null);
+  return (
+    <input
+      value={name ?? campaign.name}
+      aria-label="Campaign name"
+      title="Rename"
+      onChange={(e) => setName(e.target.value)}
+      onFocus={(e) => {
+        setName(campaign.name);
+        e.currentTarget.select();
+      }}
+      onBlur={() => {
+        const n = name?.trim();
+        if (n && n !== campaign.name) void update({ id: campaignId, name: n });
+        setName(null);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") {
+          setName(null);
+          e.currentTarget.blur();
+        }
+      }}
+      className={cn(fit && "field-sizing-content", "h-8 min-w-12 truncate rounded-lg px-2 text-sm font-semibold text-neutral-950 outline-none hover:bg-neutral-100 focus:bg-white focus:ring-2 focus:ring-blue-500/40", className)}
+    />
+  );
+}
+
+function PanelToggle() {
+  const { sidebar, setSidebar, agent } = useCanvas();
+  const label = sidebar.open ? "Hide the panel" : "Show the chat";
+  return (
+    <Tip label={label}>
+      <button type="button" aria-label={label} onClick={() => setSidebar({ open: !sidebar.open })} className={iconButton}>
+        {sidebar.open ? <PanelLeftClose /> : <PanelLeft />}
+        {!sidebar.open && agent.busy && <Loader2 className="absolute -top-0.5 -right-0.5 size-3! animate-spin rounded-full bg-white text-neutral-500" />}
+      </button>
+    </Tip>
+  );
+}
+
+/** Top left of the canvas while the sidebar is closed. */
+export function CanvasCorner() {
+  return (
+    <div data-board-ui className={cn(FLOAT, "flex h-10 items-center p-1")}>
+      <BackButton />
+      <Divider />
+      <CampaignName fit className="max-w-[min(24rem,36vw)]" />
+      <Divider />
+      <PanelToggle />
+    </div>
+  );
+}
+
+/** The same group at the top of the open sidebar, with the brand beside the name. */
+export function SidebarHead() {
+  return (
+    <div className="flex h-14 shrink-0 items-center gap-0.5 px-2.5">
+      <BackButton />
+      <BrandChip compact side="bottom" />
+      <CampaignName className="min-w-0 flex-1" />
+      <PanelToggle />
+    </div>
+  );
+}
+
+/** Top right of the canvas: what it has cost, and the asset library. */
+export function CanvasTopRight() {
+  const { sidebar, setSidebar } = useCanvas();
+  const on = sidebar.open && sidebar.tab === "assets";
+  return (
+    <div data-board-ui className={cn(FLOAT, "flex h-10 items-center p-1")}>
+      <SpendPill />
+      <Divider />
+      <button
+        type="button"
+        onClick={() => setSidebar({ open: !on, tab: "assets" })}
+        className={cn("flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-950", on && "bg-neutral-100 text-neutral-950")}
+      >
+        <ImageIcon className="size-4 text-neutral-500" /> Assets
+      </button>
+    </div>
   );
 }
 
 export function ZoomControl({ zoom }: { zoom: number }) {
   const { board, selected } = useCanvas();
   return (
-    <div data-board-ui className="flex items-center gap-0.5 rounded-xl bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_20px_-10px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.07]">
+    <div data-board-ui className={cn(FLOAT, "flex items-center gap-0.5 p-1")}>
       <button type="button" aria-label="Zoom out" onClick={() => board.current?.zoomBy(1 / 1.25)} className="flex size-7 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-100">
         <Minus className="size-3.5" />
       </button>

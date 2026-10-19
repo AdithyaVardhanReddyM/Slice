@@ -22,6 +22,9 @@ export interface ChatMessage {
 
 export type SidebarTab = "chat" | "assets";
 
+/** The chat and assets sidebar's width; the canvas keeps clear of it while it is open. */
+export const SIDEBAR_W = 420;
+
 /** What a drag on the canvas does: select and move, or pan. */
 export type CanvasTool = "select" | "hand";
 

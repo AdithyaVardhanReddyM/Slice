@@ -1,10 +1,12 @@
 "use client";
 
-// The canvas prompt bar: say what to make, for which brand and audience, on
-// which models and in what shape. Big and centred at the bottom of the canvas
-// to start; once a conversation is going it docks into the sidebar (the
-// workspace animates it there) and the chat continues above it. Whatever is
-// selected on the canvas rides along, so "warmer light on this" lands.
+// The canvas prompt bar: say what to make, for which brand, in what aspect
+// ratio, and tune the model and audience behind one settings pill. Big and centred at the bottom
+// of the canvas to start; once a conversation is going it docks into the
+// sidebar (the workspace animates it there, and the brand moves up into the
+// sidebar's header) and the chat continues above it. Whatever is selected on
+// the canvas rides along, so "warmer light on this" lands. A soft glow in the
+// edge's colours sits around it.
 
 import { ArrowUp, Paperclip, Square, X } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent } from "react";
@@ -17,13 +19,17 @@ import { coverTime } from "../canvas/nodes";
 import { FixedStage } from "../stage";
 import type { MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { BrandChip } from "./brand-chip";
-import { AspectMenu, AudienceMenu, ModelMenu, OutputMenu } from "./menus";
+import { AspectMenu, AudiencePill, OutputMenu, SettingsMenu } from "./menus";
 import { promptEstimate, usd, usePromptPicks } from "./options";
 
 export interface PromptBarHandle {
   set(text: string): void;
   focus(): void;
 }
+
+/** The bar's edge in the Slice palette: orange at the corners, through amber and yellow to sand. */
+const EDGE = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 28%, var(--color-brand-yellow) 50%, var(--color-brand-sand) 70%, var(--color-brand-orange) 100%)";
+const GLOW = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 35%, var(--color-brand-yellow) 55%, var(--color-brand-orange) 100%)";
 
 type Pending = Attachment & { id: number; pending: boolean; error?: string; preview: string };
 
@@ -41,7 +47,7 @@ function Thumb({ node }: { node: BoardNode }) {
   if (node.creative) {
     const doc = node.creative.doc as MediaDoc;
     return (
-      <span className="flex size-5 items-center justify-center overflow-hidden rounded bg-neutral-200">
+      <span className="flex size-5 items-center justify-center overflow-hidden rounded-full bg-neutral-200">
         <FixedStage doc={doc} kit={kit} width={(20 * doc.w) / Math.max(doc.w, doc.h)} stillOnly {...(doc.kind === "video" ? { frameAt: coverTime(doc) } : { settled: true })} showPending={false} />
       </span>
     );
@@ -49,9 +55,9 @@ function Thumb({ node }: { node: BoardNode }) {
   const src = node.asset?.kind === "image" ? node.asset.url : undefined;
   return src ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" className="size-5 rounded object-cover" />
+    <img src={src} alt="" className="size-5 rounded-full object-cover" />
   ) : (
-    <span className="size-5 rounded bg-neutral-200" />
+    <span className="size-5 rounded-full bg-neutral-200" />
   );
 }
 
@@ -125,11 +131,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
 
   return (
     <div
-      className={cn(
-        "@container flex flex-col bg-white ring-1 ring-black/[0.07] transition-[border-radius,box-shadow,padding] duration-500",
-        docked ? "gap-2 rounded-2xl p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_24px_-12px_rgba(0,0,0,0.18)]" : "gap-2.5 rounded-[22px] p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_60px_-24px_rgba(0,0,0,0.35)]",
-        className,
-      )}
+      className={cn("group/bar relative", className)}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes("Files")) e.preventDefault();
       }}
@@ -140,83 +142,94 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
         attach(e.dataTransfer.files);
       }}
     >
-      {(context.length > 0 || files.length > 0) && (
-        <div className="flex flex-wrap items-center gap-1.5 px-1">
-          {context.slice(0, 3).map((n) => (
-            <span key={n.key} className="flex max-w-52 items-center gap-1.5 rounded-lg bg-blue-50 py-1 pr-1 pl-1.5 text-xs font-medium text-blue-800 ring-1 ring-blue-600/15">
-              <Thumb node={n} />
-              <span className="truncate">{n.name}</span>
-              <button type="button" aria-label={`Leave out ${n.name}`} onClick={() => select(selected.filter((k) => k !== n.key))} className="rounded p-0.5 text-blue-700/60 hover:bg-blue-600/10 hover:text-blue-800">
-                <X className="size-3" />
-              </button>
-            </span>
-          ))}
-          {context.length > 3 && <span className="text-xs text-muted-foreground">+{context.length - 3} more</span>}
-          {files.length > 0 && <AttachmentStrip items={files} size="sm" onRemove={(i) => setFiles((f) => f.filter((_, j) => j !== i))} />}
-        </div>
-      )}
-      <textarea
-        ref={field}
-        value={text}
-        rows={1}
-        onChange={(e) => {
-          setText(e.target.value);
-          const el = e.currentTarget;
-          el.style.height = "auto";
-          el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 200)}px`;
-        }}
-        onPaste={onPaste}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-            e.preventDefault();
-            send();
-          }
-        }}
-        placeholder={context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
-        className={cn("w-full resize-none bg-transparent px-1.5 leading-6 outline-none placeholder:text-neutral-400", docked ? "min-h-6 text-sm" : "min-h-12 pt-1 text-[15px]")}
+      {/* The glow: the edge's colours, blurred out behind the bar; brighter while typing. */}
+      <div
+        aria-hidden
+        className={cn("pointer-events-none absolute transition-[inset,opacity,filter] duration-500", docked ? "-inset-1 rounded-[20px] opacity-35 blur-lg group-focus-within/bar:opacity-55" : "-inset-3 rounded-[34px] opacity-45 blur-2xl group-focus-within/bar:opacity-70")}
+        style={{ background: GLOW }}
       />
-      <div className="flex items-center gap-1.5">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-          <button type="button" title="Attach images" onClick={() => fileInput.current?.click()} className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
-            <Paperclip className="size-4" />
-          </button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="image/*"
-            multiple
-            hidden
+      <div className={cn("relative p-[1.5px] shadow-[0_12px_32px_-14px_rgba(160,70,0,0.3)] transition-[border-radius] duration-500", docked ? "rounded-2xl" : "rounded-[22px]")} style={{ background: EDGE }}>
+        <div className={cn("@container flex flex-col bg-white transition-[border-radius,padding] duration-500", docked ? "gap-1 rounded-[14.5px] p-2" : "gap-2 rounded-[20.5px] p-2.5")}>
+          {(context.length > 0 || files.length > 0) && (
+            <div className="flex flex-wrap items-center gap-1.5 px-1 pt-1">
+              {context.slice(0, 3).map((n) => (
+                <span key={n.key} className="flex h-7 max-w-52 items-center gap-1.5 rounded-full bg-blue-50 pr-1 pl-1 text-xs font-medium text-blue-900 ring-1 ring-blue-600/10">
+                  <Thumb node={n} />
+                  <span className="truncate">{n.name}</span>
+                  <button type="button" aria-label={`Leave out ${n.name}`} onClick={() => select(selected.filter((k) => k !== n.key))} className="flex size-5 shrink-0 items-center justify-center rounded-full text-blue-700/60 hover:bg-blue-600/10 hover:text-blue-900">
+                    <X className="size-3" />
+                  </button>
+                </span>
+              ))}
+              {context.length > 3 && <span className="text-xs text-muted-foreground">+{context.length - 3} more</span>}
+              {files.length > 0 && <AttachmentStrip items={files} size="sm" onRemove={(i) => setFiles((f) => f.filter((_, j) => j !== i))} />}
+            </div>
+          )}
+          <textarea
+            ref={field}
+            value={text}
+            rows={1}
             onChange={(e) => {
-              attach(e.target.files);
-              e.target.value = "";
+              setText(e.target.value);
+              const el = e.currentTarget;
+              el.style.height = "auto";
+              el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 220)}px`;
             }}
+            onPaste={onPaste}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
+            className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
           />
-          <BrandChip />
-          <OutputMenu picks={picks} set={setPicks} />
-          <ModelMenu picks={picks} set={setPicks} />
-          <AspectMenu picks={picks} set={setPicks} />
-          <AudienceMenu />
+          <div className="flex items-center gap-1.5 @max-[480px]:gap-1">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 @max-[480px]:gap-1">
+              <button type="button" title="Attach images" aria-label="Attach images" onClick={() => fileInput.current?.click()} className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+                <Paperclip className="size-4" />
+              </button>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  attach(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+              {!docked && <BrandChip />}
+              <OutputMenu picks={picks} set={setPicks} />
+              <AspectMenu picks={picks} set={setPicks} />
+              <SettingsMenu picks={picks} set={setPicks} />
+              <AudiencePill />
+            </div>
+            {estimate && !docked && (
+              <span title={`Estimated at list price: ${estimate.label}`} className="shrink-0 px-1 text-xs text-neutral-400 tabular-nums">
+                ≈ {usd(estimate.usd)}
+              </span>
+            )}
+            {busy ? (
+              <button type="button" onClick={agent.stop} aria-label="Stop" title="Stop" className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700", docked ? "size-8" : "size-9")}>
+                <Square className="size-3 fill-current" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={send}
+                disabled={!canSend}
+                aria-label="Send"
+                title={estimate ? `Send · about ${usd(estimate.usd)}` : "Send"}
+                className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700 disabled:bg-neutral-100 disabled:text-neutral-400", docked ? "size-8" : "size-9")}
+              >
+                <ArrowUp className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
-        {estimate && (
-          <span title={`Estimated at list price: ${estimate.label}`} className="shrink-0 pl-1 text-xs text-neutral-400 tabular-nums @max-[420px]:hidden">
-            ≈ {usd(estimate.usd)}
-          </span>
-        )}
-        {busy ? (
-          <button type="button" onClick={agent.stop} aria-label="Stop" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white hover:bg-neutral-800">
-            <Square className="size-3.5 fill-current" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={send}
-            disabled={!canSend}
-            aria-label="Send"
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:bg-neutral-200 disabled:text-neutral-400"
-          >
-            <ArrowUp className="size-4" />
-          </button>
-        )}
       </div>
     </div>
   );

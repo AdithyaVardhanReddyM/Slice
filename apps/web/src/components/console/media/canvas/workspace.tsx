@@ -7,7 +7,7 @@
 // sidebar sends it back.
 
 import { useMutation, useQuery } from "convex/react";
-import { Loader2, MessagesSquare, PanelLeftClose } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -28,15 +28,16 @@ import { AssetsPanel, MEDIA_DRAG, measureImage, type DragItem } from "../sidebar
 import { ChatThread } from "../sidebar/chat";
 import { KitFonts } from "../stage";
 import { Board, type BoardHandle, type Viewport } from "./board";
-import { EmptyHero, TopBar, ZoomControl } from "./chrome";
-import { CanvasContext, type CanvasEnv, type CanvasTool, type ChatMessage, type SidebarTab } from "./context";
+import { CanvasCorner, CanvasTopRight, EmptyHero, SidebarHead, ZoomControl } from "./chrome";
+import { CanvasContext, SIDEBAR_W, type CanvasEnv, type CanvasTool, type ChatMessage, type SidebarTab } from "./context";
 import { bounds, buildNodes, keyOf, openSpot, refOf, type BoardNode, type CampaignData, type NodeKey } from "./model";
 import { NodeToolbar } from "./node-toolbar";
 import { NodeView } from "./nodes";
 import { CanvasToolbar, TOOLBAR_ROOM } from "./toolbar";
 import { mediaAction, useMediaAgent } from "./use-media-agent";
 
-const SIDEBAR_W = 400;
+/** Room the floating controls along the top keep clear. */
+const TOP_ROOM = 56;
 
 export function MediaCanvasRoute() {
   const { campaign } = useParams<{ campaign: string }>();
@@ -155,13 +156,13 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const notify = useCallback((text: string, tone: "ok" | "bad" = "ok") => setNotice({ text, tone, at: Date.now() }), []);
 
   const docked = sidebar.open;
-  // Wholly in view, clear of the sidebar, the toolbar and the prompt bar.
+  // Wholly in view, clear of the sidebar, the floating controls and the prompt bar.
   const inView = useCallback(
     (n: Pick<BoardNode, "x" | "y" | "w" | "h">) => {
       const v = board.current?.viewport();
       const el = area.current;
       if (!v || !el) return true;
-      return n.x * v.zoom + v.x >= (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= 0 && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
+      return n.x * v.zoom + v.x >= (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= TOP_ROOM && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
     },
     [docked, dockH],
   );
@@ -403,9 +404,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   return (
     <CanvasContext.Provider value={env}>
       <KitFonts kit={kit} />
-      <div className="fixed inset-0 flex min-h-0 flex-col overflow-hidden overscroll-none bg-white">
-        <TopBar />
-        <div ref={area} className="relative min-h-0 flex-1" style={{ ["--dock-h" as string]: `${dockH}px` }}>
+      <div className="fixed inset-0 overflow-hidden overscroll-none bg-white">
+        <div ref={area} className="relative size-full" style={{ ["--dock-h" as string]: `${dockH}px` }}>
           <Board
             ref={board}
             nodes={nodes}
@@ -417,7 +417,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             onViewport={onViewport}
             initial={campaign.viewport ?? null}
             tool={tool}
-            inset={{ left: (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: 0 }}
+            inset={{ left: (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: TOP_ROOM }}
             renderNode={(n, ctx) => <NodeView node={n} kit={kit} zoom={ctx.zoom} hovered={ctx.hovered} playing={playing === n.key} onPlay={(on) => setPlaying(on ? n.key : null)} />}
             overlay={({ rect, dragging }) => (rect && !dragging && !focus ? <NodeToolbar rect={rect} /> : null)}
           />
@@ -431,47 +431,42 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             style={{ width: SIDEBAR_W }}
             aria-hidden={!sidebar.open}
           >
-            <div className="flex h-12 shrink-0 items-center gap-1 border-b border-black/[0.06] px-2.5">
-              <div className="flex rounded-lg bg-neutral-100 p-0.5">
+            <SidebarHead />
+            <div className="shrink-0 border-b border-black/[0.06] px-3 pb-3">
+              <div className="grid grid-cols-2 rounded-lg bg-neutral-100 p-0.5">
                 {(["chat", "assets"] as const).map((t) => (
-                  <button key={t} type="button" onClick={() => setSidebar({ open: true, tab: t })} className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[13px] font-medium text-neutral-600", sidebar.tab === t && "bg-white text-neutral-950 shadow-sm")}>
+                  <button key={t} type="button" onClick={() => setSidebar({ open: true, tab: t })} className={cn("flex h-7 items-center justify-center gap-1.5 rounded-md text-[13px] font-medium text-neutral-600 transition-colors hover:text-neutral-950", sidebar.tab === t && "bg-white text-neutral-950 shadow-sm")}>
                     {t === "chat" ? "Chat" : "Assets"}
                     {t === "chat" && agent.busy && <Loader2 className="size-3 animate-spin" />}
                   </button>
                 ))}
               </div>
-              <button type="button" onClick={() => setSidebar({ open: false })} aria-label="Hide the panel" title="Hide the panel" className="ml-auto flex size-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
-                <PanelLeftClose className="size-4" />
-              </button>
             </div>
             {sidebar.tab === "chat" ? <ChatThread /> : <AssetsPanel />}
           </aside>
 
           <CanvasToolbar left={(docked ? SIDEBAR_W : 0) + 12} />
 
-          {!sidebar.open && messages.length > 0 && (
-            <button
-              type="button"
-              data-board-ui
-              onClick={openChat}
-              className="absolute top-3 left-3 z-20 flex h-9 items-center gap-2 rounded-xl bg-white px-3 text-[13px] font-medium text-neutral-700 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_20px_-10px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.07] hover:text-neutral-950"
-            >
-              <MessagesSquare className="size-4" /> Chat
-              {agent.busy && <Loader2 className="size-3.5 animate-spin text-neutral-400" />}
-            </button>
+          {!sidebar.open && (
+            <div className="absolute top-3 left-3 z-20">
+              <CanvasCorner />
+            </div>
           )}
+          <div className="absolute top-3 right-3 z-20">
+            <CanvasTopRight />
+          </div>
 
           {/* The prompt bar: centred at the bottom, or docked at the foot of the sidebar. */}
           <div
             ref={dock}
             data-board-ui
             className="absolute z-30 transition-[left,width,bottom] duration-500 ease-[cubic-bezier(0.22,0.8,0.24,1)]"
-            style={{ left: barLeft, width: barW, bottom: docked ? 12 : 24, visibility: areaW ? "visible" : "hidden" }}
+            style={{ left: barLeft, width: barW, bottom: docked ? 12 : 20, visibility: areaW ? "visible" : "hidden" }}
           >
             <PromptBar ref={bar} docked={docked} onSent={() => !sidebar.open && setSidebar({ open: true, tab: "chat" })} />
           </div>
 
-          <div className="absolute right-4 bottom-4 z-20">
+          <div className="absolute right-3 bottom-3 z-20">
             <ZoomControl zoom={zoom} />
           </div>
 

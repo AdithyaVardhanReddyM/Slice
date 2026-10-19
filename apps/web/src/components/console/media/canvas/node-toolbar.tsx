@@ -17,7 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { usd, usePromptPicks } from "../prompt/options";
-import { useCanvas } from "./context";
+import { SIDEBAR_W, useCanvas } from "./context";
 import type { BoardNode } from "./model";
 import { TOOLBAR_ROOM } from "./toolbar";
 import { WhyButton } from "./why";
@@ -173,7 +173,7 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
   const one = sel.length === 1 ? sel[0] : null;
   const above = rect.y > 84;
   // Centred over the selection, but kept inside the canvas (clear of the sidebar and the toolbar).
-  const minLeft = (sidebar.open ? 400 : 0) + TOOLBAR_ROOM;
+  const minLeft = (sidebar.open ? SIDEBAR_W : 0) + TOOLBAR_ROOM;
   const left = size.w && size.room ? Math.min(Math.max(rect.x + rect.w / 2 - size.w / 2, minLeft), size.room - size.w - 10) : rect.x + rect.w / 2 - size.w / 2;
 
   let body: ReactNode;

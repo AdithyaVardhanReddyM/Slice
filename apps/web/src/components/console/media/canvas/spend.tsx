@@ -64,7 +64,7 @@ export function SpendPill() {
 
   return (
     <Popover>
-      <PopoverTrigger className="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-medium text-neutral-700 tabular-nums transition-colors hover:bg-neutral-100 data-popup-open:bg-neutral-100" title="Spend on this campaign">
+      <PopoverTrigger className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-700 tabular-nums transition-colors hover:bg-neutral-100 data-popup-open:bg-neutral-100" title="Spend on this campaign">
         {usd(campaign.spend)}
         <Meter ratio={ratio} className={tone} />
         {committed > 0 && <Loader2 className="size-3 animate-spin text-neutral-400" />}

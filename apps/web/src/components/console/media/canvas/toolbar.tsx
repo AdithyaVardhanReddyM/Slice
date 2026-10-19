@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { OUTPUT_ICON } from "../prompt/menus";
 import { usePromptPicks, type PromptPicks } from "../prompt/options";
+import { FLOAT } from "./chrome";
 import { useCanvas } from "./context";
 
 /** The strip the toolbar keeps on the left of the canvas (fits and the node toolbar stay clear of it). */
@@ -72,7 +73,7 @@ export function CanvasToolbar({ left }: { left: number }) {
       role="toolbar"
       aria-label="Canvas tools"
       aria-orientation="vertical"
-      className="absolute top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-0.5 rounded-xl bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_20px_-10px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.07] transition-[left] duration-500 ease-[cubic-bezier(0.22,0.8,0.24,1)]"
+      className={cn(FLOAT, "absolute top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-0.5 p-1 transition-[left] duration-500 ease-[cubic-bezier(0.22,0.8,0.24,1)]")}
       style={{ left }}
     >
       <ToolButton label="Select" keys="V" active={tool === "select"} onClick={() => setTool("select")}>
