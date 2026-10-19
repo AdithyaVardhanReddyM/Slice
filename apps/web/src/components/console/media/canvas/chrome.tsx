@@ -181,12 +181,12 @@ const STARTERS: { output: MediaOutput; icon: ReactNode; label: string; prompt: (
 ];
 
 /** What an empty canvas says: who it is designing for and a few ways to start. */
-export function EmptyHero({ bottom }: { bottom: number }) {
+export function EmptyHero({ left, bottom }: { left: number; bottom: number }) {
   const { brand, kit, compose } = useCanvas();
   const [, setPicks] = usePromptPicks();
   const name = brand?.name ?? "your brand";
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center justify-center px-6" style={{ bottom }}>
+    <div className="pointer-events-none absolute top-0 right-0 flex flex-col items-center justify-center px-6 transition-[left] duration-500" style={{ left, bottom }}>
       <div className="pointer-events-auto flex max-w-2xl flex-col items-center text-center" data-board-ui>
         {brand ? <BrandMark kit={kit as MediaKit} name={brand.name} className="mb-5 h-12 w-20 rounded-xl" /> : null}
         <h1 className="text-[28px] font-medium tracking-[-0.02em] text-neutral-950">What should we make for {name}?</h1>

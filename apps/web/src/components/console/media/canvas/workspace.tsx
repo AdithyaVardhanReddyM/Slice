@@ -4,7 +4,7 @@
 // toolbar, the prompt bar, the sidebar (chat and assets) and the focus editors. The prompt
 // bar starts big at the bottom of the canvas; once a conversation is going it
 // glides into the sidebar and the chat continues above it. Closing the
-// sidebar sends it back.
+// sidebar, or switching it to Assets, sends it back.
 
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
@@ -175,16 +175,19 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   }, [notice]);
   const notify = useCallback((text: string, tone: "ok" | "bad" = "ok") => setNotice({ text, tone, at: Date.now() }), []);
 
-  const docked = sidebar.open;
+  // The sidebar covers the canvas's left while open; the prompt bar docks in it only under Chat (on Assets it would cover the library).
+  const open = sidebar.open;
+  const docked = open && sidebar.tab === "chat";
+  const canvasLeft = open ? SIDEBAR_W : 0;
   // Wholly in view, clear of the sidebar, the floating controls and the prompt bar.
   const inView = useCallback(
     (n: Pick<BoardNode, "x" | "y" | "w" | "h">) => {
       const v = board.current?.viewport();
       const el = area.current;
       if (!v || !el) return true;
-      return n.x * v.zoom + v.x >= (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= TOP_ROOM && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
+      return n.x * v.zoom + v.x >= canvasLeft + TOOLBAR_ROOM && (n.x + n.w) * v.zoom + v.x <= el.clientWidth && n.y * v.zoom + v.y >= TOP_ROOM && (n.y + n.h) * v.zoom + v.y <= el.clientHeight - (docked ? 0 : dockH + 24);
     },
-    [docked, dockH],
+    [canvasLeft, docked, dockH],
   );
 
   const act: CanvasEnv["act"] = useCallback(
@@ -416,8 +419,8 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     await placeFiles(Array.from(e.dataTransfer?.files ?? []), at);
   };
 
-  const barW = docked ? SIDEBAR_W - 24 : Math.min(780, Math.max(320, areaW - 48));
-  const barLeft = docked ? 12 : (areaW - barW) / 2;
+  const barW = docked ? SIDEBAR_W - 24 : Math.min(780, Math.max(320, areaW - canvasLeft - 48));
+  const barLeft = docked ? 12 : canvasLeft + (areaW - canvasLeft - barW) / 2;
   const empty = nodes.length === 0 && messages.length === 0 && !agent.busy;
   const focusNode = focus ? nodes.find((n) => n.key === focus) : undefined;
 
@@ -437,12 +440,12 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             onViewport={onViewport}
             initial={campaign.viewport ?? null}
             tool={tool}
-            inset={{ left: (docked ? SIDEBAR_W : 0) + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: TOP_ROOM }}
+            inset={{ left: canvasLeft + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: TOP_ROOM }}
             renderNode={(n, ctx) => <NodeView node={n} kit={kit} zoom={ctx.zoom} hovered={ctx.hovered} playing={playing === n.key} onPlay={(on) => setPlaying(on ? n.key : null)} />}
             overlay={({ rect, dragging }) => (rect && !dragging && !focus ? <NodeToolbar rect={rect} /> : null)}
           />
 
-          {empty && <EmptyHero bottom={dockH + 40} />}
+          {empty && <EmptyHero left={canvasLeft} bottom={docked ? 0 : dockH + 40} />}
 
           {/* The sidebar: chat and assets. */}
           <aside
@@ -465,7 +468,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             {sidebar.tab === "chat" ? <ChatThread /> : <AssetsPanel />}
           </aside>
 
-          <CanvasToolbar left={(docked ? SIDEBAR_W : 0) + 12} />
+          <CanvasToolbar left={canvasLeft + 12} />
 
           {!sidebar.open && (
             <div className="absolute top-3 left-3 z-20">
@@ -476,14 +479,14 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             <CanvasTopRight />
           </div>
 
-          {/* The prompt bar: centred at the bottom, or docked at the foot of the sidebar. */}
+          {/* The prompt bar: centred at the bottom of the canvas, or docked at the foot of the sidebar's chat. */}
           <div
             ref={dock}
             data-board-ui
             className="absolute z-30 transition-[left,width,bottom] duration-500 ease-[cubic-bezier(0.22,0.8,0.24,1)]"
             style={{ left: barLeft, width: barW, bottom: docked ? 12 : 20, visibility: areaW ? "visible" : "hidden" }}
           >
-            <PromptBar ref={bar} docked={docked} onSent={() => !sidebar.open && setSidebar({ open: true, tab: "chat" })} />
+            <PromptBar ref={bar} docked={docked} onSent={() => !docked && setSidebar({ open: true, tab: "chat" })} />
           </div>
 
           <div className="absolute right-3 bottom-3 z-20">

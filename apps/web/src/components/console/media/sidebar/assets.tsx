@@ -160,7 +160,7 @@ export function AssetsPanel() {
 
   return (
     <div
-      className={cn("scrollbar-thin min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pt-4 pb-[calc(var(--dock-h,120px)+20px)]", over && "bg-blue-50/40")}
+      className={cn("scrollbar-thin min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pt-4 pb-6", over && "bg-blue-50/40")}
       data-board-scroll
       onDragOver={(e) => {
         if (!e.dataTransfer.types.includes("Files")) return;
