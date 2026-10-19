@@ -2,10 +2,10 @@
 
 // The canvas toolbar, down the left edge: the two ways to work the canvas
 // (select, and the hand that pans), your own files onto it, and the five
-// things Slice makes. Every button says what it is under its icon (icons
-// alone left people guessing). A maker button readies the prompt bar for that
-// output (and a shape that suits it) and puts the cursor there, and stays
-// lit while the bar is set to make it; nothing runs until you send.
+// things Slice makes. Icons only; each one names itself in a tooltip. A maker
+// button readies the prompt bar for that output (and a shape that suits it)
+// and puts the cursor there, and stays lit while the bar is set to make it;
+// nothing runs until you send.
 
 import { Hand, Loader2, MousePointer2, Upload } from "lucide-react";
 import { useRef, type ReactNode } from "react";
@@ -18,22 +18,22 @@ import { FLOAT } from "./chrome";
 import { useCanvas } from "./context";
 
 /** The strip the toolbar keeps on the left of the canvas (fits and the node toolbar stay clear of it). */
-export const TOOLBAR_ROOM = 80;
+export const TOOLBAR_ROOM = 64;
 
 const MAKERS: MediaOutput[] = ["image", "poster", "clip", "video", "music"];
 
-/** The word under each maker (short enough for the rail), and its tooltip. */
-const MAKER: Partial<Record<MediaOutput, { word: string; tip: string }>> = {
-  image: { word: "Image", tip: "Make an image" },
-  poster: { word: "Poster", tip: "Make a poster" },
-  clip: { word: "Clip", tip: "Make a video clip" },
-  video: { word: "Video ad", tip: "Make a video ad" },
-  music: { word: "Music", tip: "Make music" },
+/** Each maker's tooltip. */
+const MAKER_TIP: Partial<Record<MediaOutput, string>> = {
+  image: "Make an image",
+  poster: "Make a poster",
+  clip: "Make a video clip",
+  video: "Make a video ad",
+  music: "Make music",
 };
 
-const Sep = () => <span className="my-1 h-px w-8 shrink-0 bg-neutral-200" />;
+const Sep = () => <span className="my-1 h-px w-5 shrink-0 bg-neutral-200" />;
 
-function ToolButton({ label, word, hint, keys, active, current, busy, onClick, children }: { label: string; word: string; hint?: string; keys?: string; active?: boolean; current?: boolean; busy?: boolean; onClick: () => void; children: ReactNode }) {
+function ToolButton({ label, hint, keys, active, current, busy, onClick, children }: { label: string; hint?: string; keys?: string; active?: boolean; current?: boolean; busy?: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <Tooltip>
       <TooltipTrigger
@@ -45,7 +45,7 @@ function ToolButton({ label, word, hint, keys, active, current, busy, onClick, c
             disabled={busy}
             onClick={onClick}
             className={cn(
-              "flex w-[52px] flex-col items-center justify-center gap-1 rounded-lg pt-2 pb-1.5 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:pointer-events-none [&_svg]:size-[18px]",
+              "flex size-9 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:pointer-events-none [&_svg]:size-[18px]",
               current && "bg-orange-50 text-orange-800 hover:bg-orange-100/70 hover:text-orange-900",
               active && "bg-neutral-900 text-white hover:bg-neutral-900 hover:text-white",
             )}
@@ -53,7 +53,6 @@ function ToolButton({ label, word, hint, keys, active, current, busy, onClick, c
         }
       >
         {busy ? <Loader2 className="animate-spin text-neutral-400" /> : children}
-        <span className="text-[10px] leading-none font-medium">{word}</span>
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={10} className={cn(hint && "flex-col items-start gap-0.5")}>
         <span className="flex items-center gap-2">
@@ -88,14 +87,14 @@ export function CanvasToolbar({ left }: { left: number }) {
       className={cn(FLOAT, "absolute top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-0.5 p-1 transition-[left] duration-500 ease-[cubic-bezier(0.22,0.8,0.24,1)]")}
       style={{ left }}
     >
-      <ToolButton label="Select" word="Select" keys="V" active={tool === "select"} onClick={() => setTool("select")}>
+      <ToolButton label="Select" keys="V" active={tool === "select"} onClick={() => setTool("select")}>
         <MousePointer2 />
       </ToolButton>
-      <ToolButton label="Hand: drag to move around" word="Hand" keys="H or hold Space" active={tool === "hand"} onClick={() => setTool("hand")}>
+      <ToolButton label="Hand: drag to move around" keys="H or hold Space" active={tool === "hand"} onClick={() => setTool("hand")}>
         <Hand />
       </ToolButton>
       <Sep />
-      <ToolButton label="Upload" word="Upload" hint="Images, video clips or music from your computer" busy={pending.includes("upload")} onClick={() => input.current?.click()}>
+      <ToolButton label="Upload" hint="Images, video clips or music from your computer" busy={pending.includes("upload")} onClick={() => input.current?.click()}>
         <Upload />
       </ToolButton>
       <input
@@ -112,7 +111,7 @@ export function CanvasToolbar({ left }: { left: number }) {
       />
       <Sep />
       {MAKERS.map((o) => (
-        <ToolButton key={o} label={MAKER[o]?.tip ?? OUTPUTS[o].label} word={MAKER[o]?.word ?? OUTPUTS[o].label} hint={OUTPUTS[o].hint} current={picks.output === o} onClick={() => make(o)}>
+        <ToolButton key={o} label={MAKER_TIP[o] ?? OUTPUTS[o].label} hint={OUTPUTS[o].hint} current={picks.output === o} onClick={() => make(o)}>
           {OUTPUT_ICON[o]}
         </ToolButton>
       ))}
