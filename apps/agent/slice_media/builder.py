@@ -208,8 +208,8 @@ def _audiences_block(state: dict[str, Any]) -> str:
         if a.get("kind") == "seed" and a.get("seed"):
             s = a["seed"]
             what = f"taste seeds: {', '.join(s.get('interests') or [])}" + (f"; {s['city']}" if s.get("city") else "") + (f"; age {s['age']}" if s.get("age") else "")
-        elif a.get("kind") == "pages":
-            what = "Pages audience" + (f" ({a.get('status')})" if a.get("status") and a.get("status") != "ready" else "")
+        elif a.get("kind") in ("pages", "email"):
+            what = ("Pages audience" if a["kind"] == "pages" else "Email taste group (customers grouped by what they bought)") + (f" ({a.get('status')})" if a.get("status") and a.get("status") != "ready" else "")
         brief = a.get("brief") or {}
         summ = a.get("summary") or brief.get("summary") or brief.get("who") or ""
         lines.append(f"- {a['id']}: {a.get('name')} [{what}]" + (f" {str(summ)[:220]}" if summ else "") + (" (profile ready)" if a.get("profile") else ""))

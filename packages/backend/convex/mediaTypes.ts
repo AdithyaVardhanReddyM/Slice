@@ -271,8 +271,10 @@ export interface MediaAudience {
   /** Stable within the campaign; creatives point here. */
   id: string;
   name: string;
-  kind: "everyone" | "pages" | "seed";
+  kind: "everyone" | "pages" | "email" | "seed";
   pagesAudienceId?: string;
+  /** An Email taste group of the brand's linked Email brand, read live like a Pages audience. */
+  emailAudienceId?: string;
   /** Taste seeds the agent resolves through Qloo when there is no Pages audience. */
   seed?: { city?: string; interests: string[]; age?: string };
   summary?: string;

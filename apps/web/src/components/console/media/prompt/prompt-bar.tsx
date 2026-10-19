@@ -1,12 +1,13 @@
 "use client";
 
 // The canvas prompt bar: say what to make, for which brand, in what aspect
-// ratio, and tune the model and audience behind one settings pill. Big and centred at the bottom
-// of the canvas to start; once a conversation is going it docks into the
-// sidebar (the workspace animates it there, and the brand moves up into the
-// sidebar's header) and the chat continues above it. Whatever is selected on
-// the canvas rides along, so "warmer light on this" lands. A soft glow in the
-// edge's colours sits around it.
+// ratio, and tune the model behind one settings pill. It sits in a warm tray
+// with a gradient edge and a soft glow; the tray's top strip says who it is
+// for. Big and centred at the bottom of the canvas to start; once a
+// conversation is going it docks into the sidebar (the workspace animates it
+// there, and the brand moves up into the sidebar's header) and the chat
+// continues above it. Whatever is selected on the canvas rides along, so
+// "warmer light on this" lands.
 
 import { ArrowUp, Paperclip, Square, X } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent } from "react";
@@ -19,7 +20,8 @@ import { coverTime } from "../canvas/nodes";
 import { FixedStage } from "../stage";
 import type { MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { BrandChip } from "./brand-chip";
-import { AspectMenu, AudiencePill, OutputMenu, SettingsMenu } from "./menus";
+import { AudiencePill } from "./audience";
+import { AspectMenu, OutputMenu, SettingsMenu } from "./menus";
 import { promptEstimate, usd, usePromptPicks } from "./options";
 
 export interface PromptBarHandle {
@@ -30,6 +32,8 @@ export interface PromptBarHandle {
 /** The bar's edge in the Slice palette: orange at the corners, through amber and yellow to sand. */
 const EDGE = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 28%, var(--color-brand-yellow) 50%, var(--color-brand-sand) 70%, var(--color-brand-orange) 100%)";
 const GLOW = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 35%, var(--color-brand-yellow) 55%, var(--color-brand-orange) 100%)";
+/** The tray around the composer: a warm off-white. */
+const TRAY = "#fff8ee";
 
 type Pending = Attachment & { id: number; pending: boolean; error?: string; preview: string };
 
@@ -142,92 +146,99 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
         attach(e.dataTransfer.files);
       }}
     >
-      {/* The glow: the edge's colours, blurred out behind the bar; brighter while typing. */}
-      <div
-        aria-hidden
-        className={cn("pointer-events-none absolute transition-[inset,opacity,filter] duration-500", docked ? "-inset-1 rounded-[20px] opacity-35 blur-lg group-focus-within/bar:opacity-55" : "-inset-3 rounded-[34px] opacity-45 blur-2xl group-focus-within/bar:opacity-70")}
-        style={{ background: GLOW }}
-      />
-      <div className={cn("relative p-[1.5px] shadow-[0_12px_32px_-14px_rgba(160,70,0,0.3)] transition-[border-radius] duration-500", docked ? "rounded-2xl" : "rounded-[22px]")} style={{ background: EDGE }}>
-        <div className={cn("@container flex flex-col bg-white transition-[border-radius,padding] duration-500", docked ? "gap-1 rounded-[14.5px] p-2" : "gap-2 rounded-[20.5px] p-2.5")}>
-          {(context.length > 0 || files.length > 0) && (
-            <div className="flex flex-wrap items-center gap-1.5 px-1 pt-1">
-              {context.slice(0, 3).map((n) => (
-                <span key={n.key} className="flex h-7 max-w-52 items-center gap-1.5 rounded-full bg-blue-50 pr-1 pl-1 text-xs font-medium text-blue-900 ring-1 ring-blue-600/10">
-                  <Thumb node={n} />
-                  <span className="truncate">{n.name}</span>
-                  <button type="button" aria-label={`Leave out ${n.name}`} onClick={() => select(selected.filter((k) => k !== n.key))} className="flex size-5 shrink-0 items-center justify-center rounded-full text-blue-700/60 hover:bg-blue-600/10 hover:text-blue-900">
-                    <X className="size-3" />
-                  </button>
+      <div className="relative">
+        {/* The glow: the edge's colours, blurred out behind the bar; brighter while typing. */}
+        <div
+          aria-hidden
+          className={cn("pointer-events-none absolute transition-[inset,opacity,filter] duration-500", docked ? "-inset-2 rounded-[24px] opacity-25 blur-xl group-focus-within/bar:opacity-45" : "-inset-3 rounded-[34px] opacity-45 blur-2xl group-focus-within/bar:opacity-70")}
+          style={{ background: GLOW }}
+        />
+        {/* The tray: a soft warm card with the gradient edge (a real border: the tray colour fills the padding box, the gradient the border box).
+            Its top strip says who it is for, since that changes everything the bar makes; the white composer sits inside, its corners
+            the tray's radius less the edge and the padding. */}
+        <div className={cn("relative border-[1.5px] border-transparent p-1.5 shadow-[0_12px_32px_-14px_rgba(160,70,0,0.3)] transition-[border-radius] duration-500", docked ? "rounded-[20px]" : "rounded-[26px]")} style={{ background: `linear-gradient(${TRAY}, ${TRAY}) padding-box, ${EDGE} border-box` }}>
+          <div className="mb-1.5 flex min-w-0 items-center px-0.5">
+            <AudiencePill />
+          </div>
+          <div className={cn("@container flex flex-col bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-6px_rgba(120,60,0,0.12)] ring-1 ring-black/[0.05] transition-[border-radius,padding] duration-500", docked ? "gap-1 rounded-[12.5px] p-2" : "gap-2 rounded-[18.5px] p-2.5")}>
+            {(context.length > 0 || files.length > 0) && (
+              <div className="flex flex-wrap items-center gap-1.5 px-1 pt-1">
+                {context.slice(0, 3).map((n) => (
+                  <span key={n.key} className="flex h-7 max-w-52 items-center gap-1.5 rounded-full bg-blue-50 pr-1 pl-1 text-xs font-medium text-blue-900 ring-1 ring-blue-600/10">
+                    <Thumb node={n} />
+                    <span className="truncate">{n.name}</span>
+                    <button type="button" aria-label={`Leave out ${n.name}`} onClick={() => select(selected.filter((k) => k !== n.key))} className="flex size-5 shrink-0 items-center justify-center rounded-full text-blue-700/60 hover:bg-blue-600/10 hover:text-blue-900">
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))}
+                {context.length > 3 && <span className="text-xs text-muted-foreground">+{context.length - 3} more</span>}
+                {files.length > 0 && <AttachmentStrip items={files} size="sm" onRemove={(i) => setFiles((f) => f.filter((_, j) => j !== i))} />}
+              </div>
+            )}
+            <textarea
+              ref={field}
+              value={text}
+              rows={1}
+              onChange={(e) => {
+                setText(e.target.value);
+                const el = e.currentTarget;
+                el.style.height = "auto";
+                el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 220)}px`;
+              }}
+              onPaste={onPaste}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
+              placeholder={context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
+              className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
+            />
+            <div className="flex items-center gap-1.5 @max-[480px]:gap-1">
+              <div className="flex min-w-0 flex-1 items-center gap-1.5 @max-[480px]:gap-1">
+                <button type="button" title="Attach images" aria-label="Attach images" onClick={() => fileInput.current?.click()} className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+                  <Paperclip className="size-4" />
+                </button>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    attach(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+                {!docked && <BrandChip />}
+                <OutputMenu picks={picks} set={setPicks} />
+                <AspectMenu picks={picks} set={setPicks} />
+                <SettingsMenu picks={picks} set={setPicks} />
+              </div>
+              {estimate && !docked && (
+                <span title={`Estimated at list price: ${estimate.label}`} className="shrink-0 px-1 text-xs text-neutral-400 tabular-nums">
+                  ≈ {usd(estimate.usd)}
                 </span>
-              ))}
-              {context.length > 3 && <span className="text-xs text-muted-foreground">+{context.length - 3} more</span>}
-              {files.length > 0 && <AttachmentStrip items={files} size="sm" onRemove={(i) => setFiles((f) => f.filter((_, j) => j !== i))} />}
+              )}
+              {busy ? (
+                <button type="button" onClick={agent.stop} aria-label="Stop" title="Stop" className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700", docked ? "size-8" : "size-9")}>
+                  <Square className="size-3 fill-current" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={!canSend}
+                  aria-label="Send"
+                  title={estimate ? `Send · about ${usd(estimate.usd)}` : "Send"}
+                  className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700 disabled:bg-neutral-100 disabled:text-neutral-400", docked ? "size-8" : "size-9")}
+                >
+                  <ArrowUp className="size-4" />
+                </button>
+              )}
             </div>
-          )}
-          <textarea
-            ref={field}
-            value={text}
-            rows={1}
-            onChange={(e) => {
-              setText(e.target.value);
-              const el = e.currentTarget;
-              el.style.height = "auto";
-              el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 220)}px`;
-            }}
-            onPaste={onPaste}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder={context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
-            className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
-          />
-          <div className="flex items-center gap-1.5 @max-[480px]:gap-1">
-            <div className="flex min-w-0 flex-1 items-center gap-1.5 @max-[480px]:gap-1">
-              <button type="button" title="Attach images" aria-label="Attach images" onClick={() => fileInput.current?.click()} className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
-                <Paperclip className="size-4" />
-              </button>
-              <input
-                ref={fileInput}
-                type="file"
-                accept="image/*"
-                multiple
-                hidden
-                onChange={(e) => {
-                  attach(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-              {!docked && <BrandChip />}
-              <OutputMenu picks={picks} set={setPicks} />
-              <AspectMenu picks={picks} set={setPicks} />
-              <SettingsMenu picks={picks} set={setPicks} />
-              <AudiencePill />
-            </div>
-            {estimate && !docked && (
-              <span title={`Estimated at list price: ${estimate.label}`} className="shrink-0 px-1 text-xs text-neutral-400 tabular-nums">
-                ≈ {usd(estimate.usd)}
-              </span>
-            )}
-            {busy ? (
-              <button type="button" onClick={agent.stop} aria-label="Stop" title="Stop" className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700", docked ? "size-8" : "size-9")}>
-                <Square className="size-3 fill-current" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={send}
-                disabled={!canSend}
-                aria-label="Send"
-                title={estimate ? `Send · about ${usd(estimate.usd)}` : "Send"}
-                className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700 disabled:bg-neutral-100 disabled:text-neutral-400", docked ? "size-8" : "size-9")}
-              >
-                <ArrowUp className="size-4" />
-              </button>
-            )}
           </div>
         </div>
       </div>

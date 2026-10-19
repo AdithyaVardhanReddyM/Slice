@@ -566,7 +566,7 @@ export function AudienceBuilder({
 }: {
   audience?: Audience | null;
   initialRows?: ConditionKey[];
-  onDone: (id: Id<"pagesAudiences">) => void;
+  onDone: (id: Id<"pagesAudiences">, name: string) => void;
   onCancel?: () => void;
 }) {
   const brand = useBrand();
@@ -659,7 +659,7 @@ export function AudienceBuilder({
       } else {
         ({ id } = await create({ brandId: brand._id, name: finalName, kind, sources }));
       }
-      onDone(id);
+      onDone(id, finalName);
       void run(id);
     } catch (err) {
       setError(String((err as Error).message ?? err));

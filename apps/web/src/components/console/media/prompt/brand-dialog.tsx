@@ -355,7 +355,7 @@ function Website({ brand, onStarted, onBack, onClose, onManual }: { brand: Doc<"
   );
 }
 
-function SourceRow({ name, sub, logo, colors, busy, onClick }: { name: string; sub?: string; logo?: string; colors?: string[]; busy: boolean; onClick: () => void }) {
+export function SourceRow({ name, sub, logo, colors, busy, onClick }: { name: string; sub?: string; logo?: string; colors?: string[]; busy: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick} disabled={busy} className="flex items-center gap-3 rounded-xl bg-white p-3 text-left ring-1 ring-black/[0.06] transition-colors hover:bg-neutral-50 disabled:opacity-60">
       <span className="flex h-10 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-50 ring-1 ring-black/[0.04]">

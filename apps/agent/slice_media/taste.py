@@ -96,7 +96,7 @@ async def ensure_profile(campaign_id: str, audiences: list[dict[str, Any]], audi
     profile = await compile_seed(aud.get("seed") or {})
     aud["profile"] = profile
     try:
-        # Pages audiences are read live, so only the seed audiences keep a profile on the campaign.
+        # Pages audiences and Email groups are read live, so only the seed audiences keep a profile on the campaign.
         stored = [a if a.get("kind") == "seed" else {k: v for k, v in a.items() if k not in ("profile", "brief", "sources", "status")} for a in audiences]
         await store.post("/media/campaign", {"campaignId": campaign_id, "patch": {"audiences": stored}})
     except Exception as e:  # the profile still serves this turn

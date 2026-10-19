@@ -1,22 +1,22 @@
 "use client";
 
-// The Media home: every campaign as a card headed by the plain Media artwork
-// (nothing laid over it), and "New campaign", which opens a fresh canvas
-// straight away.
+// The Media home: every campaign as a card on the Media artwork (its brand's
+// logo on the phone screen; no pictures), and "New campaign", which asks for
+// the brand first and then opens its canvas.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, Loader2, MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { MediaKit } from "@slice/backend/convex/mediaTypes";
-import { cn } from "@/lib/utils";
 import { PageHeader, Skeleton } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MediaFrame } from "./media-frame";
+import { NewCampaignDialog } from "./new-campaign";
 import { usd } from "./prompt/options";
 
 type Row = NonNullable<ReturnType<typeof useQuery<typeof api.media.list>>>[number];
@@ -29,6 +29,30 @@ const ago = (at: number) => {
   if (s < 86400 * 7) return `${Math.round(s / 86400)} d ago`;
   return new Date(at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
+
+function Art({ row }: { row: Row }) {
+  const kit = row.kit as MediaKit | undefined;
+  const logo = kit?.logo?.src;
+  const [broken, setBroken] = useState<string | null>(null);
+  return (
+    <MediaFrame
+      className="border-b border-black/[0.05]"
+      hoverZoom
+      logoBackground={kit ? (kit.logo?.onDark ? kit.colors.foreground : kit.colors.background) : undefined}
+      logo={
+        logo && broken !== logo ? (
+          // Brand logos live on the brands' hosts and Convex storage.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt="" className="max-h-[62%] max-w-[78%] object-contain" onError={() => setBroken(logo)} />
+        ) : kit ? (
+          <span className="truncate px-[6%] text-[1.6cqw] font-semibold" style={{ color: kit.colors.foreground, fontFamily: kit.fonts?.heading?.family }}>
+            {kit.wordmark ?? kit.name}
+          </span>
+        ) : undefined
+      }
+    />
+  );
+}
 
 function CampaignMenu({ row }: { row: Row }) {
   const remove = useMutation(api.media.remove);
@@ -88,7 +112,7 @@ function CampaignCard({ row }: { row: Row }) {
         href={`/dashboard/media/${row._id}`}
         className="flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow hover:shadow-lg"
       >
-        <MediaFrame className="border-b border-black/[0.05]" hoverZoom />
+        <Art row={row} />
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">{row.name}</h3>
@@ -125,25 +149,7 @@ function CampaignCard({ row }: { row: Row }) {
   );
 }
 
-/** Make a campaign and open its canvas. */
-function useNewCampaign() {
-  const router = useRouter();
-  const create = useMutation(api.media.createBlank);
-  const [busy, setBusy] = useState(false);
-  const start = async () => {
-    setBusy(true);
-    try {
-      const id = await create({});
-      router.push(`/dashboard/media/${id}`);
-    } catch {
-      setBusy(false);
-    }
-  };
-  return { start, busy };
-}
-
-function NoCampaigns() {
-  const { start, busy } = useNewCampaign();
+function NoCampaigns({ onNew }: { onNew: () => void }) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center py-10 text-center">
       <MediaFrame className="mb-10 w-full max-w-xl rounded-3xl ring-1 ring-black/[0.05]" priority sizes="576px" />
@@ -151,17 +157,20 @@ function NoCampaigns() {
       <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-muted-foreground">
         Open a canvas, pick your brand and say what you need. Slice makes it in your look and voice with the latest Google models, and checks every picture against your guidelines.
       </p>
-      <Button className="mt-8 h-10 rounded-full px-5" disabled={busy} onClick={() => void start()}>
-        {busy ? <Loader2 className="animate-spin" /> : <Plus />} Start a campaign
+      <Button className="mt-8 h-10 rounded-full px-5" onClick={onNew}>
+        <Plus /> Start a campaign
       </Button>
     </div>
   );
 }
 
-export function MediaCampaignList() {
+/** The campaigns; `startOpen` (the /new route) opens "New campaign" straight away. */
+export function MediaCampaignList({ startOpen = false }: { startOpen?: boolean }) {
   const { isAuthenticated } = useConvexAuth();
+  const router = useRouter();
   const rows = useQuery(api.media.list, isAuthenticated ? {} : "skip");
-  const { start, busy } = useNewCampaign();
+  const [creating, setCreating] = useState(startOpen);
+  const onNew = () => setCreating(true);
   const total = (rows ?? []).reduce((s, r) => s + r.spend, 0);
   return (
     <>
@@ -175,8 +184,8 @@ export function MediaCampaignList() {
                 {usd(total)} spent
               </span>
             )}
-            <Button className="h-9 rounded-full px-4" disabled={busy} onClick={() => void start()}>
-              {busy ? <Loader2 className="animate-spin" /> : <Plus />} New campaign
+            <Button className="h-9 rounded-full px-4" onClick={onNew}>
+              <Plus /> New campaign
             </Button>
           </div>
         }
@@ -188,7 +197,7 @@ export function MediaCampaignList() {
           ))}
         </div>
       ) : rows.length === 0 ? (
-        <NoCampaigns />
+        <NoCampaigns onNew={onNew} />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {rows.map((r) => (
@@ -196,34 +205,24 @@ export function MediaCampaignList() {
           ))}
           <button
             type="button"
-            disabled={busy}
-            onClick={() => void start()}
-            className={cn("group/new flex min-h-[26rem] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-black/15 px-8 text-center text-muted-foreground transition-colors hover:border-black/30 hover:bg-white hover:text-foreground", busy && "opacity-60")}
+            onClick={onNew}
+            className="group/new flex min-h-[26rem] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-black/15 px-8 text-center text-muted-foreground transition-colors hover:border-black/30 hover:bg-white hover:text-foreground"
           >
-            <span className="flex size-11 items-center justify-center rounded-full bg-neutral-100 transition-colors group-hover/new:bg-white group-hover/new:shadow-sm">{busy ? <Loader2 className="size-5 animate-spin" /> : <Plus className="size-5" />}</span>
+            <span className="flex size-11 items-center justify-center rounded-full bg-neutral-100 transition-colors group-hover/new:bg-white group-hover/new:shadow-sm">
+              <Plus className="size-5" />
+            </span>
             <span className="text-sm font-medium">New campaign</span>
-            <span className="max-w-60 text-xs leading-relaxed">Opens a blank canvas. Pick a brand and ask for what you need.</span>
+            <span className="max-w-60 text-xs leading-relaxed">Pick the brand, then ask for what you need on its canvas.</span>
           </button>
         </div>
       )}
+      <NewCampaignDialog
+        open={creating}
+        onOpenChange={(o) => {
+          setCreating(o);
+          if (!o && startOpen) router.replace("/dashboard/media");
+        }}
+      />
     </>
-  );
-}
-
-/** /dashboard/media/new: make a campaign and go straight to its canvas. */
-export function NewCampaign() {
-  const router = useRouter();
-  const { isAuthenticated } = useConvexAuth();
-  const create = useMutation(api.media.createBlank);
-  const started = useRef(false);
-  useEffect(() => {
-    if (!isAuthenticated || started.current) return;
-    started.current = true;
-    void create({}).then((id) => router.replace(`/dashboard/media/${id}`));
-  }, [isAuthenticated, create, router]);
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[#f6f5f3]">
-      <Loader2 className="size-5 animate-spin text-muted-foreground" />
-    </div>
   );
 }

@@ -97,7 +97,27 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const [focus, setFocus] = useState<NodeKey | null>(null);
   const [sidebar, setSidebarState] = useState<{ open: boolean; tab: SidebarTab }>({ open: messages.length > 0, tab: "chat" });
   const setSidebar = useCallback((s: { open: boolean; tab?: SidebarTab }) => setSidebarState((cur) => ({ open: s.open, tab: s.tab ?? cur.tab })), []);
-  const [audienceId, setAudienceId] = useState("all");
+  // Who the prompts are for, remembered per campaign in this browser (the workspace only renders on the client, once the campaign has loaded).
+  const audienceKey = `slice.media.audience.${campaignId}`;
+  const [audienceId, setAudienceState] = useState(() => {
+    try {
+      const saved = window.localStorage.getItem(audienceKey);
+      return saved && (campaign.audiences as { id: string }[]).some((a) => a.id === saved) ? saved : "all";
+    } catch {
+      return "all";
+    }
+  });
+  const setAudienceId = useCallback(
+    (id: string) => {
+      setAudienceState(id);
+      try {
+        window.localStorage.setItem(audienceKey, id);
+      } catch {
+        // it is only a convenience
+      }
+    },
+    [audienceKey],
+  );
   const [pending, setPending] = useState<string[]>([]);
   const [notice, setNotice] = useState<{ tone: "ok" | "bad"; text: string; at: number } | null>(null);
   const [confirm, setConfirm] = useState<NodeKey[] | null>(null);

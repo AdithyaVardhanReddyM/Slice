@@ -602,12 +602,18 @@ export const readForAgent = internalQuery({
       ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(300),
       ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(60),
     ]);
-    // Pages audiences are read live: their brief and Qloo profile may have been recompiled since.
+    // Pages audiences and Email taste groups are read live: their brief and Qloo profile may have been recompiled since.
     const audiences = await Promise.all(
-      (campaign.audiences as { id: string; pagesAudienceId?: string }[]).map(async (a) => {
-        if (!a.pagesAudienceId) return a;
-        const row = await ctx.db.get(a.pagesAudienceId as Id<"pagesAudiences">).catch(() => null);
-        return row ? { ...a, brief: row.brief, profile: row.profile, sources: row.sources, status: row.status } : a;
+      (campaign.audiences as { id: string; pagesAudienceId?: string; emailAudienceId?: string }[]).map(async (a) => {
+        if (a.pagesAudienceId) {
+          const row = await ctx.db.get(a.pagesAudienceId as Id<"pagesAudiences">).catch(() => null);
+          return row ? { ...a, name: row.name, brief: row.brief, profile: row.profile, sources: row.sources, status: row.status } : a;
+        }
+        if (a.emailAudienceId) {
+          const row = await ctx.db.get(a.emailAudienceId as Id<"emailAudiences">).catch(() => null);
+          return row ? { ...a, name: row.name, brief: row.brief, profile: row.profile, status: row.status } : a;
+        }
+        return a;
       }),
     );
     let brand: unknown = null;

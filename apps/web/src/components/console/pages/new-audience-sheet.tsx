@@ -736,11 +736,14 @@ export function NewAudienceSheet({
   kind,
   onOpenChange,
   onKindChange,
+  onCreated,
 }: {
   open: boolean;
   kind: AudienceSourceKind | null;
   onOpenChange: (o: boolean) => void;
   onKindChange: (k: AudienceSourceKind | null) => void;
+  /** The builder saved a new audience (Media picks it straight away). */
+  onCreated?: (id: Id<"pagesAudiences">, name: string) => void;
 }) {
   const close = () => onOpenChange(false);
   const source = AUDIENCE_SOURCES.find((s) => s.kind === kind) ?? null;
@@ -776,7 +779,17 @@ export function NewAudienceSheet({
         )}
         <div className="flex flex-1 flex-col px-6 pt-6 pb-6 has-[.sticky]:pb-0">
           {!source && <SourcePicker onPick={onKindChange} onCrm={pickCrm} />}
-          {builder && <AudienceBuilder key={source.kind} initialRows={PRESET_ROWS[source.kind]} onDone={close} onCancel={close} />}
+          {builder && (
+            <AudienceBuilder
+              key={source.kind}
+              initialRows={PRESET_ROWS[source.kind]}
+              onDone={(id, name) => {
+                close();
+                onCreated?.(id, name);
+              }}
+              onCancel={close}
+            />
+          )}
           {source?.kind === "csv" && <CsvTab onDone={close} />}
           {source?.kind === "crm" && <CrmTab crm={crm} onCrm={setCrm} onDone={close} />}
         </div>
