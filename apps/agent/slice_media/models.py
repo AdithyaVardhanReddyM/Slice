@@ -30,21 +30,29 @@ VEO_STANDARD = _env("MEDIA_VEO_MODEL", "veo-3.1-generate-001")
 OMNI = _env("MEDIA_OMNI_MODEL", "gemini-omni-1.1-flash-preview")
 LYRIA = _env("MEDIA_MUSIC_MODEL", "lyria-3-clip-preview")
 TTS = _env("MEDIA_TTS_MODEL", "gemini-3.8-flash-tts")
-IMAGE_LITE = _env("MEDIA_IMAGE_LITE_MODEL", "gemini-3.1-flash-lite-image")
-IMAGE = _env("MEDIA_IMAGE_MODEL", "gemini-3.1-flash-image")
+LYRIA_PRO = _env("MEDIA_MUSIC_PRO_MODEL", "lyria-3-pro-preview")
+# Nano Banana 2.1 replaced Nano Banana 2 (gemini-3.1-flash-image, deprecated) and costs what Lite did.
+IMAGE_LITE = _env("MEDIA_IMAGE_LITE_MODEL", "gemini-nano-banana-2.1")
+IMAGE = _env("MEDIA_IMAGE_MODEL", "gemini-nano-banana-2.1")
 IMAGE_PRO = _env("MEDIA_IMAGE_PRO_MODEL", "gemini-3-pro-image")
 VEO_LOCATION = _env("MEDIA_VEO_LOCATION", "us-central1")
 
 # USD per second of output: (silent, with native audio).
 VIDEO_PRICE: dict[str, tuple[float, float]] = {
     VEO_LITE: (0.03, 0.05),
-    VEO_FAST: (0.10, 0.15),
+    VEO_FAST: (0.08, 0.10),
     VEO_STANDARD: (0.20, 0.40),
 }
 OMNI_PER_SECOND = 0.10
-IMAGE_PRICE = {IMAGE_LITE: 0.02, IMAGE: 0.067, IMAGE_PRO: 0.134}
+IMAGE_PRICE = {"gemini-3.1-flash-lite-image": 0.034, "gemini-3.1-flash-image": 0.067, IMAGE: 0.034, IMAGE_PRO: 0.134}
 MUSIC_PRICE = 0.04
+MUSIC_PRICES = {LYRIA: 0.04, LYRIA_PRO: 0.08}
 VOICE_PRICE = 0.01
+
+# What the console's prompt bar may ask for (mediaTypes.ts IMAGE_MODELS, VIDEO_MODELS, MUSIC_MODELS).
+IMAGE_CHOICES = (IMAGE_PRO, IMAGE)
+VIDEO_CHOICES = (VEO_STANDARD, VEO_FAST, VEO_LITE)
+MUSIC_CHOICES = (LYRIA_PRO, LYRIA)
 
 TIERS: dict[str, dict[str, Any]] = {
     "draft": {"image": IMAGE_LITE, "hero": VEO_LITE, "broll": VEO_LITE, "resolution": "720p"},
@@ -53,7 +61,13 @@ TIERS: dict[str, dict[str, Any]] = {
 }
 
 VIDEO_LABEL = {VEO_LITE: "Veo 3.1 Lite", VEO_FAST: "Veo 3.1 Fast", VEO_STANDARD: "Veo 3.1", OMNI: "Omni Flash"}
-IMAGE_LABEL = {IMAGE_LITE: "Nano Banana Lite", IMAGE: "Nano Banana 2", IMAGE_PRO: "Nano Banana Pro"}
+IMAGE_LABEL = {IMAGE: "Nano Banana 2.1", IMAGE_PRO: "Nano Banana Pro", "gemini-3.1-flash-image": "Nano Banana 2", "gemini-3.1-flash-lite-image": "Nano Banana Lite"}
+MUSIC_LABEL = {LYRIA: "Lyria 3 Clip", LYRIA_PRO: "Lyria 3 Pro"}
+
+
+def chosen(value: str | None, choices: tuple[str, ...]) -> str | None:
+    """A model id the merchant picked, if it is one we run."""
+    return value if value in choices else None
 
 
 def tier(name: str | None) -> dict[str, Any]:
@@ -61,7 +75,12 @@ def tier(name: str | None) -> dict[str, Any]:
 
 
 def video_model(tier_name: str | None, role: str, quality: str = "auto") -> str:
-    """Hero and product shots get the tier's better model; b-roll the cheaper one. `quality` overrides."""
+    """Hero and product shots get the tier's better model; b-roll the cheaper one. `quality` overrides,
+    and may also be a model id from the prompt bar (b-roll then steps down one model)."""
+    if quality in VIDEO_CHOICES:
+        if role in ("hero", "product", "talent"):
+            return quality
+        return {VEO_STANDARD: VEO_FAST, VEO_FAST: VEO_LITE}.get(quality, quality)
     if quality == "draft":
         return VEO_LITE
     if quality == "premium":
@@ -73,6 +92,8 @@ def video_model(tier_name: str | None, role: str, quality: str = "auto") -> str:
 
 
 def image_model(tier_name: str | None, quality: str = "auto") -> str:
+    if quality in IMAGE_CHOICES:
+        return quality
     if quality == "draft":
         return IMAGE_LITE
     if quality == "premium":
@@ -89,6 +110,10 @@ def video_cost(model: str, seconds: float, audio: bool) -> float:
 
 def image_cost(model: str) -> float:
     return IMAGE_PRICE.get(model, 0.067)
+
+
+def music_cost(model: str) -> float:
+    return MUSIC_PRICES.get(model, MUSIC_PRICE)
 
 
 def veo_duration(seconds: float, *, with_refs: bool = False, resolution: str = "720p") -> int:

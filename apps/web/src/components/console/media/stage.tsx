@@ -372,6 +372,8 @@ export interface StageProps {
   muted?: boolean;
   /** Show "Generating shot" on pending shots. */
   showPending?: boolean;
+  /** Stills only, drawn as the video looks at this second (thumbnails of videos). */
+  frameAt?: number;
   /** Called with each text layer's fitted size. */
   onFit?: (id: string, size: number) => void;
   /** Drawn over the frame, in frame pixels (selection boxes). */
@@ -380,11 +382,12 @@ export interface StageProps {
 }
 
 /** The doc at its own pixel size; wrap it in <ScaledStage> to fit a box. */
-export function Stage({ doc, kit, time = 0, playing = false, stillOnly = false, only = null, settled = false, muted = false, showPending = true, onFit, overlay, className }: StageProps) {
+export function Stage({ doc, kit, time = 0, playing = false, stillOnly = false, only = null, settled = false, muted = false, showPending = true, frameAt, onFit, overlay, className }: StageProps) {
   const fontsVersion = useFontsVersion();
   const duration = docDuration(doc);
   const video = doc.kind === "video";
-  const t = video && !settled && !stillOnly ? time : undefined;
+  if (frameAt !== undefined) time = Math.min(frameAt, Math.max(0, duration - 0.05));
+  const t = video && !settled && (!stillOnly || frameAt !== undefined) ? time : undefined;
   const ctx: LayerCtx = { kit, t, duration, fontsVersion, onFit };
   const layers = doc.layers.filter((l) => (only ? only.includes(l.id) : video && t !== undefined ? layerVisibleAt(l, t, duration) : !l.hidden));
   return (
@@ -413,6 +416,18 @@ export function ScaledStage({ className, mode = "contain", children, ...props }:
           {children}
         </div>
       )}
+    </div>
+  );
+}
+
+/** A stage drawn `width` px wide with no measuring: for places already inside a transform (the canvas). */
+export function FixedStage({ width, className, ...props }: StageProps & { width: number }) {
+  const scale = width / props.doc.w;
+  return (
+    <div className={cn("relative overflow-hidden", className)} style={{ width, height: props.doc.h * scale }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "0 0", width: props.doc.w, height: props.doc.h }}>
+        <Stage {...props} />
+      </div>
     </div>
   );
 }

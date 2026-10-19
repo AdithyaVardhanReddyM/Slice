@@ -2,11 +2,14 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { cleanMessage } from "./emailCampaigns";
-import { cleanDoc, FORMATS, isFormat, isTier, resizeDoc, safeUrl, type FormatPreset, type MediaDoc } from "./mediaTypes";
+import { AUDIO_NODE, BOARD_GAP, DEFAULT_KIT, aspectSize, boardWidth, cleanDoc, FORMATS, isFormat, isTier, resizeDoc, safeUrl, type BoardPos, type FormatPreset, type MediaDoc, type MediaKit } from "./mediaTypes";
 
-// Media campaigns: posters and short videos per audience × format. The
-// console creates and edits here (owner-checked); the agent writes through
-// /media/* HTTP routes (http.ts) into the internal functions below.
+// Media campaigns: one infinite canvas per campaign holding the posters and
+// videos (creatives), the generated images, clips and tracks (assets) and the
+// generations still running (jobs with a board spot). The console creates and
+// edits here (owner-checked); the agent writes through /media/* HTTP routes
+// (http.ts) into the internal functions below. New things land on the canvas
+// on their own: next to what they came from, or after the last thing made.
 
 async function ownCampaign(ctx: QueryCtx, id: Id<"mediaCampaigns">): Promise<Doc<"mediaCampaigns">> {
   const campaign = await ctx.db.get(id);
@@ -32,28 +35,33 @@ export const list = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
     const campaigns = await ctx.db.query("mediaCampaigns").withIndex("by_owner", (q) => q.eq("owner", identity.subject)).order("desc").collect();
-    return Promise.all(
+    const rows = await Promise.all(
       campaigns.map(async (c) => {
-        const creatives = await ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).collect();
-        const cover = creatives.find((x) => x.export?.mime.startsWith("image/"))?.export?.url ?? firstImage(creatives.map((x) => x.doc as MediaDoc));
+        const [creatives, assets] = await Promise.all([
+          ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).collect(),
+          ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).order("desc").collect(),
+        ]);
+        const onBoard = assets.filter((a) => a.board);
+        const latest = [...creatives].sort((a, b) => b.updatedAt - a.updatedAt);
+        const cover = latest.find((x) => x.export?.mime.startsWith("image/"))?.export?.url ?? firstImage(latest.map((x) => x.doc as MediaDoc)) ?? onBoard.find((a) => a.kind === "image")?.url;
         return {
           _id: c._id,
           name: c.name,
-          kind: c.kind,
-          tier: c.tier,
-          status: c.status,
           spend: c.spend,
           budget: c.budget,
-          formats: c.formats,
-          audiences: c.audiences.length,
-          creatives: creatives.length,
+          posters: creatives.filter((x) => x.kind === "poster").length,
           videos: creatives.filter((x) => x.kind === "video").length,
+          images: onBoard.filter((a) => a.kind === "image").length,
+          clips: onBoard.filter((a) => a.kind === "video").length,
+          tracks: onBoard.filter((a) => a.kind === "audio").length,
           cover: cover ?? null,
-          kit: c.kit,
+          kit: c.kit as MediaKit | undefined,
+          brandId: c.brandId ?? null,
           updatedAt: c.updatedAt,
         };
       }),
     );
+    return rows.sort((a, b) => b.updatedAt - a.updatedAt);
   },
 });
 
@@ -74,13 +82,14 @@ export const get = query({
     const identity = await ctx.auth.getUserIdentity();
     const campaign = await ctx.db.get(id);
     if (!campaign || identity?.subject !== campaign.owner) return null;
-    const [creatives, assets, jobs, chat] = await Promise.all([
+    const [creatives, assets, jobs, chat, brand] = await Promise.all([
       ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect(),
       ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").collect(),
-      ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(80),
+      ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(400),
       ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique(),
+      campaign.brandId ? ctx.db.get(campaign.brandId) : null,
     ]);
-    return { campaign, creatives, assets, jobs, messages: chat?.messages ?? [] };
+    return { campaign, brand, creatives, assets, jobs, messages: chat?.messages ?? [] };
   },
 });
 
@@ -119,13 +128,6 @@ export const exports = query({
 
 /* Console: writes ---------------------------------------------------------- */
 
-const sourceValidator = v.object({
-  kind: v.union(v.literal("pages"), v.literal("email"), v.literal("url"), v.literal("manual")),
-  pagesBrandId: v.optional(v.id("pagesBrands")),
-  emailBrandId: v.optional(v.id("emailBrands")),
-  url: v.optional(v.string()),
-});
-
 const assetInput = v.object({
   url: v.optional(v.string()),
   storageId: v.optional(v.id("_storage")),
@@ -138,7 +140,9 @@ const assetInput = v.object({
   duration: v.optional(v.number()),
 });
 
-async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a: { url?: string; storageId?: Id<"_storage">; kind: string; source: string; mime?: string; name?: string; w?: number; h?: number; duration?: number; prompt?: string; model?: string; parentId?: Id<"mediaAssets">; cost?: number; credit?: string }) {
+const boardValidator = v.object({ x: v.number(), y: v.number(), w: v.number() });
+
+async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a: { url?: string; storageId?: Id<"_storage">; kind: string; source: string; mime?: string; name?: string; w?: number; h?: number; duration?: number; prompt?: string; model?: string; parentId?: Id<"mediaAssets">; cost?: number; credit?: string; board?: BoardPos; review?: unknown }) {
   const url = a.storageId ? await ctx.storage.getUrl(a.storageId) : safeUrl(a.url);
   if (!url) throw new Error("Unknown file: expected a storageId or an https url");
   const kind = ["image", "video", "audio"].includes(a.kind) ? a.kind : "image";
@@ -158,65 +162,219 @@ async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a
     ...(a.parentId ? { parentId: a.parentId } : {}),
     ...(a.cost !== undefined ? { cost: a.cost } : {}),
     ...(a.credit ? { credit: a.credit.slice(0, 200) } : {}),
+    ...(a.board ? { board: a.board } : {}),
+    ...(a.review && typeof a.review === "object" ? { review: a.review } : {}),
     createdAt: Date.now(),
   });
   return { id, url };
 }
 
-export const create = mutation({
-  args: {
-    name: v.string(),
-    kind: v.string(),
-    source: sourceValidator,
-    kit: v.any(),
-    brief: v.any(),
-    products: v.array(v.any()),
-    audiences: v.array(v.any()),
-    formats: v.array(v.string()),
-    tier: v.string(),
-    budget: v.number(),
-    assets: v.optional(v.array(assetInput)),
+/* The board ------------------------------------------------------------------ */
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  at: number;
+}
+
+const ROW_MAX = 2600;
+/** Room above every node for its name. */
+const LABEL = 34;
+
+const creativeRect = (c: Doc<"mediaCreatives">): Rect | null => {
+  if (!c.board) return null;
+  const d = c.doc as MediaDoc;
+  return { ...c.board, h: (c.board.w * d.h) / d.w, at: c.createdAt };
+};
+
+const assetHeight = (a: { kind: string; w?: number; h?: number }, w: number) => (a.kind === "audio" ? AUDIO_NODE.h : a.w && a.h ? (w * a.h) / a.w : w);
+
+const assetRect = (a: Doc<"mediaAssets">): Rect | null => (a.board ? { ...a.board, h: assetHeight(a, a.board.w), at: a.createdAt } : null);
+
+const jobHeight = (j: { kind: string; aspect?: string }, w: number) => {
+  if (j.kind === "music" || j.kind === "voice") return AUDIO_NODE.h;
+  const s = aspectSize(j.aspect);
+  return (w * s.h) / s.w;
+};
+
+const jobRect = (j: Doc<"mediaJobs">): Rect | null => (j.board && j.status !== "done" && !j.dismissed ? { ...j.board, h: jobHeight(j, j.board.w), at: j.createdAt } : null);
+
+async function boardRects(ctx: QueryCtx, campaignId: Id<"mediaCampaigns">): Promise<Rect[]> {
+  const [creatives, assets, jobs] = await Promise.all([
+    ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect(),
+    ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect(),
+    ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).order("desc").take(200),
+  ]);
+  return [...creatives.map(creativeRect), ...assets.map(assetRect), ...jobs.map(jobRect)].filter((r): r is Rect => !!r);
+}
+
+const overlaps = (a: Omit<Rect, "at">, b: Rect) =>
+  a.x < b.x + b.w + BOARD_GAP / 2 && b.x < a.x + a.w + BOARD_GAP / 2 && a.y - LABEL < b.y + b.h + BOARD_GAP / 2 && b.y - LABEL < a.y + a.h + BOARD_GAP / 2;
+
+/** A free spot for a w×h node: right of `near` (what it came from), else after the last thing made, wrapping to a new row. */
+function freeSpot(rects: Rect[], size: { w: number; h: number }, near?: Omit<Rect, "at"> | null): { x: number; y: number } {
+  if (!rects.length) return { x: 0, y: 0 };
+  const left = Math.min(...rects.map((r) => r.x));
+  let start: { x: number; y: number };
+  if (near) start = { x: near.x + near.w + BOARD_GAP, y: near.y };
+  else {
+    const last = rects.reduce((a, b) => (b.at > a.at ? b : a));
+    start = { x: last.x + last.w + BOARD_GAP, y: last.y };
+    if (start.x - left > ROW_MAX) start = { x: left, y: Math.max(...rects.map((r) => r.y + r.h)) + BOARD_GAP + LABEL };
+  }
+  let p = { ...start };
+  for (let i = 0; i < 80; i++) {
+    const hit = rects.find((r) => overlaps({ ...p, ...size }, r));
+    if (!hit) return { x: Math.round(p.x), y: Math.round(p.y) };
+    p = { x: hit.x + hit.w + BOARD_GAP, y: p.y };
+    if (p.x - start.x > ROW_MAX * 1.5) p = { x: start.x, y: p.y + size.h + BOARD_GAP + LABEL };
+  }
+  return { x: Math.round(p.x), y: Math.round(p.y) };
+}
+
+/** Where a new node of this shape goes; `nearId` is a creative, asset or job it came from. */
+export async function placeOnBoard(ctx: QueryCtx, campaignId: Id<"mediaCampaigns">, shape: { w: number; h: number; audio?: boolean }, nearId?: string): Promise<BoardPos> {
+  const rects = await boardRects(ctx, campaignId);
+  const w = shape.audio ? AUDIO_NODE.w : boardWidth(shape.w, shape.h);
+  const h = shape.audio ? AUDIO_NODE.h : (w * shape.h) / shape.w;
+  let near: Omit<Rect, "at"> | null = null;
+  if (nearId) {
+    const id = ctx.db.normalizeId("mediaCreatives", nearId) ?? ctx.db.normalizeId("mediaAssets", nearId) ?? ctx.db.normalizeId("mediaJobs", nearId);
+    const row = id ? await ctx.db.get(id) : null;
+    const r = row && "doc" in row ? creativeRect(row as Doc<"mediaCreatives">) : row && "url" in row ? assetRect(row as Doc<"mediaAssets">) : row ? jobRect(row as Doc<"mediaJobs">) : null;
+    if (r) near = r;
+  }
+  return { ...freeSpot(rects, { w, h }, near), w };
+}
+
+const DEFAULT_BUDGET = 10;
+
+/** One-off (npx convex run media:migrateBoard): creatives made before the canvas get a spot, in rows by audience. */
+export const migrateBoard = internalMutation({
+  args: {},
+  returns: v.object({ placed: v.number() }),
+  handler: async (ctx) => {
+    let placed = 0;
+    for (const c of await ctx.db.query("mediaCampaigns").collect()) {
+      const creatives = (await ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", c._id)).collect()).filter((x) => !x.board);
+      creatives.sort((a, b) => a.audienceKey.localeCompare(b.audienceKey) || a.kind.localeCompare(b.kind) || a.createdAt - b.createdAt);
+      for (const x of creatives) {
+        const d = x.doc as MediaDoc;
+        await ctx.db.patch(x._id, { board: await placeOnBoard(ctx, c._id, { w: d.w, h: d.h }) });
+        placed++;
+      }
+    }
+    return { placed };
   },
+});
+
+/** A new, empty campaign: straight to its canvas. The brand defaults to the one used last. */
+export const createBlank = mutation({
+  args: { brandId: v.optional(v.id("mediaBrands")), name: v.optional(v.string()) },
   returns: v.id("mediaCampaigns"),
-  handler: async (ctx, args) => {
+  handler: async (ctx, { brandId, name }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Sign in to create a campaign");
-    if (args.source.pagesBrandId) {
-      const b = await ctx.db.get(args.source.pagesBrandId);
-      if (!b || b.owner !== identity.subject) throw new Error("Unknown brand");
+    let brand: Doc<"mediaBrands"> | null = null;
+    if (brandId) {
+      brand = await ctx.db.get(brandId);
+      if (!brand || brand.owner !== identity.subject) throw new Error("Unknown brand");
+    } else {
+      const last = await ctx.db.query("mediaCampaigns").withIndex("by_owner", (q) => q.eq("owner", identity.subject)).order("desc").first();
+      if (last?.brandId) brand = await ctx.db.get(last.brandId);
     }
-    if (args.source.emailBrandId) {
-      const b = await ctx.db.get(args.source.emailBrandId);
-      if (!b || b.owner !== identity.subject) throw new Error("Unknown brand");
-    }
-    const formats = args.formats.filter(isFormat);
-    if (!formats.length) throw new Error("Pick at least one format");
     const now = Date.now();
-    const id = await ctx.db.insert("mediaCampaigns", {
-      name: args.name.trim().slice(0, 120) || "Untitled campaign",
+    return ctx.db.insert("mediaCampaigns", {
+      name: name?.trim().slice(0, 120) || "Untitled campaign",
       owner: identity.subject,
-      kind: ["poster", "video", "both"].includes(args.kind) ? args.kind : "poster",
-      source: args.source,
-      kit: args.kit,
-      brief: args.brief,
-      products: args.products.slice(0, 24),
-      audiences: args.audiences.slice(0, 6),
-      formats,
-      tier: isTier(args.tier) ? args.tier : "smart",
-      budget: Math.min(MAX_BUDGET, Math.max(0.5, args.budget)),
+      ...(brand ? { brandId: brand._id } : {}),
+      kind: "both",
+      source: { kind: "manual" },
+      kit: brand?.kit ?? DEFAULT_KIT("Your brand"),
+      brief: { goal: "" },
+      products: brand?.products ?? [],
+      audiences: [{ id: "all", name: "Everyone", kind: "everyone" }],
+      formats: ["story", "portrait"],
+      tier: "smart",
+      budget: DEFAULT_BUDGET,
       spend: 0,
       status: "new",
       createdAt: now,
       updatedAt: now,
     });
-    let logo: string | undefined;
-    for (const a of args.assets ?? []) {
-      const { url } = await insertAsset(ctx, id, a);
-      if (a.source === "logo" && !logo) logo = url;
+  },
+});
+
+/** Design for another brand from now on: the campaign takes its kit and products. */
+export const setBrand = mutation({
+  args: { id: v.id("mediaCampaigns"), brandId: v.id("mediaBrands") },
+  returns: v.null(),
+  handler: async (ctx, { id, brandId }) => {
+    const campaign = await ownCampaign(ctx, id);
+    const brand = await ctx.db.get(brandId);
+    if (!brand || brand.owner !== campaign.owner) throw new Error("Unknown brand");
+    await ctx.db.patch(id, { brandId, kit: brand.kit, products: brand.products, updatedAt: Date.now() });
+    return null;
+  },
+});
+
+const nodeRef = v.object({ kind: v.union(v.literal("creative"), v.literal("asset"), v.literal("job")), id: v.string(), x: v.number(), y: v.number(), w: v.optional(v.number()) });
+
+/** Moves (and resizes) nodes on the canvas. */
+export const moveNodes = mutation({
+  args: { id: v.id("mediaCampaigns"), nodes: v.array(nodeRef) },
+  returns: v.null(),
+  handler: async (ctx, { id, nodes }) => {
+    await ownCampaign(ctx, id);
+    for (const n of nodes.slice(0, 200)) {
+      const table = n.kind === "creative" ? "mediaCreatives" : n.kind === "asset" ? "mediaAssets" : "mediaJobs";
+      const nid = ctx.db.normalizeId(table, n.id);
+      const row = nid ? await ctx.db.get(nid) : null;
+      if (!row || row.campaignId !== id) continue;
+      const w = Math.max(80, Math.min(2400, n.w ?? row.board?.w ?? 320));
+      await ctx.db.patch(nid!, { board: { x: Math.round(n.x), y: Math.round(n.y), w: Math.round(w) } });
     }
-    // A logo uploaded in the wizard becomes the kit's logo.
-    if (logo) await ctx.db.patch(id, { kit: { ...(args.kit ?? {}), logo: { src: logo, alt: `${args.name.trim() || "Brand"} logo` } } });
-    return id;
+    return null;
+  },
+});
+
+/** A library file onto the canvas (dropped from the sidebar), or off it (still in the library). */
+export const placeAsset = mutation({
+  args: { id: v.id("mediaAssets"), board: v.optional(v.union(boardValidator, v.null())) },
+  returns: v.null(),
+  handler: async (ctx, { id, board }) => {
+    const asset = await ctx.db.get(id);
+    if (!asset) throw new Error("Unknown file");
+    await ownCampaign(ctx, asset.campaignId);
+    if (board === null) await ctx.db.patch(id, { board: undefined });
+    else if (board) await ctx.db.patch(id, { board: { x: Math.round(board.x), y: Math.round(board.y), w: Math.round(board.w) } });
+    else await ctx.db.patch(id, { board: await placeOnBoard(ctx, asset.campaignId, { w: asset.w ?? 1, h: asset.h ?? 1, audio: asset.kind === "audio" }) });
+    return null;
+  },
+});
+
+/** A failed generation off the canvas. */
+export const dismissJob = mutation({
+  args: { id: v.id("mediaJobs") },
+  returns: v.null(),
+  handler: async (ctx, { id }) => {
+    const job = await ctx.db.get(id);
+    if (!job) return null;
+    await ownCampaign(ctx, job.campaignId);
+    await ctx.db.patch(id, { dismissed: true });
+    return null;
+  },
+});
+
+export const setViewport = mutation({
+  args: { id: v.id("mediaCampaigns"), viewport: v.object({ x: v.number(), y: v.number(), zoom: v.number() }) },
+  returns: v.null(),
+  handler: async (ctx, { id, viewport }) => {
+    await ownCampaign(ctx, id);
+    await ctx.db.patch(id, { viewport: { x: Math.round(viewport.x), y: Math.round(viewport.y), zoom: Math.max(0.05, Math.min(8, viewport.zoom)) } });
+    return null;
   },
 });
 
@@ -282,11 +440,13 @@ export const uploadUrl = mutation({
   },
 });
 
+/** A file into the library; `place` puts it on the canvas too (at `board`, or the next free spot). */
 export const addAsset = mutation({
-  args: { campaignId: v.id("mediaCampaigns"), asset: assetInput },
-  handler: async (ctx, { campaignId, asset }) => {
+  args: { campaignId: v.id("mediaCampaigns"), asset: assetInput, place: v.optional(v.boolean()), board: v.optional(boardValidator) },
+  handler: async (ctx, { campaignId, asset, place, board }) => {
     await ownCampaign(ctx, campaignId);
-    return insertAsset(ctx, campaignId, asset);
+    const spot = board ?? (place ? await placeOnBoard(ctx, campaignId, { w: asset.w ?? 1, h: asset.h ?? 1, audio: asset.kind === "audio" }) : undefined);
+    return insertAsset(ctx, campaignId, { ...asset, ...(spot ? { board: spot } : {}) });
   },
 });
 
@@ -370,7 +530,7 @@ export const resize = mutation({
     for (const f of formats.filter(isFormat)) {
       if (f === creative.format) continue;
       const doc = cleanDoc(resizeDoc(creative.doc as MediaDoc, f));
-      ids.push(await insertCreative(ctx, campaign._id, { name: `${creative.name.replace(/ · [^·]+$/, "")} · ${FORMATS[f].label}`, audienceKey: creative.audienceKey, format: f, kind: doc.kind, doc, why: creative.why }, "merchant"));
+      ids.push(await insertCreative(ctx, campaign._id, { name: `${creative.name.replace(/ · [^·]+$/, "")} · ${FORMATS[f].label}`, audienceKey: creative.audienceKey, format: f, kind: doc.kind, doc, why: creative.why, nearId: ids[ids.length - 1] ?? creative._id }, "merchant"));
     }
     return ids;
   },
@@ -381,7 +541,7 @@ export const duplicate = mutation({
   returns: v.id("mediaCreatives"),
   handler: async (ctx, { id }) => {
     const { creative, campaign } = await ownCreative(ctx, id);
-    return insertCreative(ctx, campaign._id, { name: `${creative.name} copy`, audienceKey: creative.audienceKey, format: creative.format, kind: creative.kind, doc: creative.doc, why: creative.why }, "merchant");
+    return insertCreative(ctx, campaign._id, { name: `${creative.name} copy`, audienceKey: creative.audienceKey, format: creative.format, kind: creative.kind, doc: creative.doc, why: creative.why, nearId: creative._id }, "merchant");
   },
 });
 
@@ -405,11 +565,12 @@ async function writeVersion(ctx: MutationCtx, creative: Doc<"mediaCreatives">, d
 async function insertCreative(
   ctx: MutationCtx,
   campaignId: Id<"mediaCampaigns">,
-  c: { name: string; audienceKey: string; format: string; kind: string; doc: unknown; why?: { text: string; evidence: string }[] },
+  c: { name: string; audienceKey: string; format: string; kind: string; doc: unknown; why?: { text: string; evidence: string }[]; board?: BoardPos; nearId?: string },
   by: "agent" | "merchant",
 ): Promise<Id<"mediaCreatives">> {
   const doc = cleanDoc(c.doc);
   const now = Date.now();
+  const board = c.board ?? (await placeOnBoard(ctx, campaignId, { w: doc.w, h: doc.h }, c.nearId));
   const id = await ctx.db.insert("mediaCreatives", {
     campaignId,
     name: c.name.slice(0, 120) || "Creative",
@@ -420,10 +581,12 @@ async function insertCreative(
     version: 1,
     status: "draft",
     ...(c.why?.length ? { why: c.why.slice(0, 8).map((w) => ({ text: String(w.text).slice(0, 400), evidence: String(w.evidence).slice(0, 400) })) } : {}),
+    board,
     createdAt: now,
     updatedAt: now,
   });
   await ctx.db.insert("mediaVersions", { creativeId: id, version: 1, doc, by, note: "Created", createdAt: now });
+  await ctx.db.patch(campaignId, { updatedAt: now });
   return id;
 }
 
@@ -436,7 +599,7 @@ export const readForAgent = internalQuery({
     if (!campaign) return null;
     const [creatives, assets, jobs] = await Promise.all([
       ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect(),
-      ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(120),
+      ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(300),
       ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(60),
     ]);
     // Pages audiences are read live: their brief and Qloo profile may have been recompiled since.
@@ -448,7 +611,10 @@ export const readForAgent = internalQuery({
       }),
     );
     let brand: unknown = null;
-    if (campaign.source.pagesBrandId) {
+    const media = campaign.brandId ? await ctx.db.get(campaign.brandId) : null;
+    if (media) {
+      brand = { kind: "media", id: media._id, name: media.name, url: media.url, about: media.about, images: media.images.map((src) => ({ src, alt: "" })) };
+    } else if (campaign.source.pagesBrandId) {
       const b = await ctx.db.get(campaign.source.pagesBrandId);
       if (b) brand = { kind: "pages", id: b._id, name: b.name, url: b.url, brief: b.brief, qloo: b.qloo ? { ...b.qloo, demographics: undefined } : undefined, images: b.site?.images?.slice(0, 24) ?? [] };
     } else if (campaign.source.emailBrandId) {
@@ -487,6 +653,8 @@ export const writeCreative = internalMutation({
     doc: v.any(),
     why: v.optional(v.array(v.object({ text: v.string(), evidence: v.string() }))),
     note: v.optional(v.string()),
+    /** A creative, asset or job the new one is placed next to. */
+    nearId: v.optional(v.string()),
   },
   returns: v.object({ id: v.id("mediaCreatives"), version: v.number() }),
   handler: async (ctx, a) => {
@@ -502,7 +670,7 @@ export const writeCreative = internalMutation({
       return { id: creative._id, version };
     }
     const doc = cleanDoc(a.doc);
-    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why }, "agent");
+    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why, nearId: a.nearId }, "agent");
     return { id, version: 1 };
   },
 });
@@ -601,11 +769,16 @@ export const addAssetInternal = internalMutation({
       parentId: v.optional(v.id("mediaAssets")),
       cost: v.optional(v.number()),
       credit: v.optional(v.string()),
+      review: v.optional(v.any()),
     }),
+    /** Put it on the canvas, next to `nearId` when given. */
+    place: v.optional(v.boolean()),
+    nearId: v.optional(v.string()),
   },
-  handler: async (ctx, { campaignId, asset }) => {
+  handler: async (ctx, { campaignId, asset, place, nearId }) => {
     if (!(await ctx.db.get(campaignId))) throw new Error("Unknown campaign");
-    return insertAsset(ctx, campaignId, asset);
+    const board = place ? await placeOnBoard(ctx, campaignId, { w: asset.w ?? 1, h: asset.h ?? 1, audio: asset.kind === "audio" }, nearId) : undefined;
+    return insertAsset(ctx, campaignId, { ...asset, ...(board ? { board } : {}) });
   },
 });
 
@@ -624,6 +797,10 @@ export const upsertJob = internalMutation({
     cost: v.optional(v.number()),
     assetId: v.optional(v.id("mediaAssets")),
     error: v.optional(v.string()),
+    /** A standalone generation: hold a spot on the canvas of this shape ("9:16", or "audio"), next to `nearId`. */
+    place: v.optional(v.boolean()),
+    aspect: v.optional(v.string()),
+    nearId: v.optional(v.string()),
   },
   returns: v.object({ id: v.id("mediaJobs") }),
   handler: async (ctx, a) => {
@@ -632,6 +809,9 @@ export const upsertJob = internalMutation({
     const now = Date.now();
     const status = a.status && ["queued", "running", "done", "failed"].includes(a.status) ? a.status : undefined;
     if (!a.jobId) {
+      const audio = a.kind === "music" || a.kind === "voice";
+      const shape = audio ? { w: 1, h: 1, audio: true } : aspectSize(a.aspect);
+      const board = a.place ? await placeOnBoard(ctx, a.campaignId, shape, a.nearId) : undefined;
       const id = await ctx.db.insert("mediaJobs", {
         campaignId: a.campaignId,
         ...(a.creativeId ? { creativeId: a.creativeId } : {}),
@@ -641,6 +821,8 @@ export const upsertJob = internalMutation({
         ...(a.prompt ? { prompt: a.prompt.slice(0, 2000) } : {}),
         status: status ?? "running",
         estimate: Math.max(0, a.estimate ?? 0),
+        ...(board ? { board } : {}),
+        ...(a.aspect ? { aspect: a.aspect.slice(0, 12) } : {}),
         createdAt: now,
         updatedAt: now,
       });
@@ -658,6 +840,11 @@ export const upsertJob = internalMutation({
       updatedAt: now,
     });
     if (finishing) await ctx.db.patch(a.campaignId, { spend: Math.round((campaign.spend + (a.cost ?? job.estimate)) * 1000) / 1000, updatedAt: now });
+    // A standalone generation's file takes the spot its placeholder held.
+    if (finishing && job.board && a.assetId) {
+      const asset = await ctx.db.get(a.assetId);
+      if (asset && !asset.board) await ctx.db.patch(a.assetId, { board: job.board });
+    }
     return { id: job._id };
   },
 });

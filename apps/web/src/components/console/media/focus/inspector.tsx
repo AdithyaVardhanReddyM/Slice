@@ -20,8 +20,6 @@ import {
   ArrowUp,
   Bold,
   Copy,
-  Eye,
-  EyeOff,
   Image as ImageIcon,
   Italic,
   Lock,
@@ -53,7 +51,6 @@ const TYPE_ICON: Record<Layer["type"], ReactNode> = {
 
 export function Inspector() {
   const { selection, doc } = useStudio();
-  if (!doc) return <p className="p-4 text-sm text-muted-foreground">Pick a creative.</p>;
   if (selection.kind === "clip") return <ShotPanel key={selection.id} id={selection.id} />;
   if (selection.kind === "audio") return <AudioPanel key={selection.id} id={selection.id} />;
   if (selection.kind === "layers") {
@@ -105,11 +102,9 @@ export function useLayerEdits() {
 /* Creative --------------------------------------------------------------------- */
 
 function CreativePanel() {
-  const { creative, creatives, doc, kit, editor, selection, select, campaign } = useStudio();
+  const { creative, creatives, doc, kit, editor, campaign } = useStudio();
   const resize = useMutation(api.media.resize);
   const duplicate = useMutation(api.media.duplicate);
-  const removeCreative = useMutation(api.media.removeCreative);
-  const { patch, order } = useLayerEdits();
   const [busy, setBusy] = useState<string | null>(null);
   if (!creative || !doc) return null;
   const spec = FORMATS[doc.format];
@@ -139,22 +134,13 @@ function CreativePanel() {
           <SmallButton disabled={!!busy} onClick={() => void run("dup", () => duplicate({ id: creative._id }))}>
             <Copy /> Duplicate
           </SmallButton>
-          <SmallButton
-            tone="danger"
-            disabled={!!busy}
-            onClick={() => {
-              if (window.confirm(`Delete “${creative.name}”? Its history goes too.`)) void run("del", () => removeCreative({ id: creative._id }));
-            }}
-          >
-            <Trash2 /> Delete
-          </SmallButton>
         </div>
       </Section>
       <Section title="Background">
         <ColorPick value={doc.background} kit={kit} onChange={(v) => editor.update((d) => ({ ...d, background: v ?? kit?.colors.background ?? "#ffffff" }))} />
       </Section>
       {missing.length > 0 && (
-        <Section title="Other sizes" aside={<span className="text-[11px] text-muted-foreground">Free: layout only</span>}>
+        <Section title="Other sizes" aside={<span className="text-[11px] text-muted-foreground">Free copy on the canvas</span>}>
           <div className="flex flex-wrap gap-1.5">
             {missing.map((f: FormatPreset) => (
               <SmallButton key={f} disabled={!!busy} onClick={() => void run(f, () => resize({ id: creative._id, formats: [f] }))} title={FORMATS[f].hint}>
@@ -162,41 +148,9 @@ function CreativePanel() {
               </SmallButton>
             ))}
           </div>
-          {doc.kind === "video" && <p className="text-[11px] leading-4 text-muted-foreground">Shots are cropped around their focal point. Regenerate the ones that matter in the new shape.</p>}
+          {doc.kind === "video" && <p className="text-[11px] leading-4 text-muted-foreground">Shots are cropped around their focal point; regenerate the ones that matter in the new shape.</p>}
         </Section>
       )}
-      <Section title="Layers" aside={<span className="text-[11px] text-muted-foreground">Top first</span>}>
-        <ul className="-mx-1.5 space-y-0.5">
-          {[...doc.layers].reverse().map((l) => {
-            const active = selection.kind === "layers" && selection.ids.includes(l.id);
-            return (
-              <li key={l.id} className={cn("group flex h-8 items-center gap-2 rounded-md px-1.5 text-xs", active ? "bg-sky-50 text-sky-900" : "hover:bg-neutral-100")}>
-                <button type="button" onClick={() => select({ kind: "layers", ids: [l.id] })} className={cn("flex min-w-0 flex-1 items-center gap-2 text-left [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground", l.hidden && "opacity-50")}>
-                  {TYPE_ICON[l.type]}
-                  <span className="truncate">{layerLabel(l)}</span>
-                </button>
-                <span className="flex items-center opacity-0 transition-opacity group-hover:opacity-100 [&_button]:flex [&_button]:size-6 [&_button]:items-center [&_button]:justify-center [&_button]:rounded [&_button:hover]:bg-black/5 [&_svg]:size-3.5">
-                  <button type="button" title="Forward" onClick={() => order(l.id, 1)}>
-                    <ArrowUp />
-                  </button>
-                  <button type="button" title="Back" onClick={() => order(l.id, -1)}>
-                    <ArrowDown />
-                  </button>
-                </span>
-                <span className={cn("flex items-center [&_button]:flex [&_button]:size-6 [&_button]:items-center [&_button]:justify-center [&_button]:rounded [&_button:hover]:bg-black/5 [&_svg]:size-3.5", !l.hidden && !l.locked && "opacity-0 group-hover:opacity-100")}>
-                  <button type="button" title={l.locked ? "Unlock" : "Lock"} onClick={() => patch(l.id, { locked: l.locked ? undefined : true })}>
-                    {l.locked ? <Lock /> : <Unlock />}
-                  </button>
-                  <button type="button" title={l.hidden ? "Show" : "Hide"} onClick={() => patch(l.id, { hidden: l.hidden ? undefined : true })}>
-                    {l.hidden ? <EyeOff /> : <Eye />}
-                  </button>
-                </span>
-              </li>
-            );
-          })}
-          {doc.layers.length === 0 && <li className="px-1.5 py-2 text-xs text-muted-foreground">No layers yet. Add text from the toolbar or drop a picture from the library.</li>}
-        </ul>
-      </Section>
     </div>
   );
 }

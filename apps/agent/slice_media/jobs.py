@@ -111,6 +111,44 @@ async def _run(campaign_id: str, job_id: str, creative_id: str, target_id: str, 
             log.exception("could not record the failure of job %s", job_id)
 
 
+async def start_asset(
+    campaign_id: str,
+    *,
+    kind: str,
+    model: str,
+    prompt: str,
+    estimate: float,
+    work: Callable[[], Awaitable[Landed]],
+    aspect: str | None,
+    near: str | None = None,
+    lane: str = "image",
+    source: str = "generated",
+    parent: str | None = None,
+) -> str:
+    """A standalone generation (an image, a clip, a track): the job holds a spot on the canvas
+    while it runs, and the file takes that spot when it lands. Returns the job id."""
+    job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}))
+    task = asyncio.create_task(_run_asset(campaign_id, job_id, kind, model, prompt, work, lane, source, parent))
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
+    return job_id
+
+
+async def _run_asset(campaign_id: str, job_id: str, kind: str, model: str, prompt: str, work: Callable[[], Awaitable[Landed]], lane: str, source: str, parent: str | None) -> None:
+    try:
+        async with _limits.get(lane, _limits["image"]):
+            out = await work()
+        asset = await store.add_asset(campaign_id, data=out.data, mime=out.mime, kind=out.asset_kind, source=source, prompt=prompt[:2000], model=out.patch.get("model") or model, cost=out.cost, **({"parentId": parent} if parent else {}), **out.meta)
+        await store.job(campaign_id, jobId=job_id, status="done", cost=round(out.cost, 3), assetId=asset["id"])
+    except Exception as e:
+        msg = _friendly(e)
+        log.warning("job %s (%s %s) failed: %s", job_id, kind, model, e)
+        try:
+            await store.job(campaign_id, jobId=job_id, status="failed", error=msg, cost=0)
+        except Exception:
+            log.exception("could not record the failure of job %s", job_id)
+
+
 def _friendly(e: Exception) -> str:
     s = str(e) or e.__class__.__name__
     low = s.lower()
@@ -197,6 +235,102 @@ def voice_work(*, text: str, voice: str, style: str, start: float) -> Callable[[
     return work
 
 
+# --- standalone work (canvas assets) ------------------------------------------------------
+
+
+def image_asset_work(*, prompt: str, model: str, aspect: str, refs: list[str], rules: list[dict[str, Any]] | None) -> Callable[[], Awaitable[Landed]]:
+    """An image for the canvas. With `rules` (the brand's guidelines), a critic checks it and a
+    picture that fails is made once more with the critic's reasons in the prompt."""
+
+    async def work() -> Landed:
+        from . import check
+
+        ref_imgs = [r for r in await asyncio.gather(*[_maybe_image(u) for u in refs[:4]], return_exceptions=True) if isinstance(r, tuple)]
+        ask = prompt + " No text, letters, logos or watermarks in the image."
+        cost = 0.0
+        best: tuple[bytes, str, dict[str, Any]] | None = None
+        tries = 0
+        for tries in range(1, (check.MAX_TRIES if rules else 1) + 1):
+            data, mime = await gen.image(ask, model=model, aspect=aspect, refs=ref_imgs)
+            cost += M.image_cost(model)
+            if not rules:
+                best = (data, mime, {})
+                break
+            verdict = await check.review(data, mime, prompt, rules, ref_imgs)
+            if best is None or verdict.get("score", 0) > best[2].get("score", 0):
+                best = (data, mime, verdict)
+            if verdict.get("passed") or verdict.get("error"):
+                break
+            ask = f"{prompt} No text, letters, logos or watermarks in the image. Fix from the last attempt: {verdict.get('fix') or '; '.join(x['reason'] for x in verdict.get('rules') or [] if not x['pass'])}"
+        assert best is not None
+        data, mime, verdict = best
+        meta: dict[str, Any] = {}
+        w, h = _image_size(data)
+        if w and h:
+            meta.update(w=w, h=h)
+        if verdict:
+            meta["review"] = check.summary(verdict, tries)
+        return Landed(data, mime, "image", round(cost, 3), patch={"model": model}, meta=meta)
+
+    return work
+
+
+def clip_asset_work(*, prompt: str, model: str, aspect: str, seconds: int, resolution: str, audio: bool, first_frame: str | None, refs: list[str]) -> Callable[[], Awaitable[Landed]]:
+    """A single Veo clip for the canvas."""
+    shot = shot_work(prompt=prompt, model=model, aspect=aspect, seconds=seconds, resolution=resolution, audio=audio, first_frame=first_frame, refs=refs, negative="text, captions, subtitles, watermark, logo", keep=float(seconds))
+
+    async def work() -> Landed:
+        out = await shot()
+        return Landed(out.data, out.mime, "video", out.cost, patch={"model": model}, meta=out.meta)
+
+    return work
+
+
+def omni_asset_work(*, instruction: str, src: str, aspect: str, images: list[str]) -> Callable[[], Awaitable[Landed]]:
+    """A finished clip changed (or continued) by Omni Flash, as a new clip beside it."""
+
+    async def work() -> Landed:
+        clip, _ = await gen.fetch(src)
+        imgs = [r for r in await asyncio.gather(*[_maybe_image(u) for u in images[:3]], return_exceptions=True) if isinstance(r, tuple)]
+        data = await gen.omni(instruction, aspect=aspect, clip=clip, images=imgs or None)
+        info = await ff.probe_bytes(data)
+        dur = info.duration or 6.0
+        return Landed(data, "video/mp4", "video", round(M.OMNI_PER_SECOND * dur, 3), patch={"model": M.OMNI}, meta={"duration": round(dur, 2), "w": info.width or None, "h": info.height or None})
+
+    return work
+
+
+def music_asset_work(*, prompt: str, model: str) -> Callable[[], Awaitable[Landed]]:
+    async def work() -> Landed:
+        data, mime = await gen.music(prompt, model=model)
+        info = await ff.probe_bytes(data, ".mp3")
+        return Landed(data, mime, "audio", M.music_cost(model), patch={"model": model}, meta={"duration": round(info.duration or 30.0, 2)})
+
+    return work
+
+
+def _image_size(data: bytes) -> tuple[int, int]:
+    """Width and height of a PNG or JPEG from its header (no image library needed)."""
+    try:
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+        if data[:2] == b"\xff\xd8":
+            i = 2
+            while i < len(data) - 9:
+                if data[i] != 0xFF:
+                    i += 1
+                    continue
+                marker = data[i + 1]
+                if marker in (0xC0, 0xC1, 0xC2):
+                    return int.from_bytes(data[i + 7 : i + 9], "big"), int.from_bytes(data[i + 5 : i + 7], "big")
+                i += 2 + int.from_bytes(data[i + 2 : i + 4], "big")
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP" and data[12:16] == b"VP8 ":
+            return int.from_bytes(data[26:28], "little") & 0x3FFF, int.from_bytes(data[28:30], "little") & 0x3FFF
+    except Exception:
+        pass
+    return 0, 0
+
+
 # --- helpers for callers ----------------------------------------------------------------
 
 
@@ -216,4 +350,4 @@ def running() -> int:
     return len(_tasks)
 
 
-__all__ = ["BudgetError", "Landed", "budget", "ensure_budget", "start", "shot_work", "edit_work", "still_work", "music_work", "voice_work", "shot_estimate", "find", "storage_url"]
+__all__ = ["BudgetError", "Landed", "budget", "ensure_budget", "start", "start_asset", "shot_work", "edit_work", "still_work", "music_work", "voice_work", "image_asset_work", "clip_asset_work", "omni_asset_work", "music_asset_work", "shot_estimate", "find", "storage_url"]

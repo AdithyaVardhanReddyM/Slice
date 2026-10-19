@@ -2,7 +2,7 @@
 
 import { newId, type Layer, type MediaBrief, type MediaDoc, type MediaKit } from "@slice/backend/convex/mediaTypes";
 
-export type NewLayerKind = "headline" | "body" | "cta" | "shape" | "logo" | "qr";
+export type NewLayerKind = "headline" | "subhead" | "body" | "cta" | "shape" | "circle" | "line" | "logo" | "qr";
 
 export const linkOf = (brief: MediaBrief | undefined, kit: MediaKit | undefined) => brief?.link || kit?.url || "";
 
@@ -18,6 +18,10 @@ export function newLayer(kind: NewLayerKind, doc: MediaDoc, kit: MediaKit | unde
       const size = Math.round(base * 0.085);
       return { id, type: "text", text: "Your headline", role: "headline", font: "heading", size, weight: 700, color: fg, align: "center", valign: "middle", lineHeight: 1.05, x: Math.round(W * 0.08), y: Math.round(H * 0.38), w: Math.round(W * 0.84), h: Math.round(size * 2.4) };
     }
+    case "subhead": {
+      const size = Math.round(base * 0.05);
+      return { id, type: "text", text: "A line that sells it", role: "subhead", font: "body", size, weight: 500, color: fg, align: "center", valign: "top", lineHeight: 1.2, x: Math.round(W * 0.1), y: Math.round(H * 0.5), w: Math.round(W * 0.8), h: Math.round(size * 2.6) };
+    }
     case "body": {
       const size = Math.round(base * 0.036);
       return { id, type: "text", text: "A line about the offer", role: "body", font: "body", size, weight: 400, color: fg, align: "center", valign: "top", lineHeight: 1.35, x: Math.round(W * 0.12), y: Math.round(H * 0.56), w: Math.round(W * 0.76), h: Math.round(size * 3) };
@@ -32,6 +36,14 @@ export function newLayer(kind: NewLayerKind, doc: MediaDoc, kit: MediaKit | unde
     case "shape": {
       const s = Math.round(base * 0.3);
       return { id, type: "shape", fill: c?.accent ?? "#c8553d", radius: 0, x: Math.round((W - s) / 2), y: Math.round((H - s) / 2), w: s, h: s };
+    }
+    case "circle": {
+      const s = Math.round(base * 0.3);
+      return { id, type: "shape", fill: c?.primary ?? "#111111", radius: 9999, x: Math.round((W - s) / 2), y: Math.round((H - s) / 2), w: s, h: s };
+    }
+    case "line": {
+      const w = Math.round(W * 0.5);
+      return { id, type: "shape", fill: fg, radius: 0, x: Math.round((W - w) / 2), y: Math.round(H / 2), w, h: Math.max(3, Math.round(base * 0.004)) };
     }
     case "logo": {
       const w = Math.round(W * 0.3);

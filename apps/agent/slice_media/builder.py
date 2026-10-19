@@ -1,5 +1,13 @@
-"""The Media builder: an ADK agent that designs posters and short videos for a
-campaign, one creative per audience and format.
+"""The Media builder: an ADK agent that makes a brand's images, posters, video
+clips, edited video ads and music on a campaign's canvas.
+
+Most turns come from the canvas prompt bar (kind "prompt"): what to make, on which
+models, in what shape, for which audience, and what is selected on the canvas. A
+"generate" turn still makes a whole set (every audience × format) when asked.
+Generation follows the ADK on-brand-genmedia recipe: the brand's guidelines are in
+the instruction, the agent rewrites each request into an on-brand prompt, and
+canvas images pass a brand check (check.py) that retries once with the critic's
+reasons.
 
 State per session (one session per campaign) is loaded fresh every turn from
 /media/read: the campaign (kit, brief, products, audiences, formats, tier,
@@ -18,6 +26,7 @@ import os
 from typing import Any
 
 from google.adk.agents import LlmAgent
+from google.adk.models import Gemini
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.tools import ToolContext
 from google.genai import types
@@ -28,6 +37,7 @@ from slice_pages.audience_brief import profile_summary
 from slice_pages.llm import generate_json
 from slice_pages.timing import timer
 
+from . import check as C
 from . import docs as D
 from . import ff
 from . import gen
@@ -52,6 +62,8 @@ SELECTION = "md_selection"  # what the merchant has selected in the studio
 MEDIA = "md_media"  # image URLs tools returned this session
 REVIEWS = "md_reviews"
 WRITES = "md_writes"  # bumps on every write; the stream tells the console
+OPTIONS = "md_options"  # the prompt bar's picks: output, models, aspect, count, audience, check
+NODES = "md_nodes"  # what is selected on the canvas: [{kind, id}]
 
 _locks: dict[str, asyncio.Lock] = {}
 
@@ -80,9 +92,11 @@ def _creative(c: dict[str, Any]) -> dict[str, Any]:
 
 def _asset(a: dict[str, Any]) -> dict[str, Any]:
     out = {"id": store.row_id(a), "kind": a.get("kind"), "source": a.get("source"), "url": a.get("url")}
-    for k in ("name", "prompt", "w", "h", "duration"):
+    for k in ("name", "prompt", "w", "h", "duration", "model"):
         if a.get(k):
             out[k] = a[k] if k != "prompt" else str(a[k])[:120]
+    if a.get("board"):
+        out["onCanvas"] = True
     return out
 
 
@@ -94,7 +108,7 @@ async def load_state(campaign_id: str) -> dict[str, Any]:
         CAMPAIGN: campaign,
         BRAND: data.get("brand") or {},
         CREATIVES: creatives,
-        ASSETS: [_asset(a) for a in data.get("assets") or [] if a.get("kind") in ("image", "video", "audio")][:80],
+        ASSETS: [_asset(a) for a in data.get("assets") or [] if a.get("kind") in ("image", "video", "audio")][:300],
         BUDGET: await J.budget(campaign_id, data),
         REVIEWS: 0,
         PB.AUDIENCE: {"name": "Everyone", "profile": {}},
@@ -132,6 +146,20 @@ def _known_images(state: dict[str, Any]) -> set[str]:
 # --- instruction -------------------------------------------------------------------
 
 
+def _about_block(brand: dict[str, Any]) -> str:
+    about = brand.get("about") or {}
+    if not isinstance(about, dict) or not about.get("summary"):
+        return ""
+    lines = [f"What it is: {about['summary']}"]
+    if about.get("audience"):
+        lines.append(f"Who it sells to: {about['audience']}")
+    if about.get("categories"):
+        lines.append(f"Sells: {', '.join(about['categories'])}")
+    if about.get("location"):
+        lines.append(f"Where: {about['location']}")
+    return "\n".join(lines) + "\n"
+
+
 def _kit_block(kit: dict[str, Any]) -> str:
     fonts = kit.get("fonts") or {}
     lines = [
@@ -145,6 +173,8 @@ def _kit_block(kit: dict[str, Any]) -> str:
         lines.append(f"Voice: {v.get('summary', '')} Do: {'; '.join(v.get('do') or [])}. Avoid: {'; '.join(v.get('avoid') or [])}.")
     if kit.get("imagery"):
         lines.append(f"Imagery: {kit['imagery'].get('style', '')} {kit['imagery'].get('treatment', '')}")
+        if kit["imagery"].get("avoid"):
+            lines.append(f"Pictures never show: {'; '.join(kit['imagery']['avoid'])}")
     if kit.get("uppercaseLabels"):
         lines.append("Labels and CTAs in uppercase.")
     if kit.get("buttonStyle"):
@@ -202,6 +232,8 @@ def _assets_block(assets: list[dict[str, Any]], brand: dict[str, Any]) -> str:
             bits.append(f"{a['w']}x{a['h']}")
         if a.get("duration"):
             bits.append(f"{a['duration']}s")
+        if a.get("onCanvas"):
+            bits.append("on the canvas")
         lines.append(f"- {' · '.join(str(b) for b in bits if b)} {a.get('url')}" + (f" — {a.get('name') or a.get('prompt')}" if a.get("name") or a.get("prompt") else ""))
     imgs = [i.get("src") if isinstance(i, dict) else i for i in (brand.get("images") or [])[:10]]
     if imgs:
@@ -232,10 +264,29 @@ def _budget_block(state: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _nodes_block(state: dict[str, Any]) -> str:
+    nodes = state.get(NODES) or []
+    if not nodes:
+        return ""
+    assets = {a["id"]: a for a in state.get(ASSETS) or []}
+    creatives = state.get(CREATIVES) or {}
+    bits = []
+    for n in nodes[:8]:
+        if n.get("kind") == "creative" and n.get("id") in creatives:
+            c = creatives[n["id"]]
+            bits.append(f"{c.get('kind')} creative {n['id']} \"{c.get('name')}\" ({c.get('format')})")
+        elif n.get("kind") == "asset" and n.get("id") in assets:
+            a = assets[n["id"]]
+            bits.append(f"{'clip' if a.get('kind') == 'video' else 'track' if a.get('kind') == 'audio' else 'image'} {n['id']} {a.get('url')}" + (f" ({str(a.get('prompt') or '')[:80]})" if a.get("prompt") else ""))
+    if not bits:
+        return ""
+    return "SELECTED ON THE CANVAS: " + "; ".join(bits) + ". \"This\", \"it\", \"these\" mean the selection: change an image with edit_image, a clip with edit_clip, a poster or video with edit_creative."
+
+
 def _selection_block(state: dict[str, Any]) -> str:
     sel = state.get(SELECTION) or {}
     if not sel.get("creativeId"):
-        return ""
+        return _nodes_block(state)
     bits = [f"creative {sel['creativeId']}"]
     if sel.get("layerIds"):
         bits.append(f"layers {', '.join(sel['layerIds'])}")
@@ -279,6 +330,7 @@ DESIGN RULES
 - CTA pill: a text layer with role cta, bg the kit's primary colour, color its primaryForeground, padX 40, padY 22, radius (pill: h/2; rounded: 16; square: 0), align center, valign middle.
 - QR: on print posters, and on other posters only when there is a link and the poster is for physical places. 200 to 260px, with a quiet "Scan to shop" caption.
 - Each audience's creative must look and read differently, in ways its taste profile explains (palette mood within the kit, imagery subject and setting, the hook's cultural reference). Do not name Qloo or the audience in the copy.
+- Reasons (why, save_concepts) are read at a glance: each reason at most 12 plain words saying what the creative does and for whom ("Candlelit late tables, because they book after 9pm"), evidence at most 5 words naming the Qloo signal ("Natural wine bars", "Khruangbin fans"). No jargon, no "affinity", no scores.
 """
 
 VIDEO = """
@@ -305,10 +357,62 @@ VIDEO RULES
 """
 
 
-def _turn_rules(kind: str, campaign: dict[str, Any]) -> str:
+OUTPUT_HINT = {
+    "image": "an image: make_image (a photograph or illustration, no words in it)",
+    "poster": "a poster: write_creative with kind poster (a designed ad: picture, headline, logo, button)",
+    "clip": "a video clip: make_clip (one generated shot)",
+    "video": "a video ad: write_creative with kind video (3 to 6 shots, text layers, then add_music)",
+    "music": "music: make_music (an instrumental track)",
+    "campaign": "the whole set: for every audience, a poster and a video in each campaign format (follow the steps for a full set)",
+}
+
+ASPECT_FORMAT = {"9:16": "story", "4:5": "portrait", "1:1": "square", "16:9": "landscape"}
+
+
+def _prompt_rules(state: dict[str, Any]) -> str:
+    o = state.get(OPTIONS) or {}
+    out = str(o.get("output") or "auto")
+    aspect = str(o.get("aspect") or "")
+    lines = ["THIS TURN: the merchant asked from the canvas prompt bar. Their picks:"]
+    if out in OUTPUT_HINT:
+        lines.append(f"- Make {OUTPUT_HINT[out]}. Make several only when they ask for several.")
+    else:
+        lines.append("- Make: your call from their words. A scene or photo: make_image. A designed ad with words, logo or a button: a poster (write_creative). One moving shot: make_clip. An edited ad with several shots, text and music: a video (write_creative). A soundtrack: make_music. Several things when they ask for several.")
+    if aspect:
+        lines.append(f"- Shape {aspect}" + (f" (poster and video format {ASPECT_FORMAT[aspect]})" if aspect in ASPECT_FORMAT else "") + ". Video models make 9:16 or 16:9 only: a clip or video asked in another shape uses the nearer of the two.")
+    models = []
+    if o.get("imageModel"):
+        models.append(f"images {M.IMAGE_LABEL.get(o['imageModel'], o['imageModel'])} (model \"{o['imageModel']}\")")
+    if o.get("videoModel"):
+        models.append(f"video {M.VIDEO_LABEL.get(o['videoModel'], o['videoModel'])} (model \"{o['videoModel']}\"; in a video ad b-roll steps down one model)")
+    if o.get("musicModel"):
+        models.append(f"music {M.MUSIC_LABEL.get(o['musicModel'], o['musicModel'])} (model \"{o['musicModel']}\")")
+    if models:
+        lines.append("- Models (pass them as model): " + "; ".join(models) + ".")
+    if int(o.get("count") or 1) > 1:
+        lines.append(f"- How many: {int(o['count'])} (make_image count, each a different take).")
+    aud = next((a for a in _audiences(state) if a["id"] == o.get("audienceId")), None) if o.get("audienceId") not in (None, "", "all") else None
+    if aud:
+        lines.append(f"- For the audience {aud['id']} ({aud.get('name')}): call get_audience first, ground the idea in its taste, and save_concepts one short concept for it.")
+    if state.get(NODES):
+        lines.append("- Something is selected on the canvas: when the words ask to change it, change it (edit_image, edit_clip, edit_creative) instead of making something new; when they ask for something new from it, use it (its URL as a reference or first frame, near its id).")
+    lines.append(
+        """HOW
+1. Write every generation prompt on brand (you are the prompt writer): restate the request as subject, setting, light, lens, composition and mood in the brand's imagery style; write the "never show" list in as plain negatives; keep the merchant's products true by passing their photos in reference_urls (or image, for a clip's first frame); never ask for text, captions or logos inside a picture or shot (posters carry words and the logo as layers).
+2. Images, clips and music generate in the background and appear on the canvas by themselves, each next to what it came from (near). Start them and finish the turn: never wait, never start the same thing twice.
+3. Posters and videos: write_creative (near the image it builds on, when there is one). A poster's format comes from the shape; without one, story.
+4. If the campaign is still called "Untitled campaign", rename_campaign it (2 to 4 words about what it is for).
+5. Reply in one or two short sentences: what is coming, on which model, about what it costs. No lists, no markdown."""
+    )
+    return "\n".join(lines)
+
+
+def _turn_rules(kind: str, campaign: dict[str, Any], state: dict[str, Any] | None = None) -> str:
     formats = ", ".join(campaign.get("formats") or ["story"])
     what = campaign.get("kind") or "poster"
     make = {"poster": "a poster", "video": "a video", "both": "a poster and a video"}.get(what, "a poster")
+    if kind == "prompt" and state is not None and (state.get(OPTIONS) or {}).get("output") != "campaign":
+        return _prompt_rules(state)
     if kind == "edit":
         return """THIS TURN: the merchant asks for a change. Do exactly that, on the creatives it concerns (the selection if there is one).
 - Layout and copy: edit_creative with ops on ids from CREATIVES. Several ops in one call.
@@ -331,15 +435,16 @@ async def build_instruction(ctx: ReadonlyContext) -> str:
     campaign = s.get(CAMPAIGN) or {}
     kind = s.get(KIND) or "generate"
     sel = _selection_block(s)
-    return f"""You are the creative director of Slice Media. You design posters and short videos (Reels, TikTok, Stories, feed and display ads, print) for one brand's campaign: one creative per audience and format, each shaped by that audience's cultural taste (Qloo) and true to the brand's kit. You work like a top studio: a sharp concept, real photography where it exists, clean typography, a single call to action, and money spent only where it shows.
+    brand = s.get(BRAND) or {}
+    return f"""You are the creative director of Slice Media. On one campaign's canvas you make a brand's images, posters, video clips, edited video ads (Reels, TikTok, Stories, feed and display, print) and music, true to the brand's guidelines and, when an audience is chosen, shaped by its cultural taste (Qloo). You work like a top studio: a sharp idea, real photography where it exists, clean typography, one call to action, and money spent only where it shows.
 
-CAMPAIGN: "{campaign.get('name')}" ({campaign.get('kind')}), formats {', '.join(campaign.get('formats') or [])}
+CAMPAIGN: "{campaign.get('name')}", formats {', '.join(campaign.get('formats') or [])}
+
+BRAND GUIDELINES (every picture, word and shot follows these)
+{_about_block(brand)}{_kit_block(campaign.get('kit') or {})}
 
 BRIEF
 {_brief_block(campaign.get('brief') or {})}
-
-BRAND KIT
-{_kit_block(campaign.get('kit') or {})}
 
 AUDIENCES (creatives point at an audience by id)
 {_audiences_block(s)}
@@ -358,7 +463,7 @@ CREATIVES
 
 {sel}
 
-{_turn_rules(kind, campaign)}
+{_turn_rules(kind, campaign, s)}
 {DOCUMENT}
 {DESIGN}
 {VIDEO}
@@ -401,7 +506,7 @@ async def save_concepts(concepts: list, tool_context: ToolContext) -> dict:
     """Record the concept for each audience (shown to the merchant as the "why" of each creative).
 
     Args:
-        concepts: [{audienceKey, title, hook, visual, why: [{text, evidence}]}]: hook is the headline idea, visual the picture/shot idea, each why a reason with the Qloo evidence it rests on.
+        concepts: [{audienceKey, title, hook, visual, why: [{text, evidence}]}]: title 2 to 5 words; hook the headline idea in at most 10 words; visual the picture or shot in at most 20 words; 2 or 3 why, each text at most 12 words and evidence at most 5 words (the Qloo tag, brand or place it rests on).
     """
     state = tool_context.state
     raw = _coerce(concepts)
@@ -473,6 +578,223 @@ async def generate_image(prompt: str, tool_context: ToolContext, format: str = "
     state[ASSETS] = [{"id": asset["id"], "kind": "image", "source": "generated", "url": asset["url"], "prompt": prompt[:120]}] + list(state.get(ASSETS) or [])
     return {"ok": True, "url": asset["url"], "assetId": asset["id"], "model": M.IMAGE_LABEL.get(model, model), "cost": cost}
 
+
+# --- tools: canvas generations --------------------------------------------------------------
+# Each starts a background job that holds a spot on the canvas (next to `near`) and lands there.
+
+ASPECTS = ("9:16", "4:5", "1:1", "16:9", "3:4", "4:3", "2:3", "3:2")
+
+
+def _option(state: dict[str, Any], key: str) -> str:
+    return str((state.get(OPTIONS) or {}).get(key) or "")
+
+
+def _video_aspect(aspect: str) -> str:
+    """Veo makes 9:16 or 16:9: anything taller than square is 9:16."""
+    try:
+        a, b = (float(x) for x in aspect.split(":"))
+        return "9:16" if a < b else "16:9"
+    except Exception:
+        return "9:16"
+
+
+def _check_rules(state: dict[str, Any], refs: bool) -> list[dict[str, Any]] | None:
+    """The brand's guidelines as rules for the brand check, unless the merchant turned it off."""
+    if (state.get(OPTIONS) or {}).get("check") is False:
+        return None
+    kit = (state.get(CAMPAIGN) or {}).get("kit") or {}
+    return C.rules_for(kit, (state.get(BRAND) or {}).get("about"), refs=refs)
+
+
+def _asset_by_id(state: dict[str, Any], asset_id: str) -> dict[str, Any] | None:
+    return next((a for a in state.get(ASSETS) or [] if a.get("id") == asset_id), None)
+
+
+async def make_image(prompt: str, tool_context: ToolContext, aspect: str = "1:1", count: int = 1, reference_urls: list[str] | None = None, model: str = "", near: str = "") -> dict:
+    """Make images for the canvas (a deliverable the merchant sees, not a picture for a poster
+    layer: use generate_image for that). Runs in the background; each lands on the canvas after
+    a brand check against the guidelines (one automatic retry if it fails).
+
+    Args:
+        prompt: The on-brand scene: subject, setting, light, lens, composition, mood. No text or logos.
+        aspect: 9:16, 4:5, 1:1, 16:9, 3:4, 4:3, 2:3 or 3:2.
+        count: 1 to 4 takes, each its own image.
+        reference_urls: Up to 4 image URLs you were given whose subjects must appear (the product photo).
+        model: An image model id from the prompt bar ("" uses the merchant's pick or the default).
+        near: An id on the canvas (image, clip, creative) to place them beside, e.g. the image being varied.
+    """
+    state = tool_context.state
+    cid = _cid(state)
+    aspect = aspect if aspect in ASPECTS else "1:1"
+    count = max(1, min(4, int(count or 1)))
+    m = M.chosen(model, M.IMAGE_CHOICES) or M.chosen(_option(state, "imageModel"), M.IMAGE_CHOICES) or M.IMAGE
+    refs = [u for u in (reference_urls or []) if isinstance(u, str) and u.startswith("http")][:4]
+    unknown = [u for u in refs if u not in _known_images(state)]
+    if unknown:
+        return {"ok": False, "error": f"reference_urls must be images you were given: {', '.join(unknown[:2])}"}
+    estimate = round(M.image_cost(m) * count, 3)
+    try:
+        await J.ensure_budget(cid, estimate)
+    except J.BudgetError as e:
+        return {"ok": False, "error": str(e)}
+    rules = _check_rules(state, bool(refs))
+    jobs: list[str] = []
+    for i in range(count):
+        take = prompt if count == 1 else f"{prompt} (Take {i + 1} of {count}: vary the framing and moment.)"
+        jobs.append(await J.start_asset(cid, kind="image", model=m, prompt=take, estimate=M.image_cost(m), work=J.image_asset_work(prompt=take + _style_suffix(state), model=m, aspect=aspect, refs=refs, rules=rules), aspect=aspect, near=near or (jobs[-1] if jobs else None), lane="image"))
+    _bump(state)
+    record("slice", "Make images", f"{count} on {M.IMAGE_LABEL.get(m, m)}, ~${estimate:.2f}", ms=0)
+    return {"ok": True, "jobs": jobs, "model": M.IMAGE_LABEL.get(m, m), "estimate": estimate, "brandCheck": bool(rules)}
+
+
+async def make_clip(prompt: str, tool_context: ToolContext, aspect: str = "9:16", seconds: int = 6, image: str = "", model: str = "", sound: bool = False, near: str = "") -> dict:
+    """Make one video clip for the canvas with Veo (4, 6 or 8 seconds). Runs in the background.
+    With image, the clip starts on that picture (animate an image on the canvas, keep a product true).
+
+    Args:
+        prompt: One continuous shot: subject, action, setting, light, lens, camera move, mood. No on-screen text.
+        aspect: 9:16 or 16:9.
+        seconds: 4, 6 or 8.
+        image: A first-frame image URL you were given ("" for none).
+        model: A video model id from the prompt bar ("" uses the merchant's pick or the default).
+        sound: Veo's own sound (costs more).
+        near: An id on the canvas to place it beside (the image it animates).
+    """
+    state = tool_context.state
+    cid = _cid(state)
+    aspect = _video_aspect(aspect)
+    m = M.chosen(model, M.VIDEO_CHOICES) or M.chosen(_option(state, "videoModel"), M.VIDEO_CHOICES) or M.VEO_FAST
+    if image and image not in _known_images(state):
+        return {"ok": False, "error": "image must be a URL you were given"}
+    res = "1080p" if m == M.VEO_STANDARD else "720p"
+    secs = M.veo_duration(float(seconds or 6), resolution=res)
+    estimate = M.video_cost(m, secs, bool(sound))
+    try:
+        await J.ensure_budget(cid, estimate)
+    except J.BudgetError as e:
+        return {"ok": False, "error": str(e)}
+    full = prompt + _style_suffix(state) + " No on-screen text, captions, logos or watermarks."
+    job = await J.start_asset(cid, kind="video", model=m, prompt=prompt, estimate=estimate, work=J.clip_asset_work(prompt=full, model=m, aspect=aspect, seconds=secs, resolution=res, audio=bool(sound), first_frame=image or None, refs=[]), aspect=aspect, near=near or None, lane="video")
+    _bump(state)
+    return {"ok": True, "job": job, "model": M.VIDEO_LABEL.get(m, m), "seconds": secs, "estimate": estimate}
+
+
+async def make_music(prompt: str, tool_context: ToolContext, model: str = "", near: str = "") -> dict:
+    """Make an instrumental track for the canvas with Lyria. Runs in the background.
+
+    Args:
+        prompt: Genre, mood, tempo (BPM), instruments, energy curve, fitted to the brand and the audience.
+        model: A music model id from the prompt bar ("" uses the merchant's pick or the default).
+        near: An id on the canvas to place it beside (the video it scores).
+    """
+    state = tool_context.state
+    cid = _cid(state)
+    m = M.chosen(model, M.MUSIC_CHOICES) or M.chosen(_option(state, "musicModel"), M.MUSIC_CHOICES) or M.LYRIA
+    estimate = M.music_cost(m)
+    try:
+        await J.ensure_budget(cid, estimate)
+    except J.BudgetError as e:
+        return {"ok": False, "error": str(e)}
+    full = f"{prompt}. Instrumental only, no vocals." + (" About 60 to 90 seconds with a clean ending." if m == M.LYRIA_PRO else "")
+    job = await J.start_asset(cid, kind="music", model=m, prompt=prompt, estimate=estimate, work=J.music_asset_work(prompt=full, model=m), aspect=None, near=near or None, lane="audio")
+    _bump(state)
+    return {"ok": True, "job": job, "model": M.MUSIC_LABEL.get(m, m), "estimate": estimate}
+
+
+def _nearest_aspect(w: int, h: int) -> str:
+    return min(ASPECTS, key=lambda a: abs(float(a.split(":")[0]) / float(a.split(":")[1]) - w / max(1, h)))
+
+
+async def edit_image(asset_id: str, instruction: str, tool_context: ToolContext, model: str = "") -> dict:
+    """Change an image on the canvas (light, colour, background, an object added or removed,
+    the product swapped in) with Nano Banana, keeping the rest. The result is a new image beside
+    the original; the original stays.
+
+    Args:
+        asset_id: The image's id (from the selection or LIBRARY).
+        instruction: What to change, concretely ("warmer evening light", "put the bottle from image 2 on the table").
+        model: An image model id ("" uses the merchant's pick or the default).
+    """
+    state = tool_context.state
+    cid = _cid(state)
+    src = _asset_by_id(state, asset_id)
+    if not src or src.get("kind") != "image":
+        return {"ok": False, "error": f"no image {asset_id!r}; use an image id from the selection or LIBRARY"}
+    m = M.chosen(model, M.IMAGE_CHOICES) or M.chosen(_option(state, "imageModel"), M.IMAGE_CHOICES) or M.IMAGE
+    estimate = M.image_cost(m)
+    try:
+        await J.ensure_budget(cid, estimate)
+    except J.BudgetError as e:
+        return {"ok": False, "error": str(e)}
+    aspect = _nearest_aspect(int(src.get("w") or 1), int(src.get("h") or 1))
+    prompt = f"Edit image 1: {instruction}. Keep everything else exactly as it is: subject, composition, framing."
+    job = await J.start_asset(cid, kind="image", model=m, prompt=instruction, estimate=estimate, work=J.image_asset_work(prompt=prompt, model=m, aspect=aspect, refs=[src["url"]], rules=_check_rules(state, False)), aspect=aspect, near=asset_id, lane="image", parent=asset_id)
+    _bump(state)
+    return {"ok": True, "job": job, "model": M.IMAGE_LABEL.get(m, m), "estimate": estimate}
+
+
+async def edit_clip(asset_id: str, instruction: str, tool_context: ToolContext, reference_urls: list[str] | None = None) -> dict:
+    """Change a clip on the canvas with Omni Flash (light, weather, an object, style, camera feel),
+    keeping the rest. The result is a new clip beside the original.
+
+    Args:
+        asset_id: The clip's id.
+        instruction: What to change, concretely.
+        reference_urls: Up to 3 images the edit should use.
+    """
+    state = tool_context.state
+    cid = _cid(state)
+    src = _asset_by_id(state, asset_id)
+    if not src or src.get("kind") != "video":
+        return {"ok": False, "error": f"no clip {asset_id!r}"}
+    refs = [u for u in reference_urls or [] if u in _known_images(state)][:3]
+    estimate = round(M.OMNI_PER_SECOND * max(4.0, float(src.get("duration") or 6)), 3)
+    try:
+        await J.ensure_budget(cid, estimate)
+    except J.BudgetError as e:
+        return {"ok": False, "error": str(e)}
+    aspect = "16:9" if int(src.get("w") or 9) > int(src.get("h") or 16) else "9:16"
+    job = await J.start_asset(cid, kind="edit", model=M.OMNI, prompt=instruction, estimate=estimate, work=J.omni_asset_work(instruction=instruction + " Keep everything else the same. No on-screen text.", src=src["url"], aspect=aspect, images=refs), aspect=aspect, near=asset_id, lane="edit", parent=asset_id)
+    _bump(state)
+    return {"ok": True, "job": job, "model": "Omni Flash", "estimate": estimate}
+
+
+async def extend_clip(asset_id: str, tool_context: ToolContext, seconds: int = 6, prompt: str = "", model: str = "") -> dict:
+    """Continue a clip on the canvas: a new clip that starts on its last frame, beside it.
+
+    Args:
+        asset_id: The clip's id.
+        seconds: 4, 6 or 8.
+        prompt: What happens next ("" carries the same move on).
+        model: A video model id ("" uses the merchant's pick or the default).
+    """
+    state = tool_context.state
+    src = _asset_by_id(state, asset_id)
+    if not src or src.get("kind") != "video":
+        return {"ok": False, "error": f"no clip {asset_id!r}"}
+    try:
+        data, _ = await gen.fetch(src["url"])
+        frame_url = await J.storage_url(await ff.last_frame_bytes(data), "image/jpeg")
+    except Exception as err:
+        return {"ok": False, "error": f"could not read the clip's last frame: {str(err)[:160]}"}
+    state[MEDIA] = list(state.get(MEDIA) or []) + [frame_url]
+    aspect = "16:9" if int(src.get("w") or 9) > int(src.get("h") or 16) else "9:16"
+    return await make_clip(prompt or f"Continue the same shot seamlessly: {src.get('prompt') or ''}", tool_context, aspect=aspect, seconds=seconds, image=frame_url, model=model, near=asset_id)
+
+
+async def rename_campaign(name: str, tool_context: ToolContext) -> dict:
+    """Name the campaign (2 to 4 words about what it is for), when it is still "Untitled campaign".
+
+    Args:
+        name: The new name.
+    """
+    state = tool_context.state
+    name = " ".join(str(name).split())[:60]
+    if not name:
+        return {"ok": False, "error": "empty name"}
+    await store.post("/media/campaign", {"campaignId": _cid(state), "patch": {"name": name}})
+    state[CAMPAIGN] = {**(state.get(CAMPAIGN) or {}), "name": name}
+    return {"ok": True, "name": name}
 
 # --- tools: writing --------------------------------------------------------------------
 
@@ -603,9 +925,9 @@ async def _start_jobs(state: dict[str, Any], creative_id: str, plan: list[dict[s
     return ids
 
 
-async def _save(state: Any, *, doc: dict[str, Any], creative_id: str | None, audience: str | None, name: str | None, why: list | None, note: str) -> dict[str, Any]:
+async def _save(state: Any, *, doc: dict[str, Any], creative_id: str | None, audience: str | None, name: str | None, why: list | None, note: str, near: str | None = None) -> dict[str, Any]:
     cid = _cid(state)
-    res = await store.write_creative(cid, doc, creativeId=creative_id, name=name, audienceKey=audience, why=why, note=note)
+    res = await store.write_creative(cid, doc, creativeId=creative_id, name=name, audienceKey=audience, why=why, note=note, nearId=near)
     new_id = str(res["id"])
     # Read back the stored (validated) doc so ids and outlines match what the console shows.
     data = await store.load(cid)
@@ -619,7 +941,7 @@ async def _save(state: Any, *, doc: dict[str, Any], creative_id: str | None, aud
     return {"id": new_id, "version": res.get("version"), "doc": creatives.get(new_id, {}).get("doc", doc)}
 
 
-async def write_creative(audience_id: str, format: str, doc: dict, tool_context: ToolContext, name: str = "", why: list | None = None, creative_id: str = "") -> dict:
+async def write_creative(audience_id: str, format: str, doc: dict, tool_context: ToolContext, name: str = "", why: list | None = None, creative_id: str = "", near: str = "") -> dict:
     """Write a whole creative (a new one, or replace creative_id's doc). Shots without a
     finished clip start generating in the background and land on their own. Returns the
     saved outline, layout warnings and what the shots cost.
@@ -629,8 +951,9 @@ async def write_creative(audience_id: str, format: str, doc: dict, tool_context:
         format: story, portrait, square, landscape, banner or print.
         doc: The MediaDoc: {kind, background, layers, video?} (see THE DOCUMENT).
         name: Short name, e.g. "Night swimmers · Story".
-        why: 2 to 4 reasons [{text, evidence}] this creative fits the audience, citing Qloo.
+        why: 2 or 3 short reasons [{text, evidence}] this creative fits the audience (text at most 12 words, evidence at most 5 words naming the Qloo signal). Empty for "all" when no taste was read.
         creative_id: To replace an existing creative's doc; "" for a new one.
+        near: An image, clip or creative id on the canvas to place the new creative beside ("" places it after the last thing made).
     """
     state = tool_context.state
     raw = _coerce(doc)
@@ -662,7 +985,7 @@ async def write_creative(audience_id: str, format: str, doc: dict, tool_context:
             return {"ok": False, "problems": [str(e)], "hint": "nothing was saved; use stills, fewer or shorter shots, reuse, or ask the merchant"}
     async with _lock(creative_id or f"new:{audience_id}:{format}"):
         try:
-            saved = await _save(state, doc=norm, creative_id=creative_id or None, audience=audience_id, name=name or None, why=[w for w in (_coerce(why) or []) if isinstance(w, dict)] or None, note="Written by the agent")
+            saved = await _save(state, doc=norm, creative_id=creative_id or None, audience=audience_id, name=name or None, why=[w for w in (_coerce(why) or []) if isinstance(w, dict)] or None, note="Written by the agent", near=near or None)
         except Exception as err:
             return {"ok": False, "problems": [f"not saved: {str(err)[:300]}"]}
         jobs = await _start_jobs(state, saved["id"], plan) if plan else []
@@ -1108,6 +1431,13 @@ TOOLS = [
     PB.qloo_insights,
     PB.search_images,
     generate_image,
+    make_image,
+    make_clip,
+    make_music,
+    edit_image,
+    edit_clip,
+    extend_clip,
+    rename_campaign,
     write_creative,
     edit_creative,
     resize_creative,
@@ -1129,6 +1459,13 @@ STATUS_FOR_TOOL = {
     "qloo_insights": "Asking Qloo",
     "search_images": "Finding photographs",
     "generate_image": "Generating an image",
+    "make_image": "Making images",
+    "make_clip": "Shooting a clip",
+    "make_music": "Composing music",
+    "edit_image": "Editing the image",
+    "edit_clip": "Editing the clip with Omni",
+    "extend_clip": "Continuing the clip",
+    "rename_campaign": "Naming the campaign",
     "write_creative": "Designing a creative",
     "edit_creative": "Editing a creative",
     "resize_creative": "Adapting to more formats",
@@ -1147,13 +1484,23 @@ THINKING = {
     "build": os.environ.get("MEDIA_THINKING_BUILD", "MEDIUM"),
     "edit": os.environ.get("MEDIA_THINKING_EDIT", "LOW"),
 }
-RUNNER_FOR_KIND = {"generate": "build", "edit": "edit"}
+RUNNER_FOR_KIND = {"generate": "build", "edit": "edit", "prompt": "edit"}
+
+
+# Vertex now and then leaves a streamed answer open after its last part; ADK then waits on it
+# before the next call. A read timeout turns that into an error the turn recovers from
+# (routes.py carries on), and failed requests are retried.
+MODEL_TIMEOUT_MS = int(os.environ.get("MEDIA_MODEL_TIMEOUT_MS", "60000"))
+
+
+def _model(name: str) -> Gemini:
+    return Gemini(model=name, client_kwargs={"http_options": types.HttpOptions(timeout=MODEL_TIMEOUT_MS)}, retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1))
 
 
 def _make_agent(model: str, thinking: str) -> LlmAgent:
     return LlmAgent(
         name="slice_media_builder",
-        model=model,
+        model=_model(model),
         description="Designs posters and short videos per audience and format from a brand kit, a brief and Qloo taste profiles.",
         instruction=build_instruction,
         generate_content_config=types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_level=thinking, include_thoughts=True), temperature=0.7),
@@ -1164,6 +1511,21 @@ def _make_agent(model: str, thinking: str) -> LlmAgent:
 
 agents = {(m, mode): _make_agent(m, level) for m in MODELS for mode, level in THINKING.items()}
 root_agent = agents[(MODEL, "build")]
+
+
+def prompt_message(state: dict[str, Any], message: str) -> str:
+    """A prompt-bar turn: the merchant's words, with what they picked restated so the model cannot miss it."""
+    o = state.get(OPTIONS) or {}
+    if o.get("output") == "campaign":
+        return turn_message(state, message)
+    picks = [f"make: {o.get('output') or 'auto'}"]
+    if o.get("aspect"):
+        picks.append(f"shape {o['aspect']}")
+    if int(o.get("count") or 1) > 1:
+        picks.append(f"{int(o['count'])} takes")
+    if o.get("audienceId") and o.get("audienceId") != "all":
+        picks.append(f"for audience {o['audienceId']}")
+    return f"{message}\n[Prompt bar: {', '.join(picks)}. Follow THIS TURN.]"
 
 
 def turn_message(state: dict[str, Any], note: str | None) -> str:

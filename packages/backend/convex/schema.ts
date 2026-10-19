@@ -961,9 +961,39 @@ export default defineSchema({
 
   /* Media service: posters and short videos (see apps/web/src/lib/media). */
 
+  /** A brand the Media agent designs for: kit, what it does, its products and photos. Its own list, like Pages and Email brands. */
+  mediaBrands: defineTable({
+    owner: v.string(),
+    name: v.string(),
+    url: v.optional(v.string()),
+    /** MediaAbout: what the business does and who for. */
+    about: v.optional(v.any()),
+    /** MediaKit: logo, colours, fonts, voice, imagery. */
+    kit: v.any(),
+    /** MediaProduct[] the agent can feature. */
+    products: v.array(v.any()),
+    /** Photos from the brand's site. */
+    images: v.array(v.string()),
+    source: v.object({
+      kind: v.union(v.literal("pages"), v.literal("email"), v.literal("url"), v.literal("manual")),
+      pagesBrandId: v.optional(v.id("pagesBrands")),
+      emailBrandId: v.optional(v.id("emailBrands")),
+    }),
+    /** "reading" while its website is read, then "ready" (or "failed"). */
+    status: v.string(),
+    progress: v.optional(v.object({ value: v.number(), label: v.string() })),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_owner", ["owner"]),
+
   mediaCampaigns: defineTable({
     name: v.string(),
     owner: v.string(),
+    /** The brand the agent designs for; `kit` and `products` are its copy at the time it was picked. */
+    brandId: v.optional(v.id("mediaBrands")),
+    /** Where the canvas was last looking. */
+    viewport: v.optional(v.object({ x: v.number(), y: v.number(), zoom: v.number() })),
     /** "poster" | "video" | "both" */
     kind: v.string(),
     /** Where the kit came from. */
@@ -1016,6 +1046,10 @@ export default defineSchema({
     parentId: v.optional(v.id("mediaAssets")),
     cost: v.optional(v.number()),
     credit: v.optional(v.string()),
+    /** On the canvas (unset: only in the library). */
+    board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
+    /** The brand check of a generated picture: {score, total, passed, tries, notes}. */
+    review: v.optional(v.any()),
     createdAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
 
@@ -1036,6 +1070,8 @@ export default defineSchema({
     /** Why this creative, citing Qloo evidence. */
     why: v.optional(v.array(v.object({ text: v.string(), evidence: v.string() }))),
     export: v.optional(v.object({ url: v.string(), storageId: v.optional(v.id("_storage")), mime: v.string(), version: v.number(), at: v.number() })),
+    /** On the canvas. */
+    board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
@@ -1069,6 +1105,12 @@ export default defineSchema({
     cost: v.optional(v.number()),
     assetId: v.optional(v.id("mediaAssets")),
     error: v.optional(v.string()),
+    /** A standalone generation (an image, a clip, a track) holds its spot on the canvas while it runs; its asset lands there. */
+    board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
+    /** The shape it will have ("9:16"), so the placeholder is the right size. */
+    aspect: v.optional(v.string()),
+    /** Hidden from the canvas (a failed generation the merchant dismissed). */
+    dismissed: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

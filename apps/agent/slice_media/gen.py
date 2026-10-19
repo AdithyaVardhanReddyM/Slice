@@ -187,8 +187,8 @@ async def omni(instruction: str, *, aspect: str, clip: bytes | None = None, imag
 # --- music, voice -------------------------------------------------------------------------
 
 
-async def music(prompt: str) -> tuple[bytes, str]:
-    it = await _interact(timeout_s=300, background=False, model=M.LYRIA, input=prompt)
+async def music(prompt: str, model: str | None = None) -> tuple[bytes, str]:
+    it = await _interact(timeout_s=300, background=False, model=model or M.LYRIA, input=prompt)
     data, mime = _interaction_output(it, "audio")
     return data, mime or "audio/mpeg"
 

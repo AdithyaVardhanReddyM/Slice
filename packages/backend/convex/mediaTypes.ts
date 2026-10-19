@@ -3,7 +3,8 @@
 // Plain TypeScript (no Convex imports): apps/web, the HTTP routes and the
 // backend read one definition. The agent (apps/agent/slice_media) mirrors it.
 
-import type { BrandColors, BrandFont } from "./pagesTypes";
+import type { EmailKit } from "./emailTypes";
+import type { BrandColors, BrandFont, BrandKit } from "./pagesTypes";
 
 /* Formats ------------------------------------------------------------------ */
 
@@ -54,7 +55,7 @@ export const TIERS: Record<Tier, TierSpec> = {
   draft: {
     label: "Draft",
     blurb: "Cheapest: Veo Lite and stills, for exploring ideas",
-    image: { model: "gemini-3.1-flash-lite-image", label: "Nano Banana Lite", price: 0.02 },
+    image: { model: "gemini-nano-banana-2.1", label: "Nano Banana 2.1", price: 0.034 },
     video: {
       hero: { model: "veo-3.1-lite-generate-001", label: "Veo 3.1 Lite", perSecond: 0.05 },
       broll: { model: "veo-3.1-lite-generate-001", label: "Veo 3.1 Lite", perSecond: 0.05 },
@@ -64,9 +65,9 @@ export const TIERS: Record<Tier, TierSpec> = {
   smart: {
     label: "Smart",
     blurb: "Mixed: Veo Fast for hero shots, Lite for b-roll, stills where motion adds nothing",
-    image: { model: "gemini-3.1-flash-image", label: "Nano Banana 2", price: 0.067 },
+    image: { model: "gemini-nano-banana-2.1", label: "Nano Banana 2.1", price: 0.034 },
     video: {
-      hero: { model: "veo-3.1-fast-generate-001", label: "Veo 3.1 Fast", perSecond: 0.15 },
+      hero: { model: "veo-3.1-fast-generate-001", label: "Veo 3.1 Fast", perSecond: 0.08 },
       broll: { model: "veo-3.1-lite-generate-001", label: "Veo 3.1 Lite", perSecond: 0.05 },
     },
     resolution: "720p",
@@ -77,7 +78,7 @@ export const TIERS: Record<Tier, TierSpec> = {
     image: { model: "gemini-3-pro-image", label: "Nano Banana Pro", price: 0.134 },
     video: {
       hero: { model: "veo-3.1-generate-001", label: "Veo 3.1", perSecond: 0.4 },
-      broll: { model: "veo-3.1-fast-generate-001", label: "Veo 3.1 Fast", perSecond: 0.15 },
+      broll: { model: "veo-3.1-fast-generate-001", label: "Veo 3.1 Fast", perSecond: 0.08 },
     },
     resolution: "1080p",
   },
@@ -88,9 +89,140 @@ export const isTier = (x: unknown): x is Tier => x === "draft" || x === "smart" 
 /** Edits and extensions (Gemini Omni Flash), music (Lyria 3) and voice (Gemini TTS). */
 export const EXTRAS = {
   edit: { label: "Omni Flash edit", perSecond: 0.1 },
-  music: { label: "Lyria 3 clip", price: 0.04 },
+  music: { label: "Lyria 3 Clip", price: 0.04 },
   voice: { label: "Gemini TTS", price: 0.01 },
 };
+
+/* Models -------------------------------------------------------------------
+   What the prompt bar offers, newest and best first. The agent
+   (slice_media/models.py) runs the same ids at the same list prices. */
+
+export interface ImageModel {
+  id: string;
+  label: string;
+  blurb: string;
+  /** USD per image. */
+  price: number;
+}
+
+export const IMAGE_MODELS: ImageModel[] = [
+  { id: "gemini-3-pro-image", label: "Nano Banana Pro", blurb: "Sharpest detail, best text and product fidelity", price: 0.134 },
+  { id: "gemini-nano-banana-2.1", label: "Nano Banana 2.1", blurb: "Newest. Fast and close to Pro", price: 0.034 },
+];
+
+export interface VideoModel {
+  id: string;
+  label: string;
+  blurb: string;
+  /** USD per second, silent and with generated sound. */
+  perSecond: number;
+  withSound: number;
+  /** 1080p (always 8 s clips) or 720p. */
+  hd: boolean;
+}
+
+export const VIDEO_MODELS: VideoModel[] = [
+  { id: "veo-3.1-generate-001", label: "Veo 3.1", blurb: "Best motion and realism, 1080p", perSecond: 0.2, withSound: 0.4, hd: true },
+  { id: "veo-3.1-fast-generate-001", label: "Veo 3.1 Fast", blurb: "Nearly as good, far cheaper", perSecond: 0.08, withSound: 0.1, hd: false },
+  { id: "veo-3.1-lite-generate-001", label: "Veo 3.1 Lite", blurb: "Cheapest, for drafts and b-roll", perSecond: 0.03, withSound: 0.05, hd: false },
+];
+
+export interface MusicModel {
+  id: string;
+  label: string;
+  blurb: string;
+  price: number;
+  /** Seconds it makes. */
+  seconds: number;
+}
+
+export const MUSIC_MODELS: MusicModel[] = [
+  { id: "lyria-3-pro-preview", label: "Lyria 3 Pro", blurb: "A full track, up to a few minutes", price: 0.08, seconds: 120 },
+  { id: "lyria-3-clip-preview", label: "Lyria 3 Clip", blurb: "A 30-second cue for ads", price: 0.04, seconds: 30 },
+];
+
+export const DEFAULT_IMAGE_MODEL = "gemini-nano-banana-2.1";
+export const DEFAULT_VIDEO_MODEL = "veo-3.1-fast-generate-001";
+export const DEFAULT_MUSIC_MODEL = "lyria-3-clip-preview";
+
+export const imageModel = (id: string | undefined) => IMAGE_MODELS.find((m) => m.id === id) ?? IMAGE_MODELS[1];
+export const videoModel = (id: string | undefined) => VIDEO_MODELS.find((m) => m.id === id) ?? VIDEO_MODELS[1];
+export const musicModel = (id: string | undefined) => MUSIC_MODELS.find((m) => m.id === id) ?? MUSIC_MODELS[1];
+
+/** Veo makes 4, 6 or 8 second clips; 1080p always makes 8. */
+export const veoSeconds = (s: number, hd: boolean) => (hd ? 8 : s <= 4.5 ? 4 : s <= 6.5 ? 6 : 8);
+
+/** Every model id the console shows, with a short name (jobs, assets, the spend panel). */
+export function modelLabel(id: string | undefined): string {
+  if (!id) return "";
+  const known = [...IMAGE_MODELS, ...VIDEO_MODELS, ...MUSIC_MODELS].find((m) => m.id === id);
+  if (known) return known.label;
+  if (id === "gemini-3.1-flash-image") return "Nano Banana 2";
+  if (id === "gemini-3.1-flash-lite-image") return "Nano Banana Lite";
+  if (/omni/i.test(id)) return "Omni Flash";
+  if (/tts/i.test(id)) return "Gemini TTS";
+  return id;
+}
+
+/* What the prompt bar makes ------------------------------------------------- */
+
+/** "auto": the agent decides from the words. */
+export type MediaOutput = "auto" | "image" | "poster" | "clip" | "video" | "music";
+
+export const OUTPUTS: Record<MediaOutput, { label: string; hint: string }> = {
+  auto: { label: "Auto", hint: "Slice picks from what you ask" },
+  image: { label: "Image", hint: "A photograph or illustration" },
+  poster: { label: "Poster", hint: "A designed ad with your logo, copy and button" },
+  clip: { label: "Video clip", hint: "One generated shot, 4 to 8 seconds" },
+  video: { label: "Video ad", hint: "Shots, text, music and voice, edited together" },
+  music: { label: "Music", hint: "An instrumental track, about 30 seconds" },
+};
+
+export type Aspect = "9:16" | "4:5" | "1:1" | "16:9";
+
+/** Video models make 9:16 and 16:9 only; the other aspects are for images and posters. */
+export const ASPECTS: { value: Aspect; label: string; format: FormatPreset; video: boolean }[] = [
+  { value: "9:16", label: "Story", format: "story", video: true },
+  { value: "4:5", label: "Feed", format: "portrait", video: false },
+  { value: "1:1", label: "Square", format: "square", video: false },
+  { value: "16:9", label: "Wide", format: "landscape", video: true },
+];
+
+/* The board ----------------------------------------------------------------
+   Every creative, generated image, clip and track sits on the campaign's
+   infinite canvas at a position in board units (1 unit = 1 px at 100%). */
+
+export interface BoardPos {
+  x: number;
+  y: number;
+  /** Width on the board; the height follows the content's shape. */
+  w: number;
+}
+
+/** A node's width on the board for content of this shape: tall things narrower, so rows read evenly. */
+export function boardWidth(w: number, h: number): number {
+  const r = w / Math.max(1, h);
+  return r < 0.7 ? 300 : r < 0.9 ? 340 : r < 1.2 ? 380 : 520;
+}
+
+export const AUDIO_NODE = { w: 360, h: 128 };
+export const BOARD_GAP = 72;
+
+export const aspectSize = (aspect: string | undefined): { w: number; h: number } => {
+  const [a, b] = String(aspect ?? "1:1").split(":").map(Number);
+  return a > 0 && b > 0 ? { w: a, h: b } : { w: 1, h: 1 };
+};
+
+/* Brands -------------------------------------------------------------------- */
+
+export interface MediaAbout {
+  /** What the business is and sells, one paragraph. */
+  summary: string;
+  /** Who it sells to. */
+  audience?: string;
+  categories?: string[];
+  location?: string;
+}
 
 /* Campaign ----------------------------------------------------------------- */
 
@@ -101,7 +233,8 @@ export interface MediaKit {
   colors: BrandColors;
   fonts: { heading: BrandFont; body: BrandFont };
   voice?: { summary: string; do: string[]; avoid: string[] };
-  imagery?: { style: string; treatment: string };
+  /** How the brand's pictures look, and what they never show. */
+  imagery?: { style: string; treatment: string; avoid?: string[] };
   url?: string;
   uppercaseLabels?: boolean;
   buttonStyle?: "pill" | "rounded" | "square";
@@ -562,3 +695,40 @@ export function fontsHrefs(kit: Pick<MediaKit, "fonts"> | undefined): string[] {
 }
 
 export const fontStack = (f: BrandFont | undefined, fallback = "system-ui, sans-serif") => (f?.family ? `"${f.family.replace(/["\\]/g, "")}", ${f.fallback || fallback}` : fallback);
+
+/* Kits from the other services ------------------------------------------------
+   A Media brand can start from a Pages or an Email brand: its kit is copied
+   once and edited here, never written back. */
+
+export function kitFromPages(name: string, url: string | undefined, kit: BrandKit | undefined): MediaKit {
+  if (!kit) return { ...DEFAULT_KIT(name), ...(url ? { url } : {}) };
+  return strip({
+    name,
+    url,
+    logo: kit.logo,
+    wordmark: kit.wordmark,
+    colors: kit.colors,
+    fonts: kit.fonts,
+    voice: kit.voice,
+    imagery: kit.imagery,
+    uppercaseLabels: kit.uppercaseLabels,
+    buttonStyle: kit.buttonStyle,
+  });
+}
+
+export function kitFromEmail(name: string, url: string | undefined, kit: EmailKit | undefined): MediaKit {
+  if (!kit) return { ...DEFAULT_KIT(name), ...(url ? { url } : {}) };
+  const font = (f: EmailKit["fonts"]["heading"]): BrandFont => ({ family: f.family, source: f.google ? "google" : "system", ...(f.weights ? { weights: f.weights } : {}), fallback: f.fallback });
+  return strip({
+    name,
+    url,
+    logo: kit.logo ? strip({ src: kit.logo.src, alt: kit.logo.alt, onDark: kit.logo.onDark }) : undefined,
+    wordmark: kit.wordmark,
+    colors: kit.colors,
+    fonts: { heading: font(kit.fonts.heading), body: font(kit.fonts.body) },
+    voice: kit.voice,
+    uppercaseLabels: kit.uppercaseLabels,
+    buttonStyle: kit.buttonStyle,
+  });
+}
+

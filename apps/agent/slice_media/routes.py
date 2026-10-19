@@ -1,8 +1,13 @@
 """FastAPI routes for the Media service (registered in server.py).
 
-POST /media/agent   {campaignId, kind, message?, history?, attachments?, selection?, model?}  NDJSON stream
+POST /media/agent   {campaignId, kind, message?, history?, attachments?, selection?, nodes?, options?, model?}  NDJSON stream
 POST /media/action  {campaignId, action, args}                                                {ok, ...}
 POST /media/export  {campaignId, creativeId}                                                  {ok, url, mime}
+POST /media/brand   {brandId, url}                                                            {ok, error?}
+
+`kind` "prompt" is a turn from the canvas prompt bar: `options` carries what to make
+(output, imageModel, videoModel, musicModel, aspect, count, audienceId, check) and
+`nodes` what is selected on the canvas.
 
 The agent stream speaks the /pages/build protocol (start, status, span, thought,
 text, text_done, tool_call, tool_result, question, doc, error, done), so the
@@ -34,6 +39,7 @@ from pydantic import BaseModel
 from slice_agent.trace import Span, start_turn
 from slice_pages.routes import _image_part, _ndjson, _preview as pages_preview, _safe
 
+from . import brand as brand_setup
 from . import builder as B
 from . import render
 from . import store
@@ -47,6 +53,45 @@ runners = {key: Runner(app_name=APP_NAME, agent=a, session_service=sessions) for
 
 def _error(err: Exception) -> str:
     return f"{type(err).__name__}: {str(err)[:300]}"
+
+
+# A model stream that goes quiet this long (no event, not even a tool finishing) is treated
+# as stalled; the longest tools (a render and its review) finish well inside it. A turn whose
+# first answer has not come after FIRST_S is asked once more (Vertex sometimes leaves a
+# request hanging; the next one answers in seconds).
+STALL_S = 180
+FIRST_S = 40
+
+
+class Stalled(Exception):
+    pass
+
+
+def _timed_out(err: BaseException) -> bool:
+    """A model read timeout, however the SDK wraps it."""
+    seen: set[int] = set()
+    e: BaseException | None = err
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        if isinstance(e, (TimeoutError, asyncio.TimeoutError)) or "timeout" in type(e).__name__.lower() or "timed out" in str(e).lower():
+            return True
+        e = e.__cause__ or e.__context__
+    return False
+
+
+async def _within(events: AsyncIterator[Any], seconds: float, first: float | None = None) -> AsyncIterator[Any]:
+    """The events, failing with Stalled when none arrives for `seconds` (`first` for the first one)."""
+    it = events.__aiter__()
+    wait = first or seconds
+    while True:
+        try:
+            ev = await asyncio.wait_for(it.__anext__(), timeout=wait)
+            wait = seconds
+        except StopAsyncIteration:
+            return
+        except asyncio.TimeoutError:
+            raise Stalled() from None
+        yield ev
 
 
 class HistoryMessage(BaseModel):
@@ -67,13 +112,20 @@ class Selection(BaseModel):
     time: float | None = None
 
 
+class Node(BaseModel):
+    kind: str  # "creative" | "asset"
+    id: str
+
+
 class AgentRequest(BaseModel):
     campaignId: str
-    kind: str = "generate"  # "generate" | "edit"
+    kind: str = "generate"  # "generate" | "edit" | "prompt"
     message: str | None = None
     history: list[HistoryMessage] = []
     attachments: list[Attachment] = []
     selection: Selection | None = None
+    nodes: list[Node] = []
+    options: dict[str, Any] = {}
     model: str | None = None
 
 
@@ -115,6 +167,9 @@ def _label(name: str, args: Any) -> str:
     a = args if isinstance(args, dict) else {}
     if name == "write_creative" and a.get("name"):
         return f"Designing {a['name']}"
+    if name == "make_image":
+        n = int(a.get("count") or 1)
+        return f"Making {n} image{'s' if n != 1 else ''}"
     if name == "get_audience" and a.get("audience_id"):
         return f"Reading the taste of {a['audience_id']}"
     return B.STATUS_FOR_TOOL.get(name, "Working")
@@ -134,7 +189,9 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
         return f"{resp.get('applied', 0)} changes"
     if name == "resize_creative":
         return ", ".join(m.get("format", "") for m in resp.get("made") or [] if m.get("creativeId"))
-    if name in ("add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover", "generate_image"):
+    if name == "rename_campaign":
+        return str(resp.get("name") or "")
+    if name in ("add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover", "generate_image", "make_image", "make_clip", "make_music", "edit_image", "edit_clip", "extend_clip"):
         cost = resp.get("estimate", resp.get("cost"))
         return (f"~${cost:.2f}" if isinstance(cost, (int, float)) else "") + (f" on {resp['model']}" if resp.get("model") else "")
     if name == "review_creative":
@@ -180,12 +237,14 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         yield _ndjson({"type": "error", "message": _error(err)})
         return
     message = (req.message or "").strip()
-    kind = "edit" if req.kind == "edit" else "generate"
-    if kind == "edit" and not message:
-        yield _ndjson({"type": "error", "message": "An edit needs a message"})
+    kind = req.kind if req.kind in ("edit", "prompt") else "generate"
+    if kind in ("edit", "prompt") and not message and not req.attachments:
+        yield _ndjson({"type": "error", "message": "Say what to make"})
         return
     state[B.KIND] = kind
     state[B.SELECTION] = req.selection.model_dump() if req.selection else {}
+    state[B.NODES] = [n.model_dump() for n in req.nodes][:12]
+    state[B.OPTIONS] = _options(req.options)
     state[B.WRITES] = 0
 
     session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=cid)
@@ -199,7 +258,7 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         media = list(session.state.get(B.MEDIA) or [])
         delta = {**state, B.MEDIA: media + [u for u in attached_urls if u not in media]}
 
-    user_text = message if kind == "edit" else B.turn_message(state, message)
+    user_text = message if kind == "edit" else B.prompt_message(state, message or "Use the attached pictures.") if kind == "prompt" else B.turn_message(state, message)
     parts: list[types.Part] = [types.Part(text=user_text)]
     attached = [p for p in [await _image_part(a.url, a.type) for a in req.attachments[:6]] if p]
     if attached:
@@ -229,10 +288,43 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         else:
             push({"kind": kind_, "text": delta_text})
 
+    model = req.model if req.model in B.MODELS else B.MODEL
+    heavy = kind == "generate" or state[B.OPTIONS].get("output") in ("poster", "video", "campaign")
+    runner = runners[(model, "build" if heavy else B.RUNNER_FOR_KIND[kind])]
+
+    async def events() -> AsyncIterator[Any]:
+        """The turn's events; None marks a retry. A model call that hangs or times out is tried
+        again once: from the start when nothing came back, else asked to carry on from its last step."""
+        nonlocal delta
+        message_in = types.Content(role="user", parts=parts)
+        for attempt in (1, 2):
+            got = False
+            try:
+                async for ev in _within(runner.run_async(user_id=cid, session_id=cid, new_message=message_in, state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)), STALL_S, first=FIRST_S):
+                    got = True
+                    yield ev
+                return
+            except Exception as err:
+                if attempt == 2 or not (isinstance(err, Stalled) or _timed_out(err)):
+                    raise
+            yield None
+            if got:
+                # The work so far is in the session; ask for the rest.
+                message_in = types.Content(role="user", parts=[types.Part(text="[The connection dropped after your last step. Carry on from there: do not redo what is already done, then reply.]")])
+                delta = {}
+                continue
+            # Nothing came back: a fresh session, so the message is not in the conversation twice.
+            media = list(((await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=cid)) or SimpleNamespace(state={})).state.get(B.MEDIA) or [])
+            await sessions.delete_session(app_name=APP_NAME, user_id=cid, session_id=cid)
+            fresh = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=cid, state={**state, B.MEDIA: media + [u for u in attached_urls if u not in media]})
+            await _replay(fresh, req.history)
+            delta = {}
+
     try:
-        model = req.model if req.model in B.MODELS else B.MODEL
-        runner = runners[(model, B.RUNNER_FOR_KIND[kind])]
-        async for ev in runner.run_async(user_id=cid, session_id=session.id, new_message=types.Content(role="user", parts=parts), state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)):
+        async for ev in events():
+            if ev is None:
+                yield _ndjson({"type": "status", "text": "The model was slow to answer, carrying on"})
+                continue
             while emitted < len(spans):
                 yield _ndjson({"type": "span", "span": spans[emitted]})
                 emitted += 1
@@ -308,6 +400,8 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                             yield _ndjson({"type": "text", "delta": part.text})
                             yield _ndjson({"type": "text_done", "text": part.text})
                         streamed = ""
+    except Stalled:
+        yield _ndjson({"type": "error", "message": f"The model stopped responding for {STALL_S // 60} minutes, so this turn was stopped. Everything it made is on the canvas; ask again to carry on."})
     except Exception as err:
         yield _ndjson({"type": "error", "message": _error(err)})
 
@@ -326,6 +420,21 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
             st["ms"] = max(0, total_ms - st.get("t", total_ms))
     yield _ndjson({"type": "done", "messageId": message_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": writes})
     asyncio.create_task(_persist(req, message_id, message, full_text, spans, steps))
+
+
+def _options(raw: dict[str, Any]) -> dict[str, Any]:
+    """The prompt bar's picks, kept to what the builder understands."""
+    out: dict[str, Any] = {}
+    if raw.get("output") in ("auto", "image", "poster", "clip", "video", "music", "campaign"):
+        out["output"] = raw["output"]
+    for key in ("imageModel", "videoModel", "musicModel", "aspect", "audienceId"):
+        if isinstance(raw.get(key), str) and raw[key]:
+            out[key] = raw[key][:60]
+    if isinstance(raw.get("count"), (int, float)):
+        out["count"] = max(1, min(4, int(raw["count"])))
+    if raw.get("check") is False:
+        out["check"] = False
+    return out
 
 
 async def _persist(req: AgentRequest, message_id: str, merchant_text: str, reply: str, spans: list[Span], steps: list[dict[str, Any]]) -> None:
@@ -356,6 +465,12 @@ ACTIONS: dict[str, tuple[Any, tuple[str, ...]]] = {
     "add_music": (B.add_music, ("creative_id", "prompt", "volume")),
     "add_voiceover": (B.add_voiceover, ("creative_id", "script", "voice", "style", "start")),
     "generate_image": (B.generate_image, ("prompt", "format", "reference_urls", "quality")),
+    "make_image": (B.make_image, ("prompt", "aspect", "count", "reference_urls", "model", "near")),
+    "make_clip": (B.make_clip, ("prompt", "aspect", "seconds", "image", "model", "sound", "near")),
+    "make_music": (B.make_music, ("prompt", "model", "near")),
+    "edit_image": (B.edit_image, ("asset_id", "instruction", "model")),
+    "edit_clip": (B.edit_clip, ("asset_id", "instruction", "reference_urls")),
+    "extend_clip": (B.extend_clip, ("asset_id", "seconds", "prompt", "model")),
     "resize_creative": (B.resize_creative, ("creative_id", "formats")),
 }
 
@@ -383,6 +498,25 @@ async def action(req: ActionRequest) -> dict[str, Any]:
     except TypeError as err:
         return {"ok": False, "error": f"bad arguments: {str(err)[:200]}"}
     except Exception as err:
+        return {"ok": False, "error": _error(err)}
+
+
+class BrandRequest(BaseModel):
+    brandId: str
+    url: str
+
+
+@router.post("/brand")
+async def brand(req: BrandRequest) -> dict[str, Any]:
+    """Read a brand's website into its Media guidelines (about half a minute); progress goes to Convex as it runs."""
+    start_turn()
+    try:
+        return await brand_setup.run(req.brandId, req.url)
+    except Exception as err:
+        try:
+            await store.post("/media/brand", {"brandId": req.brandId, "patch": {"status": "failed", "error": _error(err)}})
+        except Exception:
+            pass
         return {"ok": False, "error": _error(err)}
 
 

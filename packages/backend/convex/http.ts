@@ -353,6 +353,7 @@ emailRoute("/media/creative", async (ctx, body) => {
       ...(typeof body.audienceKey === "string" ? { audienceKey: body.audienceKey } : {}),
       ...(Array.isArray(body.why) ? { why: (body.why as { text?: unknown; evidence?: unknown }[]).map((w) => ({ text: String(w.text ?? ""), evidence: String(w.evidence ?? "") })) } : {}),
       ...(typeof body.note === "string" ? { note: body.note } : {}),
+      ...(typeof body.nearId === "string" ? { nearId: body.nearId } : {}),
       doc: body.doc,
     }),
   );
@@ -373,7 +374,7 @@ emailRoute("/media/clip", async (ctx, { creativeId, clipId, patch }) => {
 });
 
 /** A file in the library: { storageId } from /media/upload-url, or an https url. */
-emailRoute("/media/asset", async (ctx, { campaignId, asset }) => {
+emailRoute("/media/asset", async (ctx, { campaignId, asset, place, nearId }) => {
   const id = asId<"mediaCampaigns">(campaignId);
   if (!id || !asset || typeof asset !== "object") return json({ error: "expected { campaignId, asset }" }, 400);
   const a = asset as Record<string, unknown>;
@@ -381,12 +382,14 @@ emailRoute("/media/asset", async (ctx, { campaignId, asset }) => {
     await ctx.runMutation(internal.media.addAssetInternal, {
       campaignId: id,
       asset: {
-        ...pick(a, ["url", "mime", "name", "w", "h", "duration", "prompt", "model", "cost", "credit"]),
+        ...pick(a, ["url", "mime", "name", "w", "h", "duration", "prompt", "model", "cost", "credit", "review"]),
         ...(a.storageId ? { storageId: (a.storageId as Id<"_storage">)! } : {}),
         ...(a.parentId ? { parentId: asId<"mediaAssets">(a.parentId)! } : {}),
         kind: String(a.kind ?? "image"),
         source: String(a.source ?? "generated"),
       } as never,
+      ...(place === true ? { place: true } : {}),
+      ...(typeof nearId === "string" ? { nearId } : {}),
     }),
   );
 });
@@ -397,7 +400,7 @@ emailRoute("/media/job", async (ctx, body) => {
   return json(
     await ctx.runMutation(internal.media.upsertJob, {
       campaignId,
-      ...pick(body, ["kind", "model", "prompt", "status", "estimate", "cost", "error", "targetId"]),
+      ...pick(body, ["kind", "model", "prompt", "status", "estimate", "cost", "error", "targetId", "place", "aspect", "nearId"]),
       ...(body.jobId ? { jobId: asId<"mediaJobs">(body.jobId)! } : {}),
       ...(body.creativeId ? { creativeId: asId<"mediaCreatives">(body.creativeId)! } : {}),
       ...(body.assetId ? { assetId: asId<"mediaAssets">(body.assetId)! } : {}),
@@ -424,6 +427,14 @@ emailRoute("/media/chat", async (ctx, { campaignId, messages }) => {
   const id = asId<"mediaCampaigns">(campaignId);
   if (!id || !Array.isArray(messages)) return json({ error: "expected { campaignId, messages }" }, 400);
   await ctx.runMutation(internal.media.appendChat, { id, messages });
+  return json({ ok: true });
+});
+
+/** Brand setup from a website: progress, then the kit, what it does, products and photos. */
+emailRoute("/media/brand", async (ctx, { brandId, patch }) => {
+  const id = asId<"mediaBrands">(brandId);
+  if (!id || !patch) return json({ error: "expected { brandId, patch }" }, 400);
+  await ctx.runMutation(internal.mediaBrands.patchFromAgent, { id, patch });
   return json({ ok: true });
 });
 

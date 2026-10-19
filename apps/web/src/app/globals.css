@@ -191,3 +191,22 @@
     background: none;
   }
 }
+/* Media canvas: a light passing over a generation while it runs. */
+.media-sheen {
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
+  background-size: 220% 100%;
+  animation: media-sheen 1.9s ease-in-out infinite;
+}
+@keyframes media-sheen {
+  from {
+    background-position: 160% 0;
+  }
+  to {
+    background-position: -60% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .media-sheen {
+    animation: none;
+  }
+}

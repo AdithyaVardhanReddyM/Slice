@@ -5,10 +5,10 @@
 // finished shot with Omni instead of remaking it, continue it, add shots,
 // music and a voiceover. Each shows what it would cost before it runs.
 
-import { ArrowLeft, ArrowRight, Loader2, Music, Plus, RefreshCw, Trash2, Wand2, Mic, FastForward } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Music, Plus, RefreshCw, Trash2, PenLine, Mic, FastForward } from "lucide-react";
 import { useState } from "react";
 import { EXTRAS, timeline, type AudioClip, type Clip, type KenBurns, type ShotRole } from "@slice/backend/convex/mediaTypes";
-import { usd } from "@/lib/media/kit";
+import { usd } from "../prompt/options";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/console/form";
 import { Badge } from "@/components/console/primitives";
@@ -17,10 +17,10 @@ import { ImagePreview, Num, Row, Section, Seg, SmallButton, Toggle } from "./con
 import { omniEstimate, shotEstimate, type Quality } from "./costs";
 
 const QUALITIES: { value: Quality; label: string; title: string }[] = [
-  { value: "auto", label: "Auto", title: "The campaign tier picks by the shot's role" },
-  { value: "draft", label: "Draft", title: "Veo 3.1 Lite / Nano Banana Lite: cheapest" },
-  { value: "fast", label: "Fast", title: "Veo 3.1 Fast" },
-  { value: "premium", label: "Best", title: "Veo 3.1 / Nano Banana Pro" },
+  { value: "auto", label: "Auto", title: "Picked by the shot's role: hero shots get the better model" },
+  { value: "veo-3.1-lite-generate-001", label: "Lite", title: "Veo 3.1 Lite: cheapest" },
+  { value: "veo-3.1-fast-generate-001", label: "Fast", title: "Veo 3.1 Fast" },
+  { value: "veo-3.1-generate-001", label: "Veo 3.1", title: "Veo 3.1: best, 1080p" },
 ];
 
 const ROLES: { value: ShotRole; label: string }[] = [
@@ -221,7 +221,7 @@ export function ShotPanel({ id }: { id: string }) {
             <div className="flex items-center justify-between gap-2">
               <Cost usd={omniEstimate(clip)} />
               <SmallButton tone="primary" disabled={busy || !instruction.trim() || running("edit")} onClick={() => void act("edit_shot", { creative_id: cid, shot_id: clip.id, instruction: instruction.trim() }, "edit").then((ok) => ok && setInstruction(""))}>
-                {running("edit") ? <Loader2 className="animate-spin" /> : <Wand2 />} Change
+                {running("edit") ? <Loader2 className="animate-spin" /> : <PenLine />} Change
               </SmallButton>
             </div>
           </Section>

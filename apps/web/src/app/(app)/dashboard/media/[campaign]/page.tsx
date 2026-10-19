@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MediaStudioRoute } from "@/components/console/media/studio/studio";
+import { MediaCanvasRoute } from "@/components/console/media/canvas/workspace";
 
-// The studio reads the campaign id and ?generate from the URL on the client.
+// The canvas reads the campaign id from the URL on the client.
 export const instant = false;
 
-export const metadata: Metadata = { title: "Media studio" };
+export const metadata: Metadata = { title: "Media" };
 
-export default function MediaStudioPage() {
+export default function MediaCampaignPage() {
   return (
-    <Suspense fallback={<div className="fixed inset-0 bg-white" />}>
-      <MediaStudioRoute />
+    <Suspense fallback={<div className="fixed inset-0 bg-[#f6f5f3]" />}>
+      <MediaCanvasRoute />
     </Suspense>
   );
 }
