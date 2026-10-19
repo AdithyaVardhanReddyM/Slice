@@ -176,7 +176,7 @@ export function ItemsCsvDialog({
           <div className="grid gap-5">
             <div className="flex items-center justify-between gap-3 rounded-xl bg-neutral-50 px-3 py-2 text-sm ring-1 ring-black/[0.05]">
               <span className="truncate">
-                <span className="font-medium">{file.name}</span> · {file.csv.rows.length} rows
+                <span className="font-medium">{file.name}</span> ({file.csv.rows.length} rows)
               </span>
               <Button variant="ghost" size="sm" onClick={reset}>
                 Choose another
@@ -223,7 +223,7 @@ export function ItemsCsvDialog({
                         )}
                       </span>
                       <span className="mt-1.5 block truncate text-xs font-medium">{r.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{[r.subtitle, r.price].filter(Boolean).join(" · ") || r.kind}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{[r.subtitle, r.price].filter(Boolean).join(", ") || r.kind}</span>
                     </li>
                   ))}
                 </ul>

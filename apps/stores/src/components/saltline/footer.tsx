@@ -54,7 +54,11 @@ export function Footer() {
       <div className="border-t border-sl-line">
         <div className="sl-container flex flex-wrap items-center justify-between gap-3 py-5 text-[13px] text-sl-mute">
           <p>© {new Date().getFullYear()} Saltline Hotels S.A., Rua da Boavista 74, 1200-068 Lisboa. Demo site for Slice.</p>
-          <p>Privacy · Terms · Accessibility</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            <li>Privacy</li>
+            <li>Terms</li>
+            <li>Accessibility</li>
+          </ul>
         </div>
       </div>
     </footer>

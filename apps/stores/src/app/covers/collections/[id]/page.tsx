@@ -31,7 +31,7 @@ export default async function CollectionPage({ params }: PageProps<"/covers/coll
   return (
     <main className="pb-24">
       <JsonLd data={{ "@type": "ItemList", name: c.name, url: `${SITE}${href.collection(c.id)}`, itemListElement: list.map((r, i) => ({ "@type": "ListItem", position: i + 1, item: restaurantJsonLd(r) })) }} />
-      <LandingHead crumb={{ label: "Collections", to: href.collections }} title={c.name} text={c.blurb} meta={`${countLabel(list.length)} · free tables for two ${tonight ? "tonight" : "tomorrow"} below`} cover={collectionCover(c.id)}>
+      <LandingHead crumb={{ label: "Collections", to: href.collections }} title={c.name} text={c.blurb} meta={`${countLabel(list.length)}, with free tables for two ${tonight ? "tonight" : "tomorrow"} below`} cover={collectionCover(c.id)}>
         <Link href={href.search({ collection: c.id })} className="cv-btn cv-btn-primary mt-7">
           Search this list by date
         </Link>

@@ -116,11 +116,10 @@ function DrawerBody({
             <SheetTitle className="text-lg font-semibold tracking-tight">
               {row.name}
             </SheetTitle>
-            <SheetDescription className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <SheetDescription className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span>
                 {row.category} / {row.subcategory}
               </span>
-              <span aria-hidden>·</span>
               <span className="num text-foreground">
                 {fmt.money(row.price)}
                 {row.compareAtPrice && (
@@ -129,7 +128,6 @@ function DrawerBody({
                   </span>
                 )}
               </span>
-              <span aria-hidden>·</span>
               <span>{row.id}</span>
             </SheetDescription>
           </div>

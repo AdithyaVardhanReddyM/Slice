@@ -41,7 +41,7 @@ export default function CartPage() {
                       <Link href={productHref(l.product.slug)} className="mt-1 block text-base font-medium link-rule hover:decoration-ink">
                         {l.product.name}
                       </Link>
-                      <p className="mono mt-1 text-mute">{l.variant.label} · {money(linePrice(l))} each</p>
+                      <p className="mono mt-1 text-mute">{l.variant.label}, {money(linePrice(l))} each</p>
                     </div>
                     <p className="display-wide text-2xl tabular-nums">{money(linePrice(l) * l.qty)}</p>
                   </div>

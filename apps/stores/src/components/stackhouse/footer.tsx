@@ -97,7 +97,10 @@ export function Footer() {
           <p>
             © 2026 {FOLIO_SHOP.legalName}, {address}. Demo site for Slice.
           </p>
-          <p>Step-free entrance · Gift wrapping is always free</p>
+          <ul className="flex flex-wrap gap-x-6 gap-y-1">
+            <li>Step-free entrance</li>
+            <li>Gift wrapping is always free</li>
+          </ul>
         </div>
       </div>
     </footer>

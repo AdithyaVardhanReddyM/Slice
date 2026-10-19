@@ -139,7 +139,7 @@ function GeminiMark({ className }: { className?: string }) {
 
 /** The settings pill's words: the model it will use. */
 function summary(p: PromptPicks) {
-  if (p.output === "image") return [imageModel(p.imageModel).label, p.count > 1 ? `${p.count} takes` : ""].filter(Boolean).join(" · ");
+  if (p.output === "image") return [imageModel(p.imageModel).label, p.count > 1 ? `${p.count} takes` : ""].filter(Boolean).join(", ");
   if (p.output === "poster") return imageModel(p.imageModel).label;
   if (p.output === "clip" || p.output === "video") return videoModel(p.videoModel).label;
   if (p.output === "music") return musicModel(p.musicModel).label;

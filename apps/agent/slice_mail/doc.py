@@ -366,7 +366,7 @@ def outline(doc: dict[str, Any] | None, items: dict[str, dict[str, Any]] | None 
     if not doc:
         return "(no email yet)"
     subj, pre = str(doc.get("subject") or ""), str(doc.get("preheader") or "")
-    lines = [f'subject "{subj}" ({len(visible(subj))} chars) · preheader "{pre}" ({len(visible(pre))} chars)']
+    lines = [f'subject "{subj}" ({len(visible(subj))} chars), preheader "{pre}" ({len(visible(pre))} chars)']
     for i, s in enumerate(sections(doc), 1):
         bits = [f'{i}. {s.get("id")} "{s.get("label") or "Section"}"']
         if s.get("background"):
@@ -375,7 +375,7 @@ def outline(doc: dict[str, Any] | None, items: dict[str, dict[str, Any]] | None 
             bits.append(f'evidence: "{_short(s["evidence"], 110)}"')
         lines.append(" ".join(bits))
         for c in s.get("columns") or []:
-            blocks = " · ".join(block_line(b, items, n=n) for b in c.get("blocks") or [] if isinstance(b, dict)) or "(empty)"
+            blocks = "; ".join(block_line(b, items, n=n) for b in c.get("blocks") or [] if isinstance(b, dict)) or "(empty)"
             lines.append(f"   {c.get('id')} ({round(float(c.get('width') or 1) * 100)}%): {blocks}")
     return "\n".join(lines)
 

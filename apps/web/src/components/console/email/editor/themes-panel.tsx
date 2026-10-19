@@ -75,7 +75,7 @@ function ThemeCard({ theme, name, note, current, onPick, large }: { theme: Email
         </span>
         <span className="block truncate text-xs text-muted-foreground">
           {theme.fonts.heading.family}
-          {theme.fonts.body.family !== theme.fonts.heading.family && ` · ${theme.fonts.body.family}`}
+          {theme.fonts.body.family !== theme.fonts.heading.family && ` and ${theme.fonts.body.family}`}
         </span>
         <span className="mt-1.5 flex gap-1">
           {swatches.map((c, i) => (

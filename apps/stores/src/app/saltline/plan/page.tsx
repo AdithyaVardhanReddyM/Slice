@@ -24,7 +24,10 @@ export default async function PlanPage({ searchParams }: PageProps<"/saltline/pl
           {openHotels.map((h) => (
             <li key={h.slug}>
               <p className="font-medium">{h.name}</p>
-              <p className="text-sl-charcoal-soft">{h.phone} · {h.email}</p>
+              <p className="flex flex-wrap gap-x-4 text-sl-charcoal-soft">
+                <span>{h.phone}</span>
+                <span>{h.email}</span>
+              </p>
             </li>
           ))}
         </ul>

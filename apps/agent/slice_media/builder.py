@@ -234,7 +234,7 @@ def _assets_block(assets: list[dict[str, Any]], brand: dict[str, Any]) -> str:
             bits.append(f"{a['duration']}s")
         if a.get("onCanvas"):
             bits.append("on the canvas")
-        lines.append(f"- {' · '.join(str(b) for b in bits if b)} {a.get('url')}" + (f" — {a.get('name') or a.get('prompt')}" if a.get("name") or a.get("prompt") else ""))
+        lines.append(f"- {', '.join(str(b) for b in bits if b)} {a.get('url')}" + (f" — {a.get('name') or a.get('prompt')}" if a.get("name") or a.get("prompt") else ""))
     imgs = [i.get("src") if isinstance(i, dict) else i for i in (brand.get("images") or [])[:10]]
     if imgs:
         lines.append("Photos from the brand's site: " + ", ".join(str(i) for i in imgs if i))
@@ -248,7 +248,7 @@ def _creatives_block(state: dict[str, Any]) -> str:
     sel = (state.get(SELECTION) or {}).get("creativeId")
     out = []
     for c in creatives:
-        head = f"### {c['id']} \"{c.get('name')}\" audience {c.get('audienceKey')} · {c.get('format')} · {c.get('kind')} · v{c.get('version')} · {c.get('status')}" + (" · SELECTED" if c["id"] == sel else "")
+        head = f"### {c['id']} \"{c.get('name')}\" audience {c.get('audienceKey')}, {c.get('format')}, {c.get('kind')}, v{c.get('version')}, {c.get('status')}" + (", SELECTED" if c["id"] == sel else "")
         out.append(head + "\n" + D.outline(c["doc"]))
     return "\n\n".join(out)
 
@@ -950,7 +950,7 @@ async def write_creative(audience_id: str, format: str, doc: dict, tool_context:
         audience_id: An id from AUDIENCES.
         format: story, portrait, square, landscape, banner or print.
         doc: The MediaDoc: {kind, background, layers, video?} (see THE DOCUMENT).
-        name: Short name, e.g. "Night swimmers · Story".
+        name: Short name for the idea, e.g. "Night swimmers". The format shows beside it, so leave it out.
         why: 2 or 3 short reasons [{text, evidence}] this creative fits the audience (text at most 12 words, evidence at most 5 words naming the Qloo signal). Empty for "all" when no taste was read.
         creative_id: To replace an existing creative's doc; "" for a new one.
         near: An image, clip or creative id on the canvas to place the new creative beside ("" places it after the last thing made).
@@ -1060,9 +1060,7 @@ async def resize_creative(creative_id: str, formats: list[str], tool_context: To
             made.append({"format": f, "skipped": "this audience already has one in that format; edit it instead"})
             continue
         try:
-            label = D.FORMATS[f]["label"]
-            base = str(cre.get("name") or "").split(" · ")[0]
-            saved = await _save(state, doc=doc, creative_id=None, audience=cre.get("audienceKey"), name=f"{base} · {label}" if base else label, why=cre.get("why") or None, note=f"Resized from {cre['format']}")
+            saved = await _save(state, doc=doc, creative_id=None, audience=cre.get("audienceKey"), name=str(cre.get("name") or "") or D.FORMATS[f]["label"], why=cre.get("why") or None, note=f"Resized from {cre['format']}")
         except Exception as err:
             made.append({"format": f, "error": str(err)[:200]})
             continue

@@ -78,7 +78,7 @@ function ProductsCard({
                 </span>
                 <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="truncate">
-                    {p.detail} · {fmt.money(p.price)}
+                    {p.detail}, {fmt.money(p.price)}
                   </span>
                   {p.matchedOn && (
                     <span className="hidden shrink-0 rounded-full bg-orange-50 px-2 py-px font-medium text-orange-700 sm:inline">
@@ -136,7 +136,7 @@ function SignalsCard({
               </span>
               <span className="block truncate text-xs text-muted-foreground">
                 {s.type}
-                {s.mapsTo && <> · reads as {s.mapsTo}</>}
+                {s.mapsTo && <>, reads as {s.mapsTo}</>}
               </span>
               <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-neutral-100">
                 <span
@@ -225,7 +225,7 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
             <WidgetGlyph name={data.widget.name} accent={data.widget.accent} />
             <span className="truncate">
-              {data.widget.domain} · {data.widget.vertical}
+              {data.widget.domain}, {data.widget.vertical}
             </span>
             <StatusText status={data.widget.status} />
           </div>

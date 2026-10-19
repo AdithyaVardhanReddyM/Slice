@@ -176,7 +176,7 @@ function buildTrace(
     duration: r.int(340, 520),
     model: MODEL,
     tokens: { input: r.int(1400, 2200), output: r.int(60, 110) },
-    result: `intent → ${scenario.category.join(" | ")}${scenario.budget ? ` · budget ≤ $${scenario.budget}` : ""}`,
+    result: `intent → ${scenario.category.join(" or ")}${scenario.budget ? `, budget ≤ $${scenario.budget}` : ""}`,
   });
   t += parse.duration;
 
@@ -185,8 +185,8 @@ function buildTrace(
     name: "Load session taste profile",
     duration: r.int(3, 7),
     result: firstTurn
-      ? `${profile.answers.length} answers · profile not built yet`
-      : `cached · ${profile.tags.length} tags, ${profile.styles.length} styles`,
+      ? `${profile.answers.length} answers, profile not built yet`
+      : `cached, ${profile.tags.length} tags and ${profile.styles.length} styles`,
   });
   t += load.duration;
 
@@ -221,10 +221,10 @@ function buildTrace(
       },
       cache: "miss",
       duration: r.int(520, 780),
-      result: `25 tags · top ${profile.tags
+      result: `25 tags, led by ${profile.tags
         .slice(0, 2)
         .map((x) => `${x.name} ${x.weight.toFixed(2)}`)
-        .join(", ")}`,
+        .join(" and ")}`,
     });
     if (persona.store === "fold") {
       add(
@@ -240,7 +240,7 @@ function buildTrace(
           },
           cache: "miss",
           duration: r.int(480, 690),
-          result: "15 brands · 3 carried (used as a weak signal only)",
+          result: "15 brands, 3 carried (used as a weak signal only)",
         },
         t,
       );
@@ -254,7 +254,7 @@ function buildTrace(
       result: profile.styles
         .slice(0, 2)
         .map((s) => `${s.style} ${s.score.toFixed(2)}`)
-        .join(" · "),
+        .join(", "),
     });
     t += map.duration;
   }
@@ -273,7 +273,7 @@ function buildTrace(
     kind: "catalog",
     name: "Score candidates",
     duration: r.int(16, 30),
-    result: `${filtered} scored · top ${recs.length + scenario.alsoRan.length} to ranker`,
+    result: `${filtered} scored, top ${recs.length + scenario.alsoRan.length} to ranker`,
   });
   t += scoreSpan.duration;
 
@@ -283,7 +283,7 @@ function buildTrace(
     duration: r.int(880, 1460),
     model: MODEL,
     tokens: { input: r.int(3600, 5200), output: r.int(140, 260) },
-    result: `${recs.length} picks · ${r.int(48, 86)} words`,
+    result: `${recs.length} picks in ${r.int(48, 86)} words`,
   });
   t += rank.duration;
 
@@ -291,7 +291,7 @@ function buildTrace(
     kind: "slice",
     name: "Guardrails",
     duration: r.int(1, 4),
-    result: "stock ✓ · budget ✓ · claims grounded in catalog ✓",
+    result: "stock ✓, budget ✓, claims grounded in catalog ✓",
   });
   t += guard.duration;
 
@@ -412,7 +412,7 @@ function generate(
       id: `${id}_m2`,
       role: "system",
       at: at(38),
-      text: `Taste questionnaire · ${profile.answers.length} answers`,
+      text: `Taste questionnaire, ${profile.answers.length} answers`,
     });
     messages.push({
       id: `${id}_m3`,
@@ -504,7 +504,7 @@ function generate(
     const top = product(finalRecs[0].productId);
     s += r.int(20, 90);
     const outcomeText: Record<Outcome, string> = {
-      purchased: `Checked out with ${top.name} · $${top.price}`,
+      purchased: `Checked out with ${top.name} for $${top.price}`,
       added_to_cart: `Added ${top.name} to cart`,
       clicked: `Opened ${top.name}`,
       browsing: "Still browsing the store",

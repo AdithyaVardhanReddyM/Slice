@@ -22,7 +22,7 @@ export default function JournalPage() {
           <Scene src={sceneSrc(lead.scene)} alt="" priority className="transition-transform duration-700 group-hover:scale-[1.03]" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-rl-rust">{formatDate(lead.date)} · {lead.readingTime}</p>
+          <p className="text-sm font-semibold text-rl-rust">{formatDate(lead.date)}, {lead.readingTime}</p>
           <h2 className="rl-serif mt-3 text-[32px] sm:text-[40px] group-hover:text-rl-rust">{lead.title}</h2>
           <p className="mt-4 text-[17px] text-rl-ink-soft">{lead.standfirst}</p>
           <p className="mt-4 text-sm text-rl-mute">{lead.author}</p>
@@ -35,7 +35,7 @@ export default function JournalPage() {
             <div className="aspect-[3/2] overflow-hidden rounded-[4px] bg-rl-sand">
               <Scene src={sceneSrc(p.scene)} alt="" className="transition-transform duration-700 group-hover:scale-[1.03]" />
             </div>
-            <p className="mt-4 text-sm font-semibold text-rl-rust">{formatDate(p.date)} · {p.readingTime}</p>
+            <p className="mt-4 text-sm font-semibold text-rl-rust">{formatDate(p.date)}, {p.readingTime}</p>
             <h2 className="rl-serif mt-2 text-[26px] group-hover:text-rl-rust">{p.title}</h2>
             <p className="mt-2 text-[15px] text-rl-ink-soft">{p.standfirst}</p>
           </Link>

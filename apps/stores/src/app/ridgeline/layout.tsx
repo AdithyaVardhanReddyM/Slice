@@ -9,7 +9,7 @@ import { Header } from "@/components/ridgeline/header";
 const SITE = "http://localhost:3002";
 
 export const metadata: Metadata = {
-  title: { default: "Ridgeline Coffee Roasters", template: "%s · Ridgeline Coffee Roasters" },
+  title: { default: "Ridgeline Coffee Roasters", template: "%s – Ridgeline Coffee Roasters" },
   description: ridgeline.store.description,
   openGraph: {
     siteName: "Ridgeline Coffee Roasters",

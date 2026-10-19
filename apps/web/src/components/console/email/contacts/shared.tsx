@@ -63,9 +63,9 @@ export function historyWords(items: { kind: string }[] | undefined) {
 }
 export type HistoryWords = ReturnType<typeof historyWords>;
 
-/** "25 to 29 · Brooklyn". */
+/** "25 to 29, Brooklyn". */
 export function aboutOf(c: Pick<EmailContact, "age" | "city" | "neighborhood">) {
-  return [c.age ? (AGE_LABEL[c.age] ?? c.age) : null, c.neighborhood ?? c.city].filter(Boolean).join(" · ");
+  return [c.age ? (AGE_LABEL[c.age] ?? c.age) : null, c.neighborhood ?? c.city].filter(Boolean).join(", ");
 }
 
 export const firstNameOf = (c: Pick<EmailContact, "name" | "firstName" | "email">) =>

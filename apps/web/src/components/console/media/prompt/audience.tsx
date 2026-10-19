@@ -83,7 +83,7 @@ function useAudiences() {
     .map((a) => ({
       key: `email:${a._id}`,
       name: a.name,
-      hint: [`${a.size} ${a.size === 1 ? "customer" : "customers"}`, a.topEntities.slice(0, 2).join(", ")].filter(Boolean).join(" · "),
+      hint: `${a.size} ${a.size === 1 ? "customer" : "customers"}${a.topEntities.length ? ` who like ${a.topEntities.slice(0, 2).join(" and ")}` : ""}`,
       image: faceOf(a.profile, true),
       icon: UsersRound,
       status: a.status,
@@ -174,7 +174,7 @@ function DescribeAudience({ open, onOpenChange, onAdd }: { open: boolean; onOpen
           <Button
             disabled={!seed.interests.length}
             onClick={() => {
-              const name = seed.name.trim() || [seed.city.trim(), seed.interests.slice(0, 2).join(" & ")].filter(Boolean).join(" · ");
+              const name = seed.name.trim() || `${seed.interests.slice(0, 2).join(" & ")}${seed.city.trim() ? ` in ${seed.city.trim()}` : ""}`;
               onAdd({ name, kind: "seed", seed: { interests: seed.interests, ...(seed.city.trim() ? { city: seed.city.trim() } : {}) } });
               setSeed({ name: "", city: "", interests: [] });
               onOpenChange(false);
@@ -225,7 +225,7 @@ export function AudiencePill() {
               <Row option={{ key: "all", name: "Everyone", hint: "The brand's own taste", icon: Users, status: "ready", ref: EVERYONE }} on={everyone} onPick={() => (choose(null), setOpen(false))} />
             </div>
             {pagesBrand && (
-              <Group title={`From Pages · ${pagesBrand.name}`}>
+              <Group title={`${pagesBrand.name} in Pages`}>
                 {pages.map((o) => (
                   <Row key={o.key} option={o} on={o.ref.pagesAudienceId === current.pagesAudienceId} onPick={() => (choose(o), setOpen(false))} />
                 ))}
@@ -233,7 +233,7 @@ export function AudiencePill() {
               </Group>
             )}
             {emailBrand && (
-              <Group title={`From Email · ${emailBrand.name}`}>
+              <Group title={`${emailBrand.name} in Email`}>
                 {email.map((o) => (
                   <Row key={o.key} option={o} on={o.ref.emailAudienceId === current.emailAudienceId} onPick={() => (choose(o), setOpen(false))} />
                 ))}

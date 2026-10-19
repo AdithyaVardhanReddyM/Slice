@@ -103,7 +103,7 @@ export function campaignLine(c: CampaignRow) {
   const stats = statsOf(c);
   const r = rates(stats);
   if ((c.status === "sent" || c.status === "sending") && stats && r.base) {
-    return `${fmt.int(r.base)} delivered · ${fmt.pct(r.open ?? 0, 0)} opened · ${fmt.pct(r.click ?? 0, 0)} clicked`;
+    return `${fmt.int(r.base)} delivered, ${fmt.pct(r.open ?? 0, 0)} opened, ${fmt.pct(r.click ?? 0, 0)} clicked`;
   }
   if (c.status === "scheduled" && c.scheduledAt)
     return `Goes out ${new Date(c.scheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}`;

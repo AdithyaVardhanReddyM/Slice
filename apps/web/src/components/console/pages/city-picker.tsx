@@ -219,7 +219,7 @@ export function CityMap({ city, className }: { city: City | null; className?: st
           <div className="flex flex-col items-center">
             <span className="mb-1.5 rounded-full bg-foreground px-2.5 py-1 text-xs font-medium whitespace-nowrap text-background shadow-md">
               {city.name}
-              <span className="text-background/60"> · {city.country}</span>
+              <span className="text-background/60">, {city.country}</span>
             </span>
             <span className="size-4 rounded-full border-[3px] border-white bg-primary shadow-md" />
           </div>

@@ -348,7 +348,13 @@ function PersonPanel({ contact, onRemoved }: { contact: EmailContact; onRemoved:
               </Badge>
             )}
           </h3>
-          <p className="truncate text-sm text-muted-foreground">{[contact.email, aboutOf(contact)].filter(Boolean).join(" · ")}</p>
+          <p className="flex flex-wrap gap-x-3 text-sm text-muted-foreground">
+            {[contact.email, aboutOf(contact)].filter(Boolean).map((t) => (
+              <span key={t} className="max-w-full truncate">
+                {t}
+              </span>
+            ))}
+          </p>
         </div>
         <ConfirmDialog
           trigger={

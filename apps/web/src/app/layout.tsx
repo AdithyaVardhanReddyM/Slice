@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Slice", template: "%s · Slice" },
+  title: { default: "Slice", template: "%s – Slice" },
   description:
     "Taste-aware concierge agents for every storefront, powered by Qloo.",
 };

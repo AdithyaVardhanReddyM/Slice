@@ -338,7 +338,7 @@ export function VerifyPanel({
                 )}
               </div>
               <div className="truncate text-xs">
-                slice.js {lastSeen?.version ?? "v1.4.2"} ·{" "}
+                slice.js {lastSeen?.version ?? "v1.4.2"} on{" "}
                 {lastSeen?.page ?? "/"}
               </div>
             </Notice>

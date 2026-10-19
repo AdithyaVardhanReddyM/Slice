@@ -122,10 +122,10 @@ export function blockText(block: EmailBlock): string {
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
-/** "Heading · Your autumn reading list". */
+/** "Heading: Your autumn reading list". */
 export function blockLabel(block: EmailBlock, max = 40): string {
   const words = blockText(block);
-  return words ? `${BLOCK_LABEL[block.type]} · ${clip(words, max)}` : BLOCK_LABEL[block.type];
+  return words ? `${BLOCK_LABEL[block.type]}: ${clip(words, max)}` : BLOCK_LABEL[block.type];
 }
 
 /** A section's name: its label, else what its first heading says, else its place. */

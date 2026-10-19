@@ -17,9 +17,9 @@ export function BookCard({ book, add = true, priority, className }: { book: Foli
           </Link>
         </h3>
         <p className="mt-0.5 text-[15px] text-(--ff-ink-soft)">{book.author}</p>
-        <p className="mt-1.5 text-[15px]">
+        <p className="mt-1.5 flex flex-wrap items-baseline gap-x-3 text-[15px]">
           <span className="font-semibold">{book.price}</span>
-          <span className="text-(--ff-mute)"> · {book.format}</span>
+          <span className="text-(--ff-mute)">{book.format}</span>
         </p>
         {add && <AddToBag slug={book.slug} title={book.title} size="sm" variant="outline" className="mt-3 self-start" />}
       </div>

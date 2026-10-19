@@ -99,7 +99,7 @@ export function NoteCard({ r, className }: { r: CoversRestaurant & { note: NonNu
           <Link href={href.restaurant(r.slug)} className="font-semibold text-(--cv-ink) hover:text-(--cv-accent)">
             {r.name}
           </Link>{" "}
-          · {r.neighbourhood} · {priceLabel(r.price)}
+          in {r.neighbourhood}, {priceLabel(r.price)}
         </p>
         <blockquote className="cv-title mt-3 text-[19px] leading-snug">&ldquo;{r.note.text}&rdquo;</blockquote>
         <div className="mt-auto flex items-center gap-3 pt-5">

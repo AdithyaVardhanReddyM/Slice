@@ -6,7 +6,7 @@ import { GoldDefs } from "@/components/gwen/logo";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { default: "Gwen Reserve: the card for the table, the trip and the encore", template: "%s · Gwen" },
+  title: { default: "Gwen Reserve: the card for the table, the trip and the encore", template: "%s – Gwen" },
   description: gwen.store.tagline,
   icons: { icon: "/gwen/logo.svg" },
   openGraph: {

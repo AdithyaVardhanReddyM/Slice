@@ -258,8 +258,8 @@ function BlockFields({ block, theme, set }: { block: EmailBlock; theme: EmailThe
               <SelectField
                 value={block.font ?? "heading"}
                 options={[
-                  { value: "heading", label: `Heading · ${theme.fonts.heading.family}` },
-                  { value: "body", label: `Body · ${theme.fonts.body.family}` },
+                  { value: "heading", label: `Heading (${theme.fonts.heading.family})` },
+                  { value: "body", label: `Body (${theme.fonts.body.family})` },
                 ]}
                 onChange={(v) => v && set({ font: v })}
               />

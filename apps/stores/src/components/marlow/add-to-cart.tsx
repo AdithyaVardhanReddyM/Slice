@@ -48,7 +48,7 @@ export function AddToCart({ product }: { product: Product }) {
         </p>
         <p className="mono text-mute">
           {variant.label}
-          {!variant.inStock && " · sold out"}
+          {!variant.inStock && " (sold out)"}
         </p>
       </div>
 
@@ -122,7 +122,7 @@ export function AddToCart({ product }: { product: Product }) {
       </div>
 
       <ul className="mono mt-5 space-y-1.5 text-mute">
-        <li>Free shipping over $75 · ships in 3–5 business days</li>
+        <li>Free shipping over $75, ships in 3–5 business days</li>
         <li>100-day returns, we arrange the pickup</li>
         <li>Made-to-order pieces ship in 4–6 weeks</li>
       </ul>

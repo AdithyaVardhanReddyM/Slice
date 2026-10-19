@@ -1069,7 +1069,7 @@ export function coversItems(site = COVERS_SITE): (Omit<EmailItem, "id"> & { ref:
   return COVERS_RESTAURANTS.map((r) => ({
     ref: coversRef(r.slug),
     name: r.name,
-    subtitle: `${r.cuisine} · ${r.neighbourhood}`,
+    subtitle: `${r.cuisine} in ${r.neighbourhood}`,
     kind: "restaurant",
     description: r.description,
     price: priceLabel(r.price),

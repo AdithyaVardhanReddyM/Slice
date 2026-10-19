@@ -616,7 +616,7 @@ async function customSignals(
   return { signals, artistFilter, picked: anchors, anchorIds, city, anchoredOn };
 }
 
-/** "Austin · 24_and_younger · female · Nike, Tyler, the Creator · Sneakerheads · Hip hop" for the trace. */
+/** "Austin; 24_and_younger; female; Nike, Tyler, the Creator; Sneakerheads; Hip hop" for the trace. */
 function describeSources(s: Sources): string {
   return [
     s.location?.city,
@@ -627,7 +627,7 @@ function describeSources(s: Sources): string {
     (s.tags ?? []).map((t) => t.name).join(", "),
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join("; ");
 }
 
 /**

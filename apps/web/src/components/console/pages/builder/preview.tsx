@@ -139,7 +139,7 @@ export function VariantTabs({
               "inline-flex h-7 shrink-0 items-center gap-2 rounded-lg pr-3 pl-1.5 text-sm transition-colors",
               active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
-            title={v.doc ? v.name : `${v.name} · not built yet`}
+            title={v.doc ? v.name : `${v.name} (not built yet)`}
           >
             <VersionAvatar variant={v} audience={audience} working={working} />
             <span className="max-w-40 truncate">{versionLabel(v)}</span>

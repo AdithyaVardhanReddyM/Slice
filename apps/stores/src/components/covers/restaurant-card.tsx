@@ -30,7 +30,7 @@ export function RestaurantCard({ r, times, query, priority, className }: { r: Co
           </span>
         </div>
         <p className="mt-0.5 text-[14.5px] text-(--cv-mute)">
-          {r.cuisine} · {r.neighbourhood}
+          {r.cuisine} in {r.neighbourhood}
         </p>
         {times && times.length > 0 && (
           <ul className="mt-auto flex flex-wrap gap-2 pt-3" aria-label={`Free tables at ${r.name}`}>

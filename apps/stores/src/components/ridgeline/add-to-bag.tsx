@@ -59,7 +59,7 @@ export function AddToBag({ product, label = "Add to bag" }: { product: Product; 
             </>
           ) : (
             <>
-              {label} <span className="opacity-80">·</span> {money(price)}
+              {label} for {money(price)}
             </>
           )}
         </button>

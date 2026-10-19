@@ -86,8 +86,10 @@ export function CampaignReport({ campaign, brand }: { campaign: EmailCampaign; b
             )}
           </div>
           <h1 className="text-[28px] leading-tight font-medium tracking-[-0.03em] text-neutral-950">{campaign.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {[doc?.subject && `“${doc.subject}”`, report?.to && `to ${report.to}`, campaign.sentAt && `sent ${when(campaign.sentAt)}`].filter(Boolean).join(" · ")}
+          <p className="flex flex-wrap gap-x-3 text-sm text-muted-foreground">
+            {[doc?.subject && `“${doc.subject}”`, report?.to && `To ${report.to}`, campaign.sentAt && `Sent ${when(campaign.sentAt)}`].filter(Boolean).map((t, i) => (
+              <span key={i}>{t}</span>
+            ))}
           </p>
           {campaign.status === "sending" && stats && stats.recipients > 0 && (
             <div className="max-w-md space-y-1.5 pt-1">
@@ -154,7 +156,7 @@ function Kpis({ stats }: { stats: CampaignStats | null }) {
         icon={<MousePointerClick className="size-3.5" />}
         value={s?.clicked}
         rate={s ? pct(s.clicked, arrived) : undefined}
-        hint={s ? `${peopleCount(s.clicked, "person")} · ${pct(s.clicked, s.opened)} of opens` : undefined}
+        hint={s ? `${peopleCount(s.clicked, "person")}, ${pct(s.clicked, s.opened)} of opens` : undefined}
       />
       <Kpi label="Unsubscribed" value={s?.unsubscribed} rate={s ? pct(s.unsubscribed, arrived) : undefined} hint={s ? peopleCount(s.unsubscribed, "person") : undefined} />
       <Kpi label="Bounced" value={s?.bounced} rate={s ? pct(s.bounced, s.sent || s.recipients) : undefined} hint={s ? `${fmt.int(s.bounced)} addresses${s.complained ? `, ${s.complained} spam reports` : ""}` : undefined} />

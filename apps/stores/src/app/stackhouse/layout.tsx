@@ -10,7 +10,7 @@ const description =
   "Stackhouse Books is an independent bookshop on Court Street in Carroll Gardens, Brooklyn: new books, handwritten staff picks, a monthly book club, author events and Saturday Story Hour.";
 
 export const metadata: Metadata = {
-  title: { default: "Stackhouse Books · Independent bookshop in Carroll Gardens, Brooklyn", template: "%s · Stackhouse Books" },
+  title: { default: "Stackhouse Books: independent bookshop in Carroll Gardens, Brooklyn", template: "%s – Stackhouse Books" },
   description,
   icons: { icon: "/stackhouse/mark.svg", apple: "/stackhouse/mark.png" },
   openGraph: {

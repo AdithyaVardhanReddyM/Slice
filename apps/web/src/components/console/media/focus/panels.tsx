@@ -292,7 +292,7 @@ export function HistoryPanel() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-medium">{v.note || (v.by === "agent" ? "Slice edited" : "Your edits")}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {v.by === "agent" ? "Slice" : "You"} · {ago(v.createdAt)}
+                    {v.by === "agent" ? "By Slice" : "By you"}, {ago(v.createdAt)}
                   </p>
                 </div>
                 {current ? (

@@ -48,8 +48,8 @@ export default async function CoffeePage({ searchParams }: PageProps<"/ridgeline
       </div>
 
       <p className="mt-6 text-sm text-rl-mute">
-        {list.length} {list.length === 1 ? "coffee" : "coffees"}
-        {profile ? ` · ${styleLabel(profile)}` : ""}
+        {list.length} {profile ? `${styleLabel(profile).toLowerCase()} ` : ""}
+        {list.length === 1 ? "coffee" : "coffees"}
       </p>
       <div className="mt-4 grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
         {list.map((p, i) => (

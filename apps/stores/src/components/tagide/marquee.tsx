@@ -37,9 +37,8 @@ export function Ticker({ items }: { items: string[] }) {
         {[0, 1].map((k) => (
           <div key={k} className="flex shrink-0 items-center">
             {items.map((t, i) => (
-              <span key={i} className="flex items-center gap-6 py-3 pl-6 text-[13px] font-semibold uppercase tracking-[0.08em]">
+              <span key={i} className="py-3 pl-14 text-[13px] font-semibold uppercase tracking-[0.08em]">
                 {t}
-                <span className="size-1.5 rounded-full bg-tg-orange" />
               </span>
             ))}
           </div>

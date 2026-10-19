@@ -7,7 +7,7 @@ import { Footer } from "@/components/marlow/footer";
 import { Header } from "@/components/marlow/header";
 
 export const metadata: Metadata = {
-  title: { default: "Marlow", template: "%s · Marlow" },
+  title: { default: "Marlow", template: "%s – Marlow" },
   description: marlow.store.tagline,
 };
 

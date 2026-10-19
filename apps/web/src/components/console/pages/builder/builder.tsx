@@ -103,7 +103,7 @@ function PageEditor() {
       const pending = auds.filter((a) => a?.status !== "ready");
       if (pending.length === 0) return true;
       const a = pending.find((x) => x);
-      status(a ? `Reading the ${a.name} audience from Qloo${a.progress?.label ? ` · ${a.progress.label}` : ""}` : "Waiting for the audience");
+      status(a ? `Reading the ${a.name} audience from Qloo${a.progress?.label ? `: ${a.progress.label}` : ""}` : "Waiting for the audience");
       await sleep(700);
     }
     return false;

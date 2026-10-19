@@ -292,8 +292,8 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
           <h3 className="text-sm font-semibold">Preview</h3>
           <span className="text-xs text-muted-foreground">
             {fmt.int(rows.length)} contacts
-            {skipped > 0 && ` · ${fmt.int(skipped)} without an email skipped`}
-            {duplicates > 0 && ` · ${fmt.int(duplicates)} repeats merged`}
+            {skipped > 0 && `, ${fmt.int(skipped)} without an email skipped`}
+            {duplicates > 0 && `, ${fmt.int(duplicates)} repeats merged`}
           </span>
         </div>
         {over > 0 && (
@@ -322,7 +322,7 @@ function Mapper({ parsed, filename, onDone }: { parsed: ParsedCsv; filename: str
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{[p.where, p.age].filter(Boolean).join(" · ") || "–"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{[p.where, p.age].filter(Boolean).join(", ") || "–"}</TableCell>
                   <TableCell>
                     <div className="flex max-w-64 flex-wrap gap-1">
                       {p.bought.slice(0, 3).map((t) => (
@@ -520,7 +520,7 @@ export function ImportContactsSheet({
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{file.name}</span>
                   <span className="block text-xs text-muted-foreground">
-                    {fmt.int(file.parsed.rows.length)} rows · {file.parsed.columns.length} columns · click to replace
+                    {fmt.int(file.parsed.rows.length)} rows and {file.parsed.columns.length} columns. Click to replace
                   </span>
                 </span>
               ) : (

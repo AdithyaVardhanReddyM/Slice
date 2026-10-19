@@ -232,7 +232,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
                   onClick={send}
                   disabled={!canSend}
                   aria-label="Send"
-                  title={estimate ? `Send · about ${usd(estimate.usd)}` : "Send"}
+                  title={estimate ? `Send, about ${usd(estimate.usd)}` : "Send"}
                   className={cn("flex shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white transition-colors hover:bg-neutral-700 disabled:bg-neutral-100 disabled:text-neutral-400", docked ? "size-8" : "size-9")}
                 >
                   <ArrowUp className="size-4" />

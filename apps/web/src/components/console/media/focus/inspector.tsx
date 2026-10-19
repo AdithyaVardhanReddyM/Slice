@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
-import { FORMATS, FORMAT_KEYS, newId, type Anim, type FormatPreset, type Layer, type MediaDoc, type TextLayer } from "@slice/backend/convex/mediaTypes";
+import { FORMATS, FORMAT_KEYS, creativeName, newId, type Anim, type FormatPreset, type Layer, type MediaDoc, type TextLayer } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/console/form";
 import { useStudio } from "./context";
@@ -125,10 +125,10 @@ function CreativePanel() {
   return (
     <div>
       <Section title="Creative">
-        <p className="text-sm font-medium">{creative.name}</p>
+        <p className="text-sm font-medium">{creativeName(creative.name)}</p>
         <p className="text-xs text-muted-foreground">
-          {spec.label} · {doc.w}×{doc.h} · {doc.kind === "video" ? "Video" : "Poster"}
-          {audience ? ` · ${audience.name}` : ""}
+          {spec.label} {doc.kind === "video" ? "video" : "poster"}, {doc.w}×{doc.h}
+          {audience ? `, for ${audience.name}` : ""}
         </p>
         <div className="flex flex-wrap gap-1.5 pt-1">
           <SmallButton disabled={!!busy} onClick={() => void run("dup", () => duplicate({ id: creative._id }))}>
@@ -431,7 +431,7 @@ function MultiPanel({ layers }: { layers: Layer[] }) {
       <Section title={`${layers.length} layers`}>
         <AlignButtons layers={layers} doc={doc} />
         <div className="flex flex-wrap gap-1.5">
-          <SmallButton onClick={() => ask({ id: ids.join(","), label: `${layers.length} layers`, type: "group", text: layers.map(layerLabel).join(" · ") })}>
+          <SmallButton onClick={() => ask({ id: ids.join(","), label: `${layers.length} layers`, type: "group", text: layers.map(layerLabel).join(", ") })}>
             <MessageSquareText /> Ask AI
           </SmallButton>
           <SmallButton onClick={() => duplicate(ids)}>

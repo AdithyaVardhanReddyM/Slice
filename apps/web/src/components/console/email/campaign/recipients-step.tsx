@@ -212,7 +212,7 @@ export function RecipientsStep({ campaign, brand }: { campaign: EmailCampaign; b
                     {targets.length ? (
                       <>
                         {peopleCount(readiness?.recipients ?? 0, "person")}
-                        <span className="font-normal text-muted-foreground"> · {many ? (targets.length === 1 ? "1 version" : `${targets.length} versions`) : "1 email"}</span>
+                        <span className="font-normal text-muted-foreground">, {many ? (targets.length === 1 ? "1 version" : `${targets.length} versions`) : "1 email"}</span>
                       </>
                     ) : (
                       "No one yet"
@@ -516,7 +516,7 @@ function VersionPreview({
       open={!!target}
       onOpenChange={(o) => !o && onClose()}
       title={!target || !reader ? "" : target.kind === "group" ? `${reader.name}: the group's version` : `${reader.name}'s version`}
-      description={!target ? undefined : target.kind === "group" ? reader?.about : [target.contact.email, aboutOf(target.contact)].filter(Boolean).join(" · ")}
+      description={!target ? undefined : target.kind === "group" ? reader?.about : [target.contact.email, aboutOf(target.contact)].filter(Boolean).join(", ")}
       html={render?.html}
       subject={render?.subject}
       preheader={render?.preheader}

@@ -311,7 +311,7 @@ function CsvTab({ onDone }: { onDone: () => void }) {
           <>
             <span className="text-sm font-medium">{file.name}</span>
             <span className="text-xs text-muted-foreground">
-              {fmt.int(parsed.rows.length)} rows · {parsed.columns.length} columns · click to replace
+              {fmt.int(parsed.rows.length)} rows and {parsed.columns.length} columns. Click to replace
             </span>
           </>
         ) : (
@@ -377,7 +377,7 @@ function CrmConnectButton({ crm, connected, onClick }: { crm: (typeof CRMS)[numb
       </span>
       {connected ? (
         <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
-          <Check className="size-3.5" /> Connected · Import
+          <Check className="size-3.5" /> Connected, ready to import
         </span>
       ) : (
         <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
@@ -555,13 +555,13 @@ function CrmTab({ crm, onCrm, onDone }: { crm: CrmId | null; onCrm: (id: CrmId) 
       </div>
       {pulled && (
         <p className="text-xs text-muted-foreground">
-          {fmt.int(pulled.parsed.rows.length)} contacts · {pulled.parsed.columns.length} properties from {pulled.source.listName}
+          {fmt.int(pulled.parsed.rows.length)} contacts with {pulled.parsed.columns.length} properties from {pulled.source.listName}
         </p>
       )}
       <RowsImport
         key={pulled ? `${pulled.source.crm}:${pulled.source.listId}:${pulled.parsed.rows.length}` : "none"}
         parsed={pulled?.parsed ?? null}
-        filename={pulled ? `${chosen.name} · ${pulled.source.listName}` : ""}
+        filename={pulled ? `${pulled.source.listName} (${chosen.name})` : ""}
         defaultName={pulled ? (pulled.source.listId === "all" ? `${chosen.name} contacts` : pulled.source.listName) : `${chosen.name} contacts`}
         source={pulled?.source}
         pickError={error}

@@ -33,11 +33,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-rl-line bg-rl-cream">
-      <p className="bg-rl-ink px-4 py-2 text-center text-[13px] text-rl-cream">
-        Free shipping on orders over $40 <span className="mx-2 opacity-50">·</span> Roasted and shipped within 48 hours
-        <span className="hidden sm:inline">
-          <span className="mx-2 opacity-50">·</span> Austin café opening in November
-        </span>
+      <p className="flex flex-wrap justify-center gap-x-6 gap-y-1 bg-rl-ink px-4 py-2 text-center text-[13px] text-rl-cream">
+        <span>Free shipping on orders over $40</span>
+        <span>Roasted and shipped within 48 hours</span>
+        <span className="hidden sm:inline">Austin café opening in November</span>
       </p>
       <div className="rl-container flex h-[72px] items-center justify-between gap-6">
         <div className="flex items-center gap-2">

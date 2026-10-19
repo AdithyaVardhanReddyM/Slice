@@ -32,7 +32,7 @@ export function Header() {
       <div className="bg-(--ff-green) text-[13.5px] text-(--ff-paper)/90">
         <div className="ff-container flex h-9 items-center justify-between gap-4">
           <p className="truncate">
-            <span className="hidden sm:inline">{FOLIO_SHOP.street}, {FOLIO_SHOP.neighborhood} · </span>
+            <span className="mr-6 hidden sm:inline">{FOLIO_SHOP.street}, {FOLIO_SHOP.neighborhood}</span>
             Open every day, Mon–Thu till 8pm, Fri–Sat till 9pm
           </p>
           <p className="hidden shrink-0 md:block">Free delivery in Brooklyn on orders over $40</p>

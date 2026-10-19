@@ -63,7 +63,7 @@ export function GroundsMap({ className }: { className?: string }) {
         Campo Tejo
       </Label>
       <text x="172" y="80" fontSize="11" fontWeight="600" fill="#6b665e">
-        Campsite · 5 min walk
+        Campsite, 5 min walk
       </text>
 
       {/* Armazém: warehouse with a sawtooth roof */}
@@ -123,7 +123,7 @@ export function GroundsMap({ className }: { className?: string }) {
       <circle cx="400" cy="404" r="12" fill={ORANGE} stroke={CREAM} strokeWidth="3" />
       <rect x="330" y="420" width="140" height="22" rx="11" fill={INK} />
       <text x="400" y="435" textAnchor="middle" fontSize="11" fontWeight="800" fill={CREAM} letterSpacing="0.06em">
-        SHUTTLE · RIVER GATE
+        RIVER GATE SHUTTLE
       </text>
 
       {/* compass */}

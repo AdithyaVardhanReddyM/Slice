@@ -107,7 +107,7 @@ export function TasteStep({
             <FieldGroup
               label="Taste domains"
               aside={
-                <span className="num">{count} selected · 3–4 recommended</span>
+                <span className="num">{count} selected, 3 to 4 recommended</span>
               }
               hint="Order matters: shoppers see questions in the order you pick them."
             >

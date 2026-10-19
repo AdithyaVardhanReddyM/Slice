@@ -477,7 +477,7 @@ function ClickMap({ page, variant, sessions, from, to, range }: { page: Page; va
                           <span className="block h-full rounded-full bg-primary" style={{ width: `${s.reach * 100}%` }} />
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          Reached by {fmt.pct(s.reach, 0)} · {fmt.int(s.clicks)} clicks{s.share >= 0.005 ? ` (${fmt.pct(s.share, 0)})` : ""}
+                          Reached by {fmt.pct(s.reach, 0)}, {fmt.int(s.clicks)} clicks{s.share >= 0.005 ? ` (${fmt.pct(s.share, 0)})` : ""}
                         </span>
                       </span>
                     </button>
@@ -633,7 +633,7 @@ function WeekGrid({ hourly }: { hourly: number[][] }) {
   const peak = all.reduce((a, b) => (b.v > a.v ? b : a), all[0]);
   const dayName = (d: number) => WEEK.find(([x]) => x === d)?.[1] ?? "";
   const caption = hover
-    ? `${dayName(hover.d)} ${hourLabel(hover.h)}–${hourLabel((hover.h + 1) % 24)} UTC · ${fmt.int(value(hover.d, hover.h))} views`
+    ? `${dayName(hover.d)} ${hourLabel(hover.h)}–${hourLabel((hover.h + 1) % 24)} UTC, ${fmt.int(value(hover.d, hover.h))} views`
     : total
       ? `Busiest: ${dayName(peak.d)}s around ${hourLabel(peak.h)} UTC`
       : "No visits in this range.";
@@ -734,7 +734,7 @@ function LiveActivity({ page, sectionName }: { page: Page; sectionName: (id: str
                     </span>
                     <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
                       <DeviceIcon className="size-3 shrink-0" />
-                      {[place, SOURCE[e.source]?.label ?? e.source].filter(Boolean).join(" · ")}
+                      {[place, SOURCE[e.source]?.label ?? e.source].filter(Boolean).join(", ")}
                     </span>
                   </span>
                   <span className="shrink-0 pt-0.5 text-xs tabular-nums text-muted-foreground">{relativeTime(e.at)}</span>

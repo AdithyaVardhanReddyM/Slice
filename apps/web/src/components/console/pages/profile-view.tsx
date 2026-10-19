@@ -42,7 +42,7 @@ export function TagChips({ tags, max = 8, className }: { tags: ProfileTag[]; max
   return (
     <div className={cn("flex flex-wrap gap-1.5", className)}>
       {sorted.map((t) => (
-        <Badge key={t.id} variant="secondary" className="font-normal" title={`${groupLabel(tagGroup(t.type))} · affinity ${Math.round(t.affinity * 100)}`}>
+        <Badge key={t.id} variant="secondary" className="font-normal" title={`${groupLabel(tagGroup(t.type))} (affinity ${Math.round(t.affinity * 100)})`}>
           {t.name.charAt(0).toUpperCase() + t.name.slice(1)}
         </Badge>
       ))}
@@ -120,7 +120,7 @@ export function BrandsList({ brands, max = 8 }: { brands: ProfileBrand[]; max?: 
             <Thumb src={b.image} className="size-10 bg-white ring-1 ring-foreground/10" rounded="rounded-lg [&_img]:object-contain [&_img]:p-1" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{b.name}</div>
-              {words.length > 0 && <div className="truncate text-xs text-muted-foreground">{words.join(" · ")}</div>}
+              {words.length > 0 && <div className="truncate text-xs text-muted-foreground">{words.join(", ")}</div>}
             </div>
             <div className="flex w-20 shrink-0 items-center gap-2">
               <span className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
@@ -241,7 +241,7 @@ export function GeoList({ geo }: { geo?: AudienceProfile["geo"] }) {
           </div>
           <span className="num text-xs text-muted-foreground">
             {fmt.int(g.count)}
-            {g.lat !== undefined && g.lon !== undefined ? ` · ${g.lat.toFixed(2)}, ${g.lon.toFixed(2)}` : ""}
+            {g.lat !== undefined && g.lon !== undefined ? ` at ${g.lat.toFixed(2)}, ${g.lon.toFixed(2)}` : ""}
           </span>
         </li>
       ))}

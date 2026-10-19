@@ -245,7 +245,7 @@ function AudiencePicker({
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{a.name}</span>
                 <span className="block truncate text-xs text-muted-foreground">
-                  {KIND_LABEL[a.kind]} · {peopleCount(a.size, a.kind === "people" ? "person" : "contact")}
+                  {KIND_LABEL[a.kind]}, {peopleCount(a.size, a.kind === "people" ? "person" : "contact")}
                 </span>
               </span>
               {value.some((v) => v._id === a._id) && <Check className="size-4" />}

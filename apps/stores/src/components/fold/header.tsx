@@ -43,9 +43,7 @@ export function Header({ groups }: { groups: MenuGroup[] }) {
       <div className="flex h-9 items-center justify-center bg-fd-forest px-4 text-[13px] text-white">
         <p className="truncate">
           Free shipping on orders over $150
-          <span className="hidden sm:inline">
-            <span className="mx-2 opacity-50">·</span> Free returns within 30 days
-          </span>
+          <span className="ml-6 hidden sm:inline">Free returns within 30 days</span>
         </p>
       </div>
 

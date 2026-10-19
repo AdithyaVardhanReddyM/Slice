@@ -35,8 +35,9 @@ export default async function PostPage({ params }: PageProps<"/ridgeline/journal
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }} />
       <article className="rl-container py-10">
         <header className="mx-auto max-w-3xl text-center">
-          <p className="text-sm font-semibold text-rl-rust">
-            <Link href={href.journal} className="hover:underline">Journal</Link> · {formatDate(p.date)} · {p.readingTime}
+          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm font-semibold text-rl-rust">
+            <Link href={href.journal} className="hover:underline">Journal</Link>
+            <span>{formatDate(p.date)}, {p.readingTime}</span>
           </p>
           <h1 className="rl-serif mt-4 text-[38px] sm:text-[54px]">{p.title}</h1>
           <p className="mt-5 text-[19px] text-rl-ink-soft">{p.standfirst}</p>

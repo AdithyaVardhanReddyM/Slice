@@ -32,7 +32,7 @@ export default async function AreaPage({ params }: PageProps<"/covers/areas/[id]
   return (
     <main className="pb-24">
       <JsonLd data={{ "@type": "ItemList", name: `Restaurants in ${a.name}`, url: `${SITE}${href.area(a.id)}`, itemListElement: list.map((r, i) => ({ "@type": "ListItem", position: i + 1, item: restaurantJsonLd(r) })) }} />
-      <LandingHead crumb={{ label: "Areas", to: href.areas }} title={a.name} text={a.blurb} meta={`${countLabel(list.length)} · ${neighbourhoods.join(", ")}`} cover={areaCover(a.id)}>
+      <LandingHead crumb={{ label: "Areas", to: href.areas }} title={a.name} text={a.blurb} meta={`${countLabel(list.length)} in ${new Intl.ListFormat("en-GB").format(neighbourhoods)}`} cover={areaCover(a.id)}>
         <Link href={href.search({ area: a.id })} className="cv-btn cv-btn-primary mt-7">
           Search {a.name} by date
         </Link>

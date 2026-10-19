@@ -238,8 +238,11 @@ function AudioNode({ node }: NodeViewProps) {
         </button>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{node.name}</p>
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Music className="size-3" /> {Math.floor(dur / 60)}:{String(Math.round(dur % 60)).padStart(2, "0")} · {node.meta.split(" · ")[0]}
+          <p className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-1">
+              <Music className="size-3" /> {Math.floor(dur / 60)}:{String(Math.round(dur % 60)).padStart(2, "0")}
+            </span>
+            <span className="truncate">{node.meta.split(", ")[0]}</span>
           </p>
         </div>
       </div>
@@ -266,7 +269,7 @@ function PendingNode({ node, zoom }: NodeViewProps) {
         <div className="flex w-56 flex-col items-center gap-1.5 text-center">
           {failed ? <AlertTriangle className="size-5 text-red-600" /> : <Loader2 className="size-5 animate-spin text-neutral-500" />}
           <p className={cn("text-sm font-medium", failed ? "text-red-700" : "text-neutral-800")}>{failed ? "Generation failed" : (PENDING_NOUN[j.kind] ?? "Generating")}</p>
-          <p className={cn("line-clamp-3 text-xs", failed ? "text-red-700/80" : "text-neutral-500")}>{failed ? j.error || "The model returned nothing." : `${node.meta} · ${secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`}`}</p>
+          <p className={cn("line-clamp-3 text-xs", failed ? "text-red-700/80" : "text-neutral-500")}>{failed ? j.error || "The model returned nothing." : `${node.meta}, ${secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`} so far`}</p>
         </div>
       </Pin>
     </div>

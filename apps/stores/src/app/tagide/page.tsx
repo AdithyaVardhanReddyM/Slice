@@ -67,7 +67,7 @@ export default function TagideHome() {
           <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:items-end">
             <div>
               <p className="tg-label tg-rise text-tg-orange">
-                {festival.edition} · {festival.datesLong} · {festival.venue}, {festival.city}
+                {festival.edition}, {festival.datesLong} at {festival.venue}, {festival.city}
               </p>
               <h1 className="tg-display tg-rise tg-rise-2 mt-5 text-[64px] sm:text-[96px] lg:whitespace-nowrap lg:text-[clamp(72px,7vw,112px)]">
                 Three
@@ -132,7 +132,7 @@ export default function TagideHome() {
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl border-2 border-tg-ink bg-tg-cream-deep">
                   <Photo src={sceneSrc(headScenes[i])} alt="" className="transition-transform duration-700 group-hover:scale-[1.04]" />
                   <span className="absolute left-3 top-3 rounded-full bg-tg-cream px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em]">
-                    {day(a.day).short} · {stage(a.stage).name}
+                    {day(a.day).short}, {stage(a.stage).full}
                   </span>
                   <span className="tg-display absolute inset-x-3 bottom-3 rounded-full bg-tg-ink px-4 py-2.5 text-center text-[17px] text-tg-cream group-hover:bg-tg-orange">
                     {a.name}
@@ -204,7 +204,11 @@ export default function TagideHome() {
             <Link href={href.tickets} className="tg-btn bg-tg-ink text-tg-cream hover:bg-black">
               All tickets and travel packages
             </Link>
-            <span className="text-[14px] font-semibold text-white">Under 16s free · Payment in instalments · Official resale opens in March</span>
+            <ul className="flex flex-wrap gap-x-6 gap-y-1 text-[14px] font-semibold text-white">
+              <li>Under 16s free</li>
+              <li>Payment in instalments</li>
+              <li>Official resale opens in March</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -228,8 +232,9 @@ export default function TagideHome() {
                 <figcaption className="tg-display text-[28px]">{q.name}</figcaption>
                 <blockquote className={"mt-3 text-[15px] leading-relaxed " + (i === 1 || i === 4 ? "text-white/90" : "text-tg-ink-soft")}>{q.quote}</blockquote>
               </div>
-              <p className={"mt-6 text-[13px] font-semibold italic " + (i === 1 || i === 4 ? "text-white/85" : "text-tg-mute")}>
-                Came from {q.from} · {q.saw}
+              <p className={"mt-6 flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-semibold italic " + (i === 1 || i === 4 ? "text-white/85" : "text-tg-mute")}>
+                <span>Came from {q.from}</span>
+                <span>{q.saw}</span>
               </p>
             </figure>
           ))}

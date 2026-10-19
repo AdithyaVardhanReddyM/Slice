@@ -187,7 +187,7 @@ export default function CoversHome() {
                 </div>
                 <div className="px-5">
                   <p className="cv-title text-[20px]">{isTonight ? "Tonight" : "Tomorrow"}, 2 people</p>
-                  <p className="text-[12.5px] text-(--cv-mute)">Soho · around 19:30</p>
+                  <p className="text-[12.5px] text-(--cv-mute)">Soho, around 19:30</p>
                 </div>
                 <ul className="mt-4 space-y-3 px-3">
                   {phone.map((r) => (
@@ -198,7 +198,7 @@ export default function CoversHome() {
                         <div className="min-w-0">
                           <p className="cv-title truncate text-[15px]">{r.name}</p>
                           <p className="truncate text-[12px] text-(--cv-mute)">
-                            {r.cuisine} · {priceLabel(r.price)}
+                            {r.cuisine}, {priceLabel(r.price)}
                           </p>
                         </div>
                       </div>

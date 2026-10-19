@@ -28,7 +28,7 @@ export default function TicketsPage() {
     <main className="tg-container pt-12 lg:pt-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonld) }} />
       <p className="tg-label text-tg-orange">
-        {festival.phase.name} · until {festival.phase.until}
+        {festival.phase.name} until {festival.phase.until}
       </p>
       <h1 className="tg-display mt-3 text-[64px] sm:text-[96px]">Tickets</h1>
       <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-tg-ink-soft">

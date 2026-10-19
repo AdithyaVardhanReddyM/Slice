@@ -10,7 +10,10 @@ const unit = (p: Product) =>
 
 const meta = (p: Product) => {
   if (p.category === "Rooms") return p.details[0];
-  if (p.category === "Experiences") return `${cityOf(p)?.city ?? ""} · ${p.subcategory}`;
+  if (p.category === "Experiences") {
+    const city = cityOf(p)?.city;
+    return city ? `${p.subcategory} in ${city}` : p.subcategory;
+  }
   return p.details[0];
 };
 
@@ -38,11 +41,12 @@ export function ItemCard({
         />
       </div>
       <h3 className="sl-serif mt-4 text-[24px] leading-tight text-sl-charcoal">{product.name}</h3>
-      <p className="mt-1.5 text-sm text-sl-mute">
-        {product.compareAtPrice ? <span className="mr-1.5 line-through">{money(product.compareAtPrice)}</span> : null}
-        <span className="text-sl-charcoal">{money(product.price)}</span> {unit(product)}
-        <span className="mx-1.5">·</span>
-        {meta(product)}
+      <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-sl-mute">
+        <span>
+          {product.compareAtPrice ? <span className="mr-1.5 line-through">{money(product.compareAtPrice)}</span> : null}
+          <span className="text-sl-charcoal">{money(product.price)}</span> {unit(product)}
+        </span>
+        <span>{meta(product)}</span>
       </p>
     </Link>
   );

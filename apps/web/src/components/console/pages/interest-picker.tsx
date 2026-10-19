@@ -32,7 +32,7 @@ const TYPE_LABEL: Record<string, string> = {
 export const typeLabel = (t: string) => TYPE_LABEL[t] ?? TYPE_LABEL[t.replace("urn:entity:", "")] ?? (t.startsWith("urn:tag") ? "Genre" : "Entity");
 
 /**
- * Search Qloo as you type and pick real entities ("Patagonia · Brand"), so a
+ * Search Qloo as you type and pick real entities ("Patagonia", a brand), so a
  * typo or a same-name restaurant never becomes the audience. `types` narrows
  * the search ("artist", "podcast"); `mode="tag"` searches genres instead.
  * Picked items show as chips with their picture and type.

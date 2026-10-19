@@ -126,7 +126,7 @@ export function CrmImport({ crm, onPulled }: { crm: CrmId; onPulled: (parsed: Pa
       });
       if (!res.ok) throw new Error(res.error ?? "Could not read the contacts");
       if (!res.rows?.length) throw new Error(`No contacts in ${list?.name ?? "that list"}.`);
-      onPulled({ columns: res.columns ?? [], rows: res.rows, delimiter: "," }, `${chosen.name} · ${list?.name ?? "All contacts"}`);
+      onPulled({ columns: res.columns ?? [], rows: res.rows, delimiter: "," }, `${list?.name ?? "All contacts"} (${chosen.name})`);
     } catch (err) {
       setError(String((err as Error).message ?? err));
     } finally {

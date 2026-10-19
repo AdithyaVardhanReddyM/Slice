@@ -5,7 +5,7 @@ import { Header } from "@/components/tagide/header";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { default: "Tágide Festival", template: "%s · Tágide Festival" },
+  title: { default: "Tágide Festival", template: "%s – Tágide Festival" },
   description: tagide.store.description,
   openGraph: {
     siteName: "Tágide Festival",

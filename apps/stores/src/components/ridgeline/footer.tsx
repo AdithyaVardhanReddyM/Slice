@@ -57,7 +57,11 @@ export function Footer() {
       <div className="border-t border-rl-line">
         <div className="rl-container flex flex-wrap items-center justify-between gap-3 py-5 text-[13px] text-rl-mute">
           <p>© {new Date().getFullYear()} Ridgeline Coffee Roasters LLC, 2211 NE Alberta St, Portland, OR 97211. Demo storefront for Slice.</p>
-          <p>Privacy · Terms · Accessibility</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            <li>Privacy</li>
+            <li>Terms</li>
+            <li>Accessibility</li>
+          </ul>
         </div>
       </div>
     </footer>

@@ -115,7 +115,7 @@ function MembersTable({ audience }: { audience: Audience }) {
                 <TableCell>
                   <div className="font-medium">{name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {[m.age, m.gender].filter(Boolean).join(" · ")}
+                    {[m.age, m.gender].filter(Boolean).join(", ")}
                     {m.leadAudienceId && (
                       <Badge variant="secondary" className="ml-1.5">
                         personal

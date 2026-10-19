@@ -31,7 +31,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Doc } from "@slice/backend/convex/_generated/dataModel";
-import { IMAGE_MODELS, MUSIC_MODELS, VIDEO_MODELS, docDuration, imageModel, modelLabel, type MediaDoc } from "@slice/backend/convex/mediaTypes";
+import { IMAGE_MODELS, MUSIC_MODELS, VIDEO_MODELS, creativeName, docDuration, imageModel, modelLabel, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCanvas } from "../canvas/context";
@@ -199,7 +199,7 @@ function useFocusEnv(creative: Doc<"mediaCreatives">, askRef: React.RefObject<HT
 }
 
 function SaveState({ editor, version }: { editor: ReturnType<typeof useCreativeDoc>; version: number }) {
-  return <span className={cn("hidden text-xs lg:inline", editor.error ? "text-destructive" : "text-neutral-400")}>{editor.error ? `Not saved: ${editor.error}` : editor.saving || editor.dirty ? "Saving…" : `Saved · v${version}`}</span>;
+  return <span className={cn("hidden text-xs lg:inline", editor.error ? "text-destructive" : "text-neutral-400")}>{editor.error ? `Not saved: ${editor.error}` : editor.saving || editor.dirty ? "Saving…" : `Saved as v${version}`}</span>;
 }
 
 const RAIL = [
@@ -222,7 +222,7 @@ function CreativeFocus({ creative, node, onClose, video }: { creative: Doc<"medi
 
   const shell = (children: ReactNode) => (
     <FocusShell
-      title={<NameInput value={creative.name} onSave={(name) => void rename({ id: creative._id, name })} />}
+      title={<NameInput value={creativeName(creative.name)} onSave={(name) => void rename({ id: creative._id, name })} />}
       meta={node.meta}
       onClose={close}
       left={
@@ -454,13 +454,13 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
                 <select value={imageId} onChange={(e) => setImageId(e.target.value)} className="h-9 w-full rounded-lg bg-neutral-50 px-2.5 text-sm ring-1 ring-black/[0.08] outline-none">
                   {IMAGE_MODELS.map((m) => (
                     <option key={m.id} value={m.id}>
-                      {m.label} · {usd(m.price)}
+                      {m.label} ({usd(m.price)})
                     </option>
                   ))}
                 </select>
               </Field>
               <Button className="w-full" disabled={!instruction.trim() || busy("edit")} onClick={() => void act("edit_image", { asset_id: a._id, instruction: instruction.trim(), model: imageId }, `edit:${a._id}`).then((ok) => ok && setInstruction(""))}>
-                {busy("edit") ? <Loader2 className="animate-spin" /> : <PenLine />} Make the change · {usd(imageModel(imageId).price)}
+                {busy("edit") ? <Loader2 className="animate-spin" /> : <PenLine />} Make the change ({usd(imageModel(imageId).price)})
               </Button>
               <p className="text-[11px] text-neutral-500">The new image lands next to this one; this one stays.</p>
             </section>
@@ -470,12 +470,12 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
               <select value={videoId} onChange={(e) => setVideoId(e.target.value)} className="h-9 w-full rounded-lg bg-neutral-50 px-2.5 text-sm ring-1 ring-black/[0.08] outline-none">
                 {VIDEO_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.label} · {usd(m.perSecond)}/s
+                    {m.label} ({usd(m.perSecond)}/s)
                   </option>
                 ))}
               </select>
               <Button variant="outline" className="w-full" disabled={busy("animate")} onClick={() => void act("make_clip", { prompt: motion.trim() || "Bring the picture to life with a slow, natural camera move; keep everything in it true.", aspect: aspect === "16:9" ? "16:9" : "9:16", seconds: vm.hd ? 8 : 6, image: a.url, model: videoId, near: a._id }, `animate:${a._id}`)}>
-                {busy("animate") ? <Loader2 className="animate-spin" /> : <Clapperboard />} Make a {vm.hd ? 8 : 6}s clip · {usd(vm.perSecond * (vm.hd ? 8 : 6))}
+                {busy("animate") ? <Loader2 className="animate-spin" /> : <Clapperboard />} Make a {vm.hd ? 8 : 6}s clip ({usd(vm.perSecond * (vm.hd ? 8 : 6))})
               </Button>
             </section>
             <section className="space-y-2 border-t pt-5">
@@ -492,7 +492,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
               <h3 className="text-sm font-semibold">Change it</h3>
               <textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={3} placeholder="Make it golden hour, add light rain, swap the mug for our bottle…" className="w-full resize-none rounded-lg bg-neutral-50 px-3 py-2 text-sm ring-1 ring-black/[0.08] outline-none focus:bg-white focus:ring-blue-500" />
               <Button className="w-full" disabled={!instruction.trim() || busy("omni")} onClick={() => void act("edit_clip", { asset_id: a._id, instruction: instruction.trim() }, `omni:${a._id}`).then((ok) => ok && setInstruction(""))}>
-                {busy("omni") ? <Loader2 className="animate-spin" /> : <PenLine />} Change with Omni Flash · {usd(0.1 * Math.max(4, a.duration ?? 6))}
+                {busy("omni") ? <Loader2 className="animate-spin" /> : <PenLine />} Change with Omni Flash ({usd(0.1 * Math.max(4, a.duration ?? 6))})
               </Button>
               <p className="text-[11px] text-neutral-500">Keeps the rest of the shot. The new clip lands next to this one.</p>
             </section>
@@ -516,7 +516,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
                 </span>
               </div>
               <Button variant="outline" className="w-full" disabled={busy("extend")} onClick={() => void act("extend_clip", { asset_id: a._id, seconds: extend.seconds, prompt: extend.prompt.trim(), model: videoId }, `extend:${a._id}`)}>
-                {busy("extend") ? <Loader2 className="animate-spin" /> : <FastForward />} Continue · {usd(vm.perSecond * (vm.hd ? 8 : extend.seconds))}
+                {busy("extend") ? <Loader2 className="animate-spin" /> : <FastForward />} Continue ({usd(vm.perSecond * (vm.hd ? 8 : extend.seconds))})
               </Button>
             </section>
             <section className="space-y-2 border-t pt-5">
@@ -534,7 +534,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
             <select value={musicId} onChange={(e) => setMusicId(e.target.value)} className="h-9 w-full rounded-lg bg-neutral-50 px-2.5 text-sm ring-1 ring-black/[0.08] outline-none">
               {MUSIC_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.label} · {usd(m.price)}
+                  {m.label} ({usd(m.price)})
                 </option>
               ))}
             </select>

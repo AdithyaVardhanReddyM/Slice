@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function GroundsPage() {
   return (
     <main className="tg-container pt-12 lg:pt-16">
-      <p className="tg-label text-tg-orange">Parque Tejo · site plan</p>
+      <p className="tg-label text-tg-orange">Parque Tejo site plan</p>
       <h1 className="tg-display mt-3 text-[64px] sm:text-[96px]">The grounds</h1>
       <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-tg-ink-soft">
         A long park on the river, with the Vasco da Gama bridge at the east end. The stages are a ten-minute walk apart at most, the food court is in the middle, and the campsite is just north

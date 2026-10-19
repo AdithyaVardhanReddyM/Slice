@@ -139,7 +139,7 @@ export function BuildReplay({ brand, pageSlug, variant, doc, speed = 1, stopAt }
     <div className="fixed inset-0 grid grid-cols-[26rem_minmax(0,1fr)] bg-muted/40 font-sans text-foreground">
       <aside className="scrollbar-thin flex min-h-0 flex-col gap-3 overflow-y-auto border-r bg-background p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium">Build replay · {brand.name}</p>
+          <p className="text-sm font-medium">Build replay for {brand.name}</p>
           <Button size="xs" variant="outline" onClick={() => setRun((r) => r + 1)}>
             <RotateCcw data-icon="inline-start" /> Replay
           </Button>

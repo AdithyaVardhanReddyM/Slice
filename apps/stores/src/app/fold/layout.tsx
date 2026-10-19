@@ -13,7 +13,7 @@ const instrument = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Fold — Clothing, footwear & accessories from 24 brands", template: "%s · Fold" },
+  title: { default: "Fold — Clothing, footwear & accessories from 24 brands", template: "%s – Fold" },
   description: fold.store.tagline,
 };
 

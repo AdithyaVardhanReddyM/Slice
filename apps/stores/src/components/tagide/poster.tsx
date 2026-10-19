@@ -34,12 +34,9 @@ export function PosterDay({ dayId, dense }: { dayId: DayId; dense?: boolean }) {
           <Name key={a.slug} act={a} className={cn(dense ? "text-[22px]" : "text-[24px] sm:text-[28px]")} />
         ))}
       </p>
-      <p className="mt-4 flex flex-wrap gap-x-2.5 gap-y-1 leading-tight">
-        {third.map((a, i) => (
-          <span key={a.slug} className="inline-flex items-baseline gap-2.5">
-            <Name act={a} className="text-[15px] sm:text-[16px]" />
-            {i < third.length - 1 && <span className="text-tg-orange" aria-hidden="true">·</span>}
-          </span>
+      <p className="mt-4 flex flex-wrap gap-x-6 gap-y-1 leading-tight">
+        {third.map((a) => (
+          <Name key={a.slug} act={a} className="text-[15px] sm:text-[16px]" />
         ))}
       </p>
     </div>

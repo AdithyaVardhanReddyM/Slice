@@ -449,7 +449,8 @@ export default function GwenHome() {
                 <blockquote className="flex-1 p-6 text-[16.5px] leading-relaxed text-gw-ink/85">&ldquo;{m.quote}&rdquo;</blockquote>
                 <figcaption className="flex items-center justify-between border-t border-gw-line px-6 py-4 text-[14px]">
                   <span className="font-semibold">
-                    {m.name} <span className="font-normal text-gw-mute">· {m.city}</span>
+                    {m.name}
+                    <span className="block font-normal text-gw-mute">{m.city}</span>
                   </span>
                   <span className="text-[12.5px] text-gw-soft">{m.since}</span>
                 </figcaption>

@@ -43,15 +43,15 @@ export function Trace({ spans, totalMs, compact }: { spans: Span[]; totalMs?: nu
   return (
     <div className="text-[12.5px]">
       {!compact && (
-        <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[11.5px] text-[var(--mute)]">
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11.5px] text-[var(--mute)]">
           {Object.entries(counts).map(([k, n]) => (
             <span key={k} className="inline-flex items-center gap-1">
               <i className="inline-block size-1.5 rounded-full" style={{ background: KIND[k]?.color ?? "var(--mute)" }} />
               {n} {KIND[k]?.label ?? k}
             </span>
           ))}
-          {cached > 0 && <span>· {cached} from cache</span>}
-          {totalMs !== undefined && <span>· {(totalMs / 1000).toFixed(1)}s</span>}
+          {cached > 0 && <span>{cached} from cache</span>}
+          {totalMs !== undefined && <span>{(totalMs / 1000).toFixed(1)}s total</span>}
         </div>
       )}
       <ol className="relative ml-1.5 border-l border-[var(--line)] pl-4">

@@ -39,11 +39,11 @@ function summarize(
   tokens?: { input: number; output: number },
 ) {
   if (kind === "qloo" && path === "/search") {
-    return `"${params.query}" · ${params.types?.replace("urn:entity:", "")}`;
+    return `${params.types?.replace("urn:entity:", "")} "${params.query}"`;
   }
   if (kind === "qloo") {
     const n = params["signal.interests.entities"]?.split(",").length ?? 0;
-    return `${params["filter.type"]} · ${n} entities · take ${params.take}`;
+    return `${params["filter.type"]} from ${n} entities, take ${params.take}`;
   }
   if (kind === "llm" && tokens)
     return `${nf.format(tokens.input)} → ${nf.format(tokens.output)} tok`;

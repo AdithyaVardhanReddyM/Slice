@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function InfoPage() {
   return (
     <main className="tg-container pt-12 lg:pt-16">
-      <p className="tg-label text-tg-orange">Info · FAQ</p>
+      <p className="tg-label text-tg-orange">Info and FAQ</p>
       <h1 className="tg-display mt-3 text-[64px] sm:text-[96px]">Good to know</h1>
       <div className="mt-10 grid gap-12 lg:grid-cols-[1.3fr_1fr]">
         <dl className="divide-y-2 divide-tg-ink border-y-2 border-tg-ink">

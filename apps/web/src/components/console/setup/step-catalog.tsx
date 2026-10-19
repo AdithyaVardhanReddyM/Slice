@@ -209,8 +209,8 @@ function UploadPanel({
             </span>
           ) : (
             <span className="num">
-              {fmt.int(preview.rows)} rows · {preview.columns.length} columns ·
-              parsed in 1.2s · 0 errors
+              {fmt.int(preview.rows)} rows and {preview.columns.length} columns,
+              parsed in 1.2s with no errors
             </span>
           )}
         </div>
@@ -302,7 +302,7 @@ function FeedPanel({
         {connected && (
           <CardAction>
             <Badge tone="ok">
-              <span className="num">{fmt.int(connected.rows)}</span> items ·
+              <span className="num">{fmt.int(connected.rows)}</span> items,
               fetched {connected.syncedAgo}
             </Badge>
           </CardAction>
@@ -393,7 +393,7 @@ function ParsedCatalog({ preview }: { preview: CatalogPreview }) {
           <CardTitle>Field mapping</CardTitle>
           <CardDescription className="num">
             {mappedRequired} of {required.length} required fields mapped
-            {toReview > 0 && ` · ${toReview} to review`}
+            {toReview > 0 && `, ${toReview} to review`}
           </CardDescription>
           <CardAction>
             {toReview > 0 ? (
@@ -582,7 +582,7 @@ function MatchPill({
   return (
     <Badge tone={tone} className="num">
       {pct === 100 ? "Exact" : `${pct}%`}
-      {tone === "warn" && " · review"}
+      {tone === "warn" && ", check it"}
     </Badge>
   );
 }
@@ -687,7 +687,7 @@ function SampleRow({
           <div className="min-w-0">
             <div className="truncate font-medium">{p.title}</div>
             <div className="truncate text-xs text-muted-foreground">
-              {p.brand ? `${p.brand} · ` : ""}
+              {p.brand ? <span className="mr-3">{p.brand}</span> : null}
               {p.id}
             </div>
           </div>

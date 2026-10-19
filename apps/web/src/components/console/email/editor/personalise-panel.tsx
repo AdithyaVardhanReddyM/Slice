@@ -163,7 +163,7 @@ function PreviewAsList() {
         {many ? <UserStar className="size-3.5 shrink-0 text-blue-700" /> : <Fingerprint className="size-3.5 shrink-0 text-neutral-500" />}
         <span className="min-w-0 truncate">
           <span className="font-medium">{audience.name}</span>
-          <span className="text-muted-foreground"> · {many ? "a version each" : "one email for the group"}</span>
+          <span className="text-muted-foreground">, {many ? "a version each" : "one email for the group"}</span>
         </span>
       </div>
       {loading ? (
@@ -188,7 +188,7 @@ function PreviewAsList() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-medium">{r.name}</span>
                   <span className={cn("block truncate text-[11px]", state === "Version ready" ? "text-emerald-700" : "text-muted-foreground")}>
-                    {r.kind === "group" && many ? `Taste group · ${state}` : state}
+                    {r.kind === "group" && many ? `Taste group, ${state.toLowerCase()}` : state}
                   </span>
                 </span>
                 <Eye className={cn("size-3.5 shrink-0", on ? "text-blue-700" : "text-neutral-300")} />

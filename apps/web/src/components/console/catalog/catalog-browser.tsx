@@ -383,7 +383,7 @@ export function CatalogBrowser({
                         {r.name}
                       </button>
                       <div className="truncate text-xs text-muted-foreground">
-                        {multiBrand && r.brand && <>{r.brand} · </>}
+                        {multiBrand && r.brand && <span className="mr-3">{r.brand}</span>}
                         {r.id}
                       </div>
                     </div>

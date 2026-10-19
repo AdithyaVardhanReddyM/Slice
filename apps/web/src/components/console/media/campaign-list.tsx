@@ -117,7 +117,7 @@ function CampaignCard({ row }: { row: Row }) {
           <div className="min-w-0">
             <h3 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">{row.name}</h3>
             <p className="truncate text-sm text-muted-foreground">
-              {kit?.name && kit.name !== "Your brand" ? kit.name : "No brand yet"} · {ago(row.updatedAt)}
+              {kit?.name && kit.name !== "Your brand" ? kit.name : "No brand yet"}, edited {ago(row.updatedAt)}
             </p>
           </div>
           <dl className="grid grid-cols-3 gap-3 border-t border-black/[0.05] pt-4">

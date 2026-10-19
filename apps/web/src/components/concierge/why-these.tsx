@@ -61,8 +61,8 @@ export function explainSpans(
         .filter(Boolean)
         .slice(0, 2)
         .map((id) => styleLabels[id] ?? id);
-      if (styles?.length) details.push(`Leaning ${styles.join(" and ")}`);
-      steps.push({ kind: s.kind, title, detail: details.join(" · ") || undefined });
+      if (styles?.length) details.push(`${details.length ? "leaning" : "Leaning"} ${styles.join(" and ")}`);
+      steps.push({ kind: s.kind, title, detail: details.join(", ") || undefined });
       continue;
     }
 

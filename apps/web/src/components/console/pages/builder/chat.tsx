@@ -21,7 +21,7 @@ function Steps({ spans, open: openDefault = false, label }: { spans: LiveTurn["s
     <div className="mt-2 rounded-lg border bg-background/60">
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between px-3 py-2 text-xs text-muted-foreground" aria-expanded={open}>
         <span>
-          {label} · {spans.length} call{spans.length === 1 ? "" : "s"}
+          {label} ({spans.length})
         </span>
         <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} />
       </button>
@@ -64,7 +64,7 @@ function HandEditCard({ text, time }: { text: string; time: string }) {
           <span className="min-w-0 flex-1">
             <span className="block font-medium">You edited the page by hand</span>
             <span className="block text-xs text-muted-foreground">
-              {lines.length} change{lines.length === 1 ? "" : "s"} · the builder keeps them
+              {lines.length} change{lines.length === 1 ? "" : "s"} the builder keeps
             </span>
           </span>
           <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />

@@ -287,7 +287,7 @@ const eventInvite = template(
         col([
           kicker("Save the date", { color: "accent", letterSpacing: 3 }),
           heading("Our autumn evening", { size: 46 }),
-          text("Thursday, November 14 &middot; 7 pm &middot; with us", { size: 17 }),
+          text("Join us Thursday, November 14 at 7 pm", { size: 17 }),
         ]),
       ],
       { background: "text", padding: [28, 40, 28, 40] },

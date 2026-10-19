@@ -63,9 +63,8 @@ export function NewCampaignDialog({ open, onOpenChange }: { open: boolean; onOpe
   const origin = (b: NonNullable<typeof media>[number]) => {
     const host = brandHost(b.url);
     if (b.status === "reading") return "Reading its website…";
-    if (b.source.kind === "pages") return ["From Pages", host].filter(Boolean).join(" · ");
-    if (b.source.kind === "email") return ["From Email", host].filter(Boolean).join(" · ");
-    return ["Made in Media", host].filter(Boolean).join(" · ");
+    const made = b.source.kind === "pages" ? "from Pages" : b.source.kind === "email" ? "from Email" : "made in Media";
+    return host ? `${host}, ${made}` : made.charAt(0).toUpperCase() + made.slice(1);
   };
 
   return (

@@ -99,14 +99,12 @@ async function CatalogContent({
       <PageHeader
         title="Catalog"
         description={
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <span className="inline-flex items-center gap-1.5 text-foreground">
               <SourceIcon className="size-4 text-muted-foreground" />
               {widget.catalog.sourceLabel}
             </span>
-            <span aria-hidden>·</span>
             <span className="num">{fmt.int(total)} products</span>
-            <span aria-hidden>·</span>
             <span>
               Synced{" "}
               {widget.catalog.lastSyncAt
@@ -114,10 +112,7 @@ async function CatalogContent({
                 : "never"}
             </span>
             {enriched > 0 && (
-              <>
-                <span aria-hidden>·</span>
-                <span className="num">{enriched} enriched by Slice</span>
-              </>
+              <span className="num">{enriched} enriched by Slice</span>
             )}
           </span>
         }

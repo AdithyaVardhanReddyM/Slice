@@ -592,7 +592,7 @@ function AudienceTiles({ audiences, pages, byPage, base }: { audiences: Audience
                   </span>
                   <span className="shrink-0 text-xs text-muted-foreground">
                     {r.pages} page{r.pages === 1 ? "" : "s"}
-                    {r.views > 0 && ` · ${fmt.pct(r.ctaClicks / r.views)} CTA`}
+                    {r.views > 0 && `, ${fmt.pct(r.ctaClicks / r.views)} CTA`}
                   </span>
                 </>
               ) : a.status === "ready" ? (

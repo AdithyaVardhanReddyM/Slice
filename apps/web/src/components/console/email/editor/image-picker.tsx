@@ -171,7 +171,7 @@ export function ImagePicker({ current, onPick, query: initialQuery = "", landsca
         ) : posters.length ? (
           <div className="grid grid-cols-4 gap-1.5">
             {posters.map((r) => (
-              <Tile key={r.url} src={r.url} title={`${r.name} · ${r.campaign}`} selected={current === r.url} onClick={() => onPick({ src: r.url, alt: r.name, source: "media" })} />
+              <Tile key={r.url} src={r.url} title={`${r.name} from ${r.campaign}`} selected={current === r.url} onClick={() => onPick({ src: r.url, alt: r.name, source: "media" })} />
             ))}
           </div>
         ) : (

@@ -111,7 +111,7 @@ function FontField({
       {href && <link rel="stylesheet" href={href} />}
       <div className="border-b bg-muted/40 px-4 py-5">
         <div className="text-xs text-muted-foreground">
-          {role} · {font.family || "Unset"}
+          {role} ({font.family || "Unset"})
         </div>
         <p className="mt-1 truncate text-2xl leading-tight" style={{ fontFamily: `"${font.family}", ${font.fallback || "sans-serif"}` }}>
           {sample}

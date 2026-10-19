@@ -163,7 +163,7 @@ export function ItemSheet({
                 <div className="font-medium">Matched on Qloo: {item.qloo.name}</div>
                 <p className="text-xs text-muted-foreground">
                   {item.qloo.type.replace("urn:entity:", "")}
-                  {item.qloo.tags?.length ? ` · ${item.qloo.tags.slice(0, 5).join(", ")}` : ""}
+                  {item.qloo.tags?.length ? `, tagged ${item.qloo.tags.slice(0, 5).join(", ")}` : ""}
                 </p>
               </div>
               <Button type="button" variant="ghost" size="sm" onClick={() => update({ id: item._id, qloo: null }).catch((err) => setError(errorText(err)))}>

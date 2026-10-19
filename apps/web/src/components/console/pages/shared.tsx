@@ -253,7 +253,7 @@ export function audienceSubtitle(a: Audience) {
 /**
  * What an audience was built from, for subtitles: "Berlin, Germany",
  * "Under 25, women", "Patagonia, The Bear", "86 customers",
- * "Austin · Under 30 · Nike +2". Real counts only; reach estimates are never shown.
+ * "Austin, Under 30, Nike +2". Real counts only; reach estimates are never shown.
  */
 export function audienceSizeLabel(a: Audience) {
   if (a.kind === "lead") return "1 person";
@@ -269,7 +269,7 @@ export function audienceSizeLabel(a: Audience) {
   if (a.kind === "custom") {
     const picks = [...(interests ?? []), ...(segments ?? []).map((s) => s.name), ...(tags ?? []).map((t) => t.name)];
     const loves = picks.length ? picks[0] + (picks.length > 1 ? ` +${picks.length - 1}` : "") : "";
-    return [location?.city, who.join(", "), loves].filter(Boolean).join(" · ");
+    return [location?.city, who.join(", "), loves].filter(Boolean).join(", ");
   }
   if (location) return [location.city, location.country, ...who].filter(Boolean).join(", ");
   if (interests?.length) return interests.slice(0, 3).join(", ") + (interests.length > 3 ? ` +${interests.length - 3}` : "");

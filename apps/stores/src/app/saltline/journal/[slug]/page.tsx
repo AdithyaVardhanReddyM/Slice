@@ -36,18 +36,17 @@ export default async function PostPage({ params }: PageProps<"/saltline/journal/
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(article) }} />
       <article className="sl-container py-10 lg:py-14">
         <header className="mx-auto max-w-3xl text-center">
-          <p className="text-sm text-sl-mute">
+          <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-sl-mute">
             <Link href={href.journal} className="hover:text-sl-charcoal">Journal</Link>
-            {h && (
-              <>
-                {" "}· <Link href={href.hotel(h.slug)} className="hover:text-sl-charcoal">{h.name}</Link>
-              </>
-            )}{" "}
-            · {formatDate(p.date)}
+            {h && <Link href={href.hotel(h.slug)} className="hover:text-sl-charcoal">{h.name}</Link>}
+            <span>{formatDate(p.date)}</span>
           </p>
           <h1 className="sl-serif mt-5 text-[44px] sm:text-[64px]">{p.title}</h1>
           <p className="mt-5 text-[19px] text-sl-charcoal-soft">{p.standfirst}</p>
-          <p className="mt-4 text-sm text-sl-mute">{p.author} · {p.readingTime}</p>
+          <p className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-sl-mute">
+            <span>{p.author}</span>
+            <span>{p.readingTime}</span>
+          </p>
         </header>
         <div className="mx-auto mt-12 aspect-[16/9] max-w-5xl overflow-hidden bg-sl-stone">
           <Photo src={sceneSrc(p.scene)} alt="" priority />

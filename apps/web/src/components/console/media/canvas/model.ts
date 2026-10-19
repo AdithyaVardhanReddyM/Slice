@@ -4,7 +4,7 @@
 // its spot). Positions are board units; a node's height follows its content.
 
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
-import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, docDuration, modelLabel, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
+import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, creativeName, docDuration, modelLabel, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 
 export type NodeKind = "poster" | "video" | "image" | "clip" | "audio" | "pending";
 export type NodeRef = { kind: "creative" | "asset" | "job"; id: string };
@@ -81,8 +81,8 @@ export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: D
       kind: doc.kind === "video" ? "video" : "poster",
       ...pos,
       h: (pos.w * doc.h) / doc.w,
-      name: c.name.replace(/ · [^·]+$/, "") || (doc.kind === "video" ? "Video" : "Poster"),
-      meta: doc.kind === "video" ? `${fmt} · ${seconds(docDuration(doc))}` : fmt,
+      name: creativeName(c.name) || (doc.kind === "video" ? "Video" : "Poster"),
+      meta: doc.kind === "video" ? `${fmt}, ${seconds(docDuration(doc))}` : fmt,
       creative: c,
       cost: spentBy.get(c._id) ?? 0,
       running: runningBy.get(c._id) ?? 0,
@@ -101,7 +101,7 @@ export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: D
       ...a.board,
       h,
       name: a.name && a.source !== "generated" ? a.name.replace(/\.[a-z0-9]+$/i, "") : nameFromPrompt(a.prompt, noun),
-      meta: [a.source === "generated" ? modelLabel(a.model) : a.source === "upload" ? "Uploaded" : "Brand", kind !== "image" ? seconds(a.duration) : ""].filter(Boolean).join(" · "),
+      meta: [a.source === "generated" ? modelLabel(a.model) : a.source === "upload" ? "Uploaded" : "Brand", kind !== "image" ? seconds(a.duration) : ""].filter(Boolean).join(", "),
       asset: a,
       cost: a.cost ?? 0,
       running: 0,

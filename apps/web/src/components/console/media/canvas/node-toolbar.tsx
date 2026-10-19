@@ -86,7 +86,7 @@ function AnimatePopover({ node }: { node: BoardNode }) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground tabular-nums">
-            ≈ {usd(m.perSecond * secs)} · {m.label}
+            ≈ {usd(m.perSecond * secs)} with {m.label}
           </span>
           <Button
             size="sm"
@@ -202,7 +202,7 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
       </>
     ) : (
       <span className="flex items-center gap-1.5 px-2 text-[13px] text-neutral-500">
-        <Loader2 className="size-3.5 animate-spin" /> Generating · lands here when ready
+        <Loader2 className="size-3.5 animate-spin" /> Generating, it lands here when ready
       </span>
     );
   } else {

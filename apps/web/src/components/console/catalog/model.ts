@@ -50,7 +50,7 @@ export function readiness(p: Product): Readiness {
       weight: 30,
       credit: Math.min(1, w / 60),
       ok: w >= 50,
-      detail: `${w} words${w < 50 ? " · aim for 50+" : ""}`,
+      detail: `${w} words${w < 50 ? ", aim for 50+" : ""}`,
     },
     {
       label: "Style tagged",
@@ -67,21 +67,21 @@ export function readiness(p: Product): Readiness {
       detail:
         a.material.length > 1
           ? `${a.material.length} listed`
-          : "1 listed · 2+ scores better",
+          : "1 listed, 2+ scores better",
     },
     {
       label: "Colors",
       weight: 15,
       credit: Math.min(1, a.colors.length / 2),
       ok: a.colors.length >= 2,
-      detail: `${a.colors.length} named${a.colors.length < 2 ? " · aim for 2+" : ""}`,
+      detail: `${a.colors.length} named${a.colors.length < 2 ? ", aim for 2+" : ""}`,
     },
     {
       label: "Use cases",
       weight: 10,
       credit: Math.min(1, a.useCase.length / 3),
       ok: a.useCase.length >= 3,
-      detail: `${a.useCase.length} listed${a.useCase.length < 3 ? " · aim for 3+" : ""}`,
+      detail: `${a.useCase.length} listed${a.useCase.length < 3 ? ", aim for 3+" : ""}`,
     },
     {
       label: contextLabel,

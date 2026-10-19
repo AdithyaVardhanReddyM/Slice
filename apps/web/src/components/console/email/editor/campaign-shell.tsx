@@ -389,8 +389,8 @@ function Workspace({ campaign, brand }: { campaign: EmailCampaign; brand: EmailB
       } else if (sel.kind === "section") {
         const f = findSection(d, sel.id);
         if (f) {
-          const text = f.section.columns.flatMap((c) => c.blocks.map(blockText)).filter(Boolean).join(" · ");
-          composer.current?.addBlock({ id: f.section.id, label: `Section · ${sectionName(f.section, f.index)}`, type: "section", text });
+          const text = f.section.columns.flatMap((c) => c.blocks.map(blockText)).filter(Boolean).join(", ");
+          composer.current?.addBlock({ id: f.section.id, label: `Section: ${sectionName(f.section, f.index)}`, type: "section", text });
         }
       }
       // The panel mounts or shows first; focus once it is on screen.

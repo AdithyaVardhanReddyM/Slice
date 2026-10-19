@@ -152,7 +152,7 @@ export function SpanDetail({ span }: { span: Span }) {
       )}
       {span.tokens && (
         <p className="text-sm text-muted-foreground tabular-nums">
-          {fmt.int(span.tokens.input)} input tokens ·{" "}
+          {fmt.int(span.tokens.input)} input and{" "}
           {fmt.int(span.tokens.output)} output tokens
         </p>
       )}

@@ -374,13 +374,14 @@ function Expanded({ row, widgetId }: { row: LogRow; widgetId: string }) {
             {row.cache && (
               <span className="text-muted-foreground">
                 {" "}
-                · cache {row.cache}
+                (cache {row.cache})
               </span>
             )}
           </dd>
           <dt className="text-muted-foreground">Span and trace</dt>
           <dd className="col-span-2 truncate">
-            {row.id} · {row.traceId}
+            <span className="mr-3">{row.id}</span>
+            {row.traceId}
           </dd>
           <dt className="text-muted-foreground">Conversation</dt>
           <dd className="col-span-2">

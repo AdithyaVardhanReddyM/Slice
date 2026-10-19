@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Clock, MapPin, Package, Truck } from "lucide-react";
-import { FOLIO_BOOKS, FOLIO_EVENTS, FOLIO_SECTIONS, FOLIO_SHOP, bookBySlug, booksIn, dateParts, eventPhoto, href, newArrivals, photos, roleText, staff, staffPicks, type FolioEvent } from "@/lib/stackhouse/shop";
+import { FOLIO_BOOKS, FOLIO_EVENTS, FOLIO_SECTIONS, FOLIO_SHOP, bookBySlug, booksIn, dateParts, eventPhoto, href, newArrivals, photos, lowerFirst, roleText, staff, staffPicks, type FolioEvent } from "@/lib/stackhouse/shop";
 import { JsonLd, bookJsonLd, eventJsonLd, storeJsonLd } from "@/lib/stackhouse/jsonld";
 import { BookCard } from "@/components/stackhouse/book-card";
 import { Cover } from "@/components/stackhouse/cover";
@@ -93,7 +93,7 @@ export default function FolioHome() {
             <span>
               <span className="ff-label block">October book club pick</span>
               <span className="ff-title mt-0.5 block text-[17px]">{clubPick.title}</span>
-              <span className="mt-0.5 block text-[14px] text-(--ff-mute)">Thu, Oct 22 · 7pm · Reading room</span>
+              <span className="mt-0.5 block text-[14px] text-(--ff-mute)">Thu, Oct 22 at 7pm in the reading room</span>
             </span>
           </Link>
         </div>
@@ -160,9 +160,9 @@ export default function FolioHome() {
                     </h3>
                     <p className="text-[14.5px] text-(--ff-ink-soft)">{b.author}</p>
                     <blockquote className="mt-3 text-[15.5px] leading-relaxed">&ldquo;{b.staffNote.text}&rdquo;</blockquote>
-                    <p className="mt-auto pt-3 text-[14.5px]">
+                    <p className="mt-auto flex flex-wrap items-baseline gap-x-3 pt-3 text-[14.5px]">
                       <span className="font-semibold">{b.price}</span>
-                      <span className="text-(--ff-mute)"> · {who.name}, {roleText(who.role)}</span>
+                      <span className="text-(--ff-mute)">{who.name}, {roleText(who.role)}</span>
                     </p>
                   </div>
                 </article>
@@ -183,7 +183,7 @@ export default function FolioHome() {
             </div>
             <div className="p-6 sm:p-8">
               <p className="ff-label">
-                {debut.date} · {debut.time}
+                {debut.date}, {debut.time}
               </p>
               <h3 className="ff-display mt-2 text-[30px]">{debut.title}</h3>
               <p className="mt-3 text-[16.5px] leading-relaxed text-(--ff-ink-soft)">{debut.description}</p>
@@ -348,8 +348,8 @@ function EventRow({ e }: { e: FolioEvent }) {
         </span>
         <span className="min-w-0">
           <span className="text-[14px] text-(--ff-mute)">
-            {e.kind} · {d.weekday} {e.time}
-            {e.recurring ? ` · ${e.recurring}` : ""}
+            {e.kind}, {d.weekday} {e.time}
+            {e.recurring ? ` (${lowerFirst(e.recurring)})` : ""}
           </span>
           <span className="ff-title mt-0.5 block text-[19px] group-hover:underline group-hover:underline-offset-4">{e.title}</span>
           <span className="mt-1 line-clamp-2 text-[15px] leading-snug text-(--ff-ink-soft)">{e.description}</span>

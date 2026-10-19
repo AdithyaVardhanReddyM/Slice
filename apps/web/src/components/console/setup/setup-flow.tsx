@@ -152,14 +152,15 @@ export function SetupFlow({
     setCompleted((c) => (c.includes("install") ? c : [...c, "install"]));
   }
 
+  const tasteDomains = taste.domains.map((d) => domainLabel.get(d)).join(", ");
   const summaries: Record<SetupStep, string> = {
-    store: `${widget.vertical} · ${profile.price === "mid" ? "mid-priced" : profile.price} · ${profile.voice.join(", ")}`,
+    store: `${widget.vertical} at ${profile.price === "mid" ? "mid-range" : profile.price} prices${profile.voice.length ? `, in a ${profile.voice.join(", ")} voice` : ""}`,
     catalog: catalogConnected
-      ? `${fmt.int(catalog.rows)} products · ${catalog.label}`
+      ? `${fmt.int(catalog.rows)} products from ${catalog.label}`
       : "Not connected",
-    taste: `${taste.questions} questions · ${taste.domains.map((d) => domainLabel.get(d)).join(", ") || "no domains"}${taste.localize ? " · localized" : ""}`,
-    concierge: `${concierge.name || "Unnamed"} · ${concierge.recs} ${concierge.recs === 1 ? "pick" : "picks"} per reply`,
-    appearance: `${look.accent.toUpperCase()} · bottom ${look.position}`,
+    taste: `${taste.questions}${taste.localize ? " localized" : ""} questions ${tasteDomains ? `on ${tasteDomains}` : "with no domains"}`,
+    concierge: `${concierge.name || "Unnamed"}, ${concierge.recs} ${concierge.recs === 1 ? "pick" : "picks"} per reply`,
+    appearance: `${look.accent.toUpperCase()}, bottom ${look.position}`,
     install: verified ? `Detected on ${widget.domain}` : "Not verified",
   };
 
@@ -248,7 +249,7 @@ export function SetupFlow({
               >
                 <div className="min-w-0 space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    Step {index + 1} of {SETUP_STEPS.length} · about{" "}
+                    Step {index + 1} of {SETUP_STEPS.length}, about{" "}
                     {step.estimate}
                   </p>
                   <h1 className="text-2xl font-semibold tracking-tight">

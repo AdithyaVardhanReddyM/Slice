@@ -452,7 +452,7 @@ export const PromptComposer = forwardRef<
         <div className="absolute inset-x-0 bottom-full z-30 mb-2 overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-lg">
           <div className="flex items-center justify-between border-b px-3 py-2 text-xs text-muted-foreground">
             <span>Target an audience</span>
-            <span>↑↓ to move · Enter to pick</span>
+            <span>↑↓ to move, Enter to pick</span>
           </div>
           {matches.length === 0 ? (
             <div className="space-y-2 px-3 py-3 text-sm">
@@ -493,7 +493,7 @@ export const PromptComposer = forwardRef<
                         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                           {a.status !== "ready" && <StatusDot status={a.status} />}
                           {listOf(a, audiences)?.name ?? AUDIENCE_KIND_LABEL[a.kind] ?? a.kind}
-                          {a.status === "compiling" && " · compiling"}
+                          {a.status === "compiling" && " (compiling)"}
                         </span>
                       </span>
                     </button>
@@ -617,7 +617,7 @@ export const PromptComposer = forwardRef<
                   >
                     <SquareDashedMousePointer className="size-4" />
                   </TooltipTrigger>
-                  <TooltipContent side="top">{picking ? "Click an element on the page · Esc to stop" : (pickBlocked ?? "Select an element to mention it")}</TooltipContent>
+                  <TooltipContent side="top">{picking ? "Click an element on the page, Esc to stop" : (pickBlocked ?? "Select an element to mention it")}</TooltipContent>
                 </Tooltip>
               )}
               {hint && <span className="min-w-0 truncate text-xs text-muted-foreground">{hint}</span>}

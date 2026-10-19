@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/tagide/lineup/[sl
   const { slug } = await params;
   const a = actBySlug(slug);
   if (!a) return { title: "Act" };
-  return { title: `${a.name} · ${day(a.day).label} ${a.time}, ${stage(a.stage).full}`, description: a.blurb };
+  return { title: `${a.name} on ${day(a.day).label} at ${a.time}, ${stage(a.stage).full}`, description: a.blurb };
 }
 
 export default async function ActPage({ params }: PageProps<"/tagide/lineup/[slug]">) {
@@ -50,8 +50,8 @@ export default async function ActPage({ params }: PageProps<"/tagide/lineup/[slu
       <div className="mt-6 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:items-end">
         <div>
           <p className="tg-label text-tg-orange">
-            {a.tier === 1 ? "Headliner · " : ""}
-            {d.label} {d.date} · {s.full} · {a.time}
+            {a.tier === 1 ? "Headliner, " : ""}
+            {d.label} {d.date} at {a.time}, {s.full}
           </p>
           <h1 className="tg-display mt-4 text-[56px] sm:text-[88px] lg:text-[104px]">{a.name}</h1>
           <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-tg-ink-soft">{a.blurb}</p>
@@ -93,7 +93,7 @@ export default async function ActPage({ params }: PageProps<"/tagide/lineup/[slu
               .filter((x) => x.stage !== a.stage)
               .map((x) => (
                 <Link key={x.slug} href={href.act(x.slug)} className="rounded-full border-2 border-tg-ink px-4 py-2 text-[14px] font-bold hover:bg-tg-ink hover:text-tg-cream">
-                  {x.name} · {stage(x.stage).name} {x.time}
+                  {x.name} ({stage(x.stage).name}, {x.time})
                 </Link>
               ))}
           </p>

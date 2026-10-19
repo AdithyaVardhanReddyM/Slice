@@ -105,7 +105,7 @@ function ServiceCard({
           <span className="flex min-w-0 items-center gap-1.5 text-sm text-neutral-500">
             <Icon className="size-3.5 shrink-0" />
             <span className="font-medium text-neutral-700">{label}</span>
-            {meta && <span className="truncate">· {meta}</span>}
+            {meta && <span className="ml-1.5 truncate">{meta}</span>}
           </span>
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-700 transition-colors duration-300 group-hover:bg-[#ea580c] group-hover:text-white">
             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />

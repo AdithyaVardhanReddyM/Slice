@@ -13,7 +13,7 @@ export default function LineupPage() {
   return (
     <main className="tg-container pt-12 lg:pt-16">
       <p className="tg-label text-tg-orange">
-        Lineup · announced {festival.lineupAnnounced}
+        Lineup announced {festival.lineupAnnounced}
       </p>
       <h1 className="tg-display mt-3 text-[64px] sm:text-[96px]">Who&apos;s playing</h1>
       <p className="mt-4 max-w-xl text-[16px] leading-relaxed text-tg-ink-soft">
@@ -52,7 +52,7 @@ export default function LineupPage() {
                         <span>
                           <span className={"tg-display block transition-colors group-hover:text-tg-orange " + (a.tier === 1 ? "text-[24px]" : a.tier === 2 ? "text-[20px]" : "text-[16px]")}>{a.name}</span>
                           <span className="text-[12px] font-semibold text-tg-mute">
-                            {a.genre} · {a.origin}
+                            {a.genre} from {a.origin}
                           </span>
                         </span>
                       </Link>

@@ -23,8 +23,8 @@ import { useCompileAudience } from "./use-compile-audience";
 /** A person's face in the list: the first picture from their taste, like their @mention pill. */
 const avatarOf = (person: Audience, member?: Member) => coverTiles(profileOf(person), 1)[0]?.image ?? member?.entities.find((e) => e.image)?.image;
 
-/** "25 to 29 · Brooklyn": what the row says about them. */
-const aboutOf = (member?: Member) => [member?.age ? (AGE_LABEL[member.age] ?? member.age) : null, member?.city].filter(Boolean).join(" · ");
+/** "25 to 29, Brooklyn": what the row says about them. */
+const aboutOf = (member?: Member) => [member?.age ? (AGE_LABEL[member.age] ?? member.age) : null, member?.city].filter(Boolean).join(", ");
 
 /**
  * A customer list kept one by one: the list's cover, then its people on the

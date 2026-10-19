@@ -24,7 +24,7 @@ export default function JournalPage() {
             </div>
             <div className={i % 2 ? "lg:order-1" : ""}>
               <p className="text-sm text-sl-mute">
-                {hotel(p.hotel)?.city} · {formatDate(p.date)} · {p.readingTime}
+                {hotel(p.hotel)?.city}, {formatDate(p.date)}, {p.readingTime}
               </p>
               <h2 className="sl-serif mt-3 text-[36px] sm:text-[44px] group-hover:text-sl-sea-deep">{p.title}</h2>
               <p className="mt-4 text-[17px] text-sl-charcoal-soft">{p.standfirst}</p>

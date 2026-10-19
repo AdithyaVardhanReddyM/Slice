@@ -253,13 +253,13 @@ export function ContextBar() {
       {layers.length === 0 ? (
         <>
           <span className="pr-2 text-[13px] font-medium text-neutral-500">
-            {FORMATS[doc.format].label} · {doc.w}×{doc.h}
+            {FORMATS[doc.format].label}, {doc.w}×{doc.h}
           </span>
           <Sep />
           <Pop trigger={<span className="flex items-center gap-1.5 text-xs font-medium"><Swatch value={doc.background.includes("gradient") ? undefined : doc.background} /> Background</span>} title="Page background">
             <ColorPick value={doc.background} kit={kit} onChange={(v) => editor.update((d) => ({ ...d, background: v ?? kit?.colors.background ?? "#ffffff" }))} />
           </Pop>
-          <span className="ml-auto pl-3 text-xs text-neutral-400">Double-click text to edit it · drag pictures in from the left</span>
+          <span className="ml-auto pl-3 text-xs text-neutral-400">Double-click text to edit it, or drag pictures in from the left</span>
         </>
       ) : (
         <>

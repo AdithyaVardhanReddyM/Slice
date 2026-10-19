@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock, MapPin, Ticket } from "lucide-react";
-import { FOLIO_EVENTS, bookBySlug, dateParts, eventPhoto, href } from "@/lib/stackhouse/shop";
+import { FOLIO_EVENTS, bookBySlug, dateParts, eventPhoto, href, lowerFirst } from "@/lib/stackhouse/shop";
 import { JsonLd, eventJsonLd } from "@/lib/stackhouse/jsonld";
 import { Cover } from "@/components/stackhouse/cover";
 import { RsvpForm } from "@/components/stackhouse/signup";
@@ -53,7 +53,7 @@ export default function EventsPage() {
               <div className="p-6 sm:p-8">
                 <p className="ff-label">
                   {e.kind}
-                  {e.recurring ? ` · ${e.recurring}` : ""}
+                  {e.recurring ? `, ${lowerFirst(e.recurring)}` : ""}
                 </p>
                 <h2 className="ff-display mt-2 text-[30px] text-(--ff-green)">{e.title}</h2>
                 <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-[15px] text-(--ff-ink-soft)">

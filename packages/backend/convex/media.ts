@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { cleanMessage } from "./emailCampaigns";
-import { AUDIO_NODE, BOARD_GAP, DEFAULT_KIT, aspectSize, boardWidth, cleanDoc, FORMATS, isFormat, isTier, resizeDoc, safeUrl, type BoardPos, type FormatPreset, type MediaDoc, type MediaKit } from "./mediaTypes";
+import { AUDIO_NODE, BOARD_GAP, DEFAULT_KIT, aspectSize, boardWidth, cleanDoc, creativeName, FORMATS, isFormat, isTier, resizeDoc, safeUrl, type BoardPos, type FormatPreset, type MediaDoc, type MediaKit } from "./mediaTypes";
 
 // Media campaigns: one infinite canvas per campaign holding the posters and
 // videos (creatives), the generated images, clips and tracks (assets) and the
@@ -119,7 +119,7 @@ export const exports = query({
       for (const x of creatives) {
         if (!x.export) continue;
         const spec = FORMATS[(x.format as FormatPreset) ?? "story"] ?? FORMATS.story;
-        out.push({ url: x.export.url, mime: x.export.mime, name: x.name, campaign: c.name, format: x.format, w: spec.w, h: spec.h, at: x.export.at });
+        out.push({ url: x.export.url, mime: x.export.mime, name: creativeName(x.name), campaign: c.name, format: x.format, w: spec.w, h: spec.h, at: x.export.at });
       }
     }
     return out.sort((a, b) => b.at - a.at);
@@ -504,7 +504,8 @@ export const renameCreative = mutation({
   returns: v.null(),
   handler: async (ctx, { id, name }) => {
     await ownCreative(ctx, id);
-    if (name.trim()) await ctx.db.patch(id, { name: name.trim().slice(0, 120), updatedAt: Date.now() });
+    const clean = creativeName(name).slice(0, 120);
+    if (clean) await ctx.db.patch(id, { name: clean, updatedAt: Date.now() });
     return null;
   },
 });
@@ -530,7 +531,7 @@ export const resize = mutation({
     for (const f of formats.filter(isFormat)) {
       if (f === creative.format) continue;
       const doc = cleanDoc(resizeDoc(creative.doc as MediaDoc, f));
-      ids.push(await insertCreative(ctx, campaign._id, { name: `${creative.name.replace(/ · [^·]+$/, "")} · ${FORMATS[f].label}`, audienceKey: creative.audienceKey, format: f, kind: doc.kind, doc, why: creative.why, nearId: ids[ids.length - 1] ?? creative._id }, "merchant"));
+      ids.push(await insertCreative(ctx, campaign._id, { name: creative.name, audienceKey: creative.audienceKey, format: f, kind: doc.kind, doc, why: creative.why, nearId: ids[ids.length - 1] ?? creative._id }, "merchant"));
     }
     return ids;
   },
@@ -573,7 +574,7 @@ async function insertCreative(
   const board = c.board ?? (await placeOnBoard(ctx, campaignId, { w: doc.w, h: doc.h }, c.nearId));
   const id = await ctx.db.insert("mediaCreatives", {
     campaignId,
-    name: c.name.slice(0, 120) || "Creative",
+    name: creativeName(c.name).slice(0, 120) || "Creative",
     audienceKey: c.audienceKey.slice(0, 60) || "all",
     format: doc.format,
     kind: doc.kind,
@@ -670,7 +671,7 @@ export const writeCreative = internalMutation({
       if (!creative || creative.campaignId !== a.campaignId) throw new Error("Unknown creative");
       const version = await writeVersion(ctx, creative, cleanDoc(a.doc), "agent", a.note);
       const extra: Partial<Doc<"mediaCreatives">> = {};
-      if (a.name) extra.name = a.name.slice(0, 120);
+      if (creativeName(a.name ?? "")) extra.name = creativeName(a.name ?? "").slice(0, 120);
       if (a.why?.length) extra.why = a.why.slice(0, 8);
       if (Object.keys(extra).length) await ctx.db.patch(creative._id, extra);
       return { id: creative._id, version };

@@ -506,8 +506,8 @@ export function WhyDialog({
               </DialogTitle>
               <DialogDescription>
                 Pick {rec.rank} of{" "}
-                {trace.retrieval.candidates.filter((c) => c.kept).length} ·{" "}
-                {product.subcategory} · {fmt.money(product.price)}
+                {trace.retrieval.candidates.filter((c) => c.kept).length}, in{" "}
+                {product.subcategory} at {fmt.money(product.price)}
               </DialogDescription>
             </DialogHeader>
 
@@ -604,7 +604,7 @@ export function WhyDialog({
                       Steps behind this reply
                     </h3>
                     <span className="text-sm text-muted-foreground tabular-nums">
-                      {trace.spans.length} steps · {fmt.ms(trace.totalMs)}
+                      {trace.spans.length} steps in {fmt.ms(trace.totalMs)}
                     </span>
                   </div>
                   <div className="rounded-lg border p-4">

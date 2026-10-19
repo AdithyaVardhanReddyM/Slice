@@ -154,7 +154,7 @@ def outline(doc: dict[str, Any]) -> str:
                 bits.append("fade-in")
             if c.get("error"):
                 bits.append(f"error: {_short(c['error'], 80)}")
-            lines.append(f"  shot {' · '.join(x for x in bits if x)} — {_short(c.get('prompt'), 90)}" + (f' — says "{_short(c["says"], 80)}"' if c.get("says") else ""))
+            lines.append(f"  shot {', '.join(x for x in bits if x)} — {_short(c.get('prompt'), 90)}" + (f' — says "{_short(c["says"], 80)}"' if c.get("says") else ""))
         for au in doc.get("audio") or []:
             lines.append(f"  audio {au['id']} {au['kind']} {au.get('start', 0):.1f}s +{au.get('duration', 0):.1f}s vol {au.get('volume', 1)} {au.get('status', '')} — {_short(au.get('text') or au.get('prompt'), 70)}")
     for l in doc.get("layers") or []:

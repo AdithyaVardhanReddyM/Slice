@@ -25,6 +25,8 @@ export const section = (id: FolioSectionId) => FOLIO_SECTIONS.find((s) => s.id =
 export const staff = (id: FolioStaffId) => FOLIO_STAFF.find((s) => s.id === id)!;
 /** A role mid-sentence: "Kids and YA" → "kids and YA". */
 export const roleText = (role: string) => role.charAt(0).toLowerCase() + role.slice(1);
+/** Any label mid-sentence: "Every Saturday" → "every Saturday", "The reading room" → "the reading room". */
+export const lowerFirst = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 export const booksIn = (id: FolioSectionId) => FOLIO_BOOKS.filter((b) => b.section === id);
 export const newArrivals = () => FOLIO_BOOKS.filter((b) => b.isNew);
 export const eventBySlug = (slug: string) => FOLIO_EVENTS.find((e) => e.slug === slug);

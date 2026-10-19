@@ -9,7 +9,7 @@ const description = `Covers is the booking app for ${COVERS_RESTAURANTS.length} 
 const ogPhoto = restaurantBySlug("clos-maggiore")!;
 
 export const metadata: Metadata = {
-  title: { default: `Covers · ${COVERS_APP.tagline.replace(/\.$/, "")}`, template: "%s · Covers" },
+  title: { default: `Covers: ${COVERS_APP.tagline.replace(/\.$/, "")}`, template: "%s – Covers" },
   description,
   icons: { icon: "/covers/mark.png", apple: "/covers/mark.png" },
   openGraph: {

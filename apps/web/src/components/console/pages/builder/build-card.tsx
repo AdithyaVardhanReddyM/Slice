@@ -316,8 +316,8 @@ export function DoneBuildCard({ steps }: { steps: BuildStep[] }) {
       <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-muted-foreground hover:text-foreground" aria-expanded={open}>
         <Check className="size-3.5 text-emerald-600" strokeWidth={2.5} />
         <span className="text-foreground/80">{label}</span>
-        <span>
-          · {tools.length} step{tools.length === 1 ? "" : "s"}
+        <span className="ml-1">
+          {tools.length} step{tools.length === 1 ? "" : "s"}
           {failed ? ", some retried" : ""}
         </span>
         <ChevronDown className={cn("ml-auto size-3.5 transition-transform", open && "rotate-180")} />

@@ -18,7 +18,7 @@ const hotels = [
 export default function TravelPage() {
   return (
     <main className="tg-container pt-12 lg:pt-16">
-      <p className="tg-label text-tg-orange">Travel · camping · hotels</p>
+      <p className="tg-label text-tg-orange">Travel, camping and hotels</p>
       <h1 className="tg-display mt-3 text-[64px] sm:text-[96px]">Getting here</h1>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
         <div>
@@ -50,7 +50,7 @@ export default function TravelPage() {
                 <p className="mt-2 text-[14px] font-medium leading-relaxed text-tg-ink-soft">{c.how}</p>
                 {pkg ? (
                   <Link href={`${href.tickets}#${pkg.slug}`} className="tg-btn mt-auto bg-tg-orange pt-5 text-white hover:bg-tg-orange-deep">
-                    {pkg.name.replace("Travel package from", "Package from")} · {eur(pkg.price)}
+                    {pkg.name.replace("Travel package from", "Package from")} for {eur(pkg.price)}
                   </Link>
                 ) : (
                   <span className="mt-auto pt-5 text-[13px] font-bold uppercase tracking-[0.06em] text-tg-mute">Book your own travel</span>

@@ -36,6 +36,14 @@ export const FORMAT_KEYS = Object.keys(FORMATS) as FormatPreset[];
 
 export const isFormat = (x: unknown): x is FormatPreset => typeof x === "string" && x in FORMATS;
 
+/** A creative's name as shown: the format shows beside it, so an older name's " · Story" suffix goes, and no dots separate words. */
+export function creativeName(name: string) {
+  const at = name.lastIndexOf(" · ");
+  const tail = name.slice(at + 3).trim().toLowerCase().replace(/ (video|poster)$/, "");
+  const base = at > 0 && Object.values(FORMATS).some((f) => f.label.toLowerCase() === tail) ? name.slice(0, at) : name;
+  return base.replace(/\s*·\s*/g, ", ").trim();
+}
+
 /* Cost tiers ---------------------------------------------------------------
    Estimates in USD, list prices. The agent (slice_media/models.py) charges
    these per job; the console only shows them. */

@@ -15,7 +15,7 @@ import { KIND_NAME, PG_ID, clip, kindOf, nameOf, pickable, sectionOf, textOf, ty
 export interface PickedElement {
   /** Unique per pick, so two pills stay apart even for one element. */
   key: string;
-  /** What the pill and the message call it: "Headline · Passes and tickets". */
+  /** What the pill and the message call it: "Headline: Passes and tickets". */
   label: string;
   tag: string;
   /** The data-section it sits in. */
@@ -27,13 +27,13 @@ export interface PickedElement {
   id?: string;
 }
 
-/** "Headline · Passes and tickets", "Button · Get tickets", "Hero section". */
+/** "Headline: Passes and tickets", "Button: Get tickets", "Hero section". */
 function pillLabel(el: Element, names: SectionNames, win: Window): string {
   const kind = kindOf(el, win);
   if (kind === "section" || kind === "header" || kind === "footer" || kind === "nav") return nameOf(el, names, win);
   const name = kind === "heading" || kind === "text" ? nameOf(el, names, win) : KIND_NAME[kind];
   const snippet = kind === "image" ? (el.getAttribute("alt") ?? "") : textOf(el);
-  return snippet ? `${name} · ${clip(snippet, 34)}` : name;
+  return snippet ? `${name}: ${clip(snippet, 34)}` : name;
 }
 
 export function describeElement(el: Element, names: SectionNames, win: Window): PickedElement {

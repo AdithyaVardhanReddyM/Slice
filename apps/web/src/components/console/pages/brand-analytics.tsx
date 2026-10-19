@@ -369,7 +369,7 @@ function PageSwitcher({ pages, current, overview, onSelect }: { pages: PageRow[]
                   <span className="block truncate text-sm font-medium">{p.title}</span>
                   <span className="block truncate text-xs text-muted-foreground">
                     For {audienceOf(p)}
-                    {p.status !== "published" && " · Draft"}
+                    {p.status !== "published" && " (draft)"}
                   </span>
                 </span>
                 <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{visitors.has(p._id) ? `${fmt.compact(visitors.get(p._id) ?? 0)} visitors` : ""}</span>

@@ -69,7 +69,7 @@ function Cost({ usd: n, model }: { usd: number; model?: string }) {
   return (
     <span className="text-[11px] text-muted-foreground tabular-nums">
       {n === 0 ? "Free" : `≈ ${usd(n)}`}
-      {model ? ` · ${model}` : ""}
+      {model ? ` with ${model}` : ""}
     </span>
   );
 }
@@ -216,7 +216,7 @@ export function ShotPanel({ id }: { id: string }) {
       {clip.kind === "motion" && clip.status === "ready" && clip.src && (
         <>
           <Section title="Change it" aside={<span className="text-[11px] text-muted-foreground">Omni Flash</span>}>
-            <textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={2} placeholder="Make it golden hour · swap the mug for our bottle · add light rain" className={box} />
+            <textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} rows={2} placeholder="Make it golden hour, swap the mug for our bottle, add light rain" className={box} />
             <p className="text-[11px] leading-4 text-muted-foreground">Keeps the rest of the shot. Usually cheaper and truer than regenerating when it is mostly right.</p>
             <div className="flex items-center justify-between gap-2">
               <Cost usd={omniEstimate(clip)} />
@@ -414,7 +414,7 @@ export function AudioPanel({ id }: { id: string }) {
         <Section title={track ? "New take" : "Record"} aside={<span className="text-[11px] text-muted-foreground">Gemini TTS</span>}>
           <textarea value={script} onChange={(e) => setScript(e.target.value)} rows={4} placeholder="The words, in your brand's voice" className={box} />
           <p className={cn("text-[11px] tabular-nums", words > total * 2.6 ? "text-amber-700" : "text-muted-foreground")}>
-            {words} words · about {target} fit
+            {words} words, about {target} fit
           </p>
           <Row label="Voice">
             <Select value={voice} onChange={(e) => setVoice(e.target.value)} className="h-7 text-xs">

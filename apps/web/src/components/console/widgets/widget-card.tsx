@@ -35,7 +35,7 @@ export function WidgetCard({ widget }: { widget: Widget }) {
           <div className="min-w-0">
             <h3 className="truncate font-medium">{widget.name}</h3>
             <p className="truncate text-sm text-muted-foreground">
-              {widget.domain} · {widget.vertical}
+              {widget.domain}, {widget.vertical}
             </p>
           </div>
           <StatusText status={widget.status} />
@@ -73,7 +73,7 @@ export function WidgetCard({ widget }: { widget: Widget }) {
         <div className="mt-auto flex items-center justify-between text-sm text-muted-foreground">
           <span>
             {live
-              ? `${fmt.int(widget.catalog.products)} products · last 7 days`
+              ? `${fmt.int(widget.catalog.products)} products, last 7 days`
               : "Continue where you left off"}
           </span>
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />

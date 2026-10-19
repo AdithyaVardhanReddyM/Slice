@@ -272,7 +272,7 @@ function VersionPicker({
             </TooltipTrigger>
             <TooltipContent>
               {versionName(v, audiences)}
-              {v.status === "building" ? " · building" : v.status === "failed" ? " · failed" : v.status !== "ready" ? " · not built" : ""}
+              {v.status === "building" ? " (building)" : v.status === "failed" ? " (failed)" : v.status !== "ready" ? " (not built)" : ""}
             </TooltipContent>
           </Tooltip>
         );
@@ -425,7 +425,7 @@ function PageCard({ page, brand, stats, base }: { page: PageRow; brand: Brand; s
               {page.title}
             </Link>
             <p className="truncate text-sm text-muted-foreground">
-              {goalLabel(page.brief.goal)} · Edited {relativeTime(page.updatedAt)}
+              {goalLabel(page.brief.goal)}, edited {relativeTime(page.updatedAt)}
             </p>
           </div>
           <PageMenu page={page} brand={brand} editHref={href} variant={active} className="-mt-1 -mr-2" />
@@ -509,8 +509,9 @@ function PagesTable({ pages, brand, stats, base }: { pages: PageRow[]; brand: Br
                       <Link href={href} onClick={(e) => e.stopPropagation()} className="block truncate font-medium hover:underline">
                         {p.title}
                       </Link>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {goalLabel(p.brief.goal)} · /{p.slug}
+                      <div className="flex gap-x-3 text-xs text-muted-foreground">
+                        <span className="shrink-0">{goalLabel(p.brief.goal)}</span>
+                        <span className="truncate">/{p.slug}</span>
                       </div>
                     </div>
                   </div>
@@ -670,7 +671,7 @@ export function PagesScreen() {
               <DropdownMenuTrigger render={<Button variant="outline" size="sm" className={cn(filtered && "border-foreground/30")} />}>
                 <ListFilter data-icon="inline-start" />
                 {status === "all" ? "Filter" : STATUS_LABEL[status]}
-                {sort !== "updated" && <span className="text-muted-foreground">· {SORT_LABEL[sort]}</span>}
+                {sort !== "updated" && <span className="ml-1 text-muted-foreground">{SORT_LABEL[sort]}</span>}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-48">
                 <DropdownMenuGroup>

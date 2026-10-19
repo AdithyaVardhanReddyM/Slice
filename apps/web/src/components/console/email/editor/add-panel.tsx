@@ -198,7 +198,7 @@ export function AddPanel() {
                 </div>
                 {list.map((p) => (
                   <div key={p.id} className="space-y-1.5">
-                    <PresetCard id={`section-${p.id}`} label={p.label} data={{ kind: "preset-section", label: `${g.label} · ${p.label}`, section: fillItems(p.section, items) }} onAdd={() => addSection(p.section)}>
+                    <PresetCard id={`section-${p.id}`} label={p.label} data={{ kind: "preset-section", label: `${g.label}: ${p.label}`, section: fillItems(p.section, items) }} onAdd={() => addSection(p.section)}>
                       <SectionPreview section={p.section} width={previewW} ctx={ctx} theme={theme} items={items} />
                     </PresetCard>
                     <p className="text-xs text-neutral-500">{p.label}</p>

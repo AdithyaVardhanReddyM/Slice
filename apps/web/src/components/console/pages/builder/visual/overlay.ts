@@ -194,7 +194,7 @@ export class EditOverlay {
     const r = sel.getBoundingClientRect();
     this.place(p.sel, r.left, r.top, r.width, r.height);
     p.sel.classList.toggle("editing", this.info.editing);
-    p.chip.textContent = this.info.editing ? "Editing text · Enter to finish" : this.info.label;
+    p.chip.textContent = this.info.editing ? "Editing text, Enter to finish" : this.info.label;
     const above = r.top > 26;
     const chipY = above ? r.top - 24 : Math.min(r.bottom + 4, this.win.innerHeight - 24);
     this.place(p.chip, Math.max(2, r.left), chipY);

@@ -50,7 +50,7 @@ export function Footer({ store }: { store: Store }) {
       </div>
       <div className="mono flex flex-wrap items-center justify-between gap-2 border-t border-ink px-4 py-3 text-mute sm:px-6">
         <p>© {new Date().getFullYear()} Marlow Home Co. Demo storefront for Slice.</p>
-        <p>Portland · Brooklyn · Austin</p>
+        <p>Portland, Brooklyn and Austin</p>
       </div>
     </footer>
   );

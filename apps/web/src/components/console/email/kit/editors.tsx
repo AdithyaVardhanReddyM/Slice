@@ -84,7 +84,7 @@ function FontField({ role, font, sample, onChange }: { role: string; font: Email
       {href && <link rel="stylesheet" href={href} />}
       <div className="border-b bg-neutral-50 px-4 py-5">
         <div className="text-xs text-muted-foreground">
-          {role} · {font.family || "Unset"}
+          {role} ({font.family || "Unset"})
         </div>
         <p className="mt-1 truncate text-2xl leading-tight" style={{ fontFamily: fontStack(font) }}>
           {sample}

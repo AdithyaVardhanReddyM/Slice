@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ChevronRight, Package, Truck } from "lucide-react";
-import { FOLIO_BOOKS, FOLIO_EVENTS, FOLIO_SHOP, bookBySlug, href, moreLike, roleText, section, staff } from "@/lib/stackhouse/shop";
+import { FOLIO_BOOKS, FOLIO_EVENTS, FOLIO_SHOP, bookBySlug, href, lowerFirst, moreLike, roleText, section, staff } from "@/lib/stackhouse/shop";
 import { JsonLd, bookJsonLd } from "@/lib/stackhouse/jsonld";
 import { AddToBag } from "@/components/stackhouse/bag";
 import { BookCard } from "@/components/stackhouse/book-card";
@@ -59,8 +59,8 @@ export default async function BookPage({ params }: PageProps<"/stackhouse/books/
           <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-(--ff-line) pt-6">
             <span className="text-[28px] font-semibold">{b.price}</span>
             <span className="text-[16px] text-(--ff-mute)">
-              {b.format} · First published {b.year}
-              {b.ages ? ` · ${b.ages}` : ""}
+              {b.format}, first published {b.year}
+              {b.ages ? `, ${lowerFirst(b.ages)}` : ""}
             </span>
           </div>
           <p className="mt-3 flex items-center gap-2 text-[15.5px] text-(--ff-green)">
@@ -99,7 +99,7 @@ export default async function BookPage({ params }: PageProps<"/stackhouse/books/
                 <span className="block text-[14px] font-semibold text-(--ff-green)">{event.kind === "Book club" ? "Read it with us" : "At the shop"}</span>
                 <span className="ff-title block text-[19px]">{event.title}</span>
                 <span className="block text-[14.5px] text-(--ff-ink-soft)">
-                  {event.date}, {event.time} · {event.place}
+                  {event.date}, {event.time} in {lowerFirst(event.place)}
                 </span>
               </span>
               <ChevronRight className="size-5 shrink-0 text-(--ff-green)" />

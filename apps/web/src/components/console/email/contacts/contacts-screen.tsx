@@ -180,7 +180,7 @@ function UploadProgress({ list }: { list: ListRow }) {
       </span>
       <div className="min-w-0 flex-1 space-y-2">
         <p className="truncate text-sm font-medium">
-          {failed ? "Import failed" : "Importing"} {list.filename ?? list.name} · {peopleCount(list.rowCount)},{" "}
+          {failed ? "Could not import" : "Importing"} {peopleCount(list.rowCount)} from {list.filename ?? list.name}{" "}
           {list.mode === "groups" ? "into taste groups" : "as individual contacts"}
         </p>
         <ProgressLine progress={list.progress ?? { value: 0.05, label: statusLabel(list.status) }} status={list.status} error={failed ? (list.error ?? "The import failed.") : undefined} />
@@ -243,8 +243,8 @@ function IndividualsCard({ audience, onOpen }: { audience: AudienceRow; onOpen: 
         </ul>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.05] pt-4 text-sm">
           <span className="text-muted-foreground">
-            {more > 0 ? `and ${more} more · ` : ""}
-            {unsubscribed > 0 ? `${fmt.int(unsubscribed)} unsubscribed · ` : ""}
+            {more > 0 ? `and ${more} more${unsubscribed > 0 ? "," : "."} ` : ""}
+            {unsubscribed > 0 ? `${fmt.int(unsubscribed)} unsubscribed. ` : ""}
             Ticked people get their own version of a campaign.
           </span>
           <Button variant="outline" size="sm" onClick={() => onOpen(audience._id)}>
@@ -285,8 +285,11 @@ function UploadRow({ list }: { list: ListRow }) {
       {manual ? <UserPlus className="size-4 shrink-0 text-muted-foreground" /> : <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{label}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {peopleCount(list.rowCount)} {where} · {relativeTime(list.createdAt)}
+        <p className="flex gap-x-3 text-xs text-muted-foreground">
+          <span className="truncate">
+            {peopleCount(list.rowCount)} {where}
+          </span>
+          <span className="shrink-0">{relativeTime(list.createdAt)}</span>
         </p>
       </div>
       <DropdownMenu>

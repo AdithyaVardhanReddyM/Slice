@@ -283,7 +283,7 @@ function BinGenerate() {
               <select value={model} onChange={(e) => setModel(e.target.value)} className="h-8 w-full rounded-md bg-neutral-50 px-2 text-xs ring-1 ring-black/[0.08] outline-none">
                 {VIDEO_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.label} · {usd(m.perSecond)}/s
+                    {m.label} ({usd(m.perSecond)}/s)
                   </option>
                 ))}
               </select>

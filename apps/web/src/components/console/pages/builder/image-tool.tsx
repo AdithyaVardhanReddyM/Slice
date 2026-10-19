@@ -27,16 +27,16 @@ function slotsOf(sections: Section[]): Slot[] {
       case "split":
       case "story":
       case "offer":
-        out.push({ sectionId: s.id, label: `${s.type} · ${name}`, current: s.image, path: "image" });
+        out.push({ sectionId: s.id, label: `${s.type}: ${name}`, current: s.image, path: "image" });
         break;
       case "gallery":
-        s.images.forEach((img, i) => out.push({ sectionId: s.id, label: `gallery · image ${i + 1}`, current: img, path: `images[${i}]` }));
+        s.images.forEach((img, i) => out.push({ sectionId: s.id, label: `gallery: image ${i + 1}`, current: img, path: `images[${i}]` }));
         break;
       case "grid":
-        s.items.forEach((it, i) => out.push({ sectionId: s.id, label: `grid · ${it.title}`, current: it.image, path: `items[${i}].image` }));
+        s.items.forEach((it, i) => out.push({ sectionId: s.id, label: `grid: ${it.title}`, current: it.image, path: `items[${i}].image` }));
         break;
       case "locations":
-        s.places.forEach((p, i) => out.push({ sectionId: s.id, label: `locations · ${p.name}`, current: p.image, path: `places[${i}].image` }));
+        s.places.forEach((p, i) => out.push({ sectionId: s.id, label: `locations: ${p.name}`, current: p.image, path: `places[${i}].image` }));
         break;
       default:
         break;
@@ -57,7 +57,7 @@ function slotsOfHtml(html: string): Slot[] {
     const alt = /\salt\s*=\s*"([^"]*)"/i.exec(tag)?.[1] ?? "";
     const section = [...starts].reverse().find((s) => s.at < (m.index ?? 0))?.id ?? "page";
     n += 1;
-    out.push({ sectionId: section, label: `${section} · ${alt || src.split("/").pop()?.slice(0, 40) || `image ${n}`}`, current: { src, alt, source: "brand" }, path: `img:${src}` });
+    out.push({ sectionId: section, label: `${section}: ${alt || src.split("/").pop()?.slice(0, 40) || `image ${n}`}`, current: { src, alt, source: "brand" }, path: `img:${src}` });
   }
   return out;
 }
@@ -156,7 +156,7 @@ export function ImageTool({
             <div className="truncate">{slot.current.alt || "No alt text"}</div>
             <div className="truncate">
               {slot.current.source}
-              {slot.current.credit ? ` · ${slot.current.credit}` : ""}
+              {slot.current.credit ? ` (${slot.current.credit})` : ""}
             </div>
           </div>
         </div>

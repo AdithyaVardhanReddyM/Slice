@@ -113,7 +113,7 @@ export default async function RestaurantsPage({ searchParams }: PageProps<"/cove
             <span className="font-semibold">{countLabel(list.length)}</span>
             <span className="text-(--cv-mute)">
               {" "}
-              · Free tables for {party}, {date === today ? "today" : longDate(date)}, around {time}
+              with free tables for {party}, {date === today ? "today" : longDate(date)}, around {time}
             </span>
           </p>
           {(filters.area || filters.collection || filters.price) && (

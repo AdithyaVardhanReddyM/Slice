@@ -556,7 +556,7 @@ export function RecentConversations({
                     color={c.accent}
                     className="size-3.5 rounded-[4px] text-[8px]"
                   />
-                  {c.widgetName} · Shopper in {c.city}
+                  {c.widgetName}, shopper in {c.city}
                 </span>
               </span>
               <span className="hidden sm:block">
@@ -622,7 +622,7 @@ export function TopPicks({
             </span>
             <span className="num mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <span className="truncate">
-                {p.picked} picks · {p.carted} carted
+                {p.picked} picks, {p.carted} carted
               </span>
               <span className="shrink-0 text-neutral-700">
                 {fmt.money(p.price)}

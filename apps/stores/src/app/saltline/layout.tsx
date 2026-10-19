@@ -7,7 +7,7 @@ import { Header } from "@/components/saltline/header";
 const SITE = "http://localhost:3002";
 
 export const metadata: Metadata = {
-  title: { default: "Saltline Hotels", template: "%s · Saltline Hotels" },
+  title: { default: "Saltline Hotels", template: "%s – Saltline Hotels" },
   description: saltline.store.description,
   openGraph: {
     siteName: "Saltline Hotels",

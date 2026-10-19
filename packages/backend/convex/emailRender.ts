@@ -707,7 +707,7 @@ function footerHtml(b: FooterBlock, ctx: BlockRenderContext): string {
   const linkStyle = `color:${muted};text-decoration:underline`;
   const links = [`<a href="${attr(ctx.mode === "edit" ? "#unsubscribe" : unsub)}" target="_blank" style="${linkStyle}">${plainHtml(b.unsubscribeLabel || "Unsubscribe", ctx)}</a>`];
   if (b.viewOnline) links.push(`<a href="${attr(ctx.mode === "edit" ? "#view-online" : ctx.links?.viewOnline || "#view-online")}" target="_blank" style="${linkStyle}">View in browser</a>`);
-  parts.push(`<div class="bf" style="${font};padding-top:${parts.length ? 14 : 0}px">${links.join(`<span style="padding:0 8px">&middot;</span>`)}</div>`);
+  parts.push(`<div class="bf" style="${font};padding-top:${parts.length ? 14 : 0}px">${links.join("&nbsp;&nbsp;&nbsp;&nbsp;")}</div>`);
   return wrapBlock(b, ctx, parts.join(""), b.align);
 }
 
@@ -964,7 +964,7 @@ export function renderPlainText(doc: EmailDoc, ctx: RenderContext): string {
               .filter((x): x is EmailItem => !!x)
               .slice(0, limit)
               .map((it) => {
-                const head = [it.name, b.show.subtitle ? it.subtitle : "", b.show.price ? it.price : ""].filter(Boolean).join(" · ");
+                const head = [it.name, b.show.subtitle ? it.subtitle : ""].filter(Boolean).join(", ") + (b.show.price && it.price ? ` (${it.price})` : "");
                 const reason = b.show.reason && b.reasons?.[it.id] ? `\n  ${fillMergePlain(b.reasons[it.id], merge)}` : "";
                 return `- ${head}${reason}${it.url ? `\n  ${href(it.url, b.id)}` : ""}`;
               });

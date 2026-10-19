@@ -75,7 +75,7 @@ export default async function ProductPage({ params }: PageProps<"/marlow/p/[slug
               ))}
               {product.rating !== undefined && (
                 <span className="ml-auto">
-                  ★ {product.rating.toFixed(1)} · {product.reviewCount ?? 0} reviews
+                  ★ {product.rating.toFixed(1)} from {product.reviewCount ?? 0} reviews
                 </span>
               )}
             </div>

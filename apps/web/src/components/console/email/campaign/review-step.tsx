@@ -126,7 +126,7 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
       out.push(
         info.mode === "none"
           ? { key: "sender", level: "bad", title: "Sender", detail: info.reason ?? "No verified domain yet, so only test emails can go out.", fix: { label: "Set up sending", href: sendingHref } }
-          : { key: "sender", level: "ok", title: "Sender", detail: `${info.from} · ${SENDING_MODE[info.mode].label}` },
+          : { key: "sender", level: "ok", title: "Sender", detail: `${info.from} (${SENDING_MODE[info.mode].label})` },
       );
     out.push(...docChecks(doc, brand, pathname));
     if (many) {
@@ -241,7 +241,7 @@ export function ReviewStep({ campaign, brand }: { campaign: EmailCampaign; brand
               <ReviewRow
                 level={worst(...contentChecks)}
                 label="Content"
-                title={`${sectionCount} ${sectionCount === 1 ? "section" : "sections"} · ${imageCount} ${imageCount === 1 ? "image" : "images"} · ${linkCount} ${linkCount === 1 ? "link" : "links"}`}
+                title={`${sectionCount} ${sectionCount === 1 ? "section" : "sections"}, ${imageCount} ${imageCount === 1 ? "image" : "images"}, ${linkCount} ${linkCount === 1 ? "link" : "links"}`}
                 lines={
                   contentChecks.every((c) => c?.level === "ok")
                     ? ["Unsubscribe and your address in the footer, alt text on every image, and every link goes somewhere."]
@@ -339,7 +339,7 @@ function InboxLines({
             key: v.group._id as string,
             show: { kind: "group" as const, id: v.group._id },
             name: v.group.name,
-            note: `Taste group · ${peopleCount(v.group.size, "person")}`,
+            note: `Taste group of ${peopleCount(v.group.size, "person")}`,
             image: group ? coverTiles(profileOf(group), 1, true)[0]?.image : undefined,
             group: true,
             subject: p?.subject || doc.subject,
@@ -349,7 +349,7 @@ function InboxLines({
             key: v.contact!._id as string,
             show: { kind: "person" as const, id: v.contact!._id },
             name: v.contact!.name,
-            note: ["Individual contact", v.contact!.neighborhood ?? v.contact!.city].filter(Boolean).join(" · "),
+            note: ["Individual contact", v.contact!.neighborhood ?? v.contact!.city].filter(Boolean).join(" in "),
             image: v.contact!.entities.find((e) => e.image)?.image,
             subject: p?.subject || doc.subject,
             preheader: p?.preheader || doc.preheader,
@@ -477,7 +477,7 @@ function SubjectEditor({ campaign, doc, onApply }: { campaign: EmailCampaign; do
         <span className="flex items-baseline justify-between text-sm font-medium">
           Preview text
           <span className={cn("num text-xs font-normal", p.length && (p.length < PREHEADER_RANGE[0] || p.length > PREHEADER_RANGE[1]) ? "text-amber-700" : "text-muted-foreground")}>
-            {p.length} · {PREHEADER_RANGE[0]} to {PREHEADER_RANGE[1]} reads best
+            {p.length} ({PREHEADER_RANGE[0]} to {PREHEADER_RANGE[1]} reads best)
           </span>
         </span>
         <Input value={p} disabled={locked} onChange={(e) => setPreheader(e.target.value)} onBlur={() => void commit()} onKeyDown={(e) => e.key === "Enter" && (e.currentTarget as HTMLInputElement).blur()} placeholder="The line after the subject" className="bg-white" />

@@ -133,8 +133,8 @@ export function ViewAsPicker() {
             <span className="min-w-0 truncate">
               <span className="text-muted-foreground">Viewing </span>
               <span className="font-medium text-neutral-950">{previewAs ? `${previewAs.name}'s version` : "the shared email"}</span>
-              {previewAs && !previewAs.personalization && <span className="text-muted-foreground"> · not personalised yet</span>}
-              {previewAs?.stale && <span className="text-muted-foreground"> · earlier draft</span>}
+              {previewAs && !previewAs.personalization && <span className="text-muted-foreground">, not personalised yet</span>}
+              {previewAs?.stale && <span className="text-muted-foreground">, from an earlier draft</span>}
             </span>
             <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
           </DropdownMenuTrigger>

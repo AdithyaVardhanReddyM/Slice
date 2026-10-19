@@ -83,7 +83,11 @@ export function Footer({ store }: { store: Store }) {
         <div className="border-t border-white/10">
           <div className="fd-container flex flex-wrap items-center justify-between gap-3 py-5 text-[13px] text-white/50">
             <p>© {new Date().getFullYear()} Fold Supply Co., Brooklyn NY. Demo storefront for Slice.</p>
-            <p>Privacy · Terms · Accessibility</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              <li>Privacy</li>
+              <li>Terms</li>
+              <li>Accessibility</li>
+            </ul>
           </div>
         </div>
       </div>

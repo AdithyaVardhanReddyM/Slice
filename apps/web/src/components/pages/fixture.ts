@@ -220,7 +220,7 @@ export const fixtureDoc: PageDoc = {
       type: "custom",
       html: `<div style="display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
         <div><h3 style="font-size:1.1rem;margin-bottom:8px">Opening week hours</h3><p>Sat 14 to Fri 20: 7 am to 7 pm<br/>After opening week: 7 am to 5 pm daily</p></div>
-        <div><h3 style="font-size:1.1rem;margin-bottom:8px">Guest bakers</h3><p>Sat: Sour Duck · Sun: Quack's · Mon: Comadre Panadería · Tue to Fri: rotating</p></div>
+        <div><h3 style="font-size:1.1rem;margin-bottom:8px">Guest bakers</h3><p>Sat: Sour Duck<br/>Sun: Quack's<br/>Mon: Comadre Panadería<br/>Tue to Fri: rotating</p></div>
         <div><h3 style="font-size:1.1rem;margin-bottom:8px">Getting there</h3><p>CapMetro 4 and 17 stop at the corner. Bike racks out front, parking behind the building off Chalmers.</p></div>
       </div><script>alert('this is stripped')</script><img src=x onerror="alert(1)" style="display:none" />`,
     },

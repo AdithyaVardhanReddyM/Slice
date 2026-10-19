@@ -52,12 +52,12 @@ export function ItemDetail({ product, parent }: { product: Product; parent: { na
 
         <div className="lg:py-6">
           <p className="text-sm text-sl-sea-deep">
+            {isExp && hotel && <>{product.subcategory} at </>}
             {hotel ? (
               <Link href={href.hotel(hotel.slug)} className="hover:underline">{hotel.name}</Link>
             ) : (
               "All hotels"
             )}
-            {isExp && <> · {product.subcategory}</>}
           </p>
           <h1 className="sl-serif mt-3 text-[40px] sm:text-[52px]">{product.name}</h1>
           <p className="mt-4 text-[17px]">

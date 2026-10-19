@@ -65,7 +65,12 @@ export function Footer() {
       </div>
       <div className="tg-container mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-white/30 py-4 text-[13px] font-medium text-white/85">
         <p>© {new Date().getFullYear()} Tágide Festival, Lda. Demo site for Slice.</p>
-        <p>Privacy · Terms · Accessibility · Cookies</p>
+        <ul className="flex flex-wrap gap-x-4 gap-y-1">
+          <li>Privacy</li>
+          <li>Terms</li>
+          <li>Accessibility</li>
+          <li>Cookies</li>
+        </ul>
       </div>
       <div className="tg-container -mb-[0.22em] overflow-hidden" aria-hidden="true">
         <div className="tg-display text-[clamp(96px,19vw,300px)] leading-[0.8] text-white">Tágide</div>

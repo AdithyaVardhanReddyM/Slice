@@ -235,8 +235,8 @@ export function Canvas() {
             <Eye className="size-4 shrink-0 text-blue-700" />
             <span className="truncate">
               Previewing <span className="font-medium">{previewAs.name}</span>&apos;s version
-              {!previewAs.personalization && <span className="text-neutral-500"> · not personalised yet</span>}
-              {previewAs.stale && <span className="text-neutral-500"> · written for an earlier draft</span>}
+              {!previewAs.personalization && <span className="text-neutral-500">, not personalised yet</span>}
+              {previewAs.stale && <span className="text-neutral-500">, written for an earlier draft</span>}
             </span>
             <Button size="xs" variant="secondary" className="rounded-full" onClick={() => setPreviewAs(null)}>
               Back to editing

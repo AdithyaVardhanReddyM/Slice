@@ -370,7 +370,8 @@ function MessageRow({
           )}
         >
           {converted && <ShoppingBag className="size-3.5" />}
-          {m.text} · {fmt.clock(m.at)}
+          {m.text}
+          <span className="ml-1.5">{fmt.clock(m.at)}</span>
         </span>
         <Separator className="flex-1" />
       </div>
@@ -384,7 +385,7 @@ function MessageRow({
           {m.text}
         </div>
         <span className="text-xs text-muted-foreground">
-          Shopper · {fmt.clock(m.at)}
+          Shopper at {fmt.clock(m.at)}
         </span>
       </div>
     );
@@ -411,7 +412,7 @@ function MessageRow({
               className="ml-auto text-muted-foreground"
               onClick={() => onTrace(trace.id)}
             >
-              <Timer /> {fmt.ms(trace.totalMs)} · view trace
+              <Timer /> View trace ({fmt.ms(trace.totalMs)})
             </Button>
           )}
         </div>
@@ -459,7 +460,7 @@ function RecCard({
       <div className="flex flex-1 flex-col gap-1 p-3">
         <div className="line-clamp-2 text-sm font-medium">{p.name}</div>
         <div className="text-sm text-muted-foreground tabular-nums">
-          {p.brand && `${p.brand} · `}
+          {p.brand && <span className="mr-3">{p.brand}</span>}
           {fmt.money(p.price)}
         </div>
         <div className="mt-auto flex items-center justify-between pt-2">

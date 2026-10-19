@@ -359,7 +359,7 @@ function Constellation({ entities }: { entities: EntityRef[] }) {
           key={n.e.id}
           className="rise absolute flex w-[76px] -translate-x-1/2 -translate-y-1/2 flex-col items-center"
           style={{ left: n.x, top: n.y, animationDelay: `${i * 50}ms` }}
-          title={`${n.e.name} · ${typeLabel(n.e.type)}`}
+          title={`${n.e.name} (${typeLabel(n.e.type)})`}
         >
           <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-white shadow-[0_1px_2px_rgb(23_21_15/0.08),0_4px_12px_rgb(23_21_15/0.1)] ring-2 ring-white">
             {n.e.image ? (

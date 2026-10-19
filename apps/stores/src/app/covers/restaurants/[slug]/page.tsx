@@ -61,7 +61,7 @@ export default async function RestaurantPage({ params }: PageProps<"/covers/rest
               {r.isNew && <span className="mb-3 inline-block rounded-full bg-(--cv-primary) px-2.5 py-1 text-[12.5px] font-semibold leading-none text-(--cv-on-primary)">New on Covers</span>}
               <h1 className="cv-display text-[40px] sm:text-[54px]">{r.name}</h1>
               <p className="mt-2 text-[17px] text-(--cv-ink-soft)">
-                {r.cuisine} · {r.neighbourhood} · <span className="font-semibold text-(--cv-ink)">{priceLabel(r.price)}</span>
+                {r.cuisine} in {r.neighbourhood}, <span className="font-semibold text-(--cv-ink)">{priceLabel(r.price)}</span>
               </p>
               <p className="mt-5 max-w-2xl text-[18px] leading-relaxed">{r.description}</p>
             </div>

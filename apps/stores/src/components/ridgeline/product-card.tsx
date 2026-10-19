@@ -34,7 +34,7 @@ export function ProductCard({ product, className, sizes }: { product: Product; c
           </h3>
           <p className="mt-1 text-sm text-rl-mute">
             {tasting ?? product.attributes.style.map(styleLabel).join(", ")}
-            {roastLevel ? ` · ${roastLevel} roast` : ""}
+            {roastLevel ? ` (${roastLevel} roast)` : ""}
           </p>
         </div>
         <p className="shrink-0 text-right text-[15px] font-semibold tabular-nums">

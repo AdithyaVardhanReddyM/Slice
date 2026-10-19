@@ -86,7 +86,9 @@ export function Footer() {
           <p className="lg:text-right">
             {card.address.join(", ")}
             <br />
-            {card.phone} · {card.email}
+            {card.phone}
+            <br />
+            {card.email}
             <br />© 2026 Gwen Financial, Inc.
           </p>
         </div>

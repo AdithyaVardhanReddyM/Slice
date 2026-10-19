@@ -20,7 +20,7 @@ export default function MarlowHome() {
         <div className="px-4 pt-10 sm:px-6 lg:pt-14">
           <div className="rise flex flex-wrap items-end justify-between gap-4">
             <p className="mono text-mute">Autumn / Winter 2026 — Catalog № 07</p>
-            <p className="mono text-mute">{marlow.products.length} pieces · 7 rooms · 22 workshops</p>
+            <p className="mono text-mute">{marlow.products.length} pieces for 7 rooms from 22 workshops</p>
           </div>
           <h1 className="display rise rise-delay-1 mt-6 text-[19vw] leading-[0.84] sm:text-[15vw] lg:text-[12.5vw]">
             Furniture

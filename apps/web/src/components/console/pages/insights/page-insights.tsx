@@ -525,7 +525,7 @@ function RefStack({ refs }: { refs: InsightRef[] }) {
             <RefAvatar r={r} className="size-9 rounded-lg" />
           </TooltipTrigger>
           <TooltipContent>
-            {r.name} · {r.kind}
+            {r.name} ({r.kind})
           </TooltipContent>
         </Tooltip>
       ))}

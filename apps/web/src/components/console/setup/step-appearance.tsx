@@ -87,8 +87,8 @@ export function AppearanceStep({
             className="py-4"
             hint={
               <span className="num">
-                Text on accent: {fg === "#ffffff" ? "white" : "dark"} ·{" "}
-                {ratio.toFixed(1)}:1 ·{" "}
+                Text on accent: {fg === "#ffffff" ? "white" : "dark"},{" "}
+                {ratio.toFixed(1)}:1 contrast (
                 <span
                   className={cn(
                     "font-medium",
@@ -101,6 +101,7 @@ export function AppearanceStep({
                 >
                   {grade}
                 </span>
+                )
               </span>
             }
           >
