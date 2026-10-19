@@ -31,7 +31,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from slice_agent.trace import Span, start_turn
-from slice_pages.routes import _image_part, _ndjson, _preview as pages_preview, _safe
+from slice_pages.routes import CARRY_ON, FIRST_S, STALL_S, Stalled, _image_part, _ndjson, _preview as pages_preview, _safe, _timed_out, _within
 
 from . import builder as B
 from . import doc as D
@@ -356,16 +356,50 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         else:
             push({"kind": kind_, "text": delta_text})
 
+    model = req.model if req.model in B.MODELS else B.MODEL
+    runner = runners[(model, B.RUNNER_FOR_KIND[kind])]
+
+    async def events() -> AsyncIterator[Any]:
+        """The turn's events; None marks a retry. A model call that hangs or times out is tried
+        again once: from the start when nothing came back, else asked to carry on from its last step."""
+        nonlocal delta
+        message_in = content
+        # The session as it should be, should the turn start over in a new one.
+        restart = {**state, **delta}
+        for attempt in (1, 2):
+            got = False
+            try:
+                async for ev in _within(runner.run_async(user_id=cid, session_id=cid, new_message=message_in, state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)), STALL_S, first=FIRST_S):
+                    got = True
+                    yield ev
+                return
+            except Exception as err:
+                if attempt == 2 or not (isinstance(err, Stalled) or _timed_out(err)):
+                    raise
+            yield None
+            if got:
+                # The work so far is in the session; ask for the rest.
+                message_in = types.Content(role="user", parts=[types.Part(text=CARRY_ON)])
+                delta = {}
+                continue
+            # Nothing came back: a fresh session, so the message is not in the conversation twice.
+            await sessions.delete_session(app_name=APP_NAME, user_id=cid, session_id=cid)
+            fresh = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=cid, state=restart)
+            await _replay(fresh, req.history)
+            delta = {}
+
     try:
-        model = req.model if req.model in B.MODELS else B.MODEL
-        runner = runners[(model, B.RUNNER_FOR_KIND[kind])]
-        async for ev in runner.run_async(
-            user_id=cid,
-            session_id=session.id,
-            new_message=content,
-            state_delta=delta or None,
-            run_config=RunConfig(streaming_mode=StreamingMode.SSE),
-        ):
+        async for ev in events():
+            if ev is None:
+                # A retry: what was in flight is over, and the next answer starts afresh.
+                for st in steps:
+                    if st.get("kind") == "tool" and st.get("status") == "running":
+                        st["status"] = "failed"
+                        st["ms"] = max(0, at() - st.get("t", at()))
+                        yield _ndjson({"type": "tool_result", "name": st.get("name"), "ok": False, "summary": "the connection dropped"})
+                streamed, thought_streamed = "", 0
+                yield _ndjson({"type": "status", "text": "The model was slow to answer, carrying on"})
+                continue
             while emitted < len(spans):
                 yield _ndjson({"type": "span", "span": spans[emitted]})
                 emitted += 1
@@ -444,7 +478,10 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                             yield _ndjson({"type": "text_done", "text": part.text})
                         streamed = ""
     except Exception as err:
-        yield _ndjson({"type": "error", "message": _error(err)})
+        if isinstance(err, Stalled) or _timed_out(err):
+            yield _ndjson({"type": "error", "message": "The model stopped answering, so this turn was stopped. What it saved is in the email; ask again to carry on."})
+        else:
+            yield _ndjson({"type": "error", "message": _error(err)})
 
     while emitted < len(spans):
         yield _ndjson({"type": "span", "span": spans[emitted]})

@@ -24,6 +24,7 @@ from typing import Any
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.models import Gemini
 from google.adk.tools import ToolContext
 from google.adk.tools.google_search_agent_tool import GoogleSearchAgentTool
 from google.adk.tools.google_search_tool import google_search
@@ -1613,9 +1614,23 @@ async def ask_merchant(question: str, options: list, tool_context: ToolContext, 
     return {"ok": True, "question": question.strip(), "options": opts, "other": (other or "").strip()[:80]}
 
 
+# Vertex now and then leaves a request unanswered, or a streamed answer open after its last part;
+# ADK then waits on it before the next call. A read timeout (no bytes for this long) turns that into
+# an error the turn recovers from (routes.py carries on), and failed requests are retried. The SDK
+# also sends the timeout as the server's deadline for the whole answer, which would cut a long
+# write_page off mid-stream, so the server gets its own, longer one.
+MODEL_TIMEOUT_MS = int(os.environ.get("PAGES_MODEL_TIMEOUT_MS", "60000"))
+MODEL_DEADLINE_S = 600
+
+
+def _model(name: str) -> Gemini:
+    # One HttpOptions for everything: ADK drops its own retry_options when client_kwargs brings http_options.
+    return Gemini(model=name, client_kwargs={"http_options": types.HttpOptions(timeout=MODEL_TIMEOUT_MS, headers={"X-Server-Timeout": str(MODEL_DEADLINE_S)}, retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1))})
+
+
 search_agent = LlmAgent(
     name="google_search",
-    model=MODEL,
+    model=_model(MODEL),
     description="Searches the web with Google and answers the query from the results.",
     instruction="""You are a web search assistant. Answer the query directly from Google Search grounding, in plain text: the facts found, with the source site names and dates where they matter. Do not invoke any client-side function. If nothing reliable is found, say so.""",
     tools=[google_search],
@@ -1676,7 +1691,7 @@ def _make_agent(model: str) -> LlmAgent:
     # Same name for every model: a session replayed under another model reads as one agent's history.
     return LlmAgent(
         name="slice_pages_builder",
-        model=model,
+        model=_model(model),
         description="Writes a landing page for one audience (or a combined group) as HTML and CSS from a brand's site, kit and a Qloo taste profile.",
         instruction=build_instruction,
         generate_content_config=types.GenerateContentConfig(

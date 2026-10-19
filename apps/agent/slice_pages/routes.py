@@ -65,6 +65,47 @@ def _safe(args: Any) -> Any:
         return str(args)
 
 
+# A model stream that goes quiet this long (no event, not even a tool finishing) is treated
+# as stalled; the longest tools (a review, an image) finish well inside it. A turn whose first
+# answer has not come after FIRST_S is asked once more (Vertex sometimes leaves a request
+# hanging; the next one answers in seconds).
+STALL_S = 180
+FIRST_S = 40
+CARRY_ON = "[The connection dropped after your last step. Carry on from there: do not redo what is already done, then reply.]"
+
+
+class Stalled(Exception):
+    pass
+
+
+def _timed_out(err: BaseException) -> bool:
+    """A model read timeout or deadline, however the SDK wraps it."""
+    seen: set[int] = set()
+    e: BaseException | None = err
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        text = str(e).lower()
+        if isinstance(e, (TimeoutError, asyncio.TimeoutError)) or "timeout" in type(e).__name__.lower() or "timed out" in text or "deadline_exceeded" in text:
+            return True
+        e = e.__cause__ or e.__context__
+    return False
+
+
+async def _within(events: AsyncIterator[Any], seconds: float, first: float | None = None) -> AsyncIterator[Any]:
+    """The events, failing with Stalled when none arrives for `seconds` (`first` for the first one)."""
+    it = events.__aiter__()
+    wait = first or seconds
+    while True:
+        try:
+            ev = await asyncio.wait_for(it.__anext__(), timeout=wait)
+            wait = seconds
+        except StopAsyncIteration:
+            return
+        except asyncio.TimeoutError:
+            raise Stalled() from None
+        yield ev
+
+
 # --- intake ------------------------------------------------------------------------------
 
 
@@ -540,25 +581,30 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
         )
     if req.elements:
         user_text += "\n\n" + _elements_note(req.elements)
-    parts: list[types.Part] = [types.Part(text=user_text)]
-    # The homepage screenshots go with the first turn of a session (and every generate), so the model sees the brand.
-    if fresh_session or kind == "generate":
+    async def brand_parts() -> list[types.Part]:
+        """The brand's homepage screenshots and the brief's inspiration images."""
+        out: list[types.Part] = []
         for key in ("fold", "screenshot"):
             u = (brand.get("site") or {}).get(key)
             if not u:
                 continue
             try:
-                parts.append(types.Part.from_bytes(data=await capture.site_bytes(u), mime_type="image/png"))
+                out.append(types.Part.from_bytes(data=await capture.site_bytes(u), mime_type="image/png"))
             except Exception:
                 pass
-        if len(parts) > 1:
-            parts.insert(1, types.Part(text="The brand's homepage, top of the page and then the whole page:"))
+        if out:
+            out.insert(0, types.Part(text="The brand's homepage, top of the page and then the whole page:"))
         # Images the merchant attached to the first prompt live on the brief as inspiration.
         inspo = [u for u in ((state[B.PAGE].get("brief") or {}).get("inspiration") or []) if isinstance(u, str) and u.startswith("http")][:4]
         inspo_parts = [p for p in [await _image_part(u) for u in inspo] if p]
         if inspo_parts:
-            parts.append(types.Part(text=f"{len(inspo_parts)} image{'s' if len(inspo_parts) != 1 else ''} the merchant attached as inspiration or reference:"))
-            parts.extend(inspo_parts)
+            out.append(types.Part(text=f"{len(inspo_parts)} image{'s' if len(inspo_parts) != 1 else ''} the merchant attached as inspiration or reference:"))
+            out.extend(inspo_parts)
+        return out
+
+    # The homepage screenshots go with the first turn of a session (and every generate), so the model sees the brand.
+    with_brand = fresh_session or kind == "generate"
+    parts: list[types.Part] = [types.Part(text=user_text), *(await brand_parts() if with_brand else [])]
     # Images attached to this message.
     attached = [p for p in [await _image_part(a.url, a.type) for a in req.attachments[:6]] if p]
     if attached:
@@ -595,15 +641,51 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
             steps[-1]["text"] += delta
         else:
             push({"kind": kind, "text": delta})
+
+    runner = runners.get(req.model or "") or runners[B.MODEL]
+
+    async def events() -> AsyncIterator[Any]:
+        """The turn's events; None marks a retry. A model call that hangs or times out is tried
+        again once: from the start when nothing came back, else asked to carry on from its last step."""
+        nonlocal delta
+        message_in = content
+        for attempt in (1, 2):
+            got = False
+            try:
+                async for ev in _within(runner.run_async(user_id=sid, session_id=sid, new_message=message_in, state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)), STALL_S, first=FIRST_S):
+                    got = True
+                    yield ev
+                return
+            except Exception as err:
+                if attempt == 2 or not (isinstance(err, Stalled) or _timed_out(err)):
+                    raise
+            yield None
+            if got:
+                # The work so far is in the session; ask for the rest.
+                message_in = types.Content(role="user", parts=[types.Part(text=CARRY_ON)])
+                delta = {}
+                continue
+            # Nothing came back: a fresh session (as after a restart), so the message is not in the conversation twice.
+            await sessions.delete_session(app_name=APP_NAME, user_id=sid, session_id=sid)
+            fresh = await sessions.create_session(app_name=APP_NAME, user_id=sid, session_id=sid, state={**state, **B.recall(state)})
+            await _replay(fresh, req.history)
+            delta = {}
+            if not with_brand:
+                message_in = types.Content(role="user", parts=[parts[0], *await brand_parts(), *parts[1:]])
+
     try:
-        runner = runners.get(req.model or "") or runners[B.MODEL]
-        async for ev in runner.run_async(
-            user_id=sid,
-            session_id=session.id,
-            new_message=content,
-            state_delta=delta or None,
-            run_config=RunConfig(streaming_mode=StreamingMode.SSE),
-        ):
+        async for ev in events():
+            if ev is None:
+                # A retry: what was in flight is over, and the next answer starts afresh.
+                for st in steps:
+                    if st.get("kind") == "tool" and st.get("status") == "running":
+                        st["status"] = "failed"
+                        st["ms"] = max(0, at() - st.get("t", at()))
+                        st.pop("draft", None)
+                        yield _ndjson({"type": "tool_result", "name": st.get("name"), "ok": False, "summary": "the connection dropped"})
+                streamed, thought_streamed, drafting = "", 0, None
+                yield _ndjson({"type": "status", "text": "The model was slow to answer, carrying on"})
+                continue
             while emitted < len(spans):
                 yield _ndjson({"type": "span", "span": spans[emitted]})
                 emitted += 1
@@ -721,7 +803,10 @@ async def _build_stream(req: BuildRequest) -> AsyncIterator[bytes]:
                             yield _ndjson({"type": "text_done", "text": part.text})
                         streamed = ""
     except Exception as err:
-        yield _ndjson({"type": "error", "message": f"{type(err).__name__}: {err}"})
+        if isinstance(err, Stalled) or _timed_out(err):
+            yield _ndjson({"type": "error", "message": "The model stopped answering, so this turn was stopped. What it saved is on the page; ask again to carry on."})
+        else:
+            yield _ndjson({"type": "error", "message": f"{type(err).__name__}: {err}"})
 
     while emitted < len(spans):
         yield _ndjson({"type": "span", "span": spans[emitted]})

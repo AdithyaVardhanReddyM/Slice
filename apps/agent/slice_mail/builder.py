@@ -22,6 +22,7 @@ from typing import Any
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.models import Gemini
 from google.adk.tools import ToolContext
 from google.genai import types
 
@@ -886,11 +887,25 @@ THINKING = {
 RUNNER_FOR_KIND = {"generate": "build", "adapt": "edit", "edit": "edit"}
 
 
+# Vertex now and then leaves a request unanswered, or a streamed answer open after its last part;
+# ADK then waits on it before the next call. A read timeout (no bytes for this long) turns that into
+# an error the turn recovers from (routes.py carries on), and failed requests are retried. The SDK
+# also sends the timeout as the server's deadline for the whole answer, which would cut a long
+# answer off mid-stream, so the server gets its own, longer one.
+MODEL_TIMEOUT_MS = int(os.environ.get("EMAIL_MODEL_TIMEOUT_MS", "60000"))
+MODEL_DEADLINE_S = 600
+
+
+def _model(name: str) -> Gemini:
+    # One HttpOptions for everything: ADK drops its own retry_options when client_kwargs brings http_options.
+    return Gemini(model=name, client_kwargs={"http_options": types.HttpOptions(timeout=MODEL_TIMEOUT_MS, headers={"X-Server-Timeout": str(MODEL_DEADLINE_S)}, retry_options=types.HttpRetryOptions(attempts=3, initial_delay=1))})
+
+
 def _make_agent(model: str, thinking: str) -> LlmAgent:
     # Same name for every model and level: a session replayed under another reads as one agent's history.
     return LlmAgent(
         name="slice_email_builder",
-        model=model,
+        model=_model(model),
         description="Writes and edits a marketing email for one audience as an email document, from the brand's kit and voice, its catalog and a Qloo taste profile.",
         instruction=build_instruction,
         generate_content_config=types.GenerateContentConfig(
