@@ -1,0 +1,65 @@
+# Slice for Mac. XcodeGen project: run `xcodegen generate` (or `pnpm --filter @slice/mac xcode`)
+# and never edit the generated SliceMac.xcodeproj by hand; it is not committed.
+name: SliceMac
+options:
+  bundleIdPrefix: ai.slice
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_HARDENED_RUNTIME: YES
+    DEVELOPMENT_TEAM: 5Q3KU6MZ8A
+    CODE_SIGN_STYLE: Manual
+    # Debug is signed with the team's Apple Development certificate (not ad hoc) so macOS
+    # keeps the Microphone, Accessibility and Screen Recording grants across rebuilds.
+    CODE_SIGN_IDENTITY: "Apple Development"
+    CODE_SIGN_ENTITLEMENTS: Resources/SliceMac.entitlements
+  configs:
+    Release:
+      # A notarized build for judges needs a Developer ID Application certificate
+      # (developer.apple.com > Certificates); see docs/mac-plan.md.
+      CODE_SIGN_IDENTITY: "Developer ID Application"
+      OTHER_CODE_SIGN_FLAGS: "--timestamp"
+
+targets:
+  SliceMac:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.slice.mac
+        PRODUCT_NAME: Slice
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: NO
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Slice
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.productivity
+        # Menu bar app: no Dock icon, the notch is the UI.
+        LSUIElement: true
+        NSMicrophoneUsageDescription: Slice listens while you hold fn and control, so you can talk to it.
+        NSAppleEventsUsageDescription: Slice reads the address of the page you're on when you ask about it.
+        NSAppTransportSecurity:
+          # The brain runs on localhost (ws://) while developing.
+          NSAllowsLocalNetworking: true
+
+schemes:
+  SliceMac:
+    build:
+      targets:
+        SliceMac: all
+    run:
+      config: Debug
+    archive:
+      config: Release

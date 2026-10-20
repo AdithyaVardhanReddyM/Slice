@@ -6,13 +6,16 @@ Taste personalisation for businesses, grounded in [Qloo](https://www.qloo.com/)'
 - **Pages** (built): landing pages a brand builds with an agent, one version per audience (a city, a demographic, a set of interests, a cluster of its own customers, a single lead), published at `{brand}.pages.<host>/{page}` with first-party analytics. Its clients are brands (Ridgeline Coffee Roasters and Saltline Hotels are the demos). See `docs/pages-plan.md`, `docs/pages-contracts.md` and `docs/pages-demo.md`.
 - **Media** (planned): posters, creatives and short video generated per taste cluster.
 
+Beside the business services, **Slice for Mac** (in progress) is a personal agent in the Mac's notch: hold fn + control, talk, and it acts on your computer with Qloo's taste behind every choice. See `docs/mac-plan.md`.
+
 ## Repo layout
 
 ```
 apps/
   web/        Next.js 16 — marketing site, merchant console at /dashboard (Clerk): services home → /dashboard/concierge (widgets), /dashboard/pages (brands), /dashboard/media; /embed/* (the concierge UI the widget iframes); /p/{brand}/{page} (published pages, also served on {brand}.pages.<host>)
   widget/     slice.js — the script tag merchants paste; mounts a launcher and iframes /embed/concierge
-  agent/      Python ADK agents (Gemini 3.8 Flash on Vertex AI): the concierge (slice_agent) and the Pages intake, audience briefs and page builder (slice_pages)
+  agent/      Python ADK agents (Gemini 3.8 Flash on Vertex AI): the concierge (slice_agent) and the Pages intake, audience briefs and page builder (slice_pages); the Slice for Mac brain (slice_mac, Gemini Live)
+  mac/        Slice for Mac: Swift notch app (XcodeGen), talks to the agent's /mac/live WebSocket
   stores/     Demo sites: storefronts the widget is tested on (Marlow at /marlow, Fold at /fold) and brand sites the Pages intake reads (Ridgeline at /ridgeline, Saltline at /saltline)
 packages/
   backend/    Convex — schema, queries/mutations/actions, auth config
@@ -143,6 +146,7 @@ Server-side secrets (Google credentials, Qloo) live only in the agent and Convex
 | `pnpm build`                                              | Production builds (web, widget)                                             |
 | `pnpm typecheck` / `pnpm lint`                            | Across all packages                                                         |
 | `pnpm format`                                             | Prettier                                                                    |
+| `pnpm --filter @slice/mac app`                            | Build Slice for Mac (Debug) and relaunch it; needs Xcode and `brew install xcodegen` |
 | `pnpm --filter @slice/demo-catalogs validate`             | Schema + style-coverage check on the demo catalogs                          |
 | `pnpm --filter @slice/demo-catalogs fetch-images <store>` | Fetch a Pexels photo per product (`marlow`, `fold`; needs `PEXELS_API_KEY`) |
 | `cd packages/backend && npx convex run qloo:warm`         | Pre-cache the Qloo requests in `convex/qlooWarmList.ts` before a demo       |

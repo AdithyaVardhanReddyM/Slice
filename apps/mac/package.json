@@ -1,0 +1,11 @@
+{
+  "name": "@slice/mac",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Slice for Mac (Swift, XcodeGen). Script names stay out of turbo's dev/build so the web builds never need Xcode.",
+  "scripts": {
+    "xcode": "xcodegen generate && open SliceMac.xcodeproj",
+    "app": "./scripts/run.sh",
+    "app:build": "./scripts/run.sh --build"
+  }
+}

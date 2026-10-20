@@ -3,7 +3,7 @@
     uv run uvicorn server:app --port 8000 --reload
 
 POST /chat streams newline-delimited JSON events the widget renders as they
-arrive (the Pages service adds /pages/* in slice_pages/routes.py): status lines, tool spans, text deltas, product picks, the taste brief,
+arrive (the Pages service adds /pages/* in slice_pages/routes.py, Slice for Mac adds /mac/*): status lines, tool spans, text deltas, product picks, the taste brief,
 and a final "done" with the whole turn's trace. Completed turns are written to
 Convex so the merchant console can replay them.
 """
@@ -38,6 +38,7 @@ from slice_agent.agent import root_agent  # noqa: E402
 from slice_agent.brief import write_brief  # noqa: E402
 from slice_agent.tagging import tag_store  # noqa: E402
 from slice_agent.trace import Span, record, start_turn  # noqa: E402
+from slice_mac.routes import router as mac_router  # noqa: E402
 from slice_mail.routes import router as email_router  # noqa: E402
 from slice_media.routes import router as media_router  # noqa: E402
 from slice_media import store as media_store  # noqa: E402
@@ -74,6 +75,8 @@ app.include_router(pages_router)
 # Email service routes (/email/setup, /email/build, ...); see slice_mail/routes.py.
 app.include_router(email_router)
 app.include_router(media_router)
+# Slice for Mac (/mac/health, the /mac/live WebSocket); see slice_mac/routes.py.
+app.include_router(mac_router)
 
 
 class PageContext(BaseModel):
