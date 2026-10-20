@@ -15,7 +15,7 @@ final class IslandController {
     private var lastPhase: AgentSession.Phase = .idle
 
     /// The panel is fixed and larger than the island; the island draws at its top centre.
-    private static let panelSize = CGSize(width: 680, height: 460)
+    private static let panelSize = CGSize(width: 680, height: 540)
     /// Hover this long before the island opens, so sweeping past it does nothing.
     private static let openDelay: Duration = .milliseconds(90)
     private static let closeDelay: Duration = .milliseconds(350)
@@ -195,6 +195,28 @@ final class IslandController {
         }
     }
 }
+
+#if DEBUG
+extension IslandController {
+    /// Renders each island mode to PNGs in `dir` (no window or screen access needed).
+    func renderPreviews(to dir: URL) {
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        for mode in [IslandModel.Mode.open, .captioned, .compact] {
+            model.preview = mode
+            let view = IslandView(model: model)
+                .frame(width: Self.panelSize.width, height: Self.panelSize.height)
+                .background(Color(white: 0.82))
+            let renderer = ImageRenderer(content: view)
+            renderer.scale = 2
+            if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+               let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                try? png.write(to: dir.appendingPathComponent("island-\(mode.rawValue).png"))
+            }
+        }
+        model.preview = nil
+    }
+}
+#endif
 
 final class IslandPanel: NSPanel {
     override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing: NSWindow.BackingStoreType, defer flag: Bool) {

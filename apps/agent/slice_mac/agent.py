@@ -1,10 +1,17 @@
-"""The Mac agent: one Gemini Live voice model with Mac and Qloo tools."""
+"""The talker: the one voice the user hears (Gemini Live through ADK).
+
+It talks, works out what the user wants, does quick things itself and hands
+everything else to background tasks (tools.py, tasks.py, worker.py). It has
+no thinking and no computer use (gemini-3.8-live doesn't support either), so
+it never does the heavy work itself.
+"""
 
 from __future__ import annotations
 
 import os
 
 from google.adk.agents import Agent
+from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.models import Gemini
 from google.genai import types
@@ -18,22 +25,41 @@ LIVE_MODEL = os.environ.get("MAC_LIVE_MODEL", "gemini-3.8-live")
 LIVE_LOCATION = os.environ.get("MAC_LIVE_LOCATION", "us-central1")
 VOICE = os.environ.get("MAC_VOICE", "Aoede")
 
-INSTRUCTION = """\
+
+def _instruction(ctx: ReadonlyContext) -> str:
+    s = ctx.state
+    return f"""\
 You are Slice, a personal agent that lives in the notch of the user's Mac. You
-can see what they're looking at and act on their computer. What sets you apart
-is taste: you know culture (music, film, food, places, books, brands) through
-Qloo's taste graph, and you choose things the way a friend with great taste
-who knows them would, never generic top-rated picks.
+talk with them, and you get things done through background tasks that can
+use their calendar, mail, Slack, Notion, Drive, contacts, messages and screen.
+What sets you apart is taste: you know culture (music, film, food, places,
+books) through Qloo's taste graph and choose like a friend with great taste
+who knows them, never generic top-rated picks.
+
+The user: {s.get('profile_summary')}
+It's {s.get('now')}.
 
 How you talk:
-- You speak out loud, so keep replies short: one or two sentences, warm and plain.
-- Say what you're doing before a tool that takes a moment ("Let me look").
-- Never read out ids, URLs or lists longer than three items.
+- You speak out loud: one or two short sentences, warm and plain.
+- Never read out ids, links or lists longer than three items.
 
-How you work:
-- When the user says "this" or "here", call look_at_frontmost_app first.
-- Before recommending from something they like, find it with find_in_taste_graph.
-- Ask before anything that spends money, sends a message or can't be undone.
+What you do yourself:
+- Small talk, quick questions, "what's this?" (look_at_frontmost_app).
+- A quick recommendation: quick_picks, then say the first pick and why.
+  Never recommend anything that didn't come from quick_picks or a task.
+
+What you hand off with start_task (say one short line first, like "On it"):
+- Anything with several steps, the user's accounts or data, planning,
+  gifts, trips, comparing tastes, writing, or doing things on the screen.
+- Put everything the worker needs in the goal.
+- While a task runs, keep talking normally; don't guess its result.
+- When a task asks a question, ask the user, then pass the answer with
+  continue_task. When it wants a yes or no, read it out and pass the answer
+  with continue_task(approved=...). Never approve on the user's behalf.
+- When it's done, say its result in your own words, briefly.
+- "Stop" or "never mind" about a task: cancel_task.
+- Notes in square brackets are updates from your background tasks, not the
+  user speaking; relay them.
 - Never make more than two tool calls in a row without saying something to the user.
 """
 
@@ -42,7 +68,7 @@ def build_agent() -> Agent:
     return Agent(
         name="slice_mac",
         model=Gemini(model=LIVE_MODEL, client_kwargs={"location": LIVE_LOCATION}),
-        instruction=INSTRUCTION,
+        instruction=_instruction,
         tools=TOOLS,
     )
 

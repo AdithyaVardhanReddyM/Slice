@@ -1,20 +1,34 @@
 import AppKit
 import ApplicationServices
 
-/// Tools the brain runs on this Mac (`tool_call` frames). Names match
-/// apps/agent/slice_mac/tools.py.
+/// Tools the brain runs on this Mac (`tool_call` frames). Names match the bridge
+/// calls in apps/agent/slice_mac (tools.py, mac_tools.py, taste.py, computer.py).
 @MainActor
 struct LocalTools {
-    struct Failure: Error { let message: String }
+    struct Failure: Error {
+        let message: String
+    }
 
     func run(_ name: String, args: JSONValue?) async -> Result<JSONValue, Failure> {
+        let text = { (key: String) in args?[key]?.string ?? "" }
         switch name {
-        case "frontmost_app":
-            return .success(await frontmostApp())
-        case "open_url":
-            return openURL(args?["url"]?.string)
-        default:
-            return .failure(Failure(message: "This Mac doesn't know the tool \(name)."))
+        case "frontmost_app": return .success(await frontmostApp())
+        case "open_url": return openURL(args?["url"]?.string)
+        case "calendar_events":
+            let days: Int = if case .number(let n)? = args?["days"] { Int(n) } else { 7 }
+            return await CalendarTool.events(days: days, search: text("search"))
+        case "calendar_add": return await CalendarTool.add(args)
+        case "contacts_search": return await ContactsTool.search(text("query"))
+        case "maps_search": return await MapsTool.search(query: text("query"), near: text("near"))
+        case "maps_eta": return await MapsTool.eta(from: text("from"), to: text("to"), mode: text("mode"))
+        case "maps_reverse_geocode": return await MapsTool.reverse(args?["points"]?.array ?? [])
+        case "music_now_playing": return await AppTools.nowPlaying()
+        case "music_open": return AppTools.openInMusic(text("query"))
+        case "messages_send": return await AppTools.sendMessage(to: text("to"), text: text("text"))
+        case "mail_draft": return AppTools.mailDraft(to: text("to"), subject: text("subject"), body: text("body"))
+        case "screenshot": return await ScreenTool.screenshot()
+        case "computer": return await ComputerTool.run(args)
+        default: return .failure(Failure(message: "This Mac doesn't know the tool \(name)."))
         }
     }
 
@@ -57,8 +71,7 @@ struct LocalTools {
     }
 }
 
-/// The address of the front browser tab, through AppleScript. Run by osascript in a child
-/// process so the first-time Automation prompt never blocks the app.
+/// The address of the front browser tab, through AppleScript.
 enum BrowserTab {
     private static let scripts: [String: String] = [
         "com.apple.Safari": #"tell application "Safari" to return URL of front document"#,
@@ -69,20 +82,7 @@ enum BrowserTab {
     ]
 
     static func currentURL(bundleId: String) async -> String? {
-        guard let script = scripts[bundleId] else { return nil }
-        return await withCheckedContinuation { continuation in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            process.arguments = ["-e", script]
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = Pipe()
-            process.terminationHandler = { finished in
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-                continuation.resume(returning: finished.terminationStatus == 0 && text?.isEmpty == false ? text : nil)
-            }
-            do { try process.run() } catch { continuation.resume(returning: nil) }
-        }
+        guard let script = scripts[bundleId], let url = await OSAScript.run(script), !url.isEmpty else { return nil }
+        return url
     }
 }

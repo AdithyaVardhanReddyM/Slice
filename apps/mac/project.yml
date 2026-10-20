@@ -49,7 +49,9 @@ targets:
         # Menu bar app: no Dock icon, the notch is the UI.
         LSUIElement: true
         NSMicrophoneUsageDescription: Slice listens while you hold fn and control, so you can talk to it.
-        NSAppleEventsUsageDescription: Slice reads the address of the page you're on when you ask about it.
+        NSAppleEventsUsageDescription: Slice reads the page you're on, sends messages you approve, and checks what's playing.
+        NSCalendarsFullAccessUsageDescription: Slice reads your plans so it can work around them, and adds events you approve.
+        NSContactsUsageDescription: Slice looks up the people you mention, to message or plan with them.
         NSAppTransportSecurity:
           # The brain runs on localhost (ws://) while developing.
           NSAllowsLocalNetworking: true

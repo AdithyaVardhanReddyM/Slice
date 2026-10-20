@@ -90,7 +90,7 @@ private struct Caption: View {
 }
 
 /// Live bars while listening or speaking, a slow wave while thinking, a dot otherwise.
-private struct StatusGlyph: View {
+struct StatusGlyph: View {
     let agent: AgentSession
 
     var body: some View {
@@ -109,7 +109,7 @@ private struct StatusGlyph: View {
     }
 }
 
-private struct Bars: View {
+struct Bars: View {
     /// Loudness 0…1 at a time, before each bar's own offset.
     let level: (Double) -> Double
     var spread: Double = 0.7
@@ -140,6 +140,7 @@ private struct OpenIsland: View {
     var body: some View {
         VStack(spacing: 10) {
             header
+            TasksArea(agent: model.agent)
             Conversation(agent: model.agent)
                 .frame(maxHeight: .infinity)
             input
@@ -156,9 +157,8 @@ private struct OpenIsland: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white)
             Spacer(minLength: model.notch.width + 16)
-            Circle()
-                .fill(model.agent.connection == .online ? Brand.yellow : Color.white.opacity(0.3))
-                .frame(width: 6, height: 6)
+            StatusGlyph(agent: model.agent)
+                .frame(width: 24)
             IconButton(symbol: "square.and.pencil", help: "New conversation") { model.agent.reset() }
             IconButton(symbol: "gearshape", help: "Settings") { SettingsWindow.shared.show(agent: model.agent) }
         }
@@ -281,7 +281,7 @@ private struct ActivityRow: View {
     }
 }
 
-private struct IconButton: View {
+struct IconButton: View {
     let symbol: String
     let help: String
     let action: () -> Void

@@ -2,7 +2,8 @@ import Foundation
 import Observation
 
 /// The conversation with the brain: talk-key audio up, voice and transcripts down,
-/// and the Mac tools the brain asks for. The island draws itself from this.
+/// the Mac tools the brain asks for, and the background tasks it runs. The island
+/// draws itself from this.
 @MainActor
 @Observable
 final class AgentSession {
@@ -44,6 +45,14 @@ final class AgentSession {
     /// Mic loudness 0…1 while listening, for the waveform.
     private(set) var micLevel: Float = 0
     private(set) var lastError: String?
+    /// Background tasks, newest first (the brain's `task` frames).
+    private(set) var tasks: [TaskItem] = []
+    /// The user's taste profile (local-first, see TasteStore).
+    private(set) var profile: JSONValue = TasteStore.load()
+
+    /// The task that needs an answer or a yes, if any: the island opens for it.
+    var taskNeedingYou: TaskItem? { tasks.first { $0.needsYou } }
+    var runningTask: TaskItem? { tasks.first { $0.isRunning } }
 
     /// The agent's words for the current reply, for the compact island's caption.
     var caption: String? {
@@ -74,6 +83,14 @@ final class AgentSession {
         brain.onState = { [weak self] state in self?.brainStateChanged(state) }
         brain.onEvent = { [weak self] event in self?.handle(event) }
         brain.onAudio = { [weak self] data in self?.play(data) }
+        brain.hello = { [weak self] in
+            [
+                "type": "hello",
+                "user_id": .string(TasteStore.userID),
+                "profile": self?.profile ?? [:],
+                "timezone": .string(TimeZone.current.identifier),
+            ]
+        }
         voice.onIdle = { [weak self] in
             Task { @MainActor in self?.voiceFinished() }
         }
@@ -211,6 +228,24 @@ final class AgentSession {
         phase = .speaking
     }
 
+    func loadSampleTasks() {
+        tasks = [
+            TaskItem(id: "s1", title: "Friday dinner with Sam", status: "needs_confirmation",
+                     steps: ["Checked your calendar", "Compared your taste with Sam's (10 shared threads)", "Place picks for your taste near Williamsburg (5 from Qloo)"],
+                     question: nil, confirm: .init(title: "Book Land to Sea for 2 on Friday at 8 PM, under Sam Lee?", detail: "402 Graham Ave, Brooklyn. Cozy wine bar with comfort food."),
+                     say: nil, cards: [], error: nil),
+            TaskItem(id: "s2", title: "Records for Maya", status: "done",
+                     steps: ["Saved what Maya loves", "Artist picks for your taste (5 from Qloo)", "Showed 3 picks"],
+                     question: nil, confirm: nil,
+                     say: "Maya's into moody, cinematic stuff, so I'd start with Radiohead's In Rainbows on vinyl. Frank Ocean's Blonde is the safe second pick.",
+                     cards: [
+                        .init(title: "Radiohead", subtitle: "Artist", image: "https://images.qloo.com/i/70CAE5BF-2F4C-445C-A3E5-4EDACFC3591C-420x-auto.jpg", url: nil, reason: "Her Aftersun streak, in record form"),
+                        .init(title: "Frank Ocean", subtitle: "Artist", image: "https://images.qloo.com/i/2B134C93-39EB-4A08-A72D-5F8F1167FDAA-420x-auto.jpg", url: nil, reason: "Tender and slow, like Past Lives"),
+                        .init(title: "Land to Sea", subtitle: "402 Graham Ave, Brooklyn", image: nil, url: nil, reason: "For after the record shop"),
+                     ], error: nil),
+        ]
+    }
+
     func ask(_ question: String, whenOnline: Bool) {
         Task {
             while connection != .online { try? await Task.sleep(for: .milliseconds(200)) }
@@ -228,7 +263,39 @@ final class AgentSession {
         turns = []
         activities = []
         lastError = nil
+        tasks.removeAll { $0.isOver }
         brain.send(["type": "reset"])
+    }
+
+    // MARK: Tasks
+
+    /// The island's buttons on a task that wants a yes or no.
+    func confirm(_ task: TaskItem, approved: Bool) {
+        brain.send(["type": "task_confirm", "id": .string(task.id), "approved": .bool(approved)])
+    }
+
+    /// A typed answer to a task's question.
+    func answer(_ task: TaskItem, text: String) {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        brain.send(["type": "task_reply", "id": .string(task.id), "text": .string(text)])
+    }
+
+    func cancel(_ task: TaskItem) {
+        brain.send(["type": "task_cancel", "id": .string(task.id)])
+    }
+
+    func dismiss(_ task: TaskItem) {
+        tasks.removeAll { $0.id == task.id }
+    }
+
+    // MARK: Taste profile
+
+    /// Settings built or edited the profile: keep it, and tell the brain.
+    func setProfile(_ profile: JSONValue) {
+        self.profile = profile
+        TasteStore.save(profile)
+        brain.send(["type": "profile", "profile": profile])
     }
 
     // MARK: From the brain
@@ -239,7 +306,23 @@ final class AgentSession {
             guard let text = event.text else { return }
             transcript(role: event.role == "user" ? .user : .agent, text: text, partial: event.partial ?? false)
         case .activity:
+            // A task's steps show on its card; only the talker's own lookups list here.
+            guard event.taskId == nil else { return }
             activities.append(Activity(kind: event.kind ?? "tool", label: event.label ?? "", detail: event.detail))
+        case .task:
+            guard let task = event.task else { return }
+            if let i = tasks.firstIndex(where: { $0.id == task.id }) {
+                tasks[i] = task
+            } else {
+                tasks.insert(task, at: 0)
+            }
+            tasks = Array(tasks.prefix(6))
+        case .profile:
+            guard let profile = event.profile else { return }
+            self.profile = profile
+            TasteStore.save(profile)
+        case .operatorStatus:
+            AgentCursor.shared.setOperating(event.active ?? false)
         case .toolCall:
             guard let id = event.id, let name = event.name else { return }
             Task {

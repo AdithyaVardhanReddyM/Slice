@@ -1,12 +1,14 @@
 import AppKit
 import ApplicationServices
 import AVFoundation
+import Contacts
+import EventKit
 
-/// The three macOS permissions the agent needs.
+/// The macOS permissions the agent needs.
 @MainActor
 enum Permissions {
     enum Kind: CaseIterable, Identifiable {
-        case microphone, accessibility, screenRecording
+        case microphone, accessibility, screenRecording, calendar, contacts
 
         var id: Self { self }
 
@@ -15,6 +17,8 @@ enum Permissions {
             case .microphone: "Microphone"
             case .accessibility: "Accessibility"
             case .screenRecording: "Screen Recording"
+            case .calendar: "Calendar"
+            case .contacts: "Contacts"
             }
         }
 
@@ -22,7 +26,9 @@ enum Permissions {
             switch self {
             case .microphone: "To hear you while you hold fn and control."
             case .accessibility: "For the fn and control keys, and to read and use other apps."
-            case .screenRecording: "To see what's on your screen when you ask about it."
+            case .screenRecording: "To see your screen when you ask about it, and to work on it for you."
+            case .calendar: "To plan around what's already on your calendar."
+            case .contacts: "To find the people you mention."
             }
         }
 
@@ -32,6 +38,8 @@ enum Permissions {
             case .microphone: "Privacy_Microphone"
             case .accessibility: "Privacy_Accessibility"
             case .screenRecording: "Privacy_ScreenCapture"
+            case .calendar: "Privacy_Calendars"
+            case .contacts: "Privacy_Contacts"
             }
         }
     }
@@ -41,10 +49,12 @@ enum Permissions {
         case .microphone: AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
         case .accessibility: AXIsProcessTrusted()
         case .screenRecording: CGPreflightScreenCaptureAccess()
+        case .calendar: EKEventStore.authorizationStatus(for: .event) == .fullAccess
+        case .contacts: CNContactStore.authorizationStatus(for: .contacts) == .authorized
         }
     }
 
-    /// Screen Recording isn't used yet, so it doesn't count here.
+    /// The two Slice can't work without. The rest are asked for in Settings, or when first needed.
     static var allGranted: Bool {
         isGranted(.microphone) && isGranted(.accessibility)
     }
@@ -62,6 +72,10 @@ enum Permissions {
             if !AXIsProcessTrustedWithOptions(options) { openSettings(kind) }
         case .screenRecording:
             if !CGRequestScreenCaptureAccess() { openSettings(kind) }
+        case .calendar:
+            Task { if !(await CalendarTool.access()) { openSettings(kind) } }
+        case .contacts:
+            Task { if !(await ContactsTool.access()) { openSettings(kind) } }
         }
     }
 

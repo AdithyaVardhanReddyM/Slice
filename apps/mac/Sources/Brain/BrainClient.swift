@@ -9,6 +9,8 @@ final class BrainClient {
     var onState: ((State) -> Void)?
     var onEvent: ((BrainEvent) -> Void)?
     var onAudio: ((Data) -> Void)?
+    /// The first frame on every connection: who this Mac is (user id, taste profile, time zone).
+    var hello: (() -> JSONValue)?
 
     private(set) var state: State = .offline {
         didSet { if state != oldValue { onState?(state) } }
@@ -62,6 +64,9 @@ final class BrainClient {
         self.task = task
         state = .connecting
         task.resume()
+        if let hello = hello?(), let data = try? JSONEncoder().encode(hello), let text = String(data: data, encoding: .utf8) {
+            task.send(.string(text)) { _ in }
+        }
         Task { await receiveLoop(task, gen) }
     }
 
