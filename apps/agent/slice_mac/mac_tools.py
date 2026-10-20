@@ -94,7 +94,7 @@ async def add_calendar_event(title: str, start: str, end: str, tool_context: Too
 
 
 async def find_contact(name: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Look someone up in the Mac's Contacts (phone numbers, emails, address).
+    """Look someone up in the Mac's Contacts (phone numbers, emails, address, birthday).
 
     Args:
         name: Their name or part of it.
@@ -151,15 +151,31 @@ async def send_imessage(to: str, text: str, tool_context: ToolContext) -> dict[s
     return await _mac(tool_context, "messages_send", {"to": to, "text": text}, label=f"Messaged {to}")
 
 
-async def draft_email_in_mail(to: str, subject: str, body: str, tool_context: ToolContext) -> dict[str, Any]:
+async def send_file_imessage(to: str, path: str, tool_context: ToolContext, text: str = "") -> dict[str, Any]:
+    """Send a file (a PDF from make_printout) by iMessage, with an optional message (asks first).
+
+    Args:
+        to: Phone number or email of the recipient (look it up with find_contact).
+        path: The file's path on the Mac.
+        text: A short message to go with it.
+    """
+    name = path.rsplit("/", 1)[-1]
+    if not await _confirm(tool_context, f"Send {name} to {to}?", text):
+        return {"cancelled": True}
+    return await _mac(tool_context, "messages_send_file", {"to": to, "path": path, "text": text}, label=f"Sent {name} to {to}")
+
+
+async def draft_email_in_mail(to: str, subject: str, body: str, tool_context: ToolContext, attachment: str = "") -> dict[str, Any]:
     """Open a ready-to-send draft in the Mac's Mail app (the user presses Send themselves).
 
     Args:
         to: Recipient email.
         subject: Subject line.
         body: Plain-text body.
+        attachment: Optional path of a file on the Mac to attach (from make_printout).
     """
-    return await _mac(tool_context, "mail_draft", {"to": to, "subject": subject, "body": body}, label="Opened an email draft in Mail")
+    return await _mac(tool_context, "mail_draft", {"to": to, "subject": subject, "body": body, "attachment": attachment},
+                      label="Opened an email draft in Mail")
 
 
 async def open_link(url: str, tool_context: ToolContext) -> dict[str, Any]:
@@ -173,5 +189,5 @@ async def open_link(url: str, tool_context: ToolContext) -> dict[str, Any]:
 
 TOOLS = [
     what_is_in_front, look_at_screen, calendar_events, add_calendar_event, find_contact,
-    find_on_map, travel_time, now_playing, open_in_music, send_imessage, draft_email_in_mail, open_link,
+    find_on_map, travel_time, now_playing, open_in_music, send_imessage, send_file_imessage, draft_email_in_mail, open_link,
 ]

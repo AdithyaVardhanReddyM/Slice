@@ -49,6 +49,10 @@ final class AgentSession {
     private(set) var tasks: [TaskItem] = []
     /// The user's taste profile (local-first, see TasteStore).
     private(set) var profile: JSONValue = TasteStore.load()
+    /// Something Slice brings up: a "very you" pill, a birthday, or a why card the user asked for.
+    private(set) var nudge: Nudge?
+    /// The island is open to show `nudge` (asked for by voice), not because it's hovered.
+    private(set) var presenting = false
 
     /// The task that needs an answer or a yes, if any: the island opens for it.
     var taskNeedingYou: TaskItem? { tasks.first { $0.needsYou } }
@@ -64,6 +68,8 @@ final class AgentSession {
     private let mic = MicCapture()
     private let voice = VoicePlayer()
     private let tools = LocalTools()
+    private var watchers: Watchers?
+    private var nudgeTimer: Task<Void, Never>?
 
     private enum Talk { case off, pending, streaming }
     private var talk: Talk = .off
@@ -111,7 +117,12 @@ final class AgentSession {
         switch state {
         case .offline: connection = .offline
         case .connecting: connection = .connecting
-        case .online: connection = .online
+        case .online:
+            connection = .online
+            if watchers == nil {
+                watchers = Watchers(agent: self)
+                watchers?.start()
+            }
         }
         if state == .offline, phase != .idle {
             stopEverything()
@@ -246,6 +257,32 @@ final class AgentSession {
         ]
     }
 
+    /// Fetch every picture and map the sample cards draw, so -renderIsland shows them.
+    func prepareForRender() async {
+        let views = tasks.flatMap(\.views)
+        var urls = tasks.flatMap(\.cards).compactMap(\.image) + views.flatMap { $0.cards ?? [] }.compactMap(\.image)
+        urls += [views.compactMap(\.why).first?.thing.image, nudge?.why?.thing.image].compactMap { $0 }
+        for url in urls { _ = await ImageCache.load(url) }
+        await MapShots.prepare(views)
+    }
+
+    /// One task per rich card, for `-sampleViews person|gifts|timeline|map|note|why|file`.
+    func loadSampleView(_ type: String) {
+        guard let data = SampleViews.json[type]?.data(using: .utf8),
+              let view = try? JSONDecoder().decode(TaskView.self, from: data) else { return }
+        let say = type == "gifts" ? "Four ideas for Maya, from Polaroid to a Nick Drake record. Want me to put one in your cart?" : nil
+        tasks = [TaskItem(id: "v-\(type)", title: SampleViews.titles[type] ?? type.capitalized, status: "done", steps: ["Done"],
+                          question: nil, confirm: nil, say: say, cards: [], views: [view], error: nil)]
+        if type == "why", let why = view.why {
+            tasks = []
+            show(Nudge(id: "n1", kind: "why", title: why.thing.name, line: why.line, show: true, why: why))
+        }
+        if type == "pill", let why = view.why {
+            tasks = []
+            show(Nudge(id: "n2", kind: "why", title: "Very you", line: "Shares 'dreamy' and 'nostalgic' with Lady Bird", why: why))
+        }
+    }
+
     func ask(_ question: String, whenOnline: Bool) {
         Task {
             while connection != .online { try? await Task.sleep(for: .milliseconds(200)) }
@@ -283,6 +320,57 @@ final class AgentSession {
 
     func cancel(_ task: TaskItem) {
         brain.send(["type": "task_cancel", "id": .string(task.id)])
+    }
+
+    // MARK: Nudges
+
+    /// Show a nudge: a pill under the notch for a while, or the open island when it was asked for.
+    func show(_ nudge: Nudge) {
+        self.nudge = nudge
+        presenting = nudge.show
+        nudgeTimer?.cancel()
+        nudgeTimer = Task {
+            try? await Task.sleep(for: .seconds(nudge.show ? 25 : 14))
+            guard !Task.isCancelled else { return }
+            // Unread, it goes away; hovering holds it (holdNudge) until the island closes.
+            if self.nudge?.id == nudge.id {
+                self.presenting = false
+                self.nudge = nil
+            }
+        }
+    }
+
+    /// The pointer opened the island: keep the nudge up while it's read.
+    func holdNudge() {
+        nudgeTimer?.cancel()
+    }
+
+    /// The island closed: a nudge the user has seen is done.
+    func islandClosed() {
+        presenting = false
+        nudge = nil
+    }
+
+    func dismissNudge() {
+        nudgeTimer?.cancel()
+        nudge = nil
+        presenting = false
+    }
+
+    /// A nudge's button ("Sort it"): ask Slice in words.
+    func act(on nudge: Nudge) {
+        dismissNudge()
+        if let prompt = nudge.prompt { send(text: prompt) }
+    }
+
+    /// A frame from one of the watchers (`noticed`, `run_routine`).
+    func sendFrame(_ frame: JSONValue) {
+        brain.send(frame)
+    }
+
+    /// A Mac tool run from the app itself (the why card's play button).
+    func runTool(_ name: String, args: JSONValue) {
+        Task { _ = await tools.run(name, args: args) }
     }
 
     func dismiss(_ task: TaskItem) {
@@ -323,6 +411,9 @@ final class AgentSession {
             TasteStore.save(profile)
         case .operatorStatus:
             AgentCursor.shared.setOperating(event.active ?? false)
+        case .nudge:
+            guard let nudge = event.nudge else { return }
+            show(nudge)
         case .toolCall:
             guard let id = event.id, let name = event.name else { return }
             Task {

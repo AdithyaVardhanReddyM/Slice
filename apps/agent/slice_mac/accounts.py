@@ -100,11 +100,22 @@ async def connect_link(user_id: str, app: str, callback_url: str | None = None) 
     return req.redirect_url
 
 
+def _not_connected(text: str) -> bool:
+    low = text.lower()
+    return "noactiveconnection" in low or ("connect" in low and ("no " in low or "not" in low))
+
+
 async def execute(user_id: str, slug: str, arguments: dict[str, Any]) -> Any:
-    res = await asyncio.to_thread(_with_session, user_id, lambda s: s.execute(slug, arguments=arguments))
+    try:
+        res = await asyncio.to_thread(_with_session, user_id, lambda s: s.execute(slug, arguments=arguments))
+    except Exception as err:
+        # The SDK raises (400 ToolRouterV2_NoActiveConnection) when the app was never connected.
+        if _not_connected(str(err)):
+            raise NotConnected(str(err)) from err
+        raise
     if res.error:
         text = str(res.error)
-        if "connect" in text.lower() and ("no " in text.lower() or "not" in text.lower()):
+        if _not_connected(text):
             raise NotConnected(text)
         raise RuntimeError(text[:400])
     return res.data
@@ -173,6 +184,18 @@ async def gmail_search(query: str, tool_context: ToolContext, count: int = 5) ->
         count: How many messages (1-10).
     """
     return await _run(tool_context, "GMAIL_FETCH_EMAILS", {"query": query, "max_results": max(1, min(count, 10))}, f'Searched Gmail for "{query}"')
+
+
+async def find_trip_emails(tool_context: ToolContext, destination: str = "") -> dict[str, Any]:
+    """Flight, train and hotel confirmations in the user's Gmail (the last 90 days and upcoming),
+    to find when they arrive, leave and where they stay.
+
+    Args:
+        destination: The city, to narrow it ("Lisbon").
+    """
+    words = "(flight OR booking OR reservation OR itinerary OR \"check-in\" OR hotel OR boarding)"
+    query = f"{words} newer_than:90d" + (f" {destination}" if destination else "")
+    return await _run(tool_context, "GMAIL_FETCH_EMAILS", {"query": query, "max_results": 8}, f"Looked for trip emails{' about ' + destination if destination else ''}")
 
 
 async def gmail_draft(to: str, subject: str, body: str, tool_context: ToolContext) -> dict[str, Any]:
@@ -262,29 +285,13 @@ async def drive_search(query: str, tool_context: ToolContext) -> dict[str, Any]:
     return await _run(tool_context, "GOOGLEDRIVE_FIND_FILE", {"q": query, "pageSize": 8}, f'Searched Drive for "{query}"')
 
 
-async def events_near(city: str, tool_context: ToolContext, keyword: str = "", days_ahead: int = 30) -> dict[str, Any]:
-    """Upcoming concerts and shows from Ticketmaster.
-
-    Args:
-        city: City name ("New York").
-        keyword: Artist, genre or show ("Beach House", "jazz").
-        days_ahead: How far ahead (1-120).
-    """
-    now = dt.datetime.now(dt.UTC).replace(microsecond=0)
-    args: dict[str, Any] = {"city": city, "size": 10,
-                            "startDateTime": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                            "endDateTime": (now + dt.timedelta(days=max(1, min(days_ahead, 120)))).strftime("%Y-%m-%dT%H:%M:%SZ")}
-    if keyword:
-        args["keyword"] = keyword
-    return await _run(tool_context, "TICKETMASTER_GET_EVENTS", args, f"Looked for shows in {city}")
-
-
 async def find_app_action(app: str, need: str, tool_context: ToolContext) -> dict[str, Any]:
     """Find the right action in one of the user's apps when no other tool covers it
     (e.g. WhatsApp send, YouTube search, Outlook calendar). Then call run_app_action.
 
     Args:
         app: The app (gmail, googlecalendar, slack, notion, googledrive, ticketmaster, outlook, whatsapp, youtube, discord).
+            For concerts use shows_for_me instead.
         need: What you want to do, in a few words.
     """
 
@@ -318,7 +325,7 @@ async def run_app_action(slug: str, arguments_json: str, tool_context: ToolConte
 
 
 TOOLS = [
-    connected_apps, connect_app, gmail_search, gmail_draft, gmail_send, google_calendar_events,
-    slack_search, slack_send, notion_search, notion_create_page, drive_search, events_near,
+    connected_apps, connect_app, gmail_search, find_trip_emails, gmail_draft, gmail_send, google_calendar_events,
+    slack_search, slack_send, notion_search, notion_create_page, drive_search,
     find_app_action, run_app_action,
 ]

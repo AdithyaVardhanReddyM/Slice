@@ -56,6 +56,7 @@ private struct GeneralSettings: View {
     let agent: AgentSession
 
     @State private var granted: [Permissions.Kind: Bool] = [:]
+    @State private var suggest = Watchers.suggestVeryYou
     @State private var address = BrainSettings.urlString
     @State private var token = BrainSettings.token ?? ""
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -70,6 +71,15 @@ private struct GeneralSettings: View {
             Section("Talking to Slice") {
                 LabeledContent("Talk", value: "Hold fn and control")
                 LabeledContent("Type", value: "Hover over the notch")
+            }
+            Section {
+                Toggle("Say when something is very you", isOn: $suggest)
+                    .onChange(of: suggest) { UserDefaults.standard.set(suggest, forKey: Watchers.suggestKey) }
+            } header: {
+                Text("Suggestions")
+            } footer: {
+                Text("When what's playing, or the film, show or book page in front, fits your taste very well, a pill drops from the notch with why. At most once an hour.")
+                    .foregroundStyle(.secondary)
             }
             Section {
                 TextField("Address", text: $address)
@@ -198,7 +208,21 @@ private struct TasteSettings: View {
                         }
                     }
                 }
-                Button("Add my most played artists from Music", action: importMusic)
+                HStack {
+                    Button("Add my most played artists from Music", action: importMusic)
+                    Spacer()
+                    Menu("Try a taste") {
+                        ForEach(Self.presets, id: \.name) { preset in
+                            Button(preset.name) {
+                                loves = preset.loves
+                                city = preset.city
+                                edited = true
+                            }
+                        }
+                    }
+                    .fixedSize()
+                    .help("Fill in a ready-made taste, then build it")
+                }
             } header: {
                 Text("Things you love")
             }
@@ -216,8 +240,16 @@ private struct TasteSettings: View {
                         .foregroundStyle(.secondary)
                 }
                 let people = profile["people"]?.object ?? [:]
+                let info = profile["people_info"]?.object ?? [:]
                 ForEach(people.keys.sorted(), id: \.self) { person in
-                    LabeledContent(person, value: (people[person]?.array ?? []).compactMap { $0["name"]?.string }.joined(separator: ", "))
+                    LabeledContent {
+                        Text((people[person]?.array ?? []).compactMap { $0["name"]?.string }.joined(separator: ", "))
+                    } label: {
+                        Text(person)
+                        if let about = Self.about(info[person]) {
+                            Text(about)
+                        }
+                    }
                 }
                 HStack {
                     if let busy { ProgressView().controlSize(.small); Text(busy).foregroundStyle(.secondary) }
@@ -238,6 +270,22 @@ private struct TasteSettings: View {
         .onAppear(perform: load)
         .onChange(of: agent.profile) { if !edited { load() } }
     }
+
+    /// "Dad, 74, Lincoln Park, step-free" for a saved person.
+    static func about(_ info: JSONValue?) -> String? {
+        guard let info else { return nil }
+        var bits = [info["relation"]?.string?.capitalized, info["home"]?.string].compactMap { $0 }
+        if case .number(let age)? = info["age"] { bits.insert("\(Int(age))", at: min(1, bits.count)) }
+        if info["step_free"] == .bool(true) { bits.append("step-free") }
+        if let birthday = info["birthday"]?.string { bits.append("birthday \(birthday)") }
+        return bits.isEmpty ? nil : bits.joined(separator: ", ")
+    }
+
+    /// Two very different tastes, so a demo can be re-run to show the answers come from Qloo.
+    static let presets: [(name: String, city: String, loves: [String])] = [
+        ("Indie, Brooklyn", "Williamsburg, Brooklyn", ["Mitski", "Frank Ocean", "Phoebe Bridgers", "Aftersun", "Lady Bird", "Past Lives"]),
+        ("Country, Nashville", "East Nashville, Nashville", ["Morgan Wallen", "Luke Combs", "Yellowstone", "Top Gun: Maverick", "Patagonia", "Zach Bryan"]),
+    ]
 
     private func load() {
         city = profile["city"]?.string ?? ""

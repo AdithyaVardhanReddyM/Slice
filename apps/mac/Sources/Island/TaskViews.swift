@@ -73,6 +73,18 @@ struct TaskCardView: View {
         }
     }
 
+    /// Rich cards: the newest while the task works, all of them (up to six) once it's done.
+    @ViewBuilder
+    private var views: some View {
+        let shown = task.isOver ? task.views : Array(task.views.suffix(1))
+        ForEach(shown) { view in
+            TaskViewCard(view: view, agent: agent, taskTitle: task.title)
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.05)))
+                .transition(.opacity)
+        }
+    }
+
     @ViewBuilder
     private var content: some View {
         switch task.status {
@@ -84,7 +96,9 @@ struct TaskCardView: View {
                     .lineLimit(1)
                     .contentTransition(.opacity)
             }
+            views
         case "needs_confirmation":
+            views
             if let confirm = task.confirm {
                 Text(confirm.title)
                     .font(.system(size: 13))
@@ -109,6 +123,7 @@ struct TaskCardView: View {
                 }
             }
         case "needs_input":
+            views
             if let question = task.question {
                 Text(question)
                     .font(.system(size: 13))
@@ -137,15 +152,9 @@ struct TaskCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !task.cards.isEmpty {
-                let row = HStack(alignment: .top, spacing: 8) {
-                    ForEach(task.cards) { CardTile(card: $0) }
-                }
-                // A plain row when the picks fit, a scrolling one when there are more.
-                ViewThatFits(in: .horizontal) {
-                    row
-                    ScrollView(.horizontal) { row }.scrollIndicators(.never)
-                }
+                PicksRow(cards: task.cards)
             }
+            views
         case "failed":
             Text("That didn't work. Ask me to try again.")
                 .font(.system(size: 12))
@@ -162,7 +171,7 @@ struct TaskCardView: View {
 }
 
 /// A pick from a task (a place, a film, a gift), with its image when Qloo has one.
-private struct CardTile: View {
+struct CardTile: View {
     let card: TaskItem.Card
 
     var body: some View {
@@ -170,14 +179,17 @@ private struct CardTile: View {
             if let link = card.url, let url = URL(string: link) { NSWorkspace.shared.open(url) }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.white.opacity(0.08))
-                    if let image = card.image, let url = URL(string: image) {
-                        AsyncImage(url: url) { phase in
-                            if let picture = phase.image { picture.resizable().scaledToFill() }
-                        }
-                    } else {
-                        SliceMark(height: 14).opacity(0.5)
+                ZStack(alignment: .topLeading) {
+                    RemoteImage(url: card.image)
+                        .frame(width: 132, height: 78)
+                    if let tag = card.tag {
+                        Text(tag)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Brand.yellow))
+                            .padding(6)
                     }
                 }
                 .frame(width: 132, height: 78)

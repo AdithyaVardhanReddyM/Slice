@@ -219,3 +219,34 @@ async def operate_computer(job: str, tool_context: ToolContext) -> dict[str, Any
     conn, task = for_worker(tool_context)
     await report(conn, task, "mac", "Working on your screen", job[:80])
     return {"outcome": await operate(conn, task, job)}
+
+
+async def shop_for(item: str, tool_context: ToolContext, store_url: str = "", options: str = "", needed_by: str = "",
+                   budget_usd: int = 0) -> dict[str, Any]:
+    """Put a gift or purchase in the cart on the shop's own website, with the operator, and check
+    when it would arrive. Stops before payment: the user pays themselves.
+
+    Args:
+        item: What to buy, specific ("Polaroid Now+ Gen 2 instant camera").
+        store_url: The shop's site (a brand's `url` from gift_ideas), or empty to find it.
+        options: Choices to make ("colour: sage green", "size M").
+        needed_by: The date it must arrive by ("October 28").
+        budget_usd: Don't pick anything above this (0 = no limit).
+    """
+    conn, task = for_worker(tool_context)
+    where = f"go to {store_url}" if store_url else "find the brand's own online shop"
+    job = (
+        f"In the web browser, {where} and find {item}."
+        + (f" Choose {options}." if options else "")
+        + (f" Don't choose anything over ${budget_usd}." if budget_usd else "")
+        + " Add it to the cart and open the cart."
+        + (f" Find the delivery estimate (the cart, the product page or the shipping info) and check whether it arrives by {needed_by}." if needed_by else "")
+        + " Don't sign in, don't type an address or any payment details, and stop before checkout or payment."
+        " Finish by saying the product, the price and the delivery date you saw."
+    )
+    await report(conn, task, "mac", f"Shopping for {item}", store_url or None)
+    outcome = await operate(conn, task, job)
+    if conn.tasks:
+        conn.tasks.show_view(task, {"type": "note", "key": "cart", "title": "In your cart", "text": outcome,
+                                    "detail": "Slice stopped before payment. Check out when you're ready."})
+    return {"outcome": outcome, "next": "Tell the user it's in the cart and they pay themselves."}

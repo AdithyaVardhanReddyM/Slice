@@ -19,6 +19,7 @@ import asyncio
 import datetime as dt
 import json
 import os
+import re
 import time
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -32,9 +33,9 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import Gemini, LlmRequest, LlmResponse
 from google.genai import types
 
-from . import accounts, mac_tools, taste
+from . import accounts, lens, mac_tools, plans, taste
 from .connection import Connection, for_worker, register_worker, report
-from .computer import operate_computer
+from .computer import operate_computer, shop_for
 from .tasks import Task
 
 WORKER_MODEL = os.environ.get("MAC_WORKER_MODEL", "gemini-3.8-flash")
@@ -72,9 +73,40 @@ How to work:
 - For a website or app with no tool (Resy, OpenTable, a shop), use
   operate_computer with one precise job that includes every detail.
 - An app isn't connected? Call connect_app, then carry on.
-- When you recommend things, show them with show_cards.
+- When you recommend things, show them with show_cards (tools that say they
+  show a card already did). Card text is plain words with commas; never
+  "·" or "|" between words.
+- Never pay for anything: shop_for and operate_computer stop before payment.
 - Finish with one to three short sentences that will be read aloud: what
   you did or found, and what's next. No lists, links, ids or markdown.
+
+Playbooks (use the one that fits; skip what the user already told you):
+- A trip ("plan my Lisbon trip"): find_trip_emails for the flight and hotel
+  (or ask the dates and where they stay); taste_map for the city; weather;
+  plan_walkable_day for each day from the hotel (indoor stops if it rains);
+  shows_for_me on those dates; offer to book one dinner on the restaurant's
+  own page (operate_computer), add_plan_to_calendar, and message the plan to
+  a friend with a dinner from recommend(for_person="Sam and me").
+- Someone else ("my dad Ray is 74, uses a walker, loves…"): remember_person
+  with age, home, needs and relation first; then recommend(for_person=...)
+  for what to watch (movie or tv_show), listen to (podcast) and where to go
+  (a place near their home; step-free follows their needs); show_cards; if
+  they'd like it on paper, make_printout (large print), then offer to send
+  it (send_file_imessage, draft_email_in_mail) and to repeat_weekly.
+- A gift ("Maya's birthday is on the 29th"): learn_taste_from_screen if her
+  profile is open, else remember_person; gift_ideas; when the user picks one,
+  shop_for it on the brand's site with the date it must arrive by; offer a
+  card written around one thing they love (show_note) and a reminder to wrap
+  it (add_plan_to_calendar).
+- A day out ("plan my Saturday, Sam joins after 2"): calendar_events for the
+  day; weather; the morning with plan_walkable_day near home for the user;
+  compare_tastes, then the afternoon for "Sam and me"; shows_for_me that
+  evening for "Sam and me"; dinner near the venue with recommend(near=<venue
+  address>, genre=restaurant, also_like=<the act>, for_person="Sam and me");
+  show_day_plan with everything in order; offer to message the friend (in
+  words that suit their taste), add it to the calendar, book dinner and open
+  the ticket page.
+- "Which of these would I love?" about the screen: rank_screen.
 """
 
 
@@ -93,8 +125,9 @@ async def show_cards(cards_json: str, tool_context: ToolContext) -> dict[str, An
     """Show results as cards in the island (up to 6).
 
     Args:
-        cards_json: A JSON list of {"title", "subtitle", "image", "url", "reason"}; image is a URL
-            from the tool results, reason is one short line on why it fits the user.
+        cards_json: A JSON list of {"title", "subtitle", "image", "url", "reason", "tag"}; image is a
+            URL from the tool results, reason is one short line on why it fits, tag is a one-word
+            label ("Watch", "Listen", "Lunch").
     """
     conn, task = for_worker(tool_context)
     assert conn.tasks
@@ -102,13 +135,30 @@ async def show_cards(cards_json: str, tool_context: ToolContext) -> dict[str, An
         cards = json.loads(cards_json)
     except json.JSONDecodeError as err:
         return {"error": f"cards_json isn't valid JSON: {err}"}
+    # Card copy reads as plain words: "1985, film", never "1985 · Film".
     clean = [
-        {k: str(c[k])[:200] for k in ("title", "subtitle", "image", "url", "reason") if isinstance(c, dict) and c.get(k)}
+        {k: re.sub(r"\s*[·•|]\s*", ", ", str(c[k]))[:200] if k not in ("image", "url") else str(c[k])[:300]
+         for k in ("title", "subtitle", "image", "url", "reason", "tag") if isinstance(c, dict) and c.get(k)}
         for c in cards if isinstance(c, dict) and c.get("title")
     ]
     conn.tasks.show_cards(task, clean)
     await report(conn, task, "slice", f"Showed {len(clean)} picks")
     return {"shown": len(clean)}
+
+
+async def show_note(title: str, text: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Show a piece of writing in the island with a Copy button: a birthday card, a message to
+    send, a toast.
+
+    Args:
+        title: "Card for Maya".
+        text: The words, as they'd be written.
+    """
+    conn, task = for_worker(tool_context)
+    assert conn.tasks
+    conn.tasks.show_view(task, {"type": "note", "key": title, "title": title, "text": text})
+    await report(conn, task, "slice", f"Wrote {title}")
+    return {"shown": True}
 
 
 # A step slower than this is usually stuck behind the shared quota; try the next model.
@@ -144,6 +194,14 @@ async def _collect(gen: Any) -> list[LlmResponse]:
     return [response async for response in gen]
 
 
+def tool_failed(tool: Any, args: dict[str, Any], tool_context: ToolContext, error: Exception) -> dict[str, Any]:
+    """A tool that raises would end the whole task (or the talker's Live session); hand the error
+    to the model instead so it can carry on or say what didn't work."""
+    print(f"mac: tool {getattr(tool, 'name', tool)} failed: {type(error).__name__}: {error}", flush=True)
+    busy = "429" in str(error) or "Rate limit" in str(error)
+    return {"error": "Qloo is busy right now; try again in a moment." if busy else f"{type(error).__name__}: {str(error)[:300]}"}
+
+
 def _before_model(callback_context: CallbackContext, llm_request: LlmRequest) -> None:
     callback_context.state["temp:model_started"] = time.monotonic()
 
@@ -165,9 +223,11 @@ worker_agent = Agent(
     ),
     before_model_callback=_before_model,
     after_model_callback=_after_model,
+    on_tool_error_callback=tool_failed,
     instruction=_instruction,
     tools=[
-        ask_user, show_cards, *taste.TOOLS, *mac_tools.TOOLS, *accounts.TOOLS, operate_computer,
+        ask_user, show_cards, show_note, *taste.TOOLS, *plans.TOOLS, *lens.WORKER_TOOLS, *mac_tools.TOOLS,
+        *accounts.TOOLS, operate_computer, shop_for,
     ],
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel(THINKING.upper())),
@@ -195,11 +255,7 @@ def _describe_front(front: dict[str, Any]) -> str | None:
 async def run_worker(conn: Connection, task: Task, message: str) -> str:
     """Run the worker on a task until it answers; returns what to say."""
     if task.worker_session_id is None:
-        notes = conn.profile.get("people_notes") or {}
-        people = ", ".join(
-            f"{name} (loves {', '.join([p['name'] for p in likes[:4]] + notes.get(name, [])[:3])})"
-            for name, likes in (conn.profile.get("people") or {}).items()
-        )
+        people = taste.people_line(conn.profile)
         session = await _sessions.create_session(
             app_name=APP_NAME,
             user_id=conn.user_id,

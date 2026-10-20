@@ -15,7 +15,7 @@ final class IslandController {
     private var lastPhase: AgentSession.Phase = .idle
 
     /// The panel is fixed and larger than the island; the island draws at its top centre.
-    private static let panelSize = CGSize(width: 680, height: 540)
+    private static let panelSize = CGSize(width: 720, height: 680)
     /// Hover this long before the island opens, so sweeping past it does nothing.
     private static let openDelay: Duration = .milliseconds(90)
     private static let closeDelay: Duration = .milliseconds(350)
@@ -78,10 +78,13 @@ final class IslandController {
         return CGRect(x: f.midX - width / 2, y: f.maxY - size.height, width: width, height: size.height)
     }
 
-    /// The area that opens the island: the notch (a little wider), or the island while open.
+    /// The area that opens the island: the notch (a little wider), the nudge pill, or the island while open.
     private func hotRect() -> CGRect {
         if model.mode == .open {
             return islandRect(.open).insetBy(dx: -6, dy: -6)
+        }
+        if model.mode == .nudge {
+            return islandRect(.nudge)
         }
         let f = screen.frame
         let height = max(model.notch.height, 6)
@@ -125,6 +128,7 @@ final class IslandController {
                     openTask = nil
                     guard !Task.isCancelled, hotRect().contains(NSEvent.mouseLocation) else { return }
                     model.hovering = true
+                    model.agent.holdNudge()
                     updateClickThrough()
                 }
             }
@@ -137,6 +141,7 @@ final class IslandController {
                     closeTask = nil
                     guard !Task.isCancelled else { return }
                     model.hovering = false
+                    model.agent.islandClosed()
                     giveBackKeyFocus()
                     updateClickThrough()
                 }
@@ -154,6 +159,7 @@ final class IslandController {
     private func close() {
         model.draft = ""
         model.hovering = false
+        model.agent.islandClosed()
         giveBackKeyFocus()
         updateClickThrough()
     }
@@ -172,6 +178,7 @@ final class IslandController {
         withObservationTracking {
             _ = model.agent.phase
             _ = model.agent.lastError
+            _ = model.agent.presenting
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.agentChanged()
@@ -181,6 +188,8 @@ final class IslandController {
     }
 
     private func agentChanged() {
+        // A card opened (or closed) without the pointer: clicks must reach it (or pass through).
+        updateClickThrough()
         let phase = model.agent.phase
         defer { lastPhase = phase }
         let finished = phase == .idle && lastPhase != .idle && lastPhase != .listening
@@ -201,7 +210,9 @@ extension IslandController {
     /// Renders each island mode to PNGs in `dir` (no window or screen access needed).
     func renderPreviews(to dir: URL) {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        for mode in [IslandModel.Mode.open, .captioned, .compact] {
+        model.rendering = true
+        defer { model.rendering = false }
+        for mode in [IslandModel.Mode.open, .captioned, .compact, .nudge] {
             model.preview = mode
             let view = IslandView(model: model)
                 .frame(width: Self.panelSize.width, height: Self.panelSize.height)
@@ -212,6 +223,21 @@ extension IslandController {
                let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
                 try? png.write(to: dir.appendingPathComponent("island-\(mode.rawValue).png"))
             }
+        }
+        // The cards on their own, at the island's inner width.
+        let cards = VStack(spacing: 8) {
+            if let nudge = model.agent.nudge { NudgeCard(nudge: nudge, agent: model.agent) }
+            TasksArea(agent: model.agent)
+        }
+        .padding(16)
+        .frame(width: IslandModel.openWidth)
+        .background(Color.black)
+        .environment(\.colorScheme, .dark)
+        let renderer = ImageRenderer(content: cards)
+        renderer.scale = 2
+        if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+           let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+            try? png.write(to: dir.appendingPathComponent("cards.png"))
         }
         model.preview = nil
     }

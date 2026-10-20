@@ -29,7 +29,7 @@ from google.adk.sessions import InMemorySessionService, Session
 from google.genai import types
 from pydantic import BaseModel
 
-from . import accounts, qloo, taste
+from . import accounts, lens, qloo, taste
 from .agent import LIVE_LOCATION, LIVE_MODEL, build_agent, live_run_config
 from .bridge import MacBridge
 from .connection import Connection, register_talker, unregister_talker
@@ -40,6 +40,8 @@ MIC_MIME = "audio/pcm;rate=16000"
 HELLO_WAIT_S = 3.0
 
 router = APIRouter(prefix="/mac")
+# Fire-and-forget work (lens.noticed) is held here so it isn't garbage-collected mid-run.
+_background_jobs: set[asyncio.Task[None]] = set()
 _sessions = InMemorySessionService()
 _runner = Runner(app_name=APP_NAME, agent=build_agent(), session_service=_sessions)
 
@@ -242,6 +244,14 @@ async def live(ws: WebSocket) -> None:
                     conn.tasks.answer(task, str(msg.get("text") or ""))
             elif kind == "profile":
                 conn.profile = msg.get("profile") or {}
+            elif kind == "noticed":
+                # A new track or media page; now and then that's worth a "very you" nudge.
+                job = asyncio.create_task(lens.noticed(conn, msg))
+                _background_jobs.add(job)
+                job.add_done_callback(_background_jobs.discard)
+            elif kind == "run_routine" and (msg.get("goal") or "").strip():
+                # A weekly job came due on the Mac (plans.repeat_weekly).
+                conn.tasks.start(str(msg["goal"]), str(msg.get("title") or "Weekly"), quiet=True)
             elif kind == "reset":
                 # A fresh conversation: new talker session, new Live session on next input.
                 convo.close()

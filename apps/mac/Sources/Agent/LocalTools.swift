@@ -22,12 +22,23 @@ struct LocalTools {
         case "maps_search": return await MapsTool.search(query: text("query"), near: text("near"))
         case "maps_eta": return await MapsTool.eta(from: text("from"), to: text("to"), mode: text("mode"))
         case "maps_reverse_geocode": return await MapsTool.reverse(args?["points"]?.array ?? [])
+        case "maps_geocode": return await MapsTool.geocode(args?["places"]?.array.compactMap(\.string) ?? [])
         case "music_now_playing": return await AppTools.nowPlaying()
         case "music_open": return AppTools.openInMusic(text("query"))
         case "messages_send": return await AppTools.sendMessage(to: text("to"), text: text("text"))
-        case "mail_draft": return AppTools.mailDraft(to: text("to"), subject: text("subject"), body: text("body"))
+        case "messages_send_file": return await AppTools.sendFile(to: text("to"), path: text("path"), text: text("text"))
+        case "mail_draft":
+            if !text("attachment").isEmpty {
+                return await AppTools.mailDraft(to: text("to"), subject: text("subject"), body: text("body"), attachment: text("attachment"))
+            }
+            return AppTools.mailDraft(to: text("to"), subject: text("subject"), body: text("body"))
+        case "save_file": return FileTool.save(name: text("name"), base64: text("data"), open: args?["open"] == .bool(true))
         case "screenshot": return await ScreenTool.screenshot()
         case "computer": return await ComputerTool.run(args)
+        case "lens_show": return LensOverlay.shared.show(args?["badges"]?.array ?? [])
+        case "lens_clear":
+            LensOverlay.shared.clear()
+            return .success(["ok": true])
         default: return .failure(Failure(message: "This Mac doesn't know the tool \(name)."))
         }
     }
@@ -57,7 +68,7 @@ struct LocalTools {
     }
 
     /// Needs Accessibility; without it the title is left out.
-    private static func focusedWindowTitle(pid: pid_t) -> String? {
+    static func focusedWindowTitle(pid: pid_t) -> String? {
         guard AXIsProcessTrusted() else { return nil }
         let app = AXUIElementCreateApplication(pid)
         var window: CFTypeRef?

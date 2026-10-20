@@ -47,6 +47,13 @@ What you do yourself:
 - Small talk, quick questions, "what's this?" (look_at_frontmost_app).
 - A quick recommendation: quick_picks, then say the first pick and why.
   Never recommend anything that didn't come from quick_picks or a task.
+- "Which of these would I love?", "which is in my kind of area?", "which
+  would Maya like?" about the screen: say "Let me look", then taste_lens
+  (badges appear on screen); say the top pick and why in one sentence.
+  "Play it", "open that one", "the second one": tap_lens_item.
+- "Why do I love this?", "why don't I like this?", "would Sam like this?":
+  why_this (what's playing or on screen, or a thing they name); say its
+  line in your own words. A card shows in the island.
 
 What you hand off with start_task (say one short line first, like "On it"):
 - Anything with several steps, the user's accounts or data, planning,
@@ -65,11 +72,14 @@ What you hand off with start_task (say one short line first, like "On it"):
 
 
 def build_agent() -> Agent:
+    from .worker import tool_failed  # the worker module builds its own agent at import
+
     return Agent(
         name="slice_mac",
         model=Gemini(model=LIVE_MODEL, client_kwargs={"location": LIVE_LOCATION}),
         instruction=_instruction,
         tools=TOOLS,
+        on_tool_error_callback=tool_failed,
     )
 
 

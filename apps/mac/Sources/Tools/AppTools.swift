@@ -47,6 +47,44 @@ enum AppTools {
         return .success(["sent": true])
     }
 
+    /// A file (a large-print plan) by iMessage. The brain asks the user first.
+    static func sendFile(to: String, path: String, text: String) async -> Result<JSONValue, LocalTools.Failure> {
+        guard FileManager.default.fileExists(atPath: path) else { return .failure(.init(message: "There's no file at \(path).")) }
+        let message = text.isEmpty ? "" : "send \"\(OSAScript.escape(text))\" to theBuddy\n"
+        let script = """
+        tell application "Messages"
+            set theService to 1st account whose service type = iMessage
+            set theBuddy to participant "\(OSAScript.escape(to))" of theService
+            \(message)send (POSIX file "\(OSAScript.escape(path))") to theBuddy
+        end tell
+        return "sent"
+        """
+        guard await OSAScript.run(script) == "sent" else {
+            return .failure(.init(message: "Messages didn't send it. Is Slice allowed to control Messages (System Settings > Privacy > Automation)?"))
+        }
+        return .success(["sent": true])
+    }
+
+    /// A Mail compose window with a file attached; the user presses Send.
+    static func mailDraft(to: String, subject: String, body: String, attachment: String) async -> Result<JSONValue, LocalTools.Failure> {
+        guard FileManager.default.fileExists(atPath: attachment) else { return .failure(.init(message: "There's no file at \(attachment).")) }
+        let script = """
+        tell application "Mail"
+            set theMessage to make new outgoing message with properties {subject:"\(OSAScript.escape(subject))", content:"\(OSAScript.escape(body))" & return & return, visible:true}
+            tell theMessage
+                make new to recipient at end of to recipients with properties {address:"\(OSAScript.escape(to))"}
+                make new attachment with properties {file name:(POSIX file "\(OSAScript.escape(attachment))")} at after the last paragraph
+            end tell
+            activate
+        end tell
+        return "ok"
+        """
+        guard await OSAScript.run(script) == "ok" else {
+            return .failure(.init(message: "Mail didn't open the draft. Is Mail set up, and is Slice allowed to control it?"))
+        }
+        return .success(["opened": true])
+    }
+
     /// A compose window in the default mail app; the user presses Send.
     static func mailDraft(to: String, subject: String, body: String) -> Result<JSONValue, LocalTools.Failure> {
         var parts = URLComponents()
@@ -81,5 +119,24 @@ enum OSAScript {
 
     static func escape(_ text: String) -> String {
         text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+/// Files the brain makes for the user (a large-print plan), kept in Documents/Slice.
+@MainActor
+enum FileTool {
+    static func save(name: String, base64: String, open: Bool) -> Result<JSONValue, LocalTools.Failure> {
+        guard let data = Data(base64Encoded: base64) else { return .failure(.init(message: "The file didn't arrive whole.")) }
+        let safe = name.replacingOccurrences(of: "/", with: "-").trimmingCharacters(in: .whitespaces)
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("Slice", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent(safe.isEmpty ? "Slice file" : safe)
+            try data.write(to: url, options: .atomic)
+            if open { NSWorkspace.shared.open(url) }
+            return .success(["path": .string(url.path)])
+        } catch {
+            return .failure(.init(message: "Couldn't save \(safe): \(error.localizedDescription)"))
+        }
     }
 }

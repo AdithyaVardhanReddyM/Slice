@@ -25,6 +25,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if defaults.bool(forKey: "sampleTasks") {
             agent.loadSampleTasks()
         }
+        //   -sampleViews person|gifts|timeline|map|note|file|why|pill   one rich card (SampleViews)
+        if let type = defaults.string(forKey: "sampleViews") {
+            agent.loadSampleView(type)
+        }
+        //   -renderLens <screenshot.jpg> <badges.json> <out.png>         the lens badges over a picture
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-renderLens"), args.count > i + 3 {
+            LensOverlay.render(screenshot: URL(fileURLWithPath: args[i + 1]), badgesJSON: URL(fileURLWithPath: args[i + 2]),
+                               to: URL(fileURLWithPath: args[i + 3]))
+            NSApp.terminate(nil)
+        }
         if let mode = defaults.string(forKey: "islandPreview").flatMap(IslandModel.Mode.init(rawValue:)) {
             agent.loadSampleConversation()
             island?.model.preview = mode
@@ -33,6 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let dir = defaults.string(forKey: "renderIsland") {
             if agent.turns.isEmpty { agent.loadSampleConversation() }
             Task { @MainActor in
+                // Pictures and maps load first: ImageRenderer can't wait for them.
+                await self.agent.prepareForRender()
                 try? await Task.sleep(for: .milliseconds(800))
                 self.island?.renderPreviews(to: URL(fileURLWithPath: dir))
                 NSApp.terminate(nil)

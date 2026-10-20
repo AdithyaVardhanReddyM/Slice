@@ -19,6 +19,7 @@ Mac as a `task` frame for the island's card.
 from __future__ import annotations
 
 import asyncio
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -50,9 +51,15 @@ class Task:
     confirm: dict[str, str] | None = None
     say: str | None = None
     cards: list[dict[str, Any]] = field(default_factory=list)
+    # Richer cards for the island: a person, a day's timeline, a map, a note (see show_view).
+    views: list[dict[str, Any]] = field(default_factory=list)
     error: str | None = None
     worker_session_id: str | None = None
+    # Started by the Mac on a schedule (a weekly job): the island shows it, the voice stays quiet.
+    quiet: bool = False
     _reply: asyncio.Future[Any] | None = None
+    # The worker can call two asking tools at once (send it AND repeat weekly); they take turns.
+    _asking: asyncio.Lock = field(default_factory=asyncio.Lock)
     _changed: asyncio.Event = field(default_factory=asyncio.Event)
     _run: asyncio.Task[None] | None = None
     _waiters: int = 0
@@ -67,6 +74,7 @@ class Task:
             "confirm": self.confirm,
             "say": self.say,
             "cards": self.cards,
+            "views": self.views,
             "error": self.error,
         }
 
@@ -94,12 +102,12 @@ class TaskManager:
 
     # --- from the talker -------------------------------------------------
 
-    def start(self, goal: str, title: str) -> Task:
+    def start(self, goal: str, title: str, quiet: bool = False) -> Task:
         # Gemini can repeat a tool call during a long wait; reuse a running task with the same goal.
         for task in self.tasks.values():
             if task.goal == goal and task.status not in ENDED:
                 return task
-        task = Task(id=uuid.uuid4().hex[:8], title=title.strip() or goal[:60], goal=goal)
+        task = Task(id=uuid.uuid4().hex[:8], title=title.strip() or goal[:60], goal=goal, quiet=quiet)
         self.tasks[task.id] = task
         self._launch(task, goal)
         return task
@@ -157,27 +165,29 @@ class TaskManager:
     # --- from the worker's tools -------------------------------------------
 
     async def ask(self, task: Task, question: str) -> str:
-        task.question = question
-        task._reply = asyncio.get_running_loop().create_future()
-        self._set(task, NEEDS_INPUT)
-        try:
-            return str(await task._reply)
-        finally:
-            task.question, task._reply = None, None
-            if task.status == NEEDS_INPUT:
-                self._set(task, RUNNING)
+        async with task._asking:
+            task.question = question
+            task._reply = asyncio.get_running_loop().create_future()
+            self._set(task, NEEDS_INPUT)
+            try:
+                return str(await task._reply)
+            finally:
+                task.question, task._reply = None, None
+                if task.status == NEEDS_INPUT:
+                    self._set(task, RUNNING)
 
     async def confirm_action(self, task: Task, title: str, detail: str = "") -> bool:
         """Ask before acting. True only on a clear yes."""
-        task.confirm = {"title": title, "detail": detail}
-        task._reply = asyncio.get_running_loop().create_future()
-        self._set(task, NEEDS_CONFIRMATION)
-        try:
-            approved = bool(await task._reply)
-        finally:
-            task.confirm, task._reply = None, None
-            if task.status == NEEDS_CONFIRMATION:
-                self._set(task, RUNNING)
+        async with task._asking:
+            task.confirm = {"title": title, "detail": detail}
+            task._reply = asyncio.get_running_loop().create_future()
+            self._set(task, NEEDS_CONFIRMATION)
+            try:
+                approved = bool(await task._reply)
+            finally:
+                task.confirm, task._reply = None, None
+                if task.status == NEEDS_CONFIRMATION:
+                    self._set(task, RUNNING)
         self.step(task, "You said go ahead" if approved else "You said no")
         return approved
 
@@ -187,6 +197,13 @@ class TaskManager:
 
     def show_cards(self, task: Task, cards: list[dict[str, Any]]) -> None:
         task.cards = cards[:6]
+        self._emit(task)
+
+    def show_view(self, task: Task, view: dict[str, Any]) -> None:
+        """Add a rich card ({"type": "person" | "timeline" | "map" | "note", ...}); a newer one of
+        the same type and key replaces the old one."""
+        same = lambda v: v.get("type") == view.get("type") and v.get("key") == view.get("key")  # noqa: E731
+        task.views = [v for v in task.views if not same(v)][-5:] + [view]
         self._emit(task)
 
     # --- internals ----------------------------------------------------------
@@ -199,7 +216,8 @@ class TaskManager:
 
     async def _run(self, task: Task, run_worker: Any, message: str) -> None:
         try:
-            task.say = await run_worker(self.conn, task, message)
+            # Spoken and shown as plain text: no markdown emphasis.
+            task.say = re.sub(r"[*_`#]+", "", await run_worker(self.conn, task, message))
             self._set(task, DONE)
         except asyncio.CancelledError:
             if task.status not in ENDED:
@@ -216,7 +234,7 @@ class TaskManager:
         self._emit(task)
         # Nobody is waiting on this stop: tell the talker in words.
         stopped = status in PAUSED or (status in ENDED and was != status)
-        if stopped and task._waiters == 0 and self.conn.notify_talker and status != CANCELLED:
+        if stopped and task._waiters == 0 and self.conn.notify_talker and status != CANCELLED and not task.quiet:
             self.conn.notify_talker(_note(task))
 
     def _emit(self, task: Task) -> None:

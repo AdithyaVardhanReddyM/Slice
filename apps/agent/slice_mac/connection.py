@@ -27,6 +27,11 @@ class Connection:
     tasks: "TaskManager | None" = None
     # Speaks to the user through the talker when no talker tool call is waiting.
     notify_talker: Callable[[str], None] | None = None
+    # The taste lens's last ranking of the screen, for "open that one" (lens.py).
+    lens: list[dict[str, Any]] = field(default_factory=list)
+    # The "very you" nudge: when it last went out, and what was already looked at.
+    last_nudge: float = float("-inf")
+    noticed: set[str] = field(default_factory=set)
 
     @property
     def city(self) -> str | None:

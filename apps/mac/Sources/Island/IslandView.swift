@@ -28,7 +28,7 @@ struct IslandView: View {
         switch mode {
         case .closed: 10
         case .compact: 12
-        case .captioned: 20
+        case .captioned, .nudge: 20
         case .open: 26
         }
     }
@@ -47,10 +47,40 @@ struct IslandView: View {
                 Caption(text: model.captionText ?? "", isError: model.agent.lastError != nil)
             }
             .transition(.opacity)
+        case .nudge:
+            VStack(spacing: 0) {
+                Ears(model: model)
+                if let nudge = model.agent.nudge { NudgePill(nudge: nudge) }
+            }
+            .transition(.opacity)
         case .open:
             OpenIsland(model: model)
                 .transition(.opacity)
         }
+    }
+}
+
+/// One line under the notch for something Slice brings up by itself; hover to open it.
+private struct NudgePill: View {
+    let nudge: Nudge
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: nudge.kind == "birthday" ? "gift.fill" : "touchid")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Brand.yellow)
+            Text(nudge.kind == "why" ? "\(nudge.title): \(nudge.line)" : nudge.title)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white.opacity(0.92))
+                .lineLimit(2)
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white.opacity(0.4))
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 6)
+        .padding(.bottom, 12)
     }
 }
 
@@ -140,9 +170,25 @@ private struct OpenIsland: View {
     var body: some View {
         VStack(spacing: 10) {
             header
-            TasksArea(agent: model.agent)
-            Conversation(agent: model.agent)
-                .frame(maxHeight: .infinity)
+            if model.hasCards {
+                // Cards scroll on their own so the conversation always keeps a few lines.
+                let cards = VStack(spacing: 8) {
+                    if let nudge = model.agent.nudge { NudgeCard(nudge: nudge, agent: model.agent) }
+                    TasksArea(agent: model.agent)
+                }
+                if model.rendering {
+                    cards.frame(maxHeight: 420, alignment: .top)
+                } else {
+                    ScrollView { cards }
+                        .scrollIndicators(.never)
+                        .frame(maxHeight: 420)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else {
+                TasksArea(agent: model.agent)
+            }
+            Conversation(agent: model.agent, plain: model.rendering)
+                .frame(minHeight: 50, maxHeight: .infinity)
             input
         }
         .padding(.horizontal, 16)
@@ -193,8 +239,23 @@ private struct OpenIsland: View {
 
 private struct Conversation: View {
     let agent: AgentSession
+    var plain = false
 
     var body: some View {
+        if plain {
+            turns.frame(maxHeight: .infinity, alignment: .bottom)
+        } else {
+            scrolling
+        }
+    }
+
+    private var turns: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(agent.turns) { TurnRow(turn: $0) }
+        }
+    }
+
+    private var scrolling: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {

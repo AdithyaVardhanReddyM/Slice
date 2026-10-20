@@ -53,7 +53,7 @@ enum MapsTool {
     /// Neighbourhood names for map points (Qloo heatmap cells).
     static func reverse(_ points: [JSONValue]) async -> Result<JSONValue, LocalTools.Failure> {
         var names: [JSONValue] = []
-        for point in points.prefix(8) {
+        for point in points.prefix(16) {
             guard case .number(let lat)? = point["lat"], case .number(let lon)? = point["lon"] else {
                 names.append(.null)
                 continue
@@ -63,6 +63,28 @@ enum MapsTool {
             names.append(name.isEmpty ? .null : .string(name))
         }
         return .success(["places": .array(names)])
+    }
+
+    /// Addresses or neighbourhoods to points, in order (null for a miss), for scoring listings.
+    static func geocode(_ places: [String]) async -> Result<JSONValue, LocalTools.Failure> {
+        var points: [JSONValue] = []
+        for place in places.prefix(30) {
+            var at = await geocode(place)
+            if at == nil { at = await firstResult(place) }
+            if let at {
+                points.append(["lat": .number(at.latitude), "lon": .number(at.longitude)])
+            } else {
+                points.append(.null)
+            }
+        }
+        return .success(["points": .array(points)])
+    }
+
+    /// Venues ("Brooklyn Steel") that the address geocoder doesn't know.
+    private static func firstResult(_ query: String) async -> CLLocationCoordinate2D? {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = query
+        return try? await MKLocalSearch(request: request).start().mapItems.first?.placemark.coordinate
     }
 
     private static func geocode(_ place: String) async -> CLLocationCoordinate2D? {

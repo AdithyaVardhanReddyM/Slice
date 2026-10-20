@@ -7,12 +7,15 @@ import Observation
 /// - compact: the notch with ears (the Slice mark, and a live status), while listening.
 /// - captioned: compact plus a line of what the agent is doing or saying, or what a
 ///   background task is up to.
-/// - open: the full panel (tasks, conversation, a text field) while hovered, and
-///   whenever a task needs an answer or a yes (its buttons must be clickable).
+/// - nudge: compact plus a pill line when Slice brings something up by itself ("very
+///   you", a birthday); hovering it opens the island on the full card.
+/// - open: the full panel (tasks, conversation, a text field) while hovered, whenever
+///   a task needs an answer or a yes (its buttons must be clickable), and while
+///   showing a card the user asked for (a why card).
 @MainActor
 @Observable
 final class IslandModel {
-    enum Mode: String, Equatable { case closed, compact, captioned, open }
+    enum Mode: String, Equatable { case closed, compact, captioned, nudge, open }
 
     static let shoulder: CGFloat = 6
     static let ear: CGFloat = 36
@@ -20,6 +23,8 @@ final class IslandModel {
     static let openWidth: CGFloat = 500
     static let openHeight: CGFloat = 340
     static let openHeightWithTasks: CGFloat = 470
+    /// Room for a rich card (a day's timeline, a map, a why card) above the conversation.
+    static let openHeightWithCards: CGFloat = 620
 
     let agent: AgentSession
     var notch = CGSize(width: 185, height: 32)
@@ -30,6 +35,8 @@ final class IslandModel {
     var lingering = false
     /// Debug builds: pins a mode for screenshots (`-islandPreview open`).
     var preview: Mode?
+    /// Drawing for -renderIsland: ImageRenderer leaves ScrollViews blank, so lay out plainly.
+    var rendering = false
 
     init(agent: AgentSession) {
         self.agent = agent
@@ -37,7 +44,8 @@ final class IslandModel {
 
     var mode: Mode {
         if let preview { return preview }
-        if hovering || !draft.isEmpty || agent.taskNeedingYou != nil { return .open }
+        if hovering || !draft.isEmpty || agent.taskNeedingYou != nil || agent.presenting { return .open }
+        if agent.nudge != nil, agent.phase == .idle { return .nudge }
         switch agent.phase {
         case .listening: return .compact
         case .thinking: return agent.activities.isEmpty ? .compact : .captioned
@@ -68,10 +76,15 @@ final class IslandModel {
         switch mode {
         case .closed: return CGSize(width: notch.width, height: hasNotch ? notch.height : 0)
         case .compact: return CGSize(width: withEars, height: barHeight)
-        case .captioned: return CGSize(width: max(withEars, Self.captionWidth), height: barHeight + 56)
+        case .captioned, .nudge: return CGSize(width: max(withEars, Self.captionWidth), height: barHeight + 56)
         case .open:
-            let height = agent.tasks.isEmpty ? Self.openHeight : Self.openHeightWithTasks
+            let height = hasCards ? Self.openHeightWithCards : agent.tasks.isEmpty ? Self.openHeight : Self.openHeightWithTasks
             return CGSize(width: max(withEars + 80, Self.openWidth), height: height)
         }
+    }
+
+    /// A nudge or a task with a rich card or picks is on show, so the open island grows.
+    var hasCards: Bool {
+        agent.nudge != nil || agent.tasks.prefix(2).contains { !$0.views.isEmpty || !$0.cards.isEmpty }
     }
 }
