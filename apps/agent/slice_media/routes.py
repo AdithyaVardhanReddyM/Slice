@@ -266,6 +266,9 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
     author = I.AGENT_NAME if item else B.root_agent.name
 
     session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=sid)
+    # Answering the questions it asked about a new poster or video ad: the design starts now.
+    asked = _last_call(session) if kind == "prompt" else None
+    answering = asked is not None and asked[0] == "ask_questions"
     attached_urls = [a.url for a in req.attachments]
     if session is None:
         state[B.MEDIA] = attached_urls
@@ -291,6 +294,14 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
     call_args: dict[str, Any] = {}
     question: dict[str, Any] | None = None
     writes = 0
+    # Canvas spots held for creatives being designed this turn (builder.open_spot).
+    held: list[str] = []
+
+    async def hold(shape: dict[str, Any] | None) -> None:
+        if shape and not B.spot_open(cid, held):
+            job = await B.open_spot(state, shape)
+            if job:
+                held.append(job)
 
     def at() -> int:
         return int((time.perf_counter() - t_start) * 1000)
@@ -338,7 +349,10 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
             await _replay(fresh, req.history, author)
             delta = {}
 
+    many = kind == "generate" or state[B.OPTIONS].get("output") == "campaign"
     try:
+        if answering:
+            await hold(B.design_shape(state, video=_asks_video(asked[1] if asked else None)))
         async for ev in events():
             if ev is None:
                 yield _ndjson({"type": "status", "text": "The model was slow to answer, carrying on"})
@@ -360,6 +374,10 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                     call_args[name] = part.function_call.args
                     if name in ("ask_merchant", "ask_questions"):
                         continue
+                    # Picture work for a new poster or video ad: hold its spot on the canvas. Once
+                    # a turn (a full set: whenever none is open), and not while changing a selected creative.
+                    if name in DESIGN_STEPS and question is None and (many or not held) and not any(n.get("kind") == "creative" for n in state[B.NODES]):
+                        await hold(B.design_shape(state, format=str((part.function_call.args or {}).get("format") or "")))
                     label = _label(name, part.function_call.args)
                     yield _ndjson({"type": "status", "text": label})
                     push({"kind": "tool", "name": name, "label": label, "status": "running"})
@@ -426,6 +444,10 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         yield _ndjson({"type": "error", "message": f"The model stopped responding for {STALL_S // 60} minutes, so this turn was stopped. Everything it made is on the canvas; ask again to carry on."})
     except Exception as err:
         yield _ndjson({"type": "error", "message": _error(err)})
+    finally:
+        # Spots no creative took leave the canvas, also when the merchant stopped the turn.
+        if held:
+            asyncio.create_task(B.release_spots(cid, held))
 
     while emitted < len(spans):
         yield _ndjson({"type": "span", "span": spans[emitted]})
@@ -444,6 +466,25 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
             st["ms"] = max(0, total_ms - st.get("t", total_ms))
     yield _ndjson({"type": "done", "messageId": message_id, "text": full_text, "trace": spans, "steps": steps, "totalMs": total_ms, "docVersion": writes})
     asyncio.create_task(_persist(req, message_id, message, full_text, spans, steps))
+
+
+# Tools that mean a new poster or video ad is under way (its concept and pictures come before it is written).
+DESIGN_STEPS = ("save_concepts", "search_images", "generate_image")
+
+
+def _last_call(session: Any) -> tuple[str, dict[str, Any]] | None:
+    """The last tool the agent called in this conversation, with its arguments."""
+    for ev in reversed(getattr(session, "events", None) or []):
+        for part in reversed((ev.content.parts or []) if ev.content else []):
+            if part.function_call and part.function_call.name:
+                return part.function_call.name, dict(part.function_call.args or {})
+    return None
+
+
+def _asks_video(args: dict[str, Any] | None) -> bool:
+    """Its questions were about a video ad (music, voiceover, length, people on camera)."""
+    text = json.dumps(args or {}).lower()
+    return any(w in text for w in ("music", "voiceover", "voice", "seconds", "on camera"))
 
 
 def _options(raw: dict[str, Any]) -> dict[str, Any]:

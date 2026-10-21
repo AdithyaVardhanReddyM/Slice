@@ -10,6 +10,7 @@ import QRCode from "qrcode";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { clipLength, docDuration, fontStack, fontsHrefs, layerVisibleAt, timeline, type AudioClip, type Clip, type ImageLayer, type KenBurns, type Layer, type LogoLayer, type MediaDoc, type MediaKit, type QrLayer, type TextLayer } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
+import { GenField, seedOf } from "./gen-field";
 
 /* Fonts and fitting ------------------------------------------------------------ */
 
@@ -317,9 +318,9 @@ function AudioTrack({ a, t, playing }: { a: AudioClip; t: number; playing: boole
 
 function PendingShot({ clip, label }: { clip: Clip; label: boolean }) {
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      {clip.poster && <Picture src={clip.poster} focal={clip.focal} style={{ filter: "blur(18px) saturate(0.8)", transform: "scale(1.1)", opacity: 0.7 }} />}
-      <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/10 via-white/0 to-white/15" />
+    <div className="absolute inset-0 overflow-hidden bg-[#17130f]">
+      {clip.poster && <Picture src={clip.poster} focal={clip.focal} style={{ filter: "blur(18px) saturate(0.8) brightness(0.6)", transform: "scale(1.1)", opacity: 0.8 }} />}
+      {clip.status !== "failed" && <GenField tone="dark" seed={seedOf(clip.id)} level={0.8} />}
       {label && (
         <div className="absolute inset-x-0 bottom-[8%] flex justify-center">
           <span className="rounded-full bg-black/55 px-[2.4%] py-[1%] text-[clamp(10px,2.6cqw,48px)] font-medium text-white">{clip.status === "failed" ? "Shot failed" : "Generating shot"}</span>

@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { cleanMessage } from "./emailCampaigns";
-import { AUDIO_NODE, BOARD_GAP, DEFAULT_KIT, aspectSize, boardWidth, cleanDoc, creativeName, FORMATS, isFormat, isTier, resizeDoc, safeUrl, type BoardPos, type FormatPreset, type MediaDoc, type MediaKit } from "./mediaTypes";
+import { AUDIO_NODE, BOARD_GAP, DEFAULT_KIT, aspectSize, boardWidth, cleanDoc, creativeName, FORMATS, isDesignJob, isFormat, isTier, resizeDoc, safeUrl, type BoardPos, type FormatPreset, type MediaDoc, type MediaKit } from "./mediaTypes";
 
 // Media campaigns: one infinite canvas per campaign holding the posters and
 // videos (creatives), the generated images, clips and tracks (assets) and the
@@ -259,6 +259,14 @@ export async function placeOnBoard(ctx: QueryCtx, campaignId: Id<"mediaCampaigns
     if (r) near = r;
   }
   return { ...freeSpot(rects, { w, h }, near), w };
+}
+
+/** The spot a design placeholder held, for the creative replacing it: its corner, unless the creative came out a size that no longer fits there. */
+async function heldSpot(ctx: QueryCtx, campaignId: Id<"mediaCampaigns">, held: BoardPos, doc: { w: number; h: number }): Promise<BoardPos | undefined> {
+  const w = boardWidth(doc.w, doc.h);
+  const box = { x: held.x, y: held.y, w, h: (w * doc.h) / doc.w };
+  const rects = await boardRects(ctx, campaignId);
+  return rects.some((r) => overlaps(box, r)) ? undefined : { x: held.x, y: held.y, w };
 }
 
 const DEFAULT_BUDGET = 10;
@@ -675,6 +683,8 @@ export const writeCreative = internalMutation({
     note: v.optional(v.string()),
     /** A creative, asset or job the new one is placed next to. */
     nearId: v.optional(v.string()),
+    /** The design placeholder holding this creative's spot: it takes the spot and the placeholder ends. */
+    designJobId: v.optional(v.id("mediaJobs")),
   },
   returns: v.object({ id: v.id("mediaCreatives"), version: v.number() }),
   handler: async (ctx, a) => {
@@ -690,7 +700,14 @@ export const writeCreative = internalMutation({
       return { id: creative._id, version };
     }
     const doc = cleanDoc(a.doc);
-    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why, nearId: a.nearId }, "agent");
+    // Ending the placeholder first frees its spot, so the creative lands where it was, in the same instant.
+    const slot = a.designJobId ? await ctx.db.get(a.designJobId) : null;
+    let board: BoardPos | undefined;
+    if (slot && slot.campaignId === a.campaignId && isDesignJob(slot.kind) && slot.status !== "done") {
+      await ctx.db.patch(slot._id, { status: "done", updatedAt: Date.now() });
+      if (slot.board) board = await heldSpot(ctx, a.campaignId, slot.board, doc);
+    }
+    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why, board, nearId: a.nearId }, "agent");
     return { id, version: 1 };
   },
 });
@@ -763,6 +780,11 @@ export const interruptJobs = internalMutation({
       ...(await ctx.db.query("mediaJobs").withIndex("by_status", (q) => q.eq("status", "queued")).take(200)),
     ];
     for (const job of open) {
+      // A design placeholder just goes: there is nothing to regenerate.
+      if (isDesignJob(job.kind)) {
+        await ctx.db.delete(job._id);
+        continue;
+      }
       await ctx.db.patch(job._id, { status: "failed", error, cost: 0, updatedAt: Date.now() });
       const creative = job.creativeId && job.targetId ? await ctx.db.get(job.creativeId) : null;
       if (creative && job.targetId && (await patchClip(ctx, creative, job.targetId, { status: "failed", error }))) await shareClip(ctx, creative, job.targetId, { status: "failed", error });
@@ -821,6 +843,8 @@ export const upsertJob = internalMutation({
     place: v.optional(v.boolean()),
     aspect: v.optional(v.string()),
     nearId: v.optional(v.string()),
+    /** Delete it: a design placeholder whose turn ended without a creative. */
+    drop: v.optional(v.boolean()),
   },
   returns: v.object({ id: v.id("mediaJobs") }),
   handler: async (ctx, a) => {
@@ -851,6 +875,10 @@ export const upsertJob = internalMutation({
     }
     const job = await ctx.db.get(a.jobId);
     if (!job || job.campaignId !== a.campaignId) throw new Error("Unknown job");
+    if (a.drop) {
+      if (isDesignJob(job.kind) && job.status !== "done") await ctx.db.delete(job._id);
+      return { id: job._id };
+    }
     const finishing = status === "done" && job.status !== "done";
     await ctx.db.patch(job._id, {
       ...(status ? { status } : {}),

@@ -1,7 +1,8 @@
 // The canvas's nodes, built from the campaign's live data: every creative
 // (poster or video), every file placed on the board (image, clip, track) and
-// every standalone generation still running or failed (a placeholder holding
-// its spot). Positions are board units; a node's height follows its content.
+// every standalone generation still running or failed, or poster or video ad
+// being designed (a placeholder holding its spot). Positions are board units;
+// a node's height follows its content.
 
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
 import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, creativeName, docDuration, modelLabel, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
@@ -46,7 +47,7 @@ export function nameFromPrompt(prompt: string | undefined, fallback: string) {
 
 const seconds = (s: number | undefined) => (s ? `${Math.round(s)}s` : "");
 
-const JOB_NOUN: Record<string, string> = { image: "Image", video: "Clip", edit: "Clip edit", music: "Music", voice: "Voiceover" };
+const JOB_NOUN: Record<string, string> = { image: "Image", video: "Clip", edit: "Clip edit", music: "Music", voice: "Voiceover", design: "Poster", "design-video": "Video ad" };
 
 export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: Doc<"mediaAssets">[]; jobs: Doc<"mediaJobs">[] }): BoardNode[] {
   const out: BoardNode[] = [];

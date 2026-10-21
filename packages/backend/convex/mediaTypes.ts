@@ -213,6 +213,9 @@ export function boardWidth(w: number, h: number): number {
 }
 
 export const AUDIO_NODE = { w: 360, h: 128 };
+
+/** A spot held on the canvas while the agent designs a poster ("design") or a video ad ("design-video"); the creative takes it when written. */
+export const isDesignJob = (kind: string) => kind === "design" || kind === "design-video";
 export const BOARD_GAP = 72;
 
 export const aspectSize = (aspect: string | undefined): { w: number; h: number } => {

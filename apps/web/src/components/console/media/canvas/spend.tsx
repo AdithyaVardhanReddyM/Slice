@@ -10,7 +10,7 @@ import { useMutation } from "convex/react";
 import { Check, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
-import { modelLabel } from "@slice/backend/convex/mediaTypes";
+import { isDesignJob, modelLabel } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usd } from "../prompt/options";
@@ -36,7 +36,9 @@ const ago = (at: number) => {
 };
 
 export function SpendPill() {
-  const { campaign, campaignId, jobs } = useCanvas();
+  const { campaign, campaignId, jobs: all } = useCanvas();
+  // Design placeholders cost nothing; they only hold a spot on the canvas.
+  const jobs = all.filter((j) => !isDesignJob(j.kind));
   const update = useMutation(api.media.update);
   const [cap, setCap] = useState<string | null>(null);
   const running = jobs.filter((j) => j.status === "queued" || j.status === "running");

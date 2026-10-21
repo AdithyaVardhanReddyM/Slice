@@ -19,6 +19,7 @@ import { useCanvas } from "../canvas/context";
 import { keyOf, type BoardNode } from "../canvas/model";
 import { CheckBadge } from "../canvas/nodes";
 import { WhyButton } from "../canvas/why";
+import { GenField, jobSeconds, seedOf } from "../gen-field";
 import { usd, usePromptPicks } from "../prompt/options";
 import { usePlayback } from "../stage";
 import { FocusContext, useStudio, type FocusEnv, type Selection } from "./context";
@@ -308,7 +309,7 @@ function useVersions(a: Doc<"mediaAssets">) {
 }
 
 function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void }) {
-  const { download, remove } = useCanvas();
+  const { download, remove, jobs } = useCanvas();
   const opened = node.asset!;
   const { root, family, coming } = useVersions(opened);
   const [viewId, setViewId] = useState<string>(opened._id);
@@ -407,8 +408,8 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
                     </button>
                   </span>
                 ) : (
-                  <span key={j._id} title={j.prompt ?? "On its way"} className="flex h-14 shrink-0 items-center justify-center rounded-md bg-neutral-100 ring-1 ring-black/[0.06]" style={{ aspectRatio: j.aspect ? j.aspect.replace(":", " / ") : "1 / 1" }}>
-                    <Loader2 className="size-4 animate-spin text-neutral-400" />
+                  <span key={j._id} title={j.prompt ?? "On its way"} className="relative h-14 shrink-0 overflow-hidden rounded-md bg-[#fffbf3] ring-1 ring-black/[0.06]" style={{ aspectRatio: j.aspect ? j.aspect.replace(":", " / ") : "1 / 1" }}>
+                    <GenField seed={seedOf(j._id)} startedAt={j.createdAt} expected={jobSeconds(j, jobs)} />
                   </span>
                 ),
               )}

@@ -3,15 +3,18 @@
 // What each node on the canvas shows: a poster or video drawn by the shared
 // Stage (so it looks as it exports), a generated image with its brand check,
 // a clip that plays on hover, a music track with its waveform, and the
-// placeholder a generation holds while it runs. Badges are counter-scaled so
-// they read the same at any zoom.
+// placeholder a generation holds while it runs (gen-field.tsx), which the new
+// file grows out of when it lands. Badges are counter-scaled so they read the
+// same at any zoom.
 
 import { AlertTriangle, Film, Loader2, Music, Pause, Play, ShieldAlert, ShieldCheck, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { docDuration, type MediaDoc, type MediaKit } from "@slice/backend/convex/mediaTypes";
+import { useEffect, useRef, useState, type AnimationEvent, type ReactNode } from "react";
+import { docDuration, isDesignJob, type MediaDoc, type MediaKit } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { FixedStage, usePlayback } from "../stage";
 import { bars, useWaveform } from "../focus/waveform";
+import { GenField, designPhase, jobSeconds, phaseAt, progressAt, revealStyle, seedAt, type FieldTone } from "../gen-field";
+import { useCanvas } from "./context";
 import type { BoardNode } from "./model";
 
 const FRAME = "size-full overflow-hidden rounded-[4px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_32px_-14px_rgba(0,0,0,0.28)]";
@@ -82,9 +85,13 @@ function Running({ node, zoom }: { node: BoardNode; zoom: number }) {
 
 function PosterNode({ node, kit, zoom }: NodeViewProps) {
   const doc = node.creative!.doc as MediaDoc;
+  const reveal = useReveal(node, zoom);
   return (
-    <div className={FRAME}>
-      <FixedStage doc={doc} kit={kit} width={node.w} stillOnly settled showPending={false} />
+    <div className={cn(FRAME, "relative", reveal.on && "bg-[#fffbf3]")}>
+      {reveal.field}
+      <div {...reveal.media}>
+        <FixedStage doc={doc} kit={kit} width={node.w} stillOnly settled showPending={false} />
+      </div>
       <Running node={node} zoom={zoom} />
     </div>
   );
@@ -93,9 +100,13 @@ function PosterNode({ node, kit, zoom }: NodeViewProps) {
 function VideoNode({ node, kit, zoom, hovered, playing, onPlay }: NodeViewProps) {
   const doc = node.creative!.doc as MediaDoc;
   const big = node.w * zoom > 140;
+  const reveal = useReveal(node, zoom, "dark");
   return (
-    <div className={cn(FRAME, "bg-neutral-900")}>
-      {playing ? <PlayingStage doc={doc} kit={kit} width={node.w} onEnd={() => onPlay(false)} /> : <FixedStage doc={doc} kit={kit} width={node.w} stillOnly frameAt={coverTime(doc)} showPending={false} />}
+    <div className={cn(FRAME, "relative", reveal.on ? "bg-[#17130f]" : "bg-neutral-900")}>
+      {reveal.field}
+      <div {...reveal.media}>
+        {playing ? <PlayingStage doc={doc} kit={kit} width={node.w} onEnd={() => onPlay(false)} /> : <FixedStage doc={doc} kit={kit} width={node.w} stillOnly frameAt={coverTime(doc)} showPending={false} />}
+      </div>
       {big && (
         <Pin zoom={zoom} at="bl">
           <span className={chip}>
@@ -164,13 +175,38 @@ export function CheckBadge({ review, compact }: { review: unknown; compact?: boo
   );
 }
 
+/**
+ * A generated file or a new creative that has only just landed grows out of
+ * the dots its placeholder showed (a file once it has loaded); the field (same
+ * seed, same spot) carries on underneath until it has.
+ */
+function useReveal(node: BoardNode, zoom: number, tone: FieldTone = "light") {
+  const made = node.asset ? (node.asset.source === "generated" ? node.asset.createdAt : 0) : (node.creative?.createdAt ?? 0);
+  const [stage, setStage] = useState<"off" | "load" | "run">(() => (Date.now() - made < 20_000 ? (node.asset ? "load" : "run") : "off"));
+  const on = stage !== "off";
+  return {
+    on,
+    field: on ? <GenField tone={tone} seed={seedAt(node.x, node.y)} level={1} /> : null,
+    media: {
+      className: cn("relative", stage === "load" && "opacity-0", stage === "run" && "media-reveal"),
+      style: on ? revealStyle(node.w, node.h, zoom) : undefined,
+      // Only its own animation: a poster's layers may run theirs.
+      onAnimationEnd: (e: AnimationEvent<HTMLElement>) => e.target === e.currentTarget && setStage("off"),
+      onError: () => setStage("off"),
+    },
+    loaded: () => setStage((s) => (s === "load" ? "run" : s)),
+  };
+}
+
 function ImageNode({ node, zoom }: NodeViewProps) {
   const a = node.asset!;
+  const reveal = useReveal(node, zoom);
   return (
-    <div className={cn(FRAME, "bg-neutral-100")}>
+    <div className={cn(FRAME, "relative", reveal.on ? "bg-[#fffbf3]" : "bg-neutral-100")}>
+      {reveal.field}
       {/* Generated and uploaded files live on Convex storage and brand hosts. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={a.url} alt="" draggable={false} loading="lazy" decoding="async" className="size-full object-cover" />
+      <img src={a.url} alt="" draggable={false} loading="lazy" decoding="async" {...reveal.media} onLoad={reveal.loaded} className={cn("size-full object-cover", reveal.media.className)} />
       {node.w * zoom > 130 && a.review ? (
         <Pin zoom={zoom} at="tl">
           <CheckBadge review={a.review} />
@@ -193,9 +229,11 @@ function ClipNode({ node, zoom, hovered }: NodeViewProps) {
     else el.pause();
   }, [hovered]);
   const big = node.w * zoom > 130;
+  const reveal = useReveal(node, zoom);
   return (
-    <div className={cn(FRAME, "bg-neutral-900")}>
-      <video ref={ref} src={a.url} muted={!sound} loop playsInline preload="metadata" className="size-full object-cover" />
+    <div className={cn(FRAME, "relative", reveal.on ? "bg-[#fffbf3]" : "bg-neutral-900")}>
+      {reveal.field}
+      <video ref={ref} src={a.url} muted={!sound} loop playsInline preload={reveal.on ? "auto" : "metadata"} {...reveal.media} onLoadedData={reveal.loaded} className={cn("size-full object-cover", reveal.media.className)} />
       {big && (
         <Pin zoom={zoom} at="bl">
           <span className={chip}>
@@ -255,23 +293,48 @@ function AudioNode({ node }: NodeViewProps) {
   );
 }
 
-const PENDING_NOUN: Record<string, string> = { image: "Generating image", video: "Shooting clip", edit: "Editing clip", music: "Composing music", voice: "Recording voice" };
+const PENDING_NOUN: Record<string, string> = { image: "Generating image", video: "Shooting clip", edit: "Editing clip", extend: "Extending clip", music: "Composing music", voice: "Recording voice", design: "Designing", "design-video": "Planning the video ad" };
+
+const pill = "block rounded-full bg-white/85 px-2.5 py-1 text-[11px] leading-4 font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] backdrop-blur-md";
 
 function PendingNode({ node, zoom }: NodeViewProps) {
+  const { jobs, agent } = useCanvas();
   const j = node.job!;
   const failed = j.status === "failed";
   const now = useNow(!failed);
-  const secs = Math.max(0, Math.round((now - j.createdAt) / 1000));
+  if (failed)
+    return (
+      <div className={cn(FRAME, "relative bg-red-50 ring-1 ring-red-200")}>
+        <Pin zoom={zoom} at="c">
+          <div className="flex w-56 flex-col items-center gap-1.5 text-center">
+            <AlertTriangle className="size-5 text-red-600" />
+            <p className="text-sm font-medium text-red-700">Generation failed</p>
+            <p className="line-clamp-3 text-xs text-red-700/80">{j.error || "The model returned nothing."}</p>
+          </div>
+        </Pin>
+      </div>
+    );
+  const expected = jobSeconds(j, jobs);
+  // A design says what the agent is really doing, while this window runs its turn.
+  const design = isDesignJob(j.kind);
+  const phase = (design && agent.busy && agent.live && designPhase(agent.live.steps)) || phaseAt(j, expected, now);
+  const dark = j.kind === "design-video";
+  const big = node.w * zoom > 150;
   return (
-    <div className={cn(FRAME, "relative", failed ? "bg-red-50 ring-1 ring-red-200" : "bg-neutral-100")}>
-      {!failed && <div className="media-sheen absolute inset-0" />}
-      <Pin zoom={zoom} at="c">
-        <div className="flex w-56 flex-col items-center gap-1.5 text-center">
-          {failed ? <AlertTriangle className="size-5 text-red-600" /> : <Loader2 className="size-5 animate-spin text-neutral-500" />}
-          <p className={cn("text-sm font-medium", failed ? "text-red-700" : "text-neutral-800")}>{failed ? "Generation failed" : (PENDING_NOUN[j.kind] ?? "Generating")}</p>
-          <p className={cn("line-clamp-3 text-xs", failed ? "text-red-700/80" : "text-neutral-500")}>{failed ? j.error || "The model returned nothing." : `${node.meta}, ${secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${secs % 60}s`} so far`}</p>
-        </div>
-      </Pin>
+    <div className={cn(FRAME, "relative", dark ? "bg-[#17130f]" : "bg-[#fffbf3]")} title={[PENDING_NOUN[j.kind] ?? "Generating", node.meta].filter(Boolean).join(" with ")}>
+      <GenField tone={dark ? "dark" : "light"} seed={seedAt(node.x, node.y)} startedAt={j.createdAt} expected={expected} />
+      {big && (
+        <>
+          <Pin zoom={zoom} at="bl">
+            <span key={phase} className={cn(pill, "duration-500 animate-in fade-in-0 slide-in-from-bottom-1")}>
+              <span className="pg-shimmer">{phase}</span>
+            </span>
+          </Pin>
+          <Pin zoom={zoom} at="br">
+            <span className={cn(pill, "tabular-nums")}>{Math.round(progressAt(j.createdAt, expected, now) * 100)}%</span>
+          </Pin>
+        </>
+      )}
     </div>
   );
 }

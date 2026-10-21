@@ -191,22 +191,39 @@
     background: none;
   }
 }
-/* Media canvas: a light passing over a generation while it runs. */
-.media-sheen {
-  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.6) 50%, transparent 70%);
-  background-size: 220% 100%;
-  animation: media-sheen 1.9s ease-in-out infinite;
+/* Media canvas: a generated file grows out of its placeholder's dots. The dots
+   (on the field's grid, from --dot, --dot-x and --dot-y) swell until they
+   merge while a solid core opens from the middle, a step behind them. */
+@property --media-reveal {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
 }
-@keyframes media-sheen {
+.media-reveal {
+  mask-image:
+    radial-gradient(circle at 50% 50%, #000 calc(var(--media-reveal) * 160% - 60%), transparent calc(var(--media-reveal) * 160% - 20%)),
+    radial-gradient(circle at center, #000 calc(var(--media-reveal) * var(--dot, 10px) * 0.74), transparent calc(var(--media-reveal) * var(--dot, 10px) * 0.74 + 0.75px));
+  mask-size:
+    100% 100%,
+    var(--dot, 10px) var(--dot, 10px);
+  mask-position:
+    0 0,
+    var(--dot-x, 0) var(--dot-y, 0);
+  mask-repeat: no-repeat, repeat;
+  animation: media-reveal 1.6s cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+@keyframes media-reveal {
   from {
-    background-position: 160% 0;
+    --media-reveal: 0;
+    filter: saturate(1.25) brightness(1.06);
   }
   to {
-    background-position: -60% 0;
+    --media-reveal: 1;
+    filter: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .media-sheen {
-    animation: none;
+  .media-reveal {
+    animation-duration: 1ms;
   }
 }
