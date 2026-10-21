@@ -82,14 +82,15 @@ export const get = query({
     const identity = await ctx.auth.getUserIdentity();
     const campaign = await ctx.db.get(id);
     if (!campaign || identity?.subject !== campaign.owner) return null;
-    const [creatives, assets, jobs, chat, brand] = await Promise.all([
+    const [creatives, assets, jobs, shapes, chat, brand] = await Promise.all([
       ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect(),
       ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").collect(),
       ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).order("desc").take(400),
+      ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect(),
       ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique(),
       campaign.brandId ? ctx.db.get(campaign.brandId) : null,
     ]);
-    return { campaign, brand, creatives, assets, jobs, messages: chat?.messages ?? [] };
+    return { campaign, brand, creatives, assets, jobs, shapes, messages: chat?.messages ?? [] };
   },
 });
 
@@ -230,13 +231,17 @@ const jobHeight = (j: { kind: string; aspect?: string }, w: number) => {
 
 const jobRect = (j: Doc<"mediaJobs">): Rect | null => (j.board && j.status !== "done" && !j.dismissed ? { ...j.board, h: jobHeight(j, j.board.w), at: j.createdAt } : null);
 
+/** Frames, text and notes are in the way too, but never what something new lines up after (an arrow is not in the way). */
+const shapeRect = (s: Doc<"mediaShapes">): Rect | null => (s.kind === "arrow" ? null : { x: s.x, y: s.y, w: s.w, h: s.h, at: 0 });
+
 async function boardRects(ctx: QueryCtx, campaignId: Id<"mediaCampaigns">): Promise<Rect[]> {
-  const [creatives, assets, jobs] = await Promise.all([
+  const [creatives, assets, jobs, shapes] = await Promise.all([
     ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect(),
     ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect(),
     ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).order("desc").take(200),
+    ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).take(500),
   ]);
-  return [...creatives.map(creativeRect), ...assets.map(assetRect), ...jobs.map(jobRect)].filter((r): r is Rect => !!r);
+  return [...creatives.map(creativeRect), ...assets.map(assetRect), ...jobs.map(jobRect), ...shapes.map(shapeRect)].filter((r): r is Rect => !!r);
 }
 
 const overlaps = (a: Omit<Rect, "at">, b: Rect) =>
@@ -405,6 +410,77 @@ export const dismissJob = mutation({
   },
 });
 
+/* Shapes the merchant draws (frames, arrows, text, notes) ------------------- */
+
+const shapeEnd = v.object({ x: v.number(), y: v.number(), node: v.optional(v.string()) });
+const SHAPE_KINDS = new Set(["frame", "arrow", "text", "sticky"]);
+const shapeLook = {
+  text: v.optional(v.string()),
+  color: v.optional(v.string()),
+  size: v.optional(v.number()),
+  dashed: v.optional(v.boolean()),
+  from: v.optional(shapeEnd),
+  to: v.optional(shapeEnd),
+};
+
+/** A shape's fields, kept in bounds. */
+function cleanShape<T extends { x?: number; y?: number; w?: number; h?: number; text?: string; color?: string; size?: number }>(s: T): T {
+  const out = { ...s };
+  if (out.x !== undefined) out.x = Math.round(out.x);
+  if (out.y !== undefined) out.y = Math.round(out.y);
+  if (out.w !== undefined) out.w = Math.max(1, Math.min(20000, Math.round(out.w)));
+  if (out.h !== undefined) out.h = Math.max(1, Math.min(20000, Math.round(out.h)));
+  if (out.text !== undefined) out.text = out.text.slice(0, 4000);
+  if (out.color !== undefined) out.color = out.color.slice(0, 24);
+  if (out.size !== undefined) out.size = Math.max(8, Math.min(400, out.size));
+  return out;
+}
+
+async function shapeBySid(ctx: QueryCtx, campaignId: Id<"mediaCampaigns">, sid: string) {
+  return ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId).eq("sid", sid)).unique();
+}
+
+export const addShape = mutation({
+  args: { campaignId: v.id("mediaCampaigns"), shape: v.object({ sid: v.string(), kind: v.string(), x: v.number(), y: v.number(), w: v.number(), h: v.number(), ...shapeLook }) },
+  returns: v.null(),
+  handler: async (ctx, { campaignId, shape }) => {
+    await ownCampaign(ctx, campaignId);
+    if (!SHAPE_KINDS.has(shape.kind)) throw new Error("Unknown shape");
+    if (await shapeBySid(ctx, campaignId, shape.sid)) return null;
+    const now = Date.now();
+    await ctx.db.insert("mediaShapes", { ...cleanShape({ ...shape, sid: shape.sid.slice(0, 64) }), campaignId, createdAt: now, updatedAt: now });
+    return null;
+  },
+});
+
+/** Moves, resizes and restyles shapes, or changes their words (only the fields given). */
+export const patchShapes = mutation({
+  args: { campaignId: v.id("mediaCampaigns"), shapes: v.array(v.object({ sid: v.string(), x: v.optional(v.number()), y: v.optional(v.number()), w: v.optional(v.number()), h: v.optional(v.number()), ...shapeLook })) },
+  returns: v.null(),
+  handler: async (ctx, { campaignId, shapes }) => {
+    await ownCampaign(ctx, campaignId);
+    const now = Date.now();
+    for (const { sid, ...patch } of shapes.slice(0, 500)) {
+      const row = await shapeBySid(ctx, campaignId, sid);
+      if (row) await ctx.db.patch(row._id, { ...cleanShape(patch), updatedAt: now });
+    }
+    return null;
+  },
+});
+
+export const removeShapes = mutation({
+  args: { campaignId: v.id("mediaCampaigns"), sids: v.array(v.string()) },
+  returns: v.null(),
+  handler: async (ctx, { campaignId, sids }) => {
+    await ownCampaign(ctx, campaignId);
+    for (const sid of sids.slice(0, 500)) {
+      const row = await shapeBySid(ctx, campaignId, sid);
+      if (row) await ctx.db.delete(row._id);
+    }
+    return null;
+  },
+});
+
 export const setViewport = mutation({
   args: { id: v.id("mediaCampaigns"), viewport: v.object({ x: v.number(), y: v.number(), zoom: v.number() }) },
   returns: v.null(),
@@ -461,6 +537,7 @@ export const remove = mutation({
       await ctx.db.delete(a._id);
     }
     for (const j of await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(j._id);
+    for (const s of await ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(s._id);
     const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
     if (chat) await ctx.db.delete(chat._id);
     for (const c of await ctx.db.query("mediaItemChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(c._id);

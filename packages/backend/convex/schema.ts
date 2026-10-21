@@ -1130,6 +1130,36 @@ export default defineSchema({
     .index("by_creative", ["creativeId"])
     .index("by_status", ["status"]),
 
+  /**
+   * What the merchant draws on a campaign's canvas to organise it: frames
+   * (titled areas that carry what sits in them), arrows (each end free or
+   * pinned to a node), text and sticky notes. `sid` is made in the browser so
+   * a new shape can be drawn, selected and typed into before the server answers.
+   */
+  mediaShapes: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    sid: v.string(),
+    /** "frame" | "arrow" | "text" | "sticky" */
+    kind: v.string(),
+    /** Its box in board units (an arrow's: around its ends). */
+    x: v.number(),
+    y: v.number(),
+    w: v.number(),
+    h: v.number(),
+    /** A frame's name, or the words of a text or note. */
+    text: v.optional(v.string()),
+    /** A palette key (canvas/shapes.ts). */
+    color: v.optional(v.string()),
+    /** Text size in board px. */
+    size: v.optional(v.number()),
+    dashed: v.optional(v.boolean()),
+    /** An arrow's ends; `node` pins one to a node on the canvas (its key, "creative:…"), x and y are where it was last seen. */
+    from: v.optional(v.object({ x: v.number(), y: v.number(), node: v.optional(v.string()) })),
+    to: v.optional(v.object({ x: v.number(), y: v.number(), node: v.optional(v.string()) })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_campaign", ["campaignId", "sid"]),
+
   mediaChats: defineTable({
     campaignId: v.id("mediaCampaigns"),
     messages: v.array(emailChatMessageValidator),

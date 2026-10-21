@@ -276,16 +276,20 @@ def _nodes_block(state: dict[str, Any]) -> str:
     assets = {a["id"]: a for a in state.get(ASSETS) or []}
     creatives = state.get(CREATIVES) or {}
     bits = []
-    for n in nodes[:8]:
+    notes = [str(n.get("text") or "").strip()[:600] for n in nodes if n.get("kind") == "note" and str(n.get("text") or "").strip()]
+    for n in [n for n in nodes if n.get("kind") != "note"][:8]:
         if n.get("kind") == "creative" and n.get("id") in creatives:
             c = creatives[n["id"]]
             bits.append(f"{c.get('kind')} creative {n['id']} \"{c.get('name')}\" ({c.get('format')})")
         elif n.get("kind") == "asset" and n.get("id") in assets:
             a = assets[n["id"]]
             bits.append(f"{'clip' if a.get('kind') == 'video' else 'track' if a.get('kind') == 'audio' else 'image'} {n['id']} {a.get('url')}" + (f" ({str(a.get('prompt') or '')[:80]})" if a.get("prompt") else ""))
-    if not bits:
-        return ""
-    return "SELECTED ON THE CANVAS: " + "; ".join(bits) + ". \"This\", \"it\", \"these\" mean the selection: change an image with edit_image, a clip with edit_clip, a poster or video with edit_creative."
+    out = []
+    if bits:
+        out.append("SELECTED ON THE CANVAS: " + "; ".join(bits) + ". \"This\", \"it\", \"these\" mean the selection: change an image with edit_image, a clip with edit_clip, a poster or video with edit_creative.")
+    if notes:
+        out.append("NOTES THE MERCHANT SELECTED (sticky notes and text on the canvas, their own words: treat them as part of the request): " + " | ".join(f'"{t}"' for t in notes[:8]))
+    return "\n".join(out)
 
 
 def _selection_block(state: dict[str, Any]) -> str:
@@ -397,7 +401,7 @@ def _prompt_rules(state: dict[str, Any]) -> str:
     aud = next((a for a in _audiences(state) if a["id"] == o.get("audienceId")), None) if o.get("audienceId") not in (None, "", "all") else None
     if aud:
         lines.append(f"- For the audience {aud['id']} ({aud.get('name')}): call get_audience first, ground the idea in its taste, and save_concepts one short concept for it.")
-    if state.get(NODES):
+    if any(n.get("kind") != "note" for n in state.get(NODES) or []):
         lines.append("- Something is selected on the canvas: when the words ask to change it, change it (edit_image, edit_clip, edit_creative) instead of making something new; when they ask for something new from it, use it (its URL as a reference or first frame, near its id).")
     lines.append(QUESTIONS_FIRST)
     lines.append(
@@ -1034,7 +1038,7 @@ async def open_spot(state: dict[str, Any], shape: dict[str, Any], *, board: dict
     reused for its thread), else beside what is selected."""
     cid = _cid(state)
     spec = D.FORMATS.get(shape["format"]) or D.FORMATS["story"]
-    near = next((n.get("id") for n in state.get(NODES) or [] if n.get("id")), None)
+    near = next((n.get("id") for n in state.get(NODES) or [] if n.get("id") and n.get("kind") != "note"), None)
     name = {"poster": "New poster", "video": "New video ad", "image": "New image"}.get(shape["kind"], "New design")
     where: dict[str, Any] = {"board": board} if board else {"place": True, "nearId": near}
     try:

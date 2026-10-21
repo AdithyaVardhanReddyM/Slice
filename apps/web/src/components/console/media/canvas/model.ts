@@ -1,16 +1,19 @@
 // The canvas's nodes, built from the campaign's live data: every creative
-// (poster or video), every file placed on the board (image, clip, track) and
+// (poster or video), every file placed on the board (image, clip, track),
 // every standalone generation still running or failed, or poster or video ad
-// being designed (a placeholder holding its spot). Positions are board units;
-// a node's height follows its content.
+// being designed (a placeholder holding its spot), and what the merchant drew
+// (frames, arrows, text, sticky notes). Positions are board units; a node's
+// height follows its content.
 
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
 import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, creativeName, docDuration, modelLabel, type Aspect, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 import type { ItemNoun } from "../focus/item-agent";
+import { arrowLine, center, contains, lineBox, type Box, type ShapeKind } from "./shapes";
 import type { ItemRef, MakerSpot } from "./use-media-agent";
 
-export type NodeKind = "poster" | "video" | "image" | "clip" | "audio" | "pending" | "ghost";
-export type NodeRef = { kind: "creative" | "asset" | "job" | "ghost"; id: string };
+export type NodeKind = "poster" | "video" | "image" | "clip" | "audio" | "pending" | "ghost" | ShapeKind;
+/** A shape's id is its `sid`. */
+export type NodeRef = { kind: "creative" | "asset" | "job" | "ghost" | "shape"; id: string };
 
 /** What a toolbar maker makes. */
 export type MakerKind = "image" | "poster" | "video";
@@ -46,6 +49,9 @@ export interface BoardNode {
   asset?: Doc<"mediaAssets">;
   job?: Doc<"mediaJobs">;
   ghost?: Ghost;
+  shape?: Doc<"mediaShapes">;
+  /** An arrow's drawn ends (its pinned ends follow their nodes), set by layoutArrows. */
+  line?: { x1: number; y1: number; x2: number; y2: number };
   /** USD spent on it (its jobs, or the file's own cost). */
   cost: number;
   /** Generations still running inside it (a video's shots). */
@@ -72,8 +78,14 @@ const JOB_NOUN: Record<string, string> = { image: "Image", video: "Clip", edit: 
 
 export const MAKER_NAME: Record<MakerKind, string> = { image: "New image", poster: "New poster", video: "New video ad" };
 
-export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: Doc<"mediaAssets">[]; jobs: Doc<"mediaJobs">[] }): BoardNode[] {
+const SHAPE_NAME: Record<ShapeKind, string> = { frame: "Frame", arrow: "Arrow", text: "Text", sticky: "Sticky note" };
+
+export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: Doc<"mediaAssets">[]; jobs: Doc<"mediaJobs">[]; shapes?: Doc<"mediaShapes">[] }): BoardNode[] {
   const out: BoardNode[] = [];
+  for (const s of data.shapes ?? []) {
+    const kind = s.kind as ShapeKind;
+    out.push({ key: keyOf({ kind: "shape", id: s.sid }), ref: { kind: "shape", id: s.sid }, kind, x: s.x, y: s.y, w: s.w, h: s.h, name: kind === "frame" ? s.text?.trim() || "Frame" : nameFromPrompt(s.text, SHAPE_NAME[kind]), meta: "", shape: s, cost: 0, running: 0 });
+  }
   const spentBy = new Map<string, number>();
   const runningBy = new Map<string, number>();
   for (const j of data.jobs) {
@@ -151,6 +163,41 @@ export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: D
   }
   return out;
 }
+
+/** Arrows drawn between where their ends are now: a pinned end meets its node's edge (wherever that node is, mid-drag too). */
+export function layoutArrows(nodes: BoardNode[]): BoardNode[] {
+  if (!nodes.some((n) => n.kind === "arrow")) return nodes;
+  const byKey = new Map(nodes.map((n) => [n.key, n]));
+  const boxOf = (key: NodeKey) => {
+    const n = byKey.get(key);
+    return n && n.kind !== "arrow" ? n : undefined;
+  };
+  return nodes.map((n) => {
+    if (n.kind !== "arrow" || !n.shape?.from || !n.shape.to) return n;
+    const line = arrowLine(n.shape.from, n.shape.to, boxOf);
+    return { ...n, ...lineBox(line), line };
+  });
+}
+
+/** Shapes draw under (frames) or over (notes, text, arrows) what is made. */
+export const layerOf = (n: BoardNode) => (n.kind === "frame" ? 0 : n.kind === "arrow" ? 3 : n.kind === "text" || n.kind === "sticky" ? 2 : 1);
+
+/** Shows its name above it (made things and frames; not text, notes or arrows). */
+export const labelled = (n: BoardNode) => !n.shape || n.kind === "frame";
+
+/** What an arrow's end can be pinned to: something made, a note or text (not a frame, another arrow or a spot still changing). */
+export const pinnable = (n: BoardNode) => !["arrow", "frame", "ghost", "pending"].includes(n.kind);
+
+/** What sits in a frame (its middle inside, and smaller), so it moves with it; arrows go when both their ends are in. */
+export function contentsOf(frame: Box, nodes: BoardNode[]): BoardNode[] {
+  return nodes.filter((n) => {
+    if (n.line) return contains(frame, { x: n.line.x1, y: n.line.y1 }) && contains(frame, { x: n.line.x2, y: n.line.y2 });
+    return n.w * n.h < frame.w * frame.h && contains(frame, center(n));
+  });
+}
+
+/** What a new w×h thing aimed at `box` must keep clear of: not arrows, and not a frame it is being put in. */
+export const obstacles = (nodes: BoardNode[], box?: Box) => nodes.filter((n) => n.kind !== "arrow" && !(box && n.kind === "frame" && contains(n, center(box))));
 
 export function ghostNode(g: Ghost): BoardNode {
   const s = aspectSize(g.aspect);
@@ -230,6 +277,7 @@ export type CampaignData = {
   creatives: Doc<"mediaCreatives">[];
   assets: Doc<"mediaAssets">[];
   jobs: Doc<"mediaJobs">[];
+  shapes: Doc<"mediaShapes">[];
   messages: unknown[];
 };
 

@@ -4,7 +4,8 @@
 // editor, ask the agent about it, see why it was made, and the quick moves for
 // its kind (more takes of an image, a poster or a video ad from it, continue a
 // clip, a free copy of a creative in another size), each priced before it runs. Studio buttons call the models
-// directly; only "Ask" starts a chat turn.
+// directly; only "Ask" starts a chat turn. A shape the merchant drew gets its
+// own: colours, a text's size, an arrow's dashes, typing in it.
 
 import { useMutation } from "convex/react";
 import { Copy, Download, FastForward, Film, Layers2, LayoutTemplate, Loader2, MessageSquareText, MoreHorizontal, Pencil, RefreshCw, Scaling, Trash2, X } from "lucide-react";
@@ -15,8 +16,9 @@ import { FORMATS, FORMAT_KEYS, imageModel, videoModel, type FormatPreset, type M
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { usd } from "../prompt/options";
-import { SIDEBAR_W, useCanvas } from "./context";
+import { SIDEBAR_W, useCanvas, type ShapePatch } from "./context";
 import type { BoardNode } from "./model";
+import { FRAME_COLORS, INK_COLORS, STICKY_COLORS, TEXT_SIZES, type Swatch } from "./shapes";
 import { TOOLBAR_ROOM } from "./toolbar";
 import { WhyButton } from "./why";
 
@@ -71,6 +73,105 @@ function ResizeMenu({ node }: { node: BoardNode }) {
           {doc.kind === "video" && <p className="px-2 pt-1 pb-1.5 text-[11px] leading-4 text-muted-foreground">Shots are cropped around their focal point; regenerate the ones that matter in the new shape.</p>}
         </DropdownMenuContent>
       </DropdownMenu>
+    </>
+  );
+}
+
+function Swatches({ list, value, onPick }: { list: Swatch[]; value: string | undefined; onPick: (key: string) => void }) {
+  const cur = value ?? list[0].key;
+  return (
+    <div role="radiogroup" aria-label="Colour" className="flex items-center gap-1 px-1.5">
+      {list.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          role="radio"
+          aria-checked={cur === c.key}
+          aria-label={c.label}
+          title={c.label}
+          onClick={() => onPick(c.key)}
+          className={cn("size-5 shrink-0 rounded-full ring-1 ring-black/10 transition-transform ring-inset hover:scale-110", cur === c.key && "outline-2 outline-offset-2 outline-blue-500")}
+          style={{ background: c.value }}
+        />
+      ))}
+    </div>
+  );
+}
+
+const DashedGlyph = () => (
+  <svg viewBox="0 0 16 16" fill="none" aria-hidden>
+    <path d="M2 8h12" stroke="currentColor" strokeWidth={2} strokeDasharray="3 2.6" strokeLinecap="round" />
+  </svg>
+);
+
+/** A frame, arrow, text or note: its look, and typing in it. */
+function ShapeTools({ node }: { node: BoardNode }) {
+  const { patchShape, setEditing, remove, compose } = useCanvas();
+  const s = node.shape!;
+  const set = (patch: ShapePatch) => patchShape(s.sid, patch);
+  const ask = (node.kind === "sticky" || node.kind === "text") && s.text?.trim() ? <Tool icon={<MessageSquareText />} label="Ask" title="Ask Slice with this note (its words go with the prompt)" onClick={() => compose("")} /> : null;
+  const del = <Tool icon={<Trash2 />} title={node.kind === "frame" ? "Delete the frame (what is in it stays)" : "Delete"} onClick={() => remove([node.key])} />;
+  if (node.kind === "frame")
+    return (
+      <>
+        <Tool icon={<Pencil />} label="Rename" onClick={() => setEditing(node.key)} />
+        <Sep />
+        <Swatches list={FRAME_COLORS} value={s.color} onPick={(color) => set({ color })} />
+        <Sep />
+        {del}
+      </>
+    );
+  if (node.kind === "arrow")
+    return (
+      <>
+        <Swatches list={INK_COLORS} value={s.color} onPick={(color) => set({ color })} />
+        <Sep />
+        <button type="button" className={cn(btn, s.dashed && "bg-neutral-100 text-neutral-950")} aria-pressed={!!s.dashed} title="Dashed line" onClick={() => set({ dashed: !s.dashed })}>
+          <DashedGlyph />
+          <span>Dashed</span>
+        </button>
+        <Sep />
+        {del}
+      </>
+    );
+  if (node.kind === "text") {
+    const size = s.size ?? 24;
+    return (
+      <>
+        <div role="radiogroup" aria-label="Text size" className="flex items-center gap-0.5">
+          {TEXT_SIZES.map((t) => (
+            <button
+              key={t.size}
+              type="button"
+              role="radio"
+              aria-checked={size === t.size}
+              title={t.name}
+              // Text grows with its size; its box follows at once (the page measures it right after).
+              onClick={() => set({ size: t.size, w: (node.w * t.size) / size, h: (node.h * t.size) / size })}
+              className={cn(btn, "w-8 justify-center px-0 tabular-nums", size === t.size && "bg-neutral-100 text-neutral-950")}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <Sep />
+        <Swatches list={INK_COLORS} value={s.color} onPick={(color) => set({ color })} />
+        <Sep />
+        <Tool icon={<Pencil />} label="Edit" onClick={() => setEditing(node.key)} />
+        {ask}
+        <Sep />
+        {del}
+      </>
+    );
+  }
+  return (
+    <>
+      <Swatches list={STICKY_COLORS} value={s.color} onPick={(color) => set({ color })} />
+      <Sep />
+      <Tool icon={<Pencil />} label="Edit" onClick={() => setEditing(node.key)} />
+      {ask}
+      <Sep />
+      {del}
     </>
   );
 }
@@ -135,6 +236,8 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
         <Tool icon={<Trash2 />} label="Remove" onClick={() => remove(sel.map((n) => n.key))} />
       </>
     );
+  } else if (one.shape) {
+    body = <ShapeTools node={one} />;
   } else if (one.kind === "ghost" || one.job?.status === "draft") {
     // A maker's spot waiting on the chat: its first prompt, or answers to the agent's questions.
     body = (

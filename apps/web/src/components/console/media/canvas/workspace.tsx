@@ -11,6 +11,11 @@
 // thread, anything else the canvas conversation. A maker button places its
 // spot (a ghost, only here until its first prompt) and opens it; once sent, the
 // selection follows it into the generation and then into what lands there.
+//
+// The merchant's own shapes (frames, arrows, text, sticky notes) are drawn
+// with the toolbar's drawing tools and kept in mediaShapes; every change shows
+// at once (optimistic) and is saved behind it. Selected notes and text ride
+// along with a canvas prompt.
 
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
@@ -33,14 +38,15 @@ import { usePromptPicks } from "../prompt/options";
 import { AssetsPanel, MEDIA_DRAG, measureImage, type DragItem } from "../sidebar/assets";
 import { ChatThread } from "../sidebar/chat";
 import { KitFonts } from "../stage";
-import { Board, type BoardHandle, type Viewport } from "./board";
+import { Board, type BoardHandle, type Drawn, type Viewport } from "./board";
 import { CanvasCorner, CanvasTopRight, EmptyHero, SidebarHead, ZoomControl } from "./chrome";
-import { CanvasContext, SIDEBAR_W, type CanvasEnv, type CanvasTool, type ChatMessage, type SidebarTab } from "./context";
-import { bounds, buildNodes, ghostNode, keyOf, nodeThread, openSpot, refOf, threadOf, type BoardNode, type CampaignData, type Ghost, type MakerKind, type NodeKey } from "./model";
+import { CanvasContext, SIDEBAR_W, type CanvasEnv, type CanvasTool, type ChatMessage, type ShapePatch, type SidebarTab } from "./context";
+import { bounds, buildNodes, ghostNode, keyOf, layoutArrows, nodeThread, obstacles, openSpot, refOf, threadOf, type BoardNode, type CampaignData, type Ghost, type MakerKind, type NodeKey } from "./model";
+import { FRAME_SIZE, STICKY_SIZE, lineBox, newSid, type End } from "./shapes";
 import { NodeToolbar } from "./node-toolbar";
 import { NodeView } from "./nodes";
 import { CanvasToolbar, TOOLBAR_ROOM } from "./toolbar";
-import { agentOf, mediaAction, useAgentPool, type PromptRequest } from "./use-media-agent";
+import { agentOf, mediaAction, useAgentPool, type CanvasNodeRef, type PromptRequest } from "./use-media-agent";
 
 /** Room the floating controls along the top keep clear. */
 const TOP_ROOM = 56;
@@ -98,11 +104,22 @@ const makerAspect = (kind: MakerKind, aspect: Aspect): Aspect => (kind === "vide
 
 const EXT: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "video/mp4": "mp4", "audio/mpeg": "mp3", "audio/wav": "wav" };
 
+/** An arrow's end as stored (whole board units, no empty pin). */
+const endOf = (e: End) => ({ x: Math.round(e.x), y: Math.round(e.y), ...(e.node ? { node: e.node } : {}) });
+
+/** The drawing tools' keys. */
+const SHAPE_KEYS: Record<string, CanvasTool> = { f: "frame", a: "arrow", t: "text", s: "sticky" };
+
 function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; data: CampaignData }) {
   const { campaign, brand, creatives, assets, jobs } = data;
+  const shapes = useMemo(() => data.shapes ?? [], [data.shapes]);
   const messages = data.messages as ChatMessage[];
   const kit = (campaign.kit ?? brand?.kit) as MediaKit | undefined;
-  const built = useMemo(() => buildNodes({ creatives, assets, jobs }), [creatives, assets, jobs]);
+  const built = useMemo(() => buildNodes({ creatives, assets, jobs, shapes }), [creatives, assets, jobs, shapes]);
+  // Text is as big as its words: its measured box stands in for the saved one.
+  const [measured, setMeasured] = useState<Record<NodeKey, { w: number; h: number }>>({});
+  const measure = useCallback((key: NodeKey, size: { w: number; h: number }) => setMeasured((m) => (m[key]?.w === size.w && m[key]?.h === size.h ? m : { ...m, [key]: size })), []);
+  const [editing, setEditing] = useState<NodeKey | null>(null);
   const [picks] = usePromptPicks();
 
   // The maker spot not yet in Convex. Until its first prompt it takes the shape the prompt bar is set to.
@@ -115,7 +132,10 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     if (!ghost || landed || (!ghost.sent && !picked.some((p) => p.key === ghostKey))) return null;
     return ghost.sent || !MAKERS.includes(picks.output as MakerKind) ? ghost : { ...ghost, kind: picks.output as MakerKind, aspect: makerAspect(picks.output as MakerKind, picks.aspect) };
   }, [ghost, landed, picked, ghostKey, picks.output, picks.aspect]);
-  const nodes = useMemo(() => (shownGhost ? [...built, ghostNode(shownGhost)] : built), [built, shownGhost]);
+  const nodes = useMemo(() => {
+    const all = shownGhost ? [...built, ghostNode(shownGhost)] : built;
+    return layoutArrows(all.map((n) => (n.kind === "text" && measured[n.key] ? { ...n, ...measured[n.key] } : n)));
+  }, [built, shownGhost, measured]);
 
   const select = useCallback((keys: NodeKey[]) => setPicked(keys.map((key) => ({ key, thread: nodeThread(nodes.find((n) => n.key === key)) }))), [nodes]);
   const setSelected = select;
@@ -191,6 +211,23 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       return m && row.board ? { ...row, board: { x: m.x, y: m.y, w: m.w ?? row.board.w } } : m ? { ...row, board: { x: m.x, y: m.y, w: m.w ?? 320 } } : row;
     };
     store.setQuery(api.media.get, { id }, { ...cur, creatives: cur.creatives.map(place), assets: cur.assets.map(place), jobs: cur.jobs.map(place) });
+  });
+  const addShape = useMutation(api.media.addShape).withOptimisticUpdate((store, { campaignId: id, shape }) => {
+    const cur = store.getQuery(api.media.get, { id });
+    if (!cur) return;
+    // Times come with the saved row; nothing reads them before it arrives.
+    store.setQuery(api.media.get, { id }, { ...cur, shapes: [...(cur.shapes ?? []), { _id: shape.sid as Id<"mediaShapes">, _creationTime: 0, campaignId: id, ...shape, createdAt: 0, updatedAt: 0 }] });
+  });
+  const patchShapes = useMutation(api.media.patchShapes).withOptimisticUpdate((store, { campaignId: id, shapes: patches }) => {
+    const cur = store.getQuery(api.media.get, { id });
+    if (!cur?.shapes) return;
+    const by = new Map(patches.map((p) => [p.sid, p]));
+    store.setQuery(api.media.get, { id }, { ...cur, shapes: cur.shapes.map((x) => ({ ...x, ...by.get(x.sid) })) });
+  });
+  const removeShapes = useMutation(api.media.removeShapes).withOptimisticUpdate((store, { campaignId: id, sids }) => {
+    const cur = store.getQuery(api.media.get, { id });
+    if (!cur?.shapes) return;
+    store.setQuery(api.media.get, { id }, { ...cur, shapes: cur.shapes.filter((x) => !sids.includes(x.sid)) });
   });
   const placeAsset = useMutation(api.media.placeAsset);
   const addAsset = useMutation(api.media.addAsset);
@@ -269,7 +306,9 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       if (shownGhost && thread.thread === shownGhost.id) setGhost({ ...shownGhost, sent: true });
       void agent.prompt(text, attachments, options(thread.spot?.kind ?? picks.output, thread.spot?.aspect ?? picks.aspect), []).catch(failed);
     } else {
-      const refs = nodes.filter((n) => live.includes(n.key) && (n.ref.kind === "creative" || n.ref.kind === "asset")).map((n) => ({ kind: n.ref.kind as "creative" | "asset", id: n.ref.id }));
+      const refs: CanvasNodeRef[] = nodes.filter((n) => live.includes(n.key) && (n.ref.kind === "creative" || n.ref.kind === "asset")).map((n) => ({ kind: n.ref.kind as "creative" | "asset", id: n.ref.id }));
+      // Selected notes and text are read as notes for the prompt.
+      for (const n of nodes) if (live.includes(n.key) && (n.kind === "sticky" || n.kind === "text") && n.shape?.text?.trim()) refs.push({ kind: "note", id: n.shape.sid, text: n.shape.text.trim().slice(0, 600) });
       void agent.prompt(text, attachments, options(picks.output, picks.aspect), refs).catch(failed);
     }
     setSidebar({ open: true, tab: "chat" });
@@ -283,7 +322,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     const v = board.current?.viewport();
     const c = board.current?.center() ?? { x: 0, y: 0 };
     const at = aim ?? { x: c.x + (sidebar.open || !v ? 0 : SIDEBAR_W / 2 / v.zoom) - w / 2, y: c.y - h / 2 };
-    return { ...openSpot(built, { w, h }, at), w, h };
+    return { ...openSpot(obstacles(built, { ...at, w, h }), { w, h }, at), w, h };
   };
 
   const openSpotNode = (g: Ghost) => {
@@ -310,13 +349,22 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       .catch(failed);
   };
 
+  /** Shapes go at once (they are only drawings). */
+  const dropShapes = (keys: NodeKey[]) => {
+    const sids = nodes.filter((n) => keys.includes(n.key) && n.shape).map((n) => n.shape!.sid);
+    if (!sids.length) return;
+    if (editing && keys.includes(editing)) setEditing(null);
+    void removeShapes({ campaignId, sids }).catch(failed);
+  };
+
   const remove: CanvasEnv["remove"] = (keys) => {
     if (ghostKey && keys.includes(ghostKey)) setGhost(null);
-    const list = nodes.filter((n) => keys.includes(n.key) && n.ref.kind !== "ghost");
+    const list = nodes.filter((n) => keys.includes(n.key) && n.ref.kind !== "ghost" && n.ref.kind !== "shape");
     if (list.some((n) => n.ref.kind === "creative")) {
       setConfirm(keys);
       return;
     }
+    dropShapes(keys);
     for (const n of list) {
       if (n.ref.kind === "asset") void placeAsset({ id: n.ref.id as Id<"mediaAssets">, board: null });
       if (n.ref.kind === "job") void dismissJob({ id: n.ref.id as Id<"mediaJobs"> });
@@ -331,6 +379,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       if (n.ref.kind === "asset") void placeAsset({ id: n.ref.id as Id<"mediaAssets">, board: null });
       if (n.ref.kind === "job") void dismissJob({ id: n.ref.id as Id<"mediaJobs"> });
     }
+    if (confirm) dropShapes(confirm);
     setSelected([]);
     setConfirm(null);
   };
@@ -358,7 +407,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const placeFiles: CanvasEnv["placeFiles"] = async (files, at) => {
     if (!files.length) return;
     const c = at ?? board.current?.center() ?? { x: 0, y: 0 };
-    const taken: Pick<BoardNode, "x" | "y" | "w" | "h">[] = [...nodes];
+    const taken: Pick<BoardNode, "x" | "y" | "w" | "h">[] = obstacles(nodes, { ...c, w: 0, h: 0 });
     const placed: NodeKey[] = [];
     const spots: Pick<BoardNode, "x" | "y" | "w" | "h">[] = [];
     let left: number | null = null;
@@ -390,6 +439,52 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     // The nearest free spot can be out of view: glide to the new files.
     const box = bounds(spots);
     if (box && !spots.every(inView)) board.current?.fitBox(box, { maxZoom: board.current.viewport().zoom });
+  };
+
+  const patchShape: CanvasEnv["patchShape"] = useCallback((sid: string, patch: ShapePatch) => void patchShapes({ campaignId, shapes: [{ sid, ...patch }] }).catch((err: Error) => notify(err.message, "bad")), [patchShapes, campaignId, notify]);
+
+  const commitText: CanvasEnv["commitText"] = (node, text) => {
+    setEditing((cur) => (cur === node.key ? null : cur));
+    const s = node.shape;
+    if (!s) return;
+    // An empty text is a text never written.
+    if (node.kind === "text" && !text.trim()) {
+      void removeShapes({ campaignId, sids: [s.sid] }).catch(failed);
+      setSelected(live.filter((k) => k !== node.key));
+      return;
+    }
+    if (text !== (s.text ?? "") || (node.kind === "text" && (node.w !== s.w || node.h !== s.h))) patchShape(s.sid, node.kind === "text" ? { text, w: node.w, h: node.h } : { text });
+  };
+
+  // What the drawing tools make: then back to selecting, with it selected (text and notes ready to type in).
+  const onDraw = (d: Drawn) => {
+    const sid = newSid();
+    const key = keyOf({ kind: "shape", id: sid });
+    setTool("select");
+    if (d.tool === "frame") {
+      const b = d.click ? { x: d.from.x, y: d.from.y, ...FRAME_SIZE } : lineBox({ x1: d.from.x, y1: d.from.y, x2: d.to.x, y2: d.to.y });
+      const n = shapes.filter((x) => x.kind === "frame").length + 1;
+      void addShape({ campaignId, shape: { sid, kind: "frame", x: b.x, y: b.y, w: Math.max(80, b.w), h: Math.max(60, b.h), text: `Frame ${n}`, color: "white" } }).catch(failed);
+    } else if (d.tool === "arrow") {
+      const to = d.click ? { x: d.from.x + 200, y: d.from.y } : d.to;
+      void addShape({ campaignId, shape: { sid, kind: "arrow", ...lineBox({ x1: d.from.x, y1: d.from.y, x2: to.x, y2: to.y }), from: endOf(d.from), to: endOf(to), color: "black" } }).catch(failed);
+    } else if (d.tool === "text") {
+      const size = 24;
+      void addShape({ campaignId, shape: { sid, kind: "text", x: d.from.x - 4, y: d.from.y - size * 0.62, w: 16, h: size * 1.25, text: "", size, color: "black" } }).catch(failed);
+      setEditing(key);
+    } else {
+      // A new note takes the colour of the last one.
+      const color = [...shapes].reverse().find((x) => x.kind === "sticky")?.color ?? "yellow";
+      void addShape({ campaignId, shape: { sid, kind: "sticky", x: d.from.x - STICKY_SIZE / 2, y: d.from.y - STICKY_SIZE / 2, w: STICKY_SIZE, h: STICKY_SIZE, text: "", color } }).catch(failed);
+      setEditing(key);
+    }
+    setPicked([{ key }]);
+  };
+
+  const editShape = (n: BoardNode) => {
+    setTool("select");
+    setPicked([{ key: n.key }]);
+    if (n.kind !== "arrow") setEditing(n.key);
   };
 
   const env: CanvasEnv = {
@@ -436,6 +531,11 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     placeFiles,
     remove,
     download,
+    editing,
+    setEditing,
+    patchShape,
+    commitText,
+    measure,
   };
 
   // Canvas keys (the focus editors have their own).
@@ -444,13 +544,17 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     const onKey = (e: KeyboardEvent) => {
       if (typing(e.target)) return;
       const mod = e.metaKey || e.ctrlKey;
+      const one = live.length === 1 ? nodes.find((n) => n.key === live[0]) : undefined;
       if ((e.key === "Delete" || e.key === "Backspace") && live.length) {
         e.preventDefault();
         remove(live);
-      } else if (e.key === "Escape") setSelected([]);
-      else if (e.key === "Enter" && live.length === 1) {
+      } else if (e.key === "Escape") {
+        if (tool !== "select" && tool !== "hand") setTool("select");
+        else setSelected([]);
+      } else if (e.key === "Enter" && one) {
         e.preventDefault();
-        setFocus(live[0]);
+        if (one.shape) editShape(one);
+        else setFocus(one.key);
       } else if (mod && e.key.toLowerCase() === "a") {
         e.preventDefault();
         setSelected(nodes.map((n) => n.key));
@@ -470,6 +574,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
         bar.current?.focus();
       } else if (!mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "v") setTool("select");
       else if (!mod && !e.altKey && !e.shiftKey && e.key.toLowerCase() === "h") setTool("hand");
+      else if (!mod && !e.altKey && !e.shiftKey && SHAPE_KEYS[e.key.toLowerCase()]) setTool(SHAPE_KEYS[e.key.toLowerCase()]);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -491,7 +596,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   useEffect(() => {
     const keys = new Set(nodes.map((n) => n.key));
     if (known.current) {
-      const fresh = nodes.filter((n) => !known.current!.has(n.key) && n.ref.kind !== "asset");
+      const fresh = nodes.filter((n) => !known.current!.has(n.key) && n.ref.kind !== "asset" && n.ref.kind !== "shape");
       if (fresh.length && board.current && !fresh.every(inView)) board.current.fit(fresh.map((n) => n.key), { maxZoom: board.current.viewport().zoom });
     }
     known.current = keys;
@@ -503,7 +608,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       const item = JSON.parse(raw) as DragItem;
       const w = item.kind === "audio" ? AUDIO_NODE.w : boardWidth(item.w ?? 1, item.h ?? 1);
       const h = item.kind === "audio" ? AUDIO_NODE.h : (w * (item.h ?? 1)) / (item.w ?? 1);
-      const spot = { ...openSpot(nodes.filter((n) => n.ref.id !== item.assetId), { w, h }, { x: at.x - w / 2, y: at.y - h / 2 }), w };
+      const spot = { ...openSpot(obstacles(nodes.filter((n) => n.ref.id !== item.assetId), { x: at.x - w / 2, y: at.y - h / 2, w, h }), { w, h }, { x: at.x - w / 2, y: at.y - h / 2 }), w };
       if (item.assetId) await placeAsset({ id: item.assetId as Id<"mediaAssets">, board: spot });
       else {
         const existing = assets.find((a) => a.url === item.url);
@@ -533,19 +638,39 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             nodes={nodes}
             selected={live}
             onSelect={select}
-            onOpen={(n) => n.kind !== "pending" && n.kind !== "ghost" && env.openFocus(n.key)}
+            onOpen={(n) => (n.shape ? editShape(n) : n.kind !== "pending" && n.kind !== "ghost" && env.openFocus(n.key))}
             onMove={(moves) => {
               const spot = moves.find((m) => m.node.ghost);
               if (spot && ghost) setGhost({ ...ghost, x: spot.x, y: spot.y });
-              const rest = moves.filter((m) => m.node.ref.kind !== "ghost");
+              // An arrow's free ends go with it; a pinned end stays with its node.
+              const drawn = moves.filter((m) => m.node.shape);
+              if (drawn.length)
+                void patchShapes({
+                  campaignId,
+                  shapes: drawn.map(({ node, x, y }) => {
+                    const s = node.shape!;
+                    if (!s.from || !s.to) return { sid: s.sid, x, y };
+                    const shift = (e: End) => endOf(e.node ? e : { x: e.x + x - node.x, y: e.y + y - node.y });
+                    return { sid: s.sid, x, y, from: shift(s.from), to: shift(s.to) };
+                  }),
+                }).catch(failed);
+              const rest = moves.filter((m) => m.node.ref.kind !== "ghost" && m.node.ref.kind !== "shape");
               if (rest.length) void moveNodes({ id: campaignId, nodes: rest.map((m) => ({ kind: m.node.ref.kind as "creative" | "asset" | "job", id: m.node.ref.id, x: m.x, y: m.y, w: m.node.w })) });
             }}
             onDrop={(e, at) => void onDrop(e, at)}
             onViewport={onViewport}
             initial={campaign.viewport ?? null}
             tool={tool}
+            onDraw={onDraw}
+            onResize={(n, b) => n.shape && patchShape(n.shape.sid, { x: b.x, y: b.y, w: b.w, h: b.h })}
+            onArrowEnd={(n, which, end) => n.shape && patchShape(n.shape.sid, which === "from" ? { from: endOf(end) } : { to: endOf(end) })}
+            onRename={(n, name) => {
+              setEditing(null);
+              if (n.shape && name !== null && name.trim() !== (n.shape.text ?? "")) patchShape(n.shape.sid, { text: name.trim() || "Frame" });
+            }}
+            editing={editing}
             inset={{ left: canvasLeft + TOOLBAR_ROOM, bottom: docked ? 0 : dockH + 32, top: TOP_ROOM }}
-            renderNode={(n, ctx) => <NodeView node={n} kit={kit} zoom={ctx.zoom} hovered={ctx.hovered} playing={playing === n.key} onPlay={(on) => setPlaying(on ? n.key : null)} />}
+            renderNode={(n, ctx) => <NodeView node={n} kit={kit} zoom={ctx.zoom} hovered={ctx.hovered} selected={ctx.selected} playing={playing === n.key} onPlay={(on) => setPlaying(on ? n.key : null)} />}
             overlay={({ rect, dragging }) => (rect && !dragging && !focus ? <NodeToolbar rect={rect} /> : null)}
           />
 

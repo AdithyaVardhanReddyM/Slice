@@ -11,7 +11,7 @@
 // maker's spot (its controls shape the spot until the first prompt), or one
 // item's own, where it only changes that item.
 
-import { ArrowUp, Paperclip, Square, X } from "lucide-react";
+import { ArrowUp, Paperclip, Square, Type, X } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import { useMediaUpload } from "@/lib/media/upload";
@@ -19,6 +19,7 @@ import { AttachmentStrip, type Attachment } from "@/components/console/pages/bui
 import { useCanvas } from "../canvas/context";
 import type { BoardNode } from "../canvas/model";
 import { coverTime } from "../canvas/nodes";
+import { STICKY_COLORS, swatch } from "../canvas/shapes";
 import { FixedStage } from "../stage";
 import type { MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { BrandChip } from "./brand-chip";
@@ -50,6 +51,14 @@ const PLACEHOLDER: Record<string, string> = {
 
 function Thumb({ node }: { node: BoardNode }) {
   const { kit } = useCanvas();
+  // A note or text rides along as its words.
+  if (node.kind === "sticky") return <span className="size-5 rounded-[5px] ring-1 ring-black/10 ring-inset" style={{ background: swatch(STICKY_COLORS, node.shape?.color).value }} />;
+  if (node.kind === "text")
+    return (
+      <span className="flex size-5 items-center justify-center rounded-full bg-neutral-200 text-neutral-600">
+        <Type className="size-3" />
+      </span>
+    );
   if (node.creative) {
     const doc = node.creative.doc as MediaDoc;
     return (
@@ -80,7 +89,8 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
   // What to make is set here for the canvas chat and for a maker's spot until its first prompt; an item's own chat only changes it.
   const shaping = thread.kind === "campaign" || (thread.kind === "draft" && !!thread.node.ghost && !thread.node.ghost.sent);
   const estimate = shaping ? promptEstimate(picks) : null;
-  const context = thread.kind === "campaign" ? nodes.filter((n) => selected.includes(n.key) && n.kind !== "pending" && n.kind !== "ghost") : [];
+  // What goes with a canvas prompt: things made, and notes and text with words in them (not frames or arrows).
+  const context = thread.kind === "campaign" ? nodes.filter((n) => selected.includes(n.key) && n.kind !== "pending" && n.kind !== "ghost" && n.kind !== "frame" && n.kind !== "arrow" && (!n.shape || !!n.shape.text?.trim())) : [];
 
   useImperativeHandle(ref, () => ({
     set: (t: string) => {
@@ -196,7 +206,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
                   send();
                 }
               }}
-              placeholder={thread.kind === "item" ? "Describe a change, or ask for a new take" : thread.kind === "draft" ? (shaping ? PLACEHOLDER[picks.output] : "Reply, or tell it what to change") : context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
+              placeholder={thread.kind === "item" ? "Describe a change, or ask for a new take" : thread.kind === "draft" ? (shaping ? PLACEHOLDER[picks.output] : "Reply, or tell it what to change") : context.length && context.every((n) => n.shape) ? `Say what to make from ${context.length === 1 ? "this note" : "these notes"}` : context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
               className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
             />
             <div className="flex items-center gap-1.5 @max-[480px]:gap-1">

@@ -55,7 +55,8 @@ export interface PromptRequest {
   check?: boolean;
 }
 
-export type CanvasNodeRef = { kind: "creative" | "asset"; id: string };
+/** What is selected on the canvas, sent with a canvas prompt: things made, and the words of selected notes and text. */
+export type CanvasNodeRef = { kind: "creative" | "asset"; id: string } | { kind: "note"; id: string; text: string };
 
 /** What an editor's own agent works on: the open creative or version, and its conversation's id. */
 export type ItemRef = { kind: "creative" | "asset"; id: string; thread: string };

@@ -4,8 +4,8 @@
 // Stage (so it looks as it exports), a generated image with its brand check,
 // a clip that plays on hover, a music track with its waveform, and the
 // placeholder a generation holds while it runs (gen-field.tsx), which the new
-// file grows out of when it lands. Badges are counter-scaled so they read the
-// same at any zoom.
+// file grows out of when it lands, and the shapes the merchant draws
+// (shape-nodes.tsx). Badges are counter-scaled so they read the same at any zoom.
 
 import { AlertTriangle, Film, Image as ImageIcon, LayoutTemplate, Loader2, MessageSquareText, Music, Pause, Play, ShieldAlert, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, type AnimationEvent, type ReactNode } from "react";
@@ -16,6 +16,7 @@ import { bars, useWaveform } from "../focus/waveform";
 import { GenField, designPhase, jobSeconds, phaseAt, progressAt, revealStyle, seedAt, type FieldTone } from "../gen-field";
 import { useCanvas } from "./context";
 import { MAKER_NAME, type BoardNode, type MakerKind } from "./model";
+import { ShapeView } from "./shape-nodes";
 
 const FRAME = "size-full overflow-hidden rounded-[4px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_32px_-14px_rgba(0,0,0,0.28)]";
 
@@ -48,6 +49,7 @@ export interface NodeViewProps {
   kit: MediaKit | undefined;
   zoom: number;
   hovered: boolean;
+  selected?: boolean;
   /** The video node playing inline. */
   playing: boolean;
   onPlay: (on: boolean) => void;
@@ -68,6 +70,11 @@ export function NodeView(props: NodeViewProps) {
       return <AudioNode {...props} />;
     case "ghost":
       return <MakerSpot node={props.node} zoom={props.zoom} kind={props.node.ghost!.kind} state={props.node.ghost!.sent ? "sent" : "empty"} />;
+    case "frame":
+    case "arrow":
+    case "text":
+    case "sticky":
+      return <ShapeView node={node} zoom={props.zoom} lit={props.hovered || !!props.selected} />;
     default:
       return <PendingNode {...props} />;
   }

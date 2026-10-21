@@ -1,13 +1,14 @@
 "use client";
 
 // The canvas toolbar, down the left edge: the two ways to work the canvas
-// (select, and the hand that pans), your own files onto it, and the five
-// things Slice makes, each with a word under it. A maker button places a spot
+// (select, and the hand that pans), the drawing tools that organise it (frame,
+// arrow, text, sticky note: each draws one, then it is back to select), your
+// own files onto it, and the things Slice makes. A maker button places a spot
 // for that output on the canvas (in a shape that suits it), opens the spot's
 // own conversation in the sidebar and puts the cursor there; it stays lit
 // while the bar is set to make it. Nothing runs until you send.
 
-import { Hand, Loader2, MousePointer2, Upload } from "lucide-react";
+import { Frame, Hand, Loader2, MousePointer2, MoveUpRight, StickyNote, Type, Upload } from "lucide-react";
 import { useRef, type ReactNode } from "react";
 import { ASPECTS, OUTPUTS, type MediaOutput } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { OUTPUT_ICON } from "../prompt/menus";
 import { usePromptPicks, type PromptPicks } from "../prompt/options";
 import { FLOAT } from "./chrome";
-import { useCanvas } from "./context";
+import { useCanvas, type CanvasTool } from "./context";
 
 /** The strip the toolbar keeps on the left of the canvas (fits and the node toolbar stay clear of it). */
 export const TOOLBAR_ROOM = 64;
@@ -28,6 +29,13 @@ const MAKER_TIP: Partial<Record<MediaOutput, string>> = {
   poster: "Make a poster",
   video: "Make a video ad (any video, with music and voice)",
 };
+
+const DRAW: { tool: CanvasTool; label: string; keys: string; hint: string; icon: ReactNode }[] = [
+  { tool: "frame", label: "Frame", keys: "F", hint: "Drag to draw an area that holds things together", icon: <Frame /> },
+  { tool: "arrow", label: "Arrow", keys: "A", hint: "Drag between two things to link them", icon: <MoveUpRight /> },
+  { tool: "text", label: "Text", keys: "T", hint: "Click to write on the canvas", icon: <Type /> },
+  { tool: "sticky", label: "Sticky note", keys: "S", hint: "Click to leave a note (select it to send it with a prompt)", icon: <StickyNote /> },
+];
 
 const Sep = () => <span className="my-1 h-px w-5 shrink-0 bg-neutral-200" />;
 
@@ -91,6 +99,12 @@ export function CanvasToolbar({ left }: { left: number }) {
       <ToolButton label="Hand: drag to move around" keys="H or hold Space" active={tool === "hand"} onClick={() => setTool("hand")}>
         <Hand />
       </ToolButton>
+      <Sep />
+      {DRAW.map((d) => (
+        <ToolButton key={d.tool} label={d.label} keys={d.keys} hint={d.hint} active={tool === d.tool} onClick={() => setTool(tool === d.tool ? "select" : d.tool)}>
+          {d.icon}
+        </ToolButton>
+      ))}
       <Sep />
       <ToolButton label="Upload" hint="Images, video clips or music from your computer" busy={pending.includes("upload")} onClick={() => input.current?.click()}>
         <Upload />

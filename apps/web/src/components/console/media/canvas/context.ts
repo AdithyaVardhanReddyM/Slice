@@ -11,6 +11,7 @@ import type { MediaKit } from "@slice/backend/convex/mediaTypes";
 import type { Attachment } from "@/components/console/pages/builder/attachments";
 import type { BoardHandle } from "./board";
 import type { BoardNode, MakerKind, NodeKey, SidebarThread } from "./model";
+import type { DrawTool } from "./shapes";
 import type { AgentPool, MediaAgent } from "./use-media-agent";
 
 export interface ChatMessage {
@@ -27,8 +28,11 @@ export type SidebarTab = "chat" | "assets";
 /** The chat and assets sidebar's width; the canvas keeps clear of it while it is open. */
 export const SIDEBAR_W = 420;
 
-/** What a drag on the canvas does: select and move, or pan. */
-export type CanvasTool = "select" | "hand";
+/** What a drag on the canvas does: select and move, pan, or draw a frame, an arrow, text or a note. */
+export type CanvasTool = "select" | "hand" | DrawTool;
+
+/** What can change on a shape (mediaShapes). */
+export type ShapePatch = Partial<Pick<Doc<"mediaShapes">, "x" | "y" | "w" | "h" | "text" | "color" | "size" | "dashed" | "from" | "to">>;
 
 export interface CanvasEnv {
   campaignId: Id<"mediaCampaigns">;
@@ -84,6 +88,15 @@ export interface CanvasEnv {
   remove: (keys: NodeKey[]) => void;
   /** Download a node's file (exports posters and videos first). */
   download: (node: BoardNode) => Promise<void>;
+  /** The shape being typed in (a frame's name, a text, a note). */
+  editing: NodeKey | null;
+  setEditing: (key: NodeKey | null) => void;
+  /** Change a shape (shown at once). */
+  patchShape: (sid: string, patch: ShapePatch) => void;
+  /** Done typing in a shape: keep its words (an empty text goes). */
+  commitText: (node: BoardNode, text: string) => void;
+  /** A text's size on the page, so its box, outline and arrows follow it while it grows. */
+  measure: (key: NodeKey, size: { w: number; h: number }) => void;
 }
 
 export const CanvasContext = createContext<CanvasEnv | null>(null);

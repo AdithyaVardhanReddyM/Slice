@@ -120,8 +120,9 @@ class Selection(BaseModel):
 
 
 class Node(BaseModel):
-    kind: str  # "creative" | "asset"
+    kind: str  # "creative" | "asset" | "note" (a sticky note or text the merchant wrote on the canvas)
     id: str
+    text: str | None = None  # a note's words
 
 
 class Item(BaseModel):
