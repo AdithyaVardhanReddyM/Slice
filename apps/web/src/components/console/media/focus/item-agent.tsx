@@ -13,11 +13,10 @@ import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent,
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { useMediaUpload } from "@/lib/media/upload";
-import { usePagesModel } from "@/lib/pages/models";
 import { SliceMark } from "@/components/console/logo";
 import { AttachmentStrip, type Attachment } from "@/components/console/pages/builder/attachments";
 import { useCanvas, type ChatMessage } from "../canvas/context";
-import { useMediaAgent, type ItemRef, type MediaSelection } from "../canvas/use-media-agent";
+import { agentOf, type ItemRef, type MediaSelection } from "../canvas/use-media-agent";
 import { EDGE, TRAY } from "../prompt/prompt-bar";
 import { Thread } from "../sidebar/chat";
 
@@ -31,14 +30,14 @@ export interface ItemAgentHandle {
 /** The editors' right column. */
 export const ITEM_AGENT_W = 340;
 
-const SUGGESTIONS: Record<ItemNoun, string[]> = {
+export const SUGGESTIONS: Record<ItemNoun, string[]> = {
   poster: ["Make the headline punchier", "Try a bolder layout", "Use a warmer photo", "Start over with a new idea"],
   video: ["Tighten it to 10 seconds", "More upbeat music", "Add captions for muted feeds", "Re-cut it with a stronger hook"],
   image: ["Warmer, golden-hour light", "A cleaner background", "Remove the people", "A completely new take"],
   clip: ["Make it golden hour", "Add light rain", "A slower camera move", "A completely new take"],
 };
 
-const WHAT_IT_DOES: Record<ItemNoun, string> = {
+export const WHAT_IT_DOES: Record<ItemNoun, string> = {
   poster: "Ask for a change to the copy, the picture or the layout, or a fresh take on the whole poster. Select something on the page first to point at it.",
   video: "Ask for a change to a shot, the text, the music or the voice, or a fresh cut of the whole video. Select a shot or a layer first to point at it.",
   image: "Ask for a change (the light, the background, something added or taken out) or a completely new take. Each one lands as a new version beside this one.",
@@ -60,10 +59,10 @@ export const ItemAgentPanel = forwardRef<
     className?: string;
   }
 >(function ItemAgentPanel({ item, noun, target, selection, beforeTurn, className }, ref) {
-  const { campaignId, notify } = useCanvas();
-  const [model] = usePagesModel();
+  const { campaignId, notify, agents } = useCanvas();
   const messages = (useQuery(api.media.itemChat, { campaignId, itemId: item.thread }) ?? []) as ChatMessage[];
-  const agent = useMediaAgent({ campaignId, history: messages.map((m) => ({ role: m.role, text: m.text })), model, beforeTurn, item });
+  // The same conversation the canvas sidebar shows when this item is selected, live turn included.
+  const agent = agentOf(agents, item.thread, { history: messages.map((m) => ({ role: m.role, text: m.text })), item, beforeTurn });
   const [text, setText] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
   const field = useRef<HTMLTextAreaElement>(null);

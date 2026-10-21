@@ -5,10 +5,30 @@
 // a node's height follows its content.
 
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
-import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, creativeName, docDuration, modelLabel, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
+import { AUDIO_NODE, FORMATS, aspectSize, boardWidth, creativeName, docDuration, modelLabel, type Aspect, type BoardPos, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
+import type { ItemNoun } from "../focus/item-agent";
+import type { ItemRef, MakerSpot } from "./use-media-agent";
 
-export type NodeKind = "poster" | "video" | "image" | "clip" | "audio" | "pending";
-export type NodeRef = { kind: "creative" | "asset" | "job"; id: string };
+export type NodeKind = "poster" | "video" | "image" | "clip" | "audio" | "pending" | "ghost";
+export type NodeRef = { kind: "creative" | "asset" | "job" | "ghost"; id: string };
+
+/** What a toolbar maker makes. */
+export type MakerKind = "image" | "poster" | "video";
+
+/**
+ * A toolbar maker's spot before its first prompt: placed on the canvas and opened in the
+ * sidebar, but only in this browser (an empty one goes when you click away). Its id is the
+ * thread its conversation runs in; once sent, a design spot holds the place in Convex.
+ */
+export interface Ghost {
+  id: string;
+  kind: MakerKind;
+  aspect: Aspect;
+  x: number;
+  y: number;
+  /** Its first prompt is on its way. */
+  sent: boolean;
+}
 export type NodeKey = string;
 
 export interface BoardNode {
@@ -25,6 +45,7 @@ export interface BoardNode {
   creative?: Doc<"mediaCreatives">;
   asset?: Doc<"mediaAssets">;
   job?: Doc<"mediaJobs">;
+  ghost?: Ghost;
   /** USD spent on it (its jobs, or the file's own cost). */
   cost: number;
   /** Generations still running inside it (a video's shots). */
@@ -47,7 +68,9 @@ export function nameFromPrompt(prompt: string | undefined, fallback: string) {
 
 const seconds = (s: number | undefined) => (s ? `${Math.round(s)}s` : "");
 
-const JOB_NOUN: Record<string, string> = { image: "Image", video: "Clip", edit: "Clip edit", music: "Music", voice: "Voiceover", design: "Poster", "design-video": "Video ad" };
+const JOB_NOUN: Record<string, string> = { image: "Image", video: "Clip", edit: "Clip edit", music: "Music", voice: "Voiceover", design: "Poster", "design-video": "Video ad", "design-image": "Image" };
+
+export const MAKER_NAME: Record<MakerKind, string> = { image: "New image", poster: "New poster", video: "New video ad" };
 
 export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: Doc<"mediaAssets">[]; jobs: Doc<"mediaJobs">[] }): BoardNode[] {
   const out: BoardNode[] = [];
@@ -110,7 +133,7 @@ export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: D
   }
 
   for (const j of data.jobs) {
-    if (!j.board || j.dismissed || !(OPEN.has(j.status) || j.status === "failed")) continue;
+    if (!j.board || j.dismissed || !(OPEN.has(j.status) || j.status === "failed" || j.status === "draft")) continue;
     const audio = j.kind === "music" || j.kind === "voice";
     const s = aspectSize(j.aspect);
     out.push({
@@ -127,6 +150,48 @@ export function buildNodes(data: { creatives: Doc<"mediaCreatives">[]; assets: D
     });
   }
   return out;
+}
+
+export function ghostNode(g: Ghost): BoardNode {
+  const s = aspectSize(g.aspect);
+  const w = boardWidth(s.w, s.h);
+  return { key: keyOf({ kind: "ghost", id: g.id }), ref: { kind: "ghost", id: g.id }, kind: "ghost", x: g.x, y: g.y, w, h: (w * s.h) / s.w, name: MAKER_NAME[g.kind], meta: g.aspect, ghost: g, cost: 0, running: 0 };
+}
+
+/** The conversation a node was made in, when it began in its own spot (a maker's thread). */
+export function nodeThread(n: BoardNode | undefined): string | undefined {
+  return n?.ghost?.id ?? n?.job?.thread ?? n?.creative?.thread ?? n?.asset?.thread;
+}
+
+/** What the sidebar's chat is: the canvas conversation, a maker's thread (with its spot until something lands), or one item's own. */
+export type SidebarThread = { kind: "campaign" } | { kind: "draft"; thread: string; node: BoardNode; spot?: MakerSpot } | { kind: "item"; thread: string; node: BoardNode; item: ItemRef; noun: ItemNoun };
+
+const SPOT_KIND: Record<string, MakerKind> = { design: "poster", "design-video": "video", "design-image": "image" };
+
+/** The conversation a selected node opens. */
+export function threadOf(n: BoardNode | undefined, assets: Doc<"mediaAssets">[]): SidebarThread {
+  if (!n) return { kind: "campaign" };
+  if (n.ghost) return { kind: "draft", thread: n.ghost.id, node: n, spot: { x: n.x, y: n.y, w: n.w, aspect: n.ghost.aspect, kind: n.ghost.kind } };
+  // A design spot still waits for what its thread makes; a generation already running in it has taken it.
+  if (n.job?.thread) return { kind: "draft", thread: n.job.thread, node: n, spot: SPOT_KIND[n.job.kind] && n.job.board ? { ...n.job.board, aspect: n.job.aspect ?? "4:5", kind: SPOT_KIND[n.job.kind] } : undefined };
+  if (n.creative) {
+    const thread = n.creative.thread ?? n.creative._id;
+    return { kind: "item", thread, node: n, item: { kind: "creative", id: n.creative._id, thread }, noun: n.kind === "video" ? "video" : "poster" };
+  }
+  if (n.asset && (n.kind === "image" || n.kind === "clip")) {
+    const root = rootAsset(n.asset, assets);
+    const thread = root.thread ?? root._id;
+    return { kind: "item", thread, node: n, item: { kind: "asset", id: n.asset._id, thread }, noun: n.kind };
+  }
+  return { kind: "campaign" };
+}
+
+/** An image's or clip's first version: its thread is that one's. */
+export function rootAsset(a: Doc<"mediaAssets">, assets: Doc<"mediaAssets">[]) {
+  const byId = new Map(assets.map((x) => [x._id as string, x]));
+  let cur = a;
+  for (let hops = 0; cur.parentId && byId.has(cur.parentId) && hops < 50; hops++) cur = byId.get(cur.parentId)!;
+  return cur;
 }
 
 /** The box around some nodes, for zoom-to-fit. */

@@ -7,7 +7,7 @@
 // file grows out of when it lands. Badges are counter-scaled so they read the
 // same at any zoom.
 
-import { AlertTriangle, Film, Loader2, Music, Pause, Play, ShieldAlert, ShieldCheck, Volume2, VolumeX } from "lucide-react";
+import { AlertTriangle, Film, Image as ImageIcon, LayoutTemplate, Loader2, MessageSquareText, Music, Pause, Play, ShieldAlert, ShieldCheck, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState, type AnimationEvent, type ReactNode } from "react";
 import { docDuration, isDesignJob, type MediaDoc, type MediaKit } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ import { FixedStage, usePlayback } from "../stage";
 import { bars, useWaveform } from "../focus/waveform";
 import { GenField, designPhase, jobSeconds, phaseAt, progressAt, revealStyle, seedAt, type FieldTone } from "../gen-field";
 import { useCanvas } from "./context";
-import type { BoardNode } from "./model";
+import { MAKER_NAME, type BoardNode, type MakerKind } from "./model";
 
 const FRAME = "size-full overflow-hidden rounded-[4px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_32px_-14px_rgba(0,0,0,0.28)]";
 
@@ -66,6 +66,8 @@ export function NodeView(props: NodeViewProps) {
       return <ClipNode {...props} />;
     case "audio":
       return <AudioNode {...props} />;
+    case "ghost":
+      return <MakerSpot node={props.node} zoom={props.zoom} kind={props.node.ghost!.kind} state={props.node.ghost!.sent ? "sent" : "empty"} />;
     default:
       return <PendingNode {...props} />;
   }
@@ -297,11 +299,48 @@ const PENDING_NOUN: Record<string, string> = { image: "Generating image", video:
 
 const pill = "block rounded-full bg-white/85 px-2.5 py-1 text-[11px] leading-4 font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] backdrop-blur-md";
 
+const MAKER_ICON: Record<MakerKind, ReactNode> = { image: <ImageIcon />, poster: <LayoutTemplate />, video: <Film /> };
+const SPOT_KIND: Record<string, MakerKind> = { design: "poster", "design-video": "video", "design-image": "image" };
+
+/**
+ * A toolbar maker's spot: empty until its first prompt, then starting, or
+ * waiting for answers to the agent's questions. A comet of the Slice palette
+ * circles its edge over a soft halo, the dot field resting inside; when it
+ * starts, the same field (same seed, same spot) livens into the generation.
+ */
+function MakerSpot({ node, zoom, kind, state }: { node: BoardNode; zoom: number; kind: MakerKind; state: "empty" | "sent" | "waiting" }) {
+  const big = node.w * zoom > 150;
+  const line = { empty: "Describe it in the chat", sent: "Starting", waiting: "Answer in the chat to carry on" }[state];
+  return (
+    <div className="relative size-full duration-500 animate-in fade-in-0 zoom-in-95">
+      <div aria-hidden className="media-ghost-halo pointer-events-none absolute -inset-5 rounded-[36px] blur-2xl" />
+      {/* A video ad's spot is dark, like the video it becomes. */}
+      <div className="media-ghost-edge relative size-full overflow-hidden rounded-[6px] shadow-[0_18px_40px_-22px_rgba(160,70,0,0.45)]" style={{ borderWidth: Math.max(1.5, 2 / zoom), ...(kind === "video" ? { ["--ghost-fill" as string]: "#17130f" } : {}) }}>
+        <GenField tone={kind === "video" ? "dark" : "light"} seed={seedAt(node.x, node.y)} level={state === "sent" ? 0.85 : 0.4} />
+      </div>
+      {big && (
+        <Pin zoom={zoom} at="c">
+          <div className="flex w-60 flex-col items-center gap-2 text-center">
+            <span className="flex size-10 items-center justify-center rounded-full text-white shadow-[0_8px_22px_-8px_rgba(255,121,0,0.8)] [&_svg]:size-[18px]" style={{ background: "linear-gradient(140deg, var(--color-brand-amber), var(--color-brand-orange))" }}>
+              {state === "waiting" ? <MessageSquareText /> : MAKER_ICON[kind]}
+            </span>
+            <span className="rounded-full bg-white/80 px-3 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.05)] ring-1 ring-black/[0.04] backdrop-blur-md">
+              <span className="block text-[13px] leading-4 font-semibold text-neutral-900">{MAKER_NAME[kind]}</span>
+              <span className={cn("block text-[11px] leading-4 text-neutral-500", state === "sent" && "pg-shimmer")}>{line}</span>
+            </span>
+          </div>
+        </Pin>
+      )}
+    </div>
+  );
+}
+
 function PendingNode({ node, zoom }: NodeViewProps) {
-  const { jobs, agent } = useCanvas();
+  const { jobs, agents } = useCanvas();
   const j = node.job!;
   const failed = j.status === "failed";
-  const now = useNow(!failed);
+  const now = useNow(!failed && j.status !== "draft");
+  if (j.status === "draft") return <MakerSpot node={node} zoom={zoom} kind={SPOT_KIND[j.kind] ?? "poster"} state="waiting" />;
   if (failed)
     return (
       <div className={cn(FRAME, "relative bg-red-50 ring-1 ring-red-200")}>
@@ -317,7 +356,8 @@ function PendingNode({ node, zoom }: NodeViewProps) {
   const expected = jobSeconds(j, jobs);
   // A design says what the agent is really doing, while this window runs its turn.
   const design = isDesignJob(j.kind);
-  const phase = (design && agent.busy && agent.live && designPhase(agent.live.steps)) || phaseAt(j, expected, now);
+  const turn = agents.lives[j.thread ?? "campaign"];
+  const phase = (design && turn && turn.status !== null && !turn.error && designPhase(turn.steps)) || phaseAt(j, expected, now);
   const dark = j.kind === "design-video";
   const big = node.w * zoom > 150;
   return (

@@ -2,10 +2,13 @@
 
 // The conversation with the agent, in the sidebar. The prompt bar docks under
 // it, so this is only the thread: what was asked, what the agent did (its
-// steps), and its answers and questions. The editors' own agents show their
-// threads with the same Thread.
+// steps), and its answers and questions. Which conversation follows the
+// selection (the canvas chat, a maker's spot, one item's own); a strip on top
+// says whose it is. The editors' own agents show their threads with the same
+// Thread.
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { Film, Image as ImageIcon, LayoutTemplate, MessagesSquare, X } from "lucide-react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { BuildStep } from "@/lib/pages/stream";
 import type { Attachment } from "@/components/console/pages/builder/attachments";
@@ -16,6 +19,8 @@ import { PillText } from "@/components/console/email/editor/chat-composer";
 import { DoneTurnCard, LiveTurnCard } from "@/components/console/email/editor/turn-card";
 import { useCanvas, type ChatMessage } from "../canvas/context";
 import { MEDIA_COPY, MEDIA_PHASES, type MediaAgent } from "../canvas/use-media-agent";
+import { MAKER_NAME, type MakerKind } from "../canvas/model";
+import { SUGGESTIONS, WHAT_IT_DOES } from "../focus/item-agent";
 import { QuestionsCard } from "./questions-card";
 
 function useStickToBottom() {
@@ -68,21 +73,58 @@ const questionsOf = (m: ChatMessage | undefined) => {
 
 const clock = (at: number) => new Date(at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
+const MAKER_ICON: Record<MakerKind, ReactNode> = { image: <ImageIcon />, poster: <LayoutTemplate />, video: <Film /> };
+
+const MAKER_HINT: Record<MakerKind, string> = {
+  image: "Describe the image: the subject, the setting, the light and the mood. It lands in the spot on the canvas.",
+  poster: "What is the poster for? An offer, a launch, an event. Slice may ask a couple of quick questions, then designs it in the spot on the canvas.",
+  video: "What is the video about? Slice may ask about music and voice first, then plans the shots, text and sound, and builds it in the spot on the canvas.",
+};
+
+const tip = "rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-neutral-600 ring-1 ring-black/[0.04]";
+
+/** The sidebar's conversation, as the selection decides. */
 export function ChatThread() {
-  const { agent, messages, sendPrompt } = useCanvas();
+  const { agent, thread, threadMessages, threadLoaded, send, compose, select } = useCanvas();
+  const maker: MakerKind | null = thread.kind === "draft" ? (thread.spot?.kind ?? thread.node.ghost?.kind ?? null) : null;
+  const empty =
+    thread.kind === "item" ? (
+      <div className="space-y-3">
+        <p className="text-[13px] leading-5 text-neutral-600">{WHAT_IT_DOES[thread.noun]}</p>
+        <div className="flex flex-col items-start gap-1.5">
+          {SUGGESTIONS[thread.noun].map((s) => (
+            <button key={s} type="button" onClick={() => compose(s)} className="rounded-full bg-neutral-100 px-3 py-1.5 text-left text-[13px] text-neutral-700 transition-colors hover:bg-neutral-200/70 hover:text-neutral-950">
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : thread.kind === "draft" ? (
+      <div className={tip}>{maker ? MAKER_HINT[maker] : "Say what to make; it lands in the spot on the canvas."}</div>
+    ) : (
+      <div className={tip}>Ask for anything: an image, a poster or a video ad. Or pick one in the toolbar to place it on the canvas first. Select something to open its own conversation.</div>
+    );
   return (
-    <Thread
-      agent={agent}
-      messages={messages}
-      onAnswer={sendPrompt}
-      className="pb-[calc(var(--dock-h,120px)+20px)]"
-      empty={<div className="rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-neutral-600 ring-1 ring-black/[0.04]">Ask for anything: an image, a poster, a clip, a video ad or music. Select things on the canvas first to change them or build from them.</div>}
-    />
+    <>
+      <div className="flex h-11 shrink-0 items-center gap-2.5 border-b border-black/[0.06] px-4">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-600 [&_svg]:size-3.5">{thread.kind === "campaign" ? <MessagesSquare /> : maker ? MAKER_ICON[maker] : thread.kind === "item" ? MAKER_ICON[thread.noun === "video" ? "video" : thread.noun === "poster" ? "poster" : "image"] : <MessagesSquare />}</span>
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[13px] font-semibold text-neutral-900">{thread.kind === "campaign" ? "Campaign chat" : thread.kind === "draft" ? (thread.node.ghost ? MAKER_NAME[thread.node.ghost.kind] : thread.node.name) : thread.node.name}</span>
+          <span className="block truncate text-[11px] text-neutral-500">{thread.kind === "campaign" ? "Everything on this canvas" : thread.kind === "draft" ? "Its own conversation" : `This ${thread.noun}'s own conversation`}</span>
+        </span>
+        {thread.kind !== "campaign" && (
+          <button type="button" title="Back to the campaign chat" aria-label="Back to the campaign chat" onClick={() => select([])} className="flex size-7 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+      <Thread key={thread.kind === "campaign" ? "campaign" : thread.thread} agent={agent} messages={threadMessages} onAnswer={(t) => send(t)} className="pb-12" style={{ marginBottom: "calc(var(--dock-h, 120px) + 16px)" }} empty={threadLoaded ? empty : null} />
+    </>
   );
 }
 
 /** One agent's conversation: the saved turns, then the live one. */
-export function Thread({ agent, messages, onAnswer, empty, className }: { agent: MediaAgent; messages: ChatMessage[]; onAnswer: (text: string) => void; empty?: ReactNode; className?: string }) {
+export function Thread({ agent, messages, onAnswer, empty, className, style }: { agent: MediaAgent; messages: ChatMessage[]; onAnswer: (text: string) => void; empty?: ReactNode; className?: string; style?: CSSProperties }) {
   const { scroller, content, pin } = useStickToBottom();
   const live = agent.live && !(agent.live.status === null && !agent.live.error && messages.length > agent.live.baseCount) ? agent.live : null;
 
@@ -103,7 +145,7 @@ export function Thread({ agent, messages, onAnswer, empty, className }: { agent:
   const answeringCard = !!live && !promptSaved && !!questionsOf(messages[messages.length - 1]);
 
   return (
-    <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain" data-board-scroll>
+    <div ref={scroller} className="media-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain" style={style} data-board-scroll>
       <div ref={content} className={cn("space-y-5 px-4 pt-4", className)}>
         {messages.length === 0 && !live && empty}
         {messages.map((m, i) => {

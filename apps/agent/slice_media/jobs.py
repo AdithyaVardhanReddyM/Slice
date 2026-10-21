@@ -125,11 +125,18 @@ async def start_asset(
     source: str = "generated",
     parent: str | None = None,
     target: str | None = None,
+    job_id: str | None = None,
+    thread: str | None = None,
 ) -> str:
     """A standalone generation (an image, a clip, a track): the job holds a spot on the canvas
     while it runs, and the file takes that spot when it lands. `target` marks the job as a new
-    version of that item (its editor shows it coming). Returns the job id."""
-    job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}), **({"targetId": target} if target else {}))
+    version of that item (its editor shows it coming). With `job_id`, a design spot already on
+    the canvas becomes this generation. `thread` is the conversation it was asked for in.
+    Returns the job id."""
+    if job_id:
+        await store.job(campaign_id, jobId=job_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", aspect=aspect, **({"thread": thread} if thread else {}))
+    else:
+        job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}), **({"targetId": target} if target else {}), **({"thread": thread} if thread else {}))
     task = asyncio.create_task(_run_asset(campaign_id, job_id, kind, model, prompt, work, lane, source, parent))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)

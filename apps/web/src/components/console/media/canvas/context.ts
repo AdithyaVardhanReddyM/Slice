@@ -1,15 +1,17 @@
 "use client";
 
 // What every part of the canvas workspace reads: the campaign's live data,
-// the nodes and selection, the open focus editor, the agent, and the actions
-// that call the models directly (studio buttons: no chat turn, no LLM cost).
+// the nodes and selection, the open focus editor, the conversations (the
+// sidebar's follows the selection), and the actions that call the models
+// directly (studio buttons: no chat turn, no LLM cost).
 
 import { createContext, useContext, type RefObject } from "react";
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
 import type { MediaKit } from "@slice/backend/convex/mediaTypes";
+import type { Attachment } from "@/components/console/pages/builder/attachments";
 import type { BoardHandle } from "./board";
-import type { BoardNode, NodeKey } from "./model";
-import type { MediaAgent } from "./use-media-agent";
+import type { BoardNode, MakerKind, NodeKey, SidebarThread } from "./model";
+import type { AgentPool, MediaAgent } from "./use-media-agent";
 
 export interface ChatMessage {
   id: string;
@@ -44,7 +46,21 @@ export interface CanvasEnv {
   focus: NodeKey | null;
   openFocus: (key: NodeKey) => void;
   closeFocus: () => void;
+  /** Every conversation's live turn (the canvas chat, makers' threads, items' own). */
+  agents: AgentPool;
+  /** The conversation in the sidebar: an item's own when one is selected, a maker's thread for its spot, else the canvas chat. */
+  thread: SidebarThread;
+  threadMessages: ChatMessage[];
+  /** Its saved messages have arrived (switching threads loads them). */
+  threadLoaded: boolean;
+  /** The sidebar conversation's agent. */
   agent: MediaAgent;
+  /** Send in the sidebar's conversation (the prompt bar, and answers to the agent's questions). */
+  send: (text: string, attachments?: Attachment[]) => void;
+  /** A toolbar maker: its spot on the canvas, opened in the sidebar for the first prompt. */
+  make: (kind: MakerKind) => void;
+  /** Make something from a node at once, in its own spot beside it. */
+  makeFrom: (kind: MakerKind, text: string, from: BoardNode) => void;
   board: RefObject<BoardHandle | null>;
   tool: CanvasTool;
   setTool: (tool: CanvasTool) => void;
@@ -64,8 +80,6 @@ export interface CanvasEnv {
   focusPrompt: () => void;
   /** Upload files into the library and onto the canvas, the first centred on `at` (else the view). */
   placeFiles: (files: File[], at?: { x: number; y: number }) => Promise<void>;
-  /** Send a prompt-bar turn now, with the current picks and selection. */
-  sendPrompt: (text: string, overrides?: { output?: string }) => void;
   /** Delete or take off the canvas, after asking when it can't be undone. */
   remove: (keys: NodeKey[]) => void;
   /** Download a node's file (exports posters and videos first). */

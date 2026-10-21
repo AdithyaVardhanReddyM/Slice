@@ -51,6 +51,7 @@ function typicalSeconds(kind: string, model: string) {
   if (kind === "voice") return 12;
   if (kind === "design") return 60;
   if (kind === "design-video") return 75;
+  if (kind === "design-image") return 20;
   return 40;
 }
 
@@ -80,10 +81,12 @@ const PHASES: Record<string, string[]> = {
   voice: ["Warming up", "Recording", "Cleaning up the take"],
   design: ["Working out the idea", "Choosing the imagery", "Laying it out", "Setting the type", "Adding final touches"],
   "design-video": ["Working out the idea", "Planning the shots", "Casting the first frame", "Laying it out", "Adding final touches"],
+  "design-image": ["Reading the brief", "Working out the shot", "Setting the scene"],
 };
 
 /** What the agent designing a poster or video ad is doing, from its live steps (null before its first). */
 const DESIGN_STEP: Record<string, string> = {
+  make_image: "Setting the scene",
   get_audience: "Reading the audience",
   qloo_search: "Finding cultural hooks",
   qloo_insights: "Finding cultural hooks",

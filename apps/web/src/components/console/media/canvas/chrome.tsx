@@ -81,13 +81,13 @@ function CampaignName({ fit, className }: { fit?: boolean; className?: string })
 }
 
 function PanelToggle() {
-  const { sidebar, setSidebar, agent } = useCanvas();
+  const { sidebar, setSidebar, agents } = useCanvas();
   const label = sidebar.open ? "Hide the panel" : "Show the chat";
   return (
     <Tip label={label}>
       <button type="button" aria-label={label} onClick={() => setSidebar({ open: !sidebar.open })} className={iconButton}>
         {sidebar.open ? <PanelLeftClose /> : <PanelLeft />}
-        {!sidebar.open && agent.busy && <Loader2 className="absolute -top-0.5 -right-0.5 size-3! animate-spin rounded-full bg-white text-neutral-500" />}
+        {!sidebar.open && agents.busy && <Loader2 className="absolute -top-0.5 -right-0.5 size-3! animate-spin rounded-full bg-white text-neutral-500" />}
       </button>
     </Tip>
   );

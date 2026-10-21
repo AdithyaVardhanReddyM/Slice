@@ -651,10 +651,13 @@ async def make_image(prompt: str, tool_context: ToolContext, aspect: str = "1:1"
     except J.BudgetError as e:
         return {"ok": False, "error": str(e)}
     rules = _check_rules(state, bool(refs))
+    # The first take fills the spot held for this turn (a toolbar maker's), and every take keeps its conversation.
+    spot = take_spot(state)
+    thread = state.get(THREAD) or None
     jobs: list[str] = []
     for i in range(count):
         take = prompt if count == 1 else f"{prompt} (Take {i + 1} of {count}: vary the framing and moment.)"
-        jobs.append(await J.start_asset(cid, kind="image", model=m, prompt=take, estimate=M.image_cost(m), work=J.image_asset_work(prompt=take + _style_suffix(state), model=m, aspect=aspect, refs=refs, rules=rules), aspect=aspect, near=near or (jobs[-1] if jobs else None), lane="image"))
+        jobs.append(await J.start_asset(cid, kind="image", model=m, prompt=take, estimate=M.image_cost(m), work=J.image_asset_work(prompt=take + _style_suffix(state), model=m, aspect=aspect, refs=refs, rules=rules), aspect=aspect, near=near or (jobs[-1] if jobs else None), lane="image", job_id=spot if i == 0 else None, thread=thread))
     _bump(state)
     record("slice", "Make images", f"{count} on {M.IMAGE_LABEL.get(m, m)}, ~${estimate:.2f}", ms=0)
     return {"ok": True, "jobs": jobs, "model": M.IMAGE_LABEL.get(m, m), "estimate": estimate, "brandCheck": bool(rules)}
@@ -980,10 +983,29 @@ async def _start_jobs(state: dict[str, Any], creative_id: str, plan: list[dict[s
 
 # --- design spots ---------------------------------------------------------------------
 # While the agent works on a new poster or video ad, a placeholder (a "design" job) holds
-# its spot on the canvas so the merchant sees it coming; the next new creative written
-# takes the spot. routes.py opens them and drops any still open when the turn ends.
+# its spot on the canvas so the merchant sees it coming; the next new creative written (or
+# the first image made) takes the spot. routes.py opens them and, when the turn ends, drops
+# the ones nothing took, or parks a spot the merchant placed with a toolbar maker until its
+# conversation carries on. Spots are per conversation (SPOT_KEY), so two threads working at
+# once never take each other's.
 
-_spots: dict[str, list[str]] = {}  # campaign id -> open placeholder job ids, oldest first
+THREAD = "md_thread"  # a toolbar maker's conversation: what the turn makes keeps it
+SPOT_KEY = "md_spot_key"  # whose spots this turn's tools take (the session's id)
+
+_spots: dict[str, list[str]] = {}  # spot key -> open placeholder job ids, oldest first
+
+
+def _spot_key(state: dict[str, Any]) -> str:
+    return str(state.get(SPOT_KEY) or _cid(state))
+
+
+def take_spot(state: dict[str, Any]) -> str | None:
+    spots = _spots.get(_spot_key(state)) or []
+    return spots.pop(0) if spots else None
+
+
+def put_back(state: dict[str, Any], spot: str) -> None:
+    _spots.setdefault(_spot_key(state), []).insert(0, spot)
 
 
 def design_shape(state: dict[str, Any], *, video: bool | None = None, format: str = "") -> dict[str, Any] | None:
@@ -1001,41 +1023,46 @@ def design_shape(state: dict[str, Any], *, video: bool | None = None, format: st
     return {"kind": kind, "format": format if format in D.FORMATS else ASPECT_FORMAT.get(str(o.get("aspect") or ""), "story")}
 
 
-async def open_spot(state: dict[str, Any], shape: dict[str, Any]) -> str | None:
-    """Hold a spot on the canvas for the creative being designed, beside what is selected."""
+async def open_spot(state: dict[str, Any], shape: dict[str, Any], *, board: dict[str, float] | None = None, thread: str | None = None) -> str | None:
+    """Hold a spot on the canvas for what is being made: the one given (a toolbar maker's,
+    reused for its thread), else beside what is selected."""
     cid = _cid(state)
     spec = D.FORMATS.get(shape["format"]) or D.FORMATS["story"]
     near = next((n.get("id") for n in state.get(NODES) or [] if n.get("id")), None)
-    name = {"poster": "Poster", "video": "Video ad"}.get(shape["kind"], "New design")
+    name = {"poster": "New poster", "video": "New video ad", "image": "New image"}.get(shape["kind"], "New design")
+    where: dict[str, Any] = {"board": board} if board else {"place": True, "nearId": near}
     try:
-        job = await store.job(cid, kind="design-video" if shape["kind"] == "video" else "design", model="", prompt=name, status="running", estimate=0, place=True, aspect=f"{spec['w']}:{spec['h']}", nearId=near)
+        job = await store.job(cid, kind={"video": "design-video", "image": "design-image"}.get(shape["kind"], "design"), model="", prompt=name, status="running", estimate=0, aspect=shape.get("aspect") or f"{spec['w']}:{spec['h']}", thread=thread, **where)
     except Exception as err:
         log.warning("design spot not held: %s", err)
         return None
-    _spots.setdefault(cid, []).append(job)
+    spots = _spots.setdefault(_spot_key(state), [])
+    if job not in spots:
+        spots.append(job)
     return job
 
 
-def spot_open(cid: str, held: list[str]) -> bool:
-    return any(j in (_spots.get(cid) or []) for j in held)
+def spot_open(key: str, held: list[str]) -> bool:
+    return any(j in (_spots.get(key) or []) for j in held)
 
 
-async def release_spots(cid: str, held: list[str]) -> None:
-    """Drop the turn's placeholders that no creative took (it asked a question, failed or was stopped)."""
+async def release_spots(cid: str, key: str, held: list[str], *, park: bool = False) -> None:
+    """The turn's spots nothing took (it asked a question, failed or was stopped): dropped, or
+    parked as drafts when the merchant placed them (they wait for the conversation to go on)."""
     for job in held:
-        spots = _spots.get(cid) or []
+        spots = _spots.get(key) or []
         if job not in spots:
             continue
         spots.remove(job)
         try:
-            await store.job(cid, jobId=job, drop=True)
+            await store.job(cid, jobId=job, **({"status": "draft"} if park else {"drop": True}))
         except Exception as err:
-            log.warning("design spot %s not dropped: %s", job, err)
+            log.warning("design spot %s not released: %s", job, err)
 
 
 async def _save(state: Any, *, doc: dict[str, Any], creative_id: str | None, audience: str | None, name: str | None, why: list | None, note: str, near: str | None = None, spot: str | None = None) -> dict[str, Any]:
     cid = _cid(state)
-    res = await store.write_creative(cid, doc, creativeId=creative_id, name=name, audienceKey=audience, why=why, note=note, nearId=near, designJobId=spot)
+    res = await store.write_creative(cid, doc, creativeId=creative_id, name=name, audienceKey=audience, why=why, note=note, nearId=near, designJobId=spot, thread=(state.get(THREAD) or None) if not creative_id else None)
     new_id = str(res["id"])
     # Read back the stored (validated) doc so ids and outlines match what the console shows.
     data = await store.load(cid)
@@ -1093,13 +1120,12 @@ async def write_creative(audience_id: str, format: str, doc: dict, tool_context:
             return {"ok": False, "problems": [str(e)], "hint": "nothing was saved; use stills, fewer or shorter shots, reuse, or ask the merchant"}
     async with _lock(creative_id or f"new:{audience_id}:{format}"):
         # A new creative lands in the spot held for it while it was designed.
-        spots = _spots.get(_cid(state)) or []
-        spot = spots.pop(0) if spots and not creative_id else None
+        spot = None if creative_id else take_spot(state)
         try:
             saved = await _save(state, doc=norm, creative_id=creative_id or None, audience=audience_id, name=name or None, why=[w for w in (_coerce(why) or []) if isinstance(w, dict)] or None, note="Written by the agent", near=near or None, spot=spot)
         except Exception as err:
             if spot:
-                _spots.setdefault(_cid(state), []).insert(0, spot)
+                put_back(state, spot)
             return {"ok": False, "problems": [f"not saved: {str(err)[:300]}"]}
         jobs = await _start_jobs(state, saved["id"], plan) if plan else []
     out: dict[str, Any] = {"ok": True, "creativeId": saved["id"], "version": saved["version"], "outline": D.outline(saved["doc"])}

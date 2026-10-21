@@ -6,8 +6,10 @@
 // for. Big and centred at the bottom of the canvas to start; once a
 // conversation is going it docks into the sidebar (the workspace animates it
 // there, and the brand moves up into the sidebar's header) and the chat
-// continues above it. Whatever is selected on the canvas rides along, so
-// "warmer light on this" lands.
+// continues above it. It sends into the sidebar's conversation: the canvas
+// chat (whatever is selected rides along, so "warmer light on this" lands), a
+// maker's spot (its controls shape the spot until the first prompt), or one
+// item's own, where it only changes that item.
 
 import { ArrowUp, Paperclip, Square, X } from "lucide-react";
 import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent } from "react";
@@ -66,7 +68,7 @@ function Thumb({ node }: { node: BoardNode }) {
 }
 
 export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?: () => void; className?: string }>(function PromptBar({ docked, onSent, className }, ref) {
-  const { agent, nodes, selected, select, campaignId, audienceId, notify } = useCanvas();
+  const { agent, nodes, selected, select, campaignId, thread, send: sendTurn } = useCanvas();
   const [picks, setPicks] = usePromptPicks();
   const [text, setText] = useState("");
   const [files, setFiles] = useState<Pending[]>([]);
@@ -75,8 +77,10 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
   const nextId = useRef(1);
   const upload = useMediaUpload(campaignId);
   const busy = agent.busy;
-  const estimate = promptEstimate(picks);
-  const context = nodes.filter((n) => selected.includes(n.key) && n.kind !== "pending");
+  // What to make is set here for the canvas chat and for a maker's spot until its first prompt; an item's own chat only changes it.
+  const shaping = thread.kind === "campaign" || (thread.kind === "draft" && !!thread.node.ghost && !thread.node.ghost.sent);
+  const estimate = shaping ? promptEstimate(picks) : null;
+  const context = thread.kind === "campaign" ? nodes.filter((n) => selected.includes(n.key) && n.kind !== "pending" && n.kind !== "ghost") : [];
 
   useImperativeHandle(ref, () => ({
     set: (t: string) => {
@@ -107,18 +111,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
 
   const send = () => {
     if (!canSend) return;
-    const options = {
-      output: picks.output,
-      imageModel: picks.imageModel,
-      videoModel: picks.videoModel,
-      musicModel: picks.musicModel,
-      aspect: picks.aspect,
-      count: picks.output === "image" ? picks.count : 1,
-      audienceId,
-      check: picks.check,
-    };
-    const refs = context.filter((n) => n.ref.kind !== "job").map((n) => ({ kind: n.ref.kind as "creative" | "asset", id: n.ref.id }));
-    void agent.prompt(text.trim(), ready.map(({ url, name, type }) => ({ url, name, type })), options, refs).catch((err: Error) => notify(err.message, "bad"));
+    sendTurn(text.trim(), ready.map(({ url, name, type }) => ({ url, name, type })));
     files.forEach((f) => URL.revokeObjectURL(f.preview));
     setFiles([]);
     setText("");
@@ -158,7 +151,17 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
             the tray's radius less the edge and the padding. */}
         <div className={cn("relative border-[1.5px] border-transparent p-1.5 shadow-[0_12px_32px_-14px_rgba(160,70,0,0.3)] transition-[border-radius] duration-500", docked ? "rounded-[20px]" : "rounded-[26px]")} style={{ background: `linear-gradient(${TRAY}, ${TRAY}) padding-box, ${EDGE} border-box` }}>
           <div className="mb-1.5 flex min-w-0 items-center px-0.5">
-            <AudiencePill />
+            {thread.kind === "item" ? (
+              <span className="flex h-7 min-w-0 items-center gap-1.5 rounded-full bg-orange-100/80 pr-1 pl-1 text-xs font-medium text-orange-950">
+                <Thumb node={thread.node} />
+                <span className="truncate">Changing {thread.node.name}</span>
+                <button type="button" aria-label="Back to the canvas chat" title="Back to the canvas chat" onClick={() => select([])} className="flex size-5 shrink-0 items-center justify-center rounded-full text-orange-900/60 hover:bg-orange-900/10 hover:text-orange-950">
+                  <X className="size-3" />
+                </button>
+              </span>
+            ) : (
+              <AudiencePill />
+            )}
           </div>
           <div className={cn("@container flex flex-col bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-6px_rgba(120,60,0,0.12)] ring-1 ring-black/[0.05] transition-[border-radius,padding] duration-500", docked ? "gap-1 rounded-[12.5px] p-2" : "gap-2 rounded-[18.5px] p-2.5")}>
             {(context.length > 0 || files.length > 0) && (
@@ -193,7 +196,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
                   send();
                 }
               }}
-              placeholder={context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
+              placeholder={thread.kind === "item" ? "Describe a change, or ask for a new take" : thread.kind === "draft" ? (shaping ? PLACEHOLDER[picks.output] : "Reply, or tell it what to change") : context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
               className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
             />
             <div className="flex items-center gap-1.5 @max-[480px]:gap-1">
@@ -213,9 +216,9 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
                   }}
                 />
                 {!docked && <BrandChip />}
-                <OutputMenu picks={picks} set={setPicks} />
-                <AspectMenu picks={picks} set={setPicks} />
-                <SettingsMenu picks={picks} set={setPicks} />
+                {shaping && <OutputMenu picks={picks} set={setPicks} />}
+                {shaping && <AspectMenu picks={picks} set={setPicks} />}
+                {thread.kind !== "item" && <SettingsMenu picks={picks} set={setPicks} />}
               </div>
               {estimate && !docked && (
                 <span title={`Estimated at list price: ${estimate.label}`} className="shrink-0 px-1 text-xs text-neutral-400 tabular-nums">

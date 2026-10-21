@@ -1,13 +1,14 @@
 "use client";
 
-// Drives /api/media/agent turns (slice_media/routes.py): one live turn at a
-// time with its steps, as the Email chat does. Everything the agent makes
-// lands in Convex (and so on the canvas) by itself, so the stream only tells
-// the chat what is happening. With `item`, it is an editor's own agent
-// (slice_media/item.py): it changes only that poster, video, image or clip,
-// in a conversation of its own.
+// Drives /api/media/agent turns (slice_media/routes.py): one live turn per
+// conversation with its steps, as the Email chat does. Everything the agent
+// makes lands in Convex (and so on the canvas) by itself, so the stream only
+// tells the chat what is happening. Conversations: the canvas chat; a toolbar
+// maker's thread, with the spot it was placed in; and each item's own, run by
+// the item agent (slice_media/item.py), which changes only that poster, video,
+// image or clip.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { postStream, postJson, type BuildStep } from "@/lib/pages/stream";
 import type { Span } from "@/lib/pages/types";
@@ -61,75 +62,137 @@ export type ItemRef = { kind: "creative" | "asset"; id: string; thread: string }
 
 type HistoryItem = { role: string; text: string };
 
-export function useMediaAgent({ campaignId, history, model, beforeTurn, item }: { campaignId: Id<"mediaCampaigns">; history: HistoryItem[]; model?: string; beforeTurn?: () => Promise<void>; item?: ItemRef }) {
-  const [live, setLive] = useState<MediaLiveTurn | null>(null);
-  const abort = useRef<AbortController | null>(null);
-  const historyRef = useRef(history);
-  const itemRef = useRef(item);
-  useEffect(() => {
-    historyRef.current = history;
-    itemRef.current = item;
-  }, [history, item]);
+/** A toolbar maker's spot on the canvas, in board units, sent with its thread's turns until something lands in it. */
+export interface MakerSpot {
+  x: number;
+  y: number;
+  w: number;
+  aspect: string;
+  kind: "image" | "poster" | "video";
+}
+
+/** One turn to run, with the conversation it belongs to. */
+interface TurnRequest {
+  kind: "generate" | "edit" | "prompt";
+  message: string;
+  history: HistoryItem[];
+  attachments?: Attachment[];
+  selection?: MediaSelection;
+  options?: PromptRequest;
+  nodes?: CanvasNodeRef[];
+  /** An item's own agent. */
+  item?: ItemRef;
+  /** A maker's thread, and its spot. */
+  thread?: string;
+  spot?: MakerSpot;
+  beforeTurn?: () => Promise<void>;
+}
+
+/**
+ * Every conversation's live turn, keyed by thread: the canvas chat ("campaign"), each maker's
+ * thread and each item's, so one can run while you start another.
+ */
+export function useAgentPool({ campaignId, model }: { campaignId: Id<"mediaCampaigns">; model?: string }) {
+  const [lives, setLives] = useState<Record<string, MediaLiveTurn>>({});
+  const aborts = useRef(new Map<string, AbortController>());
+
+  const update = useCallback((key: string, fn: (l: MediaLiveTurn) => MediaLiveTurn | null) => {
+    setLives((all) => {
+      const cur = all[key];
+      if (!cur) return all;
+      const next = fn(cur);
+      if (next === cur) return all;
+      const out = { ...all };
+      if (next) out[key] = next;
+      else delete out[key];
+      return out;
+    });
+  }, []);
 
   const run = useCallback(
-    async (kind: "generate" | "edit" | "prompt", message: string, attachments: Attachment[] = [], selection?: MediaSelection, extra?: { options?: PromptRequest; nodes?: CanvasNodeRef[] }) => {
-      abort.current?.abort();
+    async (key: string, r: TurnRequest) => {
+      aborts.current.get(key)?.abort();
       const ctrl = new AbortController();
-      abort.current = ctrl;
-      setLive({ kind: kind === "generate" ? "generate" : "edit", status: kind === "generate" ? "Starting" : "Thinking", spans: [], steps: [], text: "", error: null, startedAt: Date.now(), prompt: message, attachments, written: 0, baseCount: historyRef.current.length });
-      await beforeTurn?.();
+      aborts.current.set(key, ctrl);
+      const setLive = (fn: (l: MediaLiveTurn) => MediaLiveTurn | null) => update(key, fn);
+      setLives((all) => ({ ...all, [key]: { kind: r.kind === "generate" ? "generate" : "edit", status: r.kind === "generate" ? "Starting" : "Thinking", spans: [], steps: [], text: "", error: null, startedAt: Date.now(), prompt: r.message, attachments: r.attachments ?? [], written: 0, baseCount: r.history.length } }));
+      await r.beforeTurn?.();
       if (ctrl.signal.aborted) {
         // Cancelled before it was sent; unless a newer turn took over, nothing is running.
-        if (abort.current === ctrl) setLive(null);
+        if (aborts.current.get(key) === ctrl) setLive(() => null);
         return;
       }
-      const target = kind === "edit" ? itemRef.current : undefined;
-      const body = { campaignId, kind: target ? "item" : kind, message, history: historyRef.current.slice(-12), attachments, selection, model, ...(target ? { item: target } : {}), ...(extra?.options ? { options: extra.options } : {}), ...(extra?.nodes?.length ? { nodes: extra.nodes } : {}) };
+      const target = r.kind === "edit" ? r.item : undefined;
+      const body = { campaignId, kind: target ? "item" : r.kind, message: r.message, history: r.history.slice(-12), attachments: r.attachments ?? [], selection: r.selection, model, ...(target ? { item: target } : {}), ...(r.options ? { options: r.options } : {}), ...(r.nodes?.length ? { nodes: r.nodes } : {}), ...(r.thread ? { thread: r.thread } : {}), ...(r.spot ? { spot: r.spot } : {}) };
       try {
         for await (const raw of postStream("/api/media/agent", body, ctrl.signal)) {
           const ev = raw as unknown as EmailAgentEvent;
-          if (ev.type === "status") setLive((l) => (l ? { ...l, status: ev.text } : l));
-          else if (ev.type === "span") setLive((l) => (l ? { ...l, spans: [...l.spans, ev.span as Span] } : l));
-          else if (ev.type === "thought" || ev.type === "tool_call" || ev.type === "question") setLive((l) => (l ? { ...l, steps: withStep(l.steps, ev, l.startedAt) } : l));
-          else if (ev.type === "tool_result") setLive((l) => (l ? { ...l, steps: withStep(l.steps, ev, l.startedAt), written: l.written + (ev.name === "write_creative" && ev.ok !== false ? 1 : 0) } : l));
-          else if (ev.type === "text") setLive((l) => (l ? { ...l, text: l.text + ev.delta, steps: withStep(l.steps, ev, l.startedAt) } : l));
-          else if (ev.type === "text_done") setLive((l) => (l ? { ...l, text: ev.text, steps: withStep(l.steps, ev, l.startedAt) } : l));
-          else if (ev.type === "error") setLive((l) => (l ? { ...l, error: ev.message, status: null } : l));
-          else if (ev.type === "done") setLive((l) => (l ? { ...l, status: null, text: ev.text ?? l.text, steps: (ev.steps as BuildStep[] | undefined) ?? l.steps } : l));
+          if (ev.type === "status") setLive((l) => ({ ...l, status: ev.text }));
+          else if (ev.type === "span") setLive((l) => ({ ...l, spans: [...l.spans, ev.span as Span] }));
+          else if (ev.type === "thought" || ev.type === "tool_call" || ev.type === "question") setLive((l) => ({ ...l, steps: withStep(l.steps, ev, l.startedAt) }));
+          else if (ev.type === "tool_result") setLive((l) => ({ ...l, steps: withStep(l.steps, ev, l.startedAt), written: l.written + (ev.name === "write_creative" && ev.ok !== false ? 1 : 0) }));
+          else if (ev.type === "text") setLive((l) => ({ ...l, text: l.text + ev.delta, steps: withStep(l.steps, ev, l.startedAt) }));
+          else if (ev.type === "text_done") setLive((l) => ({ ...l, text: ev.text, steps: withStep(l.steps, ev, l.startedAt) }));
+          else if (ev.type === "error") setLive((l) => ({ ...l, error: ev.message, status: null }));
+          else if (ev.type === "done") setLive((l) => ({ ...l, status: null, text: ev.text ?? l.text, steps: (ev.steps as BuildStep[] | undefined) ?? l.steps }));
         }
       } catch (err) {
         // Stopping a turn aborts its stream; anything else is shown in the chat.
         if (ctrl.signal.aborted) return;
-        setLive((l) => (l ? { ...l, error: (err as Error).message || "The connection to the agent dropped", status: null } : l));
+        setLive((l) => ({ ...l, error: (err as Error).message || "The connection to the agent dropped", status: null }));
         return;
       }
       if (ctrl.signal.aborted) return;
-      setLive((l) => (l && l.status !== null && !l.error ? { ...l, status: null } : l));
-      setTimeout(() => setLive((l) => (l && !l.error && l.status === null ? null : l)), 1200);
+      setLive((l) => (l.status !== null && !l.error ? { ...l, status: null } : l));
+      setTimeout(() => setLive((l) => (!l.error && l.status === null && aborts.current.get(key) === ctrl ? null : l)), 1200);
     },
-    [campaignId, model, beforeTurn],
+    [campaignId, model, update],
   );
 
-  const stop = useCallback(() => {
-    abort.current?.abort();
-    setLive(null);
+  const stop = useCallback(
+    (key: string) => {
+      aborts.current.get(key)?.abort();
+      aborts.current.delete(key);
+      update(key, () => null);
+    },
+    [update],
+  );
+  const dismissError = useCallback((key: string) => update(key, (l) => (l.error ? null : l)), [update]);
+
+  useEffect(() => {
+    const all = aborts.current;
+    return () => all.forEach((c) => c.abort());
   }, []);
 
-  useEffect(() => () => abort.current?.abort(), []);
+  return useMemo(() => ({ lives, run, stop, dismissError, busy: Object.values(lives).some((l) => l.status !== null && !l.error) }), [lives, run, stop, dismissError]);
+}
 
+export type AgentPool = ReturnType<typeof useAgentPool>;
+
+/** One conversation's agent: its live turn, and the ways to start one in it. */
+export interface MediaAgent {
+  live: MediaLiveTurn | null;
+  busy: boolean;
+  /** A turn from a prompt bar (the canvas chat, or a maker's thread). */
+  prompt: (message: string, attachments: Attachment[], options: PromptRequest, nodes: CanvasNodeRef[]) => Promise<void>;
+  /** A turn for an item's own agent. */
+  send: (message: string, attachments?: Attachment[], selection?: MediaSelection) => Promise<void>;
+  stop: () => void;
+  dismissError: () => void;
+}
+
+/** The agent of the conversation `key` (the context is read when a turn starts). */
+export function agentOf(pool: AgentPool, key: string, ctx: { history: HistoryItem[]; item?: ItemRef; thread?: string; spot?: MakerSpot; beforeTurn?: () => Promise<void> }): MediaAgent {
+  const live = pool.lives[key] ?? null;
   return {
     live,
     busy: !!live && live.status !== null && !live.error,
-    generate: (message = "") => run("generate", message),
-    send: (message: string, attachments?: Attachment[], selection?: MediaSelection) => run("edit", message, attachments, selection),
-    /** A turn from the canvas prompt bar. */
-    prompt: (message: string, attachments: Attachment[], options: PromptRequest, nodes: CanvasNodeRef[]) => run("prompt", message, attachments, undefined, { options, nodes }),
-    stop,
-    dismissError: () => setLive((l) => (l?.error ? null : l)),
+    prompt: (message, attachments, options, nodes) => pool.run(key, { kind: "prompt", message, attachments, options, nodes, history: ctx.history, thread: ctx.thread, spot: ctx.spot }),
+    send: (message, attachments = [], selection) => pool.run(key, { kind: "edit", message, attachments, selection, item: ctx.item, history: ctx.history, beforeTurn: ctx.beforeTurn }),
+    stop: () => pool.stop(key),
+    dismissError: () => pool.dismissError(key),
   };
 }
-
-export type MediaAgent = ReturnType<typeof useMediaAgent>;
 
 /** One studio button run by the agent without a chat turn (no LLM cost). */
 export async function mediaAction<T extends Record<string, unknown> = Record<string, unknown>>(campaignId: string, action: string, args: Record<string, unknown>): Promise<T & { ok: boolean; error?: string; estimate?: number }> {

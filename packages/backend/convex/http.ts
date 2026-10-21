@@ -355,6 +355,7 @@ emailRoute("/media/creative", async (ctx, body) => {
       ...(typeof body.note === "string" ? { note: body.note } : {}),
       ...(typeof body.nearId === "string" ? { nearId: body.nearId } : {}),
       ...(body.designJobId ? { designJobId: asId<"mediaJobs">(body.designJobId)! } : {}),
+      ...(typeof body.thread === "string" && body.thread ? { thread: body.thread } : {}),
       doc: body.doc,
     }),
   );
@@ -401,7 +402,7 @@ emailRoute("/media/job", async (ctx, body) => {
   return json(
     await ctx.runMutation(internal.media.upsertJob, {
       campaignId,
-      ...pick(body, ["kind", "model", "prompt", "status", "estimate", "cost", "error", "targetId", "place", "aspect", "nearId", "drop"]),
+      ...pick(body, ["kind", "model", "prompt", "status", "estimate", "cost", "error", "targetId", "place", "aspect", "nearId", "drop", "board", "thread"]),
       ...(body.jobId ? { jobId: asId<"mediaJobs">(body.jobId)! } : {}),
       ...(body.creativeId ? { creativeId: asId<"mediaCreatives">(body.creativeId)! } : {}),
       ...(body.assetId ? { assetId: asId<"mediaAssets">(body.assetId)! } : {}),

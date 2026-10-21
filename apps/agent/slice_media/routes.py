@@ -139,6 +139,9 @@ class AgentRequest(BaseModel):
     options: dict[str, Any] = {}
     item: Item | None = None
     model: str | None = None
+    # A toolbar maker's conversation: its own thread, and the spot it was placed in on the canvas ({x, y, w, aspect, kind}).
+    thread: str | None = None
+    spot: dict[str, Any] | None = None
 
 
 async def _replay(session: Any, history: list[HistoryMessage], author: str = B.root_agent.name) -> None:
@@ -255,14 +258,18 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         yield _ndjson({"type": "error", "message": "Say what to make"})
         return
     state[B.KIND] = "edit" if kind == "item" else kind
+    # A prompt in a toolbar maker's thread is its own conversation, apart from the canvas one and the items' own.
+    draft = _thread_of(req)
     state[B.SELECTION] = req.selection.model_dump() if req.selection else {}
     state[B.NODES] = [n.model_dump() for n in req.nodes][:12]
     state[B.OPTIONS] = _options(req.options)
     state[B.WRITES] = 0
     if item:
         state[I.ITEM] = item.model_dump()
-    # The canvas conversation is one session per campaign; each editor's agent has its own.
-    sid = f"{cid}:{item.thread}" if item else cid
+    # The canvas conversation is one session per campaign; each editor's agent has its own, and so does each maker's thread.
+    sid = f"{cid}:{item.thread}" if item else f"{cid}:new:{draft}" if draft else cid
+    state[B.THREAD] = draft or ""
+    state[B.SPOT_KEY] = sid
     author = I.AGENT_NAME if item else B.root_agent.name
 
     session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=sid)
@@ -294,11 +301,13 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
     call_args: dict[str, Any] = {}
     question: dict[str, Any] | None = None
     writes = 0
-    # Canvas spots held for creatives being designed this turn (builder.open_spot).
+    # Canvas spots held for what this turn makes (builder.open_spot): ones it opened itself, and
+    # the spot the merchant placed for a maker's thread (pinned: it waits when nothing lands).
     held: list[str] = []
+    pinned: list[str] = []
 
     async def hold(shape: dict[str, Any] | None) -> None:
-        if shape and not B.spot_open(cid, held):
+        if shape and not B.spot_open(sid, held + pinned):
             job = await B.open_spot(state, shape)
             if job:
                 held.append(job)
@@ -351,7 +360,12 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
 
     many = kind == "generate" or state[B.OPTIONS].get("output") == "campaign"
     try:
-        if answering:
+        if draft and req.spot:
+            shape, board = _spot(req.spot)
+            job = await B.open_spot(state, shape, board=board, thread=draft)
+            if job:
+                pinned.append(job)
+        elif answering:
             await hold(B.design_shape(state, video=_asks_video(asked[1] if asked else None)))
         async for ev in events():
             if ev is None:
@@ -376,7 +390,7 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                         continue
                     # Picture work for a new poster or video ad: hold its spot on the canvas. Once
                     # a turn (a full set: whenever none is open), and not while changing a selected creative.
-                    if name in DESIGN_STEPS and question is None and (many or not held) and not any(n.get("kind") == "creative" for n in state[B.NODES]):
+                    if name in DESIGN_STEPS and question is None and (many or not (held or pinned)) and not any(n.get("kind") == "creative" for n in state[B.NODES]):
                         await hold(B.design_shape(state, format=str((part.function_call.args or {}).get("format") or "")))
                     label = _label(name, part.function_call.args)
                     yield _ndjson({"type": "status", "text": label})
@@ -445,9 +459,11 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
     except Exception as err:
         yield _ndjson({"type": "error", "message": _error(err)})
     finally:
-        # Spots no creative took leave the canvas, also when the merchant stopped the turn.
+        # Spots nothing took leave the canvas, also when the merchant stopped the turn; a maker's spot waits for its thread to go on.
         if held:
-            asyncio.create_task(B.release_spots(cid, held))
+            asyncio.create_task(B.release_spots(cid, sid, held))
+        if pinned:
+            asyncio.create_task(B.release_spots(cid, sid, pinned, park=True))
 
     while emitted < len(spans):
         yield _ndjson({"type": "span", "span": spans[emitted]})
@@ -470,6 +486,23 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
 
 # Tools that mean a new poster or video ad is under way (its concept and pictures come before it is written).
 DESIGN_STEPS = ("save_concepts", "search_images", "generate_image")
+
+
+def _thread_of(req: AgentRequest) -> str | None:
+    """A toolbar maker's thread id, for a prompt turn sent from its spot."""
+    t = (req.thread or "").strip()
+    return t[:60] if req.kind == "prompt" and t else None
+
+
+def _spot(raw: dict[str, Any]) -> tuple[dict[str, Any], dict[str, float] | None]:
+    """The shape and place of a maker's spot, as the canvas sent them."""
+    aspect = raw.get("aspect") if raw.get("aspect") in ("9:16", "4:5", "1:1", "16:9") else "4:5"
+    kind = raw.get("kind") if raw.get("kind") in ("image", "poster", "video") else None
+    try:
+        board = {"x": float(raw["x"]), "y": float(raw["y"]), "w": float(raw["w"])}
+    except (KeyError, TypeError, ValueError):
+        board = None
+    return {"kind": kind, "format": B.ASPECT_FORMAT.get(aspect, "story"), "aspect": aspect}, board
 
 
 def _last_call(session: Any) -> tuple[str, dict[str, Any]] | None:
@@ -511,7 +544,8 @@ async def _persist(req: AgentRequest, message_id: str, merchant_text: str, reply
         messages.append({"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, **({"attachments": [a.model_dump() for a in req.attachments]} if req.attachments else {})})
     messages.append({"id": message_id, "role": "agent", "at": now + 1, "text": reply, "trace": spans, "steps": steps})
     try:
-        await store.post("/media/chat", {"campaignId": req.campaignId, "messages": messages, **({"itemId": req.item.thread} if req.kind == "item" and req.item else {})})
+        thread = req.item.thread if req.kind == "item" and req.item else _thread_of(req)
+        await store.post("/media/chat", {"campaignId": req.campaignId, "messages": messages, **({"itemId": thread} if thread else {})})
     except Exception as err:
         print(f"[slice-media] could not persist the turn: {err}")
 

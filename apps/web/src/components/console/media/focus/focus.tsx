@@ -152,7 +152,7 @@ const CreativeAgent = forwardRef<ItemAgentHandle, { noun: ItemNoun }>(function C
     <ItemAgentPanel
       ref={ref}
       noun={noun}
-      item={{ kind: "creative", id: creative._id, thread: creative._id }}
+      item={{ kind: "creative", id: creative._id, thread: creative.thread ?? creative._id }}
       target={label ? { label, icon, onClear: () => select({ kind: "none" }) } : null}
       selection={{ creativeId: creative._id, ...(layers.length ? { layerIds: layers.map((l) => l.id) } : {}), ...(shot >= 0 && selection.kind === "clip" ? { clipId: selection.id } : {}), ...(doc.kind === "video" ? { time: Math.round(playback.time * 10) / 10 } : {}) }}
       beforeTurn={editor.flush}
@@ -304,7 +304,7 @@ function useVersions(a: Doc<"mediaAssets">) {
   };
   const root = rootOf(a);
   const family = assets.filter((x) => x.kind === a.kind && rootOf(x)._id === root._id).sort((p, q) => p.createdAt - q.createdAt);
-  const coming = jobs.filter((j) => j.targetId === root._id && !j.dismissed && (j.status === "queued" || j.status === "running" || j.status === "failed"));
+  const coming = jobs.filter((j) => (j.targetId === root._id || (!!root.thread && j.targetId === root.thread)) && !j.dismissed && (j.status === "queued" || j.status === "running" || j.status === "failed"));
   return { root, family, coming };
 }
 
@@ -423,7 +423,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
           </div>
         </div>
       </main>
-      <ItemAgentPanel ref={agentRef} noun={noun} item={{ kind: "asset", id: v._id, thread: root._id }} />
+      <ItemAgentPanel ref={agentRef} noun={noun} item={{ kind: "asset", id: v._id, thread: root.thread ?? root._id }} />
     </FocusShell>
   );
 }

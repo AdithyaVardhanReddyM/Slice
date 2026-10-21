@@ -2,10 +2,10 @@
 
 // The canvas toolbar, down the left edge: the two ways to work the canvas
 // (select, and the hand that pans), your own files onto it, and the five
-// things Slice makes. Icons only; each one names itself in a tooltip. A maker
-// button readies the prompt bar for that output (and a shape that suits it)
-// and puts the cursor there, and stays lit while the bar is set to make it;
-// nothing runs until you send.
+// things Slice makes, each with a word under it. A maker button places a spot
+// for that output on the canvas (in a shape that suits it), opens the spot's
+// own conversation in the sidebar and puts the cursor there; it stays lit
+// while the bar is set to make it. Nothing runs until you send.
 
 import { Hand, Loader2, MousePointer2, Upload } from "lucide-react";
 import { useRef, type ReactNode } from "react";
@@ -64,7 +64,7 @@ function ToolButton({ label, hint, keys, active, current, busy, onClick, childre
 }
 
 export function CanvasToolbar({ left }: { left: number }) {
-  const { tool, setTool, placeFiles, focusPrompt, pending } = useCanvas();
+  const { tool, setTool, placeFiles, make: place, pending } = useCanvas();
   const [picks, setPicks] = usePromptPicks();
   const input = useRef<HTMLInputElement>(null);
 
@@ -73,7 +73,7 @@ export function CanvasToolbar({ left }: { left: number }) {
     // Video models make 9:16 and 16:9 only.
     if (o === "video" && !ASPECTS.find((a) => a.value === picks.aspect)?.video) patch.aspect = "9:16";
     setPicks(patch);
-    focusPrompt();
+    if (o !== "auto") place(o);
   };
 
   return (

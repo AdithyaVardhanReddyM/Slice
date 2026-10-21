@@ -227,3 +227,56 @@
     animation-duration: 1ms;
   }
 }
+/* Media chats: a slim scrollbar that shows only while the pointer is over the
+   thread, and a soft fade where the messages meet the top and bottom edges. */
+.media-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scrollbar-gutter: stable;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
+}
+.media-scroll:hover {
+  scrollbar-color: rgb(0 0 0 / 0.16) transparent;
+}
+/* Media canvas: a toolbar maker's spot waiting for its prompt. A comet of the
+   Slice palette circles its edge (a real border: cream fills the padding box,
+   the light and a faint ring the border box) above a halo of the same light. */
+@property --ghost-turn {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.media-ghost-edge {
+  border-style: solid;
+  border-color: transparent;
+  background:
+    linear-gradient(var(--ghost-fill, #fffbf3), var(--ghost-fill, #fffbf3)) padding-box,
+    conic-gradient(from var(--ghost-turn), transparent 0deg, var(--color-brand-sand) 40deg, var(--color-brand-yellow) 80deg, var(--color-brand-amber) 115deg, var(--color-brand-orange) 140deg, transparent 165deg) border-box,
+    linear-gradient(rgb(255 121 0 / 0.22), rgb(255 121 0 / 0.22)) border-box;
+  animation: media-ghost-turn 5.5s linear infinite;
+}
+.media-ghost-halo {
+  background: conic-gradient(from var(--ghost-turn), var(--color-brand-yellow), var(--color-brand-amber), var(--color-brand-orange), var(--color-brand-sand), var(--color-brand-yellow));
+  animation:
+    media-ghost-turn 5.5s linear infinite,
+    media-ghost-breathe 3.2s ease-in-out infinite alternate;
+}
+@keyframes media-ghost-turn {
+  to {
+    --ghost-turn: 360deg;
+  }
+}
+@keyframes media-ghost-breathe {
+  from {
+    opacity: 0.22;
+  }
+  to {
+    opacity: 0.42;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .media-ghost-edge,
+  .media-ghost-halo {
+    animation: none;
+  }
+}

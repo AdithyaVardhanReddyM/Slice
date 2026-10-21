@@ -102,7 +102,7 @@ function MoreMenu({ node }: { node: BoardNode }) {
 }
 
 export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number; h: number } }) {
-  const { nodes, selected, openFocus, compose, act, pending, download, remove, sendPrompt, sidebar } = useCanvas();
+  const { nodes, selected, openFocus, compose, act, pending, download, remove, makeFrom, sidebar } = useCanvas();
   const dismiss = useMutation(api.media.dismissJob);
   const [downloading, setDownloading] = useState(false);
   const bar = useRef<HTMLDivElement>(null);
@@ -133,6 +133,17 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
         <Sep />
         <Tool icon={<MessageSquareText />} label="Ask" onClick={() => compose("")} />
         <Tool icon={<Trash2 />} label="Remove" onClick={() => remove(sel.map((n) => n.key))} />
+      </>
+    );
+  } else if (one.kind === "ghost" || one.job?.status === "draft") {
+    // A maker's spot waiting on the chat: its first prompt, or answers to the agent's questions.
+    body = (
+      <>
+        <span className="flex items-center gap-1.5 px-2 text-[13px] text-neutral-500">
+          <MessageSquareText className="size-3.5" /> {one.ghost ? "Describe it in the chat" : "Waiting for your answers in the chat"}
+        </span>
+        <Sep />
+        <Tool icon={<X />} label="Remove" onClick={() => remove([one.key])} />
       </>
     );
   } else if (one.kind === "pending") {
@@ -173,8 +184,8 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
               busy={pending.includes(`takes:${a._id}`)}
               onClick={() => void act("make_image", { prompt: a.prompt ? `${a.prompt} (another take of image 1: same subject and look, a different moment and framing)` : "Another take of image 1: same subject and look, a different moment and framing", aspect: aspectOf(a.w, a.h), count: 2, reference_urls: [a.url], model: a.model && a.model.includes("image") ? a.model : undefined, near: a._id }, `takes:${a._id}`)}
             />
-            <Tool icon={<LayoutTemplate />} label="Poster" title="Design a poster around it" onClick={() => sendPrompt("Design a poster around this image, in our brand.", { output: "poster" })} />
-            <Tool icon={<Film />} label="Video ad" title="Make a video ad that starts on it, with music and voice" onClick={() => sendPrompt("Make a video ad that opens on this image and brings it to life.", { output: "video" })} />
+            <Tool icon={<LayoutTemplate />} label="Poster" title="Design a poster around it" onClick={() => makeFrom("poster", "Design a poster around this image, in our brand.", one)} />
+            <Tool icon={<Film />} label="Video ad" title="Make a video ad that starts on it, with music and voice" onClick={() => makeFrom("video", "Make a video ad that opens on this image and brings it to life.", one)} />
           </>
         )}
         {one.kind === "clip" && a && (

@@ -1054,6 +1054,8 @@ export default defineSchema({
     board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
     /** The brand check of a generated picture: {score, total, passed, tries, notes}. */
     review: v.optional(v.any()),
+    /** The conversation it was made in, when that began at its own spot on the canvas; else its first version's id is its thread. */
+    thread: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
 
@@ -1076,6 +1078,8 @@ export default defineSchema({
     export: v.optional(v.object({ url: v.string(), storageId: v.optional(v.id("_storage")), mime: v.string(), version: v.number(), at: v.number() })),
     /** On the canvas. */
     board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
+    /** The conversation it was made in (its own thread, kept from the spot it was started in); else its id is its thread. */
+    thread: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
@@ -1101,7 +1105,7 @@ export default defineSchema({
     kind: v.string(),
     model: v.string(),
     prompt: v.optional(v.string()),
-    /** "queued" | "running" | "done" | "failed" */
+    /** "queued" | "running" | "done" | "failed", or "draft" for a design spot waiting on the merchant (its agent asked a question) */
     status: v.string(),
     /** Estimated USD, counted against the budget while running. */
     estimate: v.number(),
@@ -1111,6 +1115,8 @@ export default defineSchema({
     error: v.optional(v.string()),
     /** A standalone generation (an image, a clip, a track) holds its spot on the canvas while it runs; its asset lands there. */
     board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
+    /** The conversation that made it, when it was started from its own spot on the canvas (a toolbar maker); what it makes keeps the thread. */
+    thread: v.optional(v.string()),
     /** The shape it will have ("9:16"), so the placeholder is the right size. */
     aspect: v.optional(v.string()),
     /** Hidden from the canvas (a failed generation the merchant dismissed). */

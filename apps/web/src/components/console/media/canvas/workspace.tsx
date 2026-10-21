@@ -5,6 +5,12 @@
 // bar starts big at the bottom of the canvas; once a conversation is going it
 // glides into the sidebar and the chat continues above it. Closing the
 // sidebar, or switching it to Assets, sends it back.
+//
+// The sidebar's chat follows the selection: one item selected opens its own
+// conversation (the one its editor has), a toolbar maker's spot opens its
+// thread, anything else the canvas conversation. A maker button places its
+// spot (a ghost, only here until its first prompt) and opens it; once sent, the
+// selection follows it into the generation and then into what lands there.
 
 import { useMutation, useQuery } from "convex/react";
 import { Loader2 } from "lucide-react";
@@ -13,7 +19,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
-import { AUDIO_NODE, boardWidth, type MediaKit } from "@slice/backend/convex/mediaTypes";
+import { ASPECTS, AUDIO_NODE, aspectSize, boardWidth, type Aspect, type MediaKit } from "@slice/backend/convex/mediaTypes";
 import { postJson } from "@/lib/pages/stream";
 import { usePagesModel } from "@/lib/pages/models";
 import { useMediaUpload } from "@/lib/media/upload";
@@ -30,11 +36,11 @@ import { KitFonts } from "../stage";
 import { Board, type BoardHandle, type Viewport } from "./board";
 import { CanvasCorner, CanvasTopRight, EmptyHero, SidebarHead, ZoomControl } from "./chrome";
 import { CanvasContext, SIDEBAR_W, type CanvasEnv, type CanvasTool, type ChatMessage, type SidebarTab } from "./context";
-import { bounds, buildNodes, keyOf, openSpot, refOf, type BoardNode, type CampaignData, type NodeKey } from "./model";
+import { bounds, buildNodes, ghostNode, keyOf, nodeThread, openSpot, refOf, threadOf, type BoardNode, type CampaignData, type Ghost, type MakerKind, type NodeKey } from "./model";
 import { NodeToolbar } from "./node-toolbar";
 import { NodeView } from "./nodes";
 import { CanvasToolbar, TOOLBAR_ROOM } from "./toolbar";
-import { mediaAction, useMediaAgent } from "./use-media-agent";
+import { agentOf, mediaAction, useAgentPool, type PromptRequest } from "./use-media-agent";
 
 /** Room the floating controls along the top keep clear. */
 const TOP_ROOM = 56;
@@ -83,17 +89,50 @@ async function saveFile(url: string, name: string) {
   }
 }
 
+/** A maker thread's id (also its conversation's key). */
+const newThread = () => `new_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
+const MAKERS: MakerKind[] = ["image", "poster", "video"];
+/** Video models make 9:16 and 16:9 only. */
+const makerAspect = (kind: MakerKind, aspect: Aspect): Aspect => (kind === "video" && !ASPECTS.find((a) => a.value === aspect)?.video ? "9:16" : aspect);
+
 const EXT: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "video/mp4": "mp4", "audio/mpeg": "mp3", "audio/wav": "wav" };
 
 function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; data: CampaignData }) {
   const { campaign, brand, creatives, assets, jobs } = data;
   const messages = data.messages as ChatMessage[];
   const kit = (campaign.kit ?? brand?.kit) as MediaKit | undefined;
-  const nodes = useMemo(() => buildNodes({ creatives, assets, jobs }), [creatives, assets, jobs]);
+  const built = useMemo(() => buildNodes({ creatives, assets, jobs }), [creatives, assets, jobs]);
+  const [picks] = usePromptPicks();
 
-  const [selected, setSelected] = useState<NodeKey[]>([]);
-  const select = useCallback((keys: NodeKey[]) => setSelected(keys), []);
-  const live = selected.filter((k) => nodes.some((n) => n.key === k));
+  // The maker spot not yet in Convex. Until its first prompt it takes the shape the prompt bar is set to.
+  const [ghost, setGhost] = useState<Ghost | null>(null);
+  const [picked, setPicked] = useState<{ key: NodeKey; thread?: string }[]>([]);
+  const ghostKey = ghost ? keyOf({ kind: "ghost", id: ghost.id }) : null;
+  const landed = !!ghost && jobs.some((j) => j.thread === ghost.id);
+  const shownGhost = useMemo<Ghost | null>(() => {
+    // Gone once its spot is in Convex; an empty one only while it is selected.
+    if (!ghost || landed || (!ghost.sent && !picked.some((p) => p.key === ghostKey))) return null;
+    return ghost.sent || !MAKERS.includes(picks.output as MakerKind) ? ghost : { ...ghost, kind: picks.output as MakerKind, aspect: makerAspect(picks.output as MakerKind, picks.aspect) };
+  }, [ghost, landed, picked, ghostKey, picks.output, picks.aspect]);
+  const nodes = useMemo(() => (shownGhost ? [...built, ghostNode(shownGhost)] : built), [built, shownGhost]);
+
+  const select = useCallback((keys: NodeKey[]) => setPicked(keys.map((key) => ({ key, thread: nodeThread(nodes.find((n) => n.key === key)) }))), [nodes]);
+  const setSelected = select;
+  // A selected thing that is replaced (a spot by its generation, a generation by its file) stays selected through its thread.
+  const live = useMemo(() => {
+    const keys = new Set(nodes.map((n) => n.key));
+    const out: NodeKey[] = [];
+    for (const p of picked) {
+      let key: NodeKey | undefined = keys.has(p.key) ? p.key : undefined;
+      if (!key && p.thread) {
+        const heirs = nodes.filter((n) => nodeThread(n) === p.thread);
+        key = (heirs.find((n) => n.creative || n.asset) ?? heirs[0])?.key;
+      }
+      if (key && !out.includes(key)) out.push(key);
+    }
+    return out;
+  }, [picked, nodes]);
   const [focus, setFocus] = useState<NodeKey | null>(null);
   const [sidebar, setSidebarState] = useState<{ open: boolean; tab: SidebarTab }>({ open: messages.length > 0, tab: "chat" });
   const setSidebar = useCallback((s: { open: boolean; tab?: SidebarTab }) => setSidebarState((cur) => ({ open: s.open, tab: s.tab ?? cur.tab })), []);
@@ -131,8 +170,17 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
   const [areaW, setAreaW] = useState(0);
   const [dockH, setDockH] = useState(120);
   const [model] = usePagesModel();
-  const [picks] = usePromptPicks();
-  const agent = useMediaAgent({ campaignId, history: messages.map((m) => ({ role: m.role, text: m.text })), model });
+  const agents = useAgentPool({ campaignId, model });
+  const one = live.length === 1 ? nodes.find((n) => n.key === live[0]) : undefined;
+  const thread = threadOf(one, assets);
+  const threadChat = useQuery(api.media.itemChat, thread.kind === "campaign" ? "skip" : { campaignId, itemId: thread.thread }) as ChatMessage[] | undefined;
+  const threadMessages = thread.kind === "campaign" ? messages : (threadChat ?? []);
+  const agent = agentOf(agents, thread.kind === "campaign" ? "campaign" : thread.thread, {
+    history: threadMessages.map((m) => ({ role: m.role, text: m.text })),
+    item: thread.kind === "item" ? thread.item : undefined,
+    thread: thread.kind === "draft" ? thread.thread : undefined,
+    spot: thread.kind === "draft" ? thread.spot : undefined,
+  });
 
   const moveNodes = useMutation(api.media.moveNodes).withOptimisticUpdate((store, { id, nodes: moved }) => {
     const cur = store.getQuery(api.media.get, { id });
@@ -211,16 +259,60 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     [campaignId, notify],
   );
 
-  const openChat = () => setSidebar({ open: true, tab: "chat" });
+  const options = (output: string, aspect: string): PromptRequest => ({ output, imageModel: picks.imageModel, videoModel: picks.videoModel, musicModel: picks.musicModel, aspect, count: output === "image" ? picks.count : 1, audienceId, check: picks.check });
+  const failed = (err: Error) => notify(err.message, "bad");
 
-  const sendPrompt: CanvasEnv["sendPrompt"] = (text, overrides) => {
-    const refs = nodes.filter((n) => live.includes(n.key) && n.ref.kind !== "job").map((n) => ({ kind: n.ref.kind as "creative" | "asset", id: n.ref.id }));
-    void agent.prompt(text, [], { output: overrides?.output ?? picks.output, imageModel: picks.imageModel, videoModel: picks.videoModel, musicModel: picks.musicModel, aspect: picks.aspect, count: 1, audienceId, check: picks.check }, refs);
-    openChat();
+  // The sidebar's conversation: an item's own agent changes it; a maker's thread makes what its spot was placed for; else the canvas chat, with the selection attached.
+  const send: CanvasEnv["send"] = (text, attachments = []) => {
+    if (thread.kind === "item") void agent.send(text, attachments).catch(failed);
+    else if (thread.kind === "draft") {
+      if (shownGhost && thread.thread === shownGhost.id) setGhost({ ...shownGhost, sent: true });
+      void agent.prompt(text, attachments, options(thread.spot?.kind ?? picks.output, thread.spot?.aspect ?? picks.aspect), []).catch(failed);
+    } else {
+      const refs = nodes.filter((n) => live.includes(n.key) && (n.ref.kind === "creative" || n.ref.kind === "asset")).map((n) => ({ kind: n.ref.kind as "creative" | "asset", id: n.ref.id }));
+      void agent.prompt(text, attachments, options(picks.output, picks.aspect), refs).catch(failed);
+    }
+    setSidebar({ open: true, tab: "chat" });
+  };
+
+  // A maker's spot: in the middle of what stays in view once the sidebar is open, clear of everything else.
+  const spotFor = (kind: MakerKind, aspect: Aspect, aim?: { x: number; y: number }) => {
+    const s = aspectSize(aspect);
+    const w = boardWidth(s.w, s.h);
+    const h = (w * s.h) / s.w;
+    const v = board.current?.viewport();
+    const c = board.current?.center() ?? { x: 0, y: 0 };
+    const at = aim ?? { x: c.x + (sidebar.open || !v ? 0 : SIDEBAR_W / 2 / v.zoom) - w / 2, y: c.y - h / 2 };
+    return { ...openSpot(built, { w, h }, at), w, h };
+  };
+
+  const openSpotNode = (g: Ghost) => {
+    setGhost(g);
+    setPicked([{ key: keyOf({ kind: "ghost", id: g.id }), thread: g.id }]);
+    setSidebar({ open: true, tab: "chat" });
+  };
+
+  const make: CanvasEnv["make"] = (kind) => {
+    const aspect = makerAspect(kind, picks.aspect);
+    const spot = spotFor(kind, aspect);
+    // An empty spot moves rather than leaving another behind.
+    openSpotNode({ id: ghost && !ghost.sent && !landed ? ghost.id : newThread(), kind, aspect, x: spot.x, y: spot.y, sent: false });
+    requestAnimationFrame(() => bar.current?.focus());
+  };
+
+  const makeFrom: CanvasEnv["makeFrom"] = (kind, text, from) => {
+    const aspect = makerAspect(kind, picks.aspect);
+    const spot = spotFor(kind, aspect, { x: from.x + from.w + 72, y: from.y });
+    const id = newThread();
+    openSpotNode({ id, kind, aspect, x: spot.x, y: spot.y, sent: true });
+    void agents
+      .run(id, { kind: "prompt", message: text, history: [], options: options(kind, aspect), nodes: from.ref.kind === "creative" || from.ref.kind === "asset" ? [{ kind: from.ref.kind, id: from.ref.id }] : [], thread: id, spot: { x: spot.x, y: spot.y, w: spot.w, aspect, kind } })
+      .catch(failed);
   };
 
   const remove: CanvasEnv["remove"] = (keys) => {
-    const list = nodes.filter((n) => keys.includes(n.key));
+    if (ghostKey && keys.includes(ghostKey)) setGhost(null);
+    const list = nodes.filter((n) => keys.includes(n.key) && n.ref.kind !== "ghost");
     if (list.some((n) => n.ref.kind === "creative")) {
       setConfirm(keys);
       return;
@@ -318,7 +410,14 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
       setFocus(k);
     },
     closeFocus: () => setFocus(null),
+    agents,
+    thread,
+    threadMessages,
+    threadLoaded: thread.kind === "campaign" || threadChat !== undefined,
     agent,
+    send,
+    make,
+    makeFrom,
     board,
     tool,
     setTool,
@@ -330,11 +429,11 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
     pending,
     notify,
     compose: (text) => {
+      setSidebar({ open: true, tab: "chat" });
       bar.current?.set(text);
     },
     focusPrompt: () => bar.current?.focus(),
     placeFiles,
-    sendPrompt,
     remove,
     download,
   };
@@ -421,7 +520,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
 
   const barW = docked ? SIDEBAR_W - 24 : Math.min(780, Math.max(320, areaW - canvasLeft - 48));
   const barLeft = docked ? 12 : canvasLeft + (areaW - canvasLeft - barW) / 2;
-  const empty = nodes.length === 0 && messages.length === 0 && !agent.busy;
+  const empty = nodes.length === 0 && messages.length === 0 && !agents.busy;
   const focusNode = focus ? nodes.find((n) => n.key === focus) : undefined;
 
   return (
@@ -434,8 +533,13 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
             nodes={nodes}
             selected={live}
             onSelect={select}
-            onOpen={(n) => n.kind !== "pending" && env.openFocus(n.key)}
-            onMove={(moves) => void moveNodes({ id: campaignId, nodes: moves.map((m) => ({ kind: m.node.ref.kind, id: m.node.ref.id, x: m.x, y: m.y, w: m.node.w })) })}
+            onOpen={(n) => n.kind !== "pending" && n.kind !== "ghost" && env.openFocus(n.key)}
+            onMove={(moves) => {
+              const spot = moves.find((m) => m.node.ghost);
+              if (spot && ghost) setGhost({ ...ghost, x: spot.x, y: spot.y });
+              const rest = moves.filter((m) => m.node.ref.kind !== "ghost");
+              if (rest.length) void moveNodes({ id: campaignId, nodes: rest.map((m) => ({ kind: m.node.ref.kind as "creative" | "asset" | "job", id: m.node.ref.id, x: m.x, y: m.y, w: m.node.w })) });
+            }}
             onDrop={(e, at) => void onDrop(e, at)}
             onViewport={onViewport}
             initial={campaign.viewport ?? null}
@@ -460,7 +564,7 @@ function Workspace({ campaignId, data }: { campaignId: Id<"mediaCampaigns">; dat
                 {(["chat", "assets"] as const).map((t) => (
                   <button key={t} type="button" onClick={() => setSidebar({ open: true, tab: t })} className={cn("flex h-7 items-center justify-center gap-1.5 rounded-md text-[13px] font-medium text-neutral-600 transition-colors hover:text-neutral-950", sidebar.tab === t && "bg-white text-neutral-950 shadow-sm")}>
                     {t === "chat" ? "Chat" : "Assets"}
-                    {t === "chat" && agent.busy && <Loader2 className="size-3 animate-spin" />}
+                    {t === "chat" && agents.busy && <Loader2 className="size-3 animate-spin" />}
                   </button>
                 ))}
               </div>

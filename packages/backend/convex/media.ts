@@ -587,7 +587,7 @@ async function writeVersion(ctx: MutationCtx, creative: Doc<"mediaCreatives">, d
 async function insertCreative(
   ctx: MutationCtx,
   campaignId: Id<"mediaCampaigns">,
-  c: { name: string; audienceKey: string; format: string; kind: string; doc: unknown; why?: { text: string; evidence: string }[]; board?: BoardPos; nearId?: string },
+  c: { name: string; audienceKey: string; format: string; kind: string; doc: unknown; why?: { text: string; evidence: string }[]; board?: BoardPos; nearId?: string; thread?: string },
   by: "agent" | "merchant",
 ): Promise<Id<"mediaCreatives">> {
   const doc = cleanDoc(c.doc);
@@ -604,6 +604,7 @@ async function insertCreative(
     status: "draft",
     ...(c.why?.length ? { why: c.why.slice(0, 8).map((w) => ({ text: String(w.text).slice(0, 400), evidence: String(w.evidence).slice(0, 400) })) } : {}),
     board,
+    ...(c.thread ? { thread: c.thread.slice(0, 60) } : {}),
     createdAt: now,
     updatedAt: now,
   });
@@ -685,6 +686,8 @@ export const writeCreative = internalMutation({
     nearId: v.optional(v.string()),
     /** The design placeholder holding this creative's spot: it takes the spot and the placeholder ends. */
     designJobId: v.optional(v.id("mediaJobs")),
+    /** The conversation it is made in (a toolbar maker's spot): selecting it opens that thread. */
+    thread: v.optional(v.string()),
   },
   returns: v.object({ id: v.id("mediaCreatives"), version: v.number() }),
   handler: async (ctx, a) => {
@@ -707,7 +710,7 @@ export const writeCreative = internalMutation({
       await ctx.db.patch(slot._id, { status: "done", updatedAt: Date.now() });
       if (slot.board) board = await heldSpot(ctx, a.campaignId, slot.board, doc);
     }
-    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why, board, nearId: a.nearId }, "agent");
+    const id = await insertCreative(ctx, a.campaignId, { name: a.name ?? FORMATS[doc.format].label, audienceKey: a.audienceKey ?? "all", format: doc.format, kind: doc.kind, doc, why: a.why, board, nearId: a.nearId, thread: a.thread ?? slot?.thread }, "agent");
     return { id, version: 1 };
   },
 });
@@ -780,9 +783,10 @@ export const interruptJobs = internalMutation({
       ...(await ctx.db.query("mediaJobs").withIndex("by_status", (q) => q.eq("status", "queued")).take(200)),
     ];
     for (const job of open) {
-      // A design placeholder just goes: there is nothing to regenerate.
+      // A design placeholder just goes (nothing to regenerate), or waits again when the merchant started it with its own conversation.
       if (isDesignJob(job.kind)) {
-        await ctx.db.delete(job._id);
+        if (job.thread) await ctx.db.patch(job._id, { status: "draft", updatedAt: Date.now() });
+        else await ctx.db.delete(job._id);
         continue;
       }
       await ctx.db.patch(job._id, { status: "failed", error, cost: 0, updatedAt: Date.now() });
@@ -843,6 +847,10 @@ export const upsertJob = internalMutation({
     place: v.optional(v.boolean()),
     aspect: v.optional(v.string()),
     nearId: v.optional(v.string()),
+    /** Exactly this spot (one the merchant picked with a toolbar maker). */
+    board: v.optional(v.object({ x: v.number(), y: v.number(), w: v.number() })),
+    /** The conversation it belongs to; a design spot for a thread is reused, not doubled. */
+    thread: v.optional(v.string()),
     /** Delete it: a design placeholder whose turn ended without a creative. */
     drop: v.optional(v.boolean()),
   },
@@ -851,11 +859,20 @@ export const upsertJob = internalMutation({
     const campaign = await ctx.db.get(a.campaignId);
     if (!campaign) throw new Error("Unknown campaign");
     const now = Date.now();
-    const status = a.status && ["queued", "running", "done", "failed"].includes(a.status) ? a.status : undefined;
+    const status = a.status && ["queued", "running", "done", "failed", "draft"].includes(a.status) ? a.status : undefined;
+    const thread = a.thread?.slice(0, 60);
     if (!a.jobId) {
+      if (thread && isDesignJob(a.kind ?? "")) {
+        const recent = await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", a.campaignId)).order("desc").take(200);
+        const held = recent.find((j) => j.thread === thread && isDesignJob(j.kind) && j.status !== "done" && !j.dismissed);
+        if (held) {
+          await ctx.db.patch(held._id, { status: status ?? "running", updatedAt: now });
+          return { id: held._id };
+        }
+      }
       const audio = a.kind === "music" || a.kind === "voice";
       const shape = audio ? { w: 1, h: 1, audio: true } : aspectSize(a.aspect);
-      const board = a.place ? await placeOnBoard(ctx, a.campaignId, shape, a.nearId) : undefined;
+      const board = a.board ? { x: Math.round(a.board.x), y: Math.round(a.board.y), w: Math.round(a.board.w) } : a.place ? await placeOnBoard(ctx, a.campaignId, shape, a.nearId) : undefined;
       const id = await ctx.db.insert("mediaJobs", {
         campaignId: a.campaignId,
         ...(a.creativeId ? { creativeId: a.creativeId } : {}),
@@ -867,6 +884,7 @@ export const upsertJob = internalMutation({
         estimate: Math.max(0, a.estimate ?? 0),
         ...(board ? { board } : {}),
         ...(a.aspect ? { aspect: a.aspect.slice(0, 12) } : {}),
+        ...(thread ? { thread } : {}),
         createdAt: now,
         updatedAt: now,
       });
@@ -880,18 +898,27 @@ export const upsertJob = internalMutation({
       return { id: job._id };
     }
     const finishing = status === "done" && job.status !== "done";
+    // A design spot can become the generation itself (an image made in a toolbar maker's spot): it takes the new kind and shape.
+    const reshaped = a.aspect && job.board && a.aspect !== job.aspect ? { ...job.board, w: boardWidth(aspectSize(a.aspect).w, aspectSize(a.aspect).h) } : null;
     await ctx.db.patch(job._id, {
       ...(status ? { status } : {}),
       ...(a.cost !== undefined ? { cost: a.cost } : {}),
       ...(a.assetId ? { assetId: a.assetId } : {}),
       ...(a.error ? { error: a.error.slice(0, 500) } : {}),
+      ...(a.kind ? { kind: a.kind.slice(0, 20) } : {}),
+      ...(a.model !== undefined ? { model: a.model.slice(0, 80) } : {}),
+      ...(a.prompt ? { prompt: a.prompt.slice(0, 2000) } : {}),
+      ...(a.estimate !== undefined ? { estimate: Math.max(0, a.estimate) } : {}),
+      ...(a.aspect ? { aspect: a.aspect.slice(0, 12) } : {}),
+      ...(reshaped ? { board: reshaped } : {}),
+      ...(thread && !job.thread ? { thread } : {}),
       updatedAt: now,
     });
     if (finishing) await ctx.db.patch(a.campaignId, { spend: Math.round((campaign.spend + (a.cost ?? job.estimate)) * 1000) / 1000, updatedAt: now });
-    // A standalone generation's file takes the spot its placeholder held.
-    if (finishing && job.board && a.assetId) {
+    // A standalone generation's file takes the spot its placeholder held, and the conversation it was made in.
+    if (finishing && a.assetId && (job.board || job.thread)) {
       const asset = await ctx.db.get(a.assetId);
-      if (asset && !asset.board) await ctx.db.patch(a.assetId, { board: job.board });
+      if (asset) await ctx.db.patch(a.assetId, { ...(job.board && !asset.board ? { board: reshaped ?? job.board } : {}), ...(job.thread ? { thread: job.thread } : {}) });
     }
     return { id: job._id };
   },
