@@ -39,7 +39,8 @@ export const list = query({
       .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
       .order("desc")
       .collect();
-    return brands.map(({ trace: _t, ...b }) => ({ ...b, trace: [] as Doc<"pagesBrands">["trace"] }));
+    // A Media brand's audience store is not a Pages client.
+    return brands.filter((b) => !b.mediaBrandId).map(({ trace: _t, ...b }) => ({ ...b, trace: [] as Doc<"pagesBrands">["trace"] }));
   },
 });
 

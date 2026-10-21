@@ -4,21 +4,18 @@
 // brand's own taste) or one audience. Audiences come from where the brand
 // came from, read live: a Pages brand's audiences, an Email brand's taste
 // groups. New ones are made the same way as there (the Pages audience sheet,
-// Email's customer import) and so land in both. A brand made in Media
-// describes its audiences in words; Slice reads their taste with Qloo.
+// Email's customer import) and so land in both. A brand made in Media gets the
+// same Pages audience sheet; its audiences live under a Pages brand of its own
+// that no Pages screen lists (mediaBrands.audienceHome).
 
 import { useMutation, useQuery } from "convex/react";
 import { Check, ChevronDown, Loader2, Plus, Upload, Users, UsersRound, type LucideIcon } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { MediaAudience } from "@slice/backend/convex/mediaTypes";
 import { AUDIENCE_KIND_LABEL, listedAudiences, type AudienceProfile } from "@/lib/pages/types";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/console/form";
-import { TokenInput } from "@/components/console/setup/atoms";
 import { BrandProvider } from "@/components/console/pages/brand-context";
 import { NewAudienceSheet, type AudienceSourceKind } from "@/components/console/pages/new-audience-sheet";
 import { KIND_ICON, coverTiles } from "@/components/console/pages/taste-cover";
@@ -56,7 +53,8 @@ const faceOf = (profile: unknown, own = false) => coverTiles((profile as Audienc
 function useAudiences() {
   const { campaign, campaignId, brand, audienceId, setAudienceId } = useCanvas();
   const update = useMutation(api.media.update);
-  const pagesId = brand?.source.pagesBrandId;
+  // A brand made in Media keeps its audiences in a Pages brand of its own, made the first time it needs one.
+  const pagesId = brand?.source.pagesBrandId ?? brand?.audienceBrandId;
   const emailId = brand?.source.emailBrandId;
   const pagesBrand = useQuery(api.pagesBrands.get, pagesId ? { id: pagesId } : "skip");
   const emailBrand = useQuery(api.emailBrands.get, emailId ? { id: emailId } : "skip");
@@ -114,7 +112,7 @@ function useAudiences() {
     void add(o.ref);
   };
 
-  return { pages, email, described, current, live, choose, add, pagesBrand, emailBrand, loading: (!!pagesId && pagesRows === undefined) || (!!emailId && emailRows === undefined) };
+  return { pages, email, described, current, live, choose, pagesBrand, emailBrand, loading: (!!pagesId && pagesRows === undefined) || (!!emailId && emailRows === undefined) };
 }
 
 function Face({ image, icon: Icon, className }: { image?: string; icon: LucideIcon; className?: string }) {
@@ -153,58 +151,48 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function DescribeAudience({ open, onOpenChange, onAdd }: { open: boolean; onOpenChange: (o: boolean) => void; onAdd: (a: Omit<MediaAudience, "id">) => void }) {
-  const [seed, setSeed] = useState({ name: "", city: "", interests: [] as string[] });
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-4 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Describe an audience</DialogTitle>
-          <DialogDescription>Slice reads their taste with Qloo and shapes what it makes for them.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-2.5">
-          <Input value={seed.name} onChange={(e) => setSeed({ ...seed, name: e.target.value })} placeholder="Name, e.g. Weekend brunch crowd" />
-          <Input value={seed.city} onChange={(e) => setSeed({ ...seed, city: e.target.value })} placeholder="City (optional)" />
-          <TokenInput values={seed.interests} onChange={(interests) => setSeed({ ...seed, interests })} placeholder="What they're into: natural wine, jazz, Wes Anderson…" />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!seed.interests.length}
-            onClick={() => {
-              const name = seed.name.trim() || `${seed.interests.slice(0, 2).join(" & ")}${seed.city.trim() ? ` in ${seed.city.trim()}` : ""}`;
-              onAdd({ name, kind: "seed", seed: { interests: seed.interests, ...(seed.city.trim() ? { city: seed.city.trim() } : {}) } });
-              setSeed({ name: "", city: "", interests: [] });
-              onOpenChange(false);
-            }}
-          >
-            Add audience
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 /** The selector in the prompt bar's top strip, its picker, and the sheets that make new audiences. */
 export function AudiencePill() {
-  const { pages, email, described, current, live, choose, add, pagesBrand, emailBrand, loading } = useAudiences();
+  const { brand, notify } = useCanvas();
+  const { pages, email, described, current, live, choose, pagesBrand, emailBrand, loading } = useAudiences();
+  const audienceHome = useMutation(api.mediaBrands.audienceHome);
   const [open, setOpen] = useState(false);
-  const [sheet, setSheet] = useState<"pages" | "email" | "describe" | null>(null);
+  const [sheet, setSheet] = useState<"pages" | "email" | null>(null);
   const [pagesKind, setPagesKind] = useState<AudienceSourceKind | null>(null);
   const everyone = current.id === "all";
   const busy = live?.status === "compiling";
-  const make = (s: "pages" | "email" | "describe") => {
+  // Where new audiences are made: Pages for a Pages brand, Email's import for an Email brand, else the brand's own store.
+  const maker = !brand ? null : brand.source.pagesBrandId ? "pages" : brand.source.emailBrandId ? "email" : "own";
+  // Made when the picker opens, so the sheet has it by the time New audience is clicked.
+  const home = useRef<Promise<unknown> | null>(null);
+  const ensureHome = () => {
+    if (maker !== "own" || !brand || brand.audienceBrandId) return Promise.resolve();
+    home.current ??= audienceHome({ id: brand._id }).catch((err) => {
+      home.current = null;
+      throw err;
+    });
+    return home.current;
+  };
+  const make = async (s: "pages" | "email") => {
     setOpen(false);
     setPagesKind(null);
+    try {
+      await ensureHome();
+    } catch {
+      return notify("Couldn't start a new audience. Try again.", "bad");
+    }
     setSheet(s);
   };
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (o) ensureHome().catch(() => undefined);
+        }}
+      >
         <PopoverTrigger
           title="Who it is for"
           className="inline-flex h-8 max-w-full min-w-0 items-center gap-2 rounded-full pr-2 pl-1 text-[13px] transition-colors hover:bg-black/[0.04] data-popup-open:bg-black/[0.05]"
@@ -225,11 +213,11 @@ export function AudiencePill() {
               <Row option={{ key: "all", name: "Everyone", hint: "The brand's own taste", icon: Users, status: "ready", ref: EVERYONE }} on={everyone} onPick={() => (choose(null), setOpen(false))} />
             </div>
             {pagesBrand && (
-              <Group title={`${pagesBrand.name} in Pages`}>
+              <Group title={maker === "own" ? "Audiences" : `${pagesBrand.name} in Pages`}>
                 {pages.map((o) => (
                   <Row key={o.key} option={o} on={o.ref.pagesAudienceId === current.pagesAudienceId} onPick={() => (choose(o), setOpen(false))} />
                 ))}
-                {!loading && pages.length === 0 && <p className="px-2 pb-1.5 text-xs text-muted-foreground">No audiences in Pages yet.</p>}
+                {!loading && pages.length === 0 && <p className="px-2 pb-1.5 text-xs text-muted-foreground">{maker === "own" ? "No audiences yet." : "No audiences in Pages yet."}</p>}
               </Group>
             )}
             {emailBrand && (
@@ -248,33 +236,27 @@ export function AudiencePill() {
               </Group>
             )}
           </div>
-          <div className="border-t border-neutral-100 p-1.5">
-            {pagesBrand ? (
-              <button type="button" onClick={() => make("pages")} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-neutral-100">
-                <Plus className="size-4 text-neutral-500" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">New audience</span>
-                  <span className="block text-xs text-muted-foreground">Made in Pages, so it is there too</span>
-                </span>
-              </button>
-            ) : emailBrand ? (
-              <button type="button" onClick={() => make("email")} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-neutral-100">
-                <Upload className="size-4 text-neutral-500" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">Import customers</span>
-                  <span className="block text-xs text-muted-foreground">Email groups them by taste; the groups show up here</span>
-                </span>
-              </button>
-            ) : (
-              <button type="button" onClick={() => make("describe")} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-neutral-100">
-                <Plus className="size-4 text-neutral-500" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">Describe an audience</span>
-                  <span className="block text-xs text-muted-foreground">Where they live and what they are into</span>
-                </span>
-              </button>
-            )}
-          </div>
+          {maker && (
+            <div className="border-t border-neutral-100 p-1.5">
+              {maker === "email" ? (
+                <button type="button" onClick={() => void make("email")} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-neutral-100">
+                  <Upload className="size-4 text-neutral-500" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">Import customers</span>
+                    <span className="block text-xs text-muted-foreground">Email groups them by taste; the groups show up here</span>
+                  </span>
+                </button>
+              ) : (
+                <button type="button" onClick={() => void make("pages")} className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-neutral-100">
+                  <Plus className="size-4 text-neutral-500" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">New audience</span>
+                    <span className="block text-xs text-muted-foreground">{maker === "pages" ? "Made in Pages, so it is there too" : "Who they are and what they love, read by Qloo"}</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
         </PopoverContent>
       </Popover>
 
@@ -286,6 +268,7 @@ export function AudiencePill() {
             onOpenChange={(o) => !o && setSheet(null)}
             onKindChange={setPagesKind}
             onCreated={(id, name) => choose({ key: `pages:${id}`, name, icon: Users, status: "compiling", ref: { name, kind: "pages", pagesAudienceId: id } })}
+            description="Who is it for? Pick where the audience comes from; Qloo turns it into a taste profile Slice designs for."
           />
         </BrandProvider>
       )}
@@ -294,7 +277,6 @@ export function AudiencePill() {
           <ImportContactsSheet open={sheet === "email"} onOpenChange={(o) => !o && setSheet(null)} />
         </EmailBrandProvider>
       )}
-      <DescribeAudience open={sheet === "describe"} onOpenChange={(o) => !o && setSheet(null)} onAdd={(a) => void add(a)} />
     </>
   );
 }

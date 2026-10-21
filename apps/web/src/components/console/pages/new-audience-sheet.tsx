@@ -737,6 +737,7 @@ export function NewAudienceSheet({
   onOpenChange,
   onKindChange,
   onCreated,
+  description = "Who is the page for? Pick where the audience comes from; Qloo turns it into a taste profile the builder writes against.",
 }: {
   open: boolean;
   kind: AudienceSourceKind | null;
@@ -744,6 +745,8 @@ export function NewAudienceSheet({
   onKindChange: (k: AudienceSourceKind | null) => void;
   /** The builder saved a new audience (Media picks it straight away). */
   onCreated?: (id: Id<"pagesAudiences">, name: string) => void;
+  /** The source picker's line under "New audience". */
+  description?: string;
 }) {
   const close = () => onOpenChange(false);
   const source = AUDIENCE_SOURCES.find((s) => s.kind === kind) ?? null;
@@ -774,7 +777,7 @@ export function NewAudienceSheet({
         ) : (
           <SheetHeader className="gap-3 border-b bg-popover p-6">
             <SheetTitle>New audience</SheetTitle>
-            <SheetDescription>Who is the page for? Pick where the audience comes from; Qloo turns it into a taste profile the builder writes against.</SheetDescription>
+            <SheetDescription>{description}</SheetDescription>
           </SheetHeader>
         )}
         <div className="flex flex-1 flex-col px-6 pt-6 pb-6 has-[.sticky]:pb-0">

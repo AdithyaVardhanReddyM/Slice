@@ -433,6 +433,8 @@ export default defineSchema({
     demo: v.optional(v.boolean()),
     /** The master this copy was made from. */
     demoOf: v.optional(v.id("pagesBrands")),
+    /** Holds the audiences of a brand made in Media (see mediaBrands.audienceHome); no Pages screen lists it. */
+    mediaBrandId: v.optional(v.id("mediaBrands")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -979,6 +981,8 @@ export default defineSchema({
       pagesBrandId: v.optional(v.id("pagesBrands")),
       emailBrandId: v.optional(v.id("emailBrands")),
     }),
+    /** Where a brand made in Media keeps its audiences: a Pages brand no Pages screen lists, so the Pages audience builder works for it. */
+    audienceBrandId: v.optional(v.id("pagesBrands")),
     /** "reading" while its website is read, then "ready" (or "failed"). */
     status: v.string(),
     progress: v.optional(v.object({ value: v.number(), label: v.string() })),

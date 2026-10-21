@@ -103,11 +103,13 @@ export const summary = query({
     const total = empty();
     const prev = empty();
 
-    const brands = await ctx.db
-      .query("pagesBrands")
-      .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
-      .order("desc")
-      .collect();
+    const brands = (
+      await ctx.db
+        .query("pagesBrands")
+        .withIndex("by_owner", (q) => q.eq("owner", identity.subject))
+        .order("desc")
+        .collect()
+    ).filter((b) => !b.mediaBrandId);
 
     const brandRows = [];
     const pageRows = [];

@@ -1,9 +1,12 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { EmailAbout, EmailKit } from "./emailTypes";
 import { DEFAULT_KIT, kitFromEmail, kitFromPages, safeUrl, type MediaAbout, type MediaKit, type MediaProduct } from "./mediaTypes";
 import type { BrandBrief, BrandKit } from "./pagesTypes";
+import { uniqueSlug } from "./pagesBrands";
+import { slugify } from "./pagesUtil";
 
 // Media brands: who the agent designs for. Each holds its guidelines (logo,
 // colours, fonts, voice, imagery, what it does), its products and photos. A
@@ -228,6 +231,7 @@ export const update = mutation({
     if (p.images) patch.images = cleanImages(p.images);
     await ctx.db.patch(id, patch);
     await refreshCampaigns(ctx, (await ctx.db.get(id))!);
+    await syncAudienceHome(ctx, id);
     return null;
   },
 });
@@ -240,8 +244,73 @@ export const remove = mutation({
     // Campaigns keep their copy of the kit; they just stop following the brand.
     const campaigns = await ctx.db.query("mediaCampaigns").withIndex("by_owner", (q) => q.eq("owner", brand.owner)).collect();
     for (const c of campaigns) if (c.brandId === id) await ctx.db.patch(c._id, { brandId: undefined });
+    // Its audiences go with it; campaigns that picked one keep the name they stored.
+    if (brand.audienceBrandId) await ctx.scheduler.runAfter(0, internal.pagesBrands.purgeChunk, { brandId: brand.audienceBrandId, pageIds: [], reschedule: true });
     await ctx.db.delete(id);
     return null;
+  },
+});
+
+/* Audiences ------------------------------------------------------------------ */
+
+// A brand made in Media has no Pages brand, but Pages owns the audience
+// builder and the Qloo compile behind it. So its audiences live under a Pages
+// brand made for it here, which no Pages screen lists. That brand carries the
+// Media brand's about and products as its brief: the compile anchors on its
+// city and the audience briefs can name its products.
+
+function homeFields(brand: Doc<"mediaBrands">) {
+  const about = brand.about as MediaAbout | undefined;
+  const voice = (brand.kit as MediaKit).voice;
+  const brief: BrandBrief = {
+    summary: about?.summary ?? "",
+    categories: about?.categories ?? [],
+    positioning: "",
+    audience: about?.audience ?? "",
+    proof: [],
+    ctas: [],
+    locations: about?.location ? [about.location] : [],
+    items: (brand.products as MediaProduct[]).map((p) => ({
+      id: p.id,
+      name: p.name,
+      kind: "product",
+      description: p.description ?? "",
+      ...(p.price ? { price: p.price } : {}),
+      ...(p.image ? { image: p.image } : {}),
+      ...(p.url ? { url: p.url } : {}),
+      tags: [],
+    })),
+    relatedBrands: [],
+  };
+  return { name: brand.name, url: brand.url ?? "", kit: voice ? { voice } : {}, brief, updatedAt: Date.now() };
+}
+
+/** Keeps the audience store's copy of the brand current. */
+async function syncAudienceHome(ctx: MutationCtx, id: Id<"mediaBrands">) {
+  const brand = await ctx.db.get(id);
+  if (brand?.audienceBrandId && (await ctx.db.get(brand.audienceBrandId))) await ctx.db.patch(brand.audienceBrandId, homeFields(brand));
+}
+
+/** The Pages brand that holds this brand's audiences, made the first time it needs one. */
+export const audienceHome = mutation({
+  args: { id: v.id("mediaBrands") },
+  returns: v.id("pagesBrands"),
+  handler: async (ctx, { id }) => {
+    const brand = await ownBrand(ctx, id);
+    if (brand.source.pagesBrandId) return brand.source.pagesBrandId;
+    if (brand.audienceBrandId && (await ctx.db.get(brand.audienceBrandId))) return brand.audienceBrandId;
+    const home = await ctx.db.insert("pagesBrands", {
+      ...homeFields(brand),
+      slug: await uniqueSlug(ctx, `media-${slugify(brand.name)}`),
+      owner: brand.owner,
+      status: "ready",
+      crawled: [],
+      trace: [],
+      mediaBrandId: id,
+      createdAt: Date.now(),
+    });
+    await ctx.db.patch(id, { audienceBrandId: home });
+    return home;
   },
 });
 
@@ -278,6 +347,7 @@ export const patchFromAgent = internalMutation({
     if (typeof p.error === "string") update.error = p.error.slice(0, 400);
     await ctx.db.patch(id, update);
     if (update.status === "ready") await refreshCampaigns(ctx, (await ctx.db.get(id))!);
+    await syncAudienceHome(ctx, id);
     return null;
   },
 });
