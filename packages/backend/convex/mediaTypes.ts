@@ -299,6 +299,155 @@ export interface MediaConcept {
   why: { text: string; evidence: string }[];
 }
 
+/* Why reports (mediaInsights kind "why") -------------------------------------
+   Why a poster, video, image or clip looks the way it does, for the Why
+   modal. The agent (slice_media/why.py) looks at the finished thing next to
+   its audience's Qloo profile; every signal a choice cites is a real item of
+   that profile (checked by name), with Qloo's affinity where Qloo gives one. */
+
+export type WhySignalKind = "love" | "trait" | "brand" | "artist" | "film" | "tv" | "book" | "place" | "podcast" | "game";
+
+export interface WhySignal {
+  name: string;
+  kind: WhySignalKind;
+  /** Qloo affinity, 0..1 (traits and brands; loves are what the audience was built from). */
+  affinity?: number;
+  image?: string;
+}
+
+export type WhyChoiceKind = "subject" | "product" | "setting" | "light" | "colour" | "words" | "type" | "layout" | "music" | "voice" | "motion" | "cta";
+
+export interface WhyChoice {
+  id: string;
+  kind: WhyChoiceKind;
+  /** Short name of the choice: "A heavy, dark stoneware cup". */
+  title: string;
+  /** What it is for this audience, one plain sentence. */
+  why: string;
+  /** What decided it: the audience's taste, the brand's guidelines, or the merchant's request. */
+  from: "taste" | "brand" | "brief";
+  signals: WhySignal[];
+  /** Where it is in the frame, 0..1 (images and posters): its centre and its box. */
+  at?: { x: number; y: number };
+  box?: { x: number; y: number; w: number; h: number };
+  /** Seconds into a video. */
+  time?: number;
+}
+
+export interface WhyTrait {
+  name: string;
+  /** The Qloo tag family in plain words: "Look", "Mood", "Style", "Lifestyle", "Identity". */
+  group: string;
+  affinity: number;
+  /** Ids of the choices that carry it. */
+  choices: string[];
+}
+
+export interface WhySwatch {
+  hex: string;
+  /** Share of the frame, 0..1. */
+  share: number;
+  name: string;
+  /** The brand kit colour it matches ("primary", "accent"...), if any. */
+  kit?: string;
+}
+
+export interface WhyMapCell {
+  lat: number;
+  lon: number;
+  /** -1..1: how much more (positive) or less this audience's taste shows here than the comparison's. */
+  lean: number;
+}
+
+export interface WhyMap {
+  /** What Qloo resolved the area to: "Los Angeles". */
+  region: string;
+  /** What the taste is compared with: another audience's name, or "how busy each area is". */
+  versus: string;
+  /** Cell size in degrees [lon, lat]. */
+  cell: [number, number];
+  cells: WhyMapCell[];
+  /** The strongest areas, kept apart, named from OpenStreetMap. */
+  hotspots: { name: string; detail: string; lat: number; lon: number; lean: number }[];
+  /** Where the comparison leans instead (only when it is another audience). */
+  elsewhere: { name: string; detail: string; lat: number; lon: number; lean: number }[];
+}
+
+export interface MediaWhyReport {
+  itemId: string;
+  itemKind: "creative" | "asset";
+  /** The creative's version it explains (0 for an image or clip). */
+  version: number;
+  audienceKey: string;
+  audienceName: string;
+  /** Made for everyone: no audience taste, explained from the brand alone. */
+  everyone: boolean;
+  /** The idea in a few words. */
+  idea: string;
+  /** Two sentences: who it is for and how their taste shaped it. */
+  summary: string;
+  choices: WhyChoice[];
+  /** What was kept out on purpose. */
+  avoided: { what: string; why: string; signals: WhySignal[] }[];
+  palette: WhySwatch[];
+  /** What the audience was built from (its seeds), with pictures. */
+  loves: WhySignal[];
+  /** The audience's strongest Qloo traits, strongest first. */
+  traits: WhyTrait[];
+  /** Brands the audience over-indexes on, strongest first; `used` when a choice cites it. */
+  brands: (WhySignal & { used: boolean })[];
+  /** What they watch and listen to: what choices cite first, then their strongest films, shows and artists. */
+  culture: (WhySignal & { used: boolean })[];
+  /** Qloo's age and gender skew for the audience, -1..1 per bucket. */
+  demographics?: { age: Record<string, number>; gender: Record<string, number> } | null;
+  /** Where the taste is strongest, for an audience tied to a city. */
+  map?: WhyMap | null;
+  at: number;
+}
+
+/* Pre-tests (mediaInsights kind "pretest") -----------------------------------
+   A simulated panel (slice_media/pretest.py): five people Gemini builds from an
+   audience's Qloo profile and demographics react to the piece. A model's
+   judgement grounded in Qloo data, not a Qloo measurement. */
+
+export type PretestAction = "scroll_past" | "pause" | "tap" | "save_or_share";
+
+export interface PretestPerson {
+  name: string;
+  age: number;
+  gender: "woman" | "man" | "";
+  city: string;
+  bio: string;
+  /** Their tastes: real items of the audience's Qloo profile. */
+  tastes: WhySignal[];
+  firstGlance: string;
+  reaction: string;
+  /** 1..10 */
+  score: number;
+  action: PretestAction;
+  likes: string[];
+  dislikes: string[];
+}
+
+export interface MediaPretest {
+  itemId: string;
+  itemKind: "creative" | "asset";
+  /** The creative's version it saw (0 for an image or clip). */
+  version: number;
+  audienceKey: string;
+  audienceName: string;
+  everyone: boolean;
+  /** 0..100, the panel's scores averaged. */
+  score: number;
+  /** How many would stop scrolling. */
+  stopped: number;
+  verdict: string;
+  personas: PretestPerson[];
+  fixes: { what: string; why: string; where: string; impact: "high" | "medium" | "low"; layer?: string }[];
+  demographics?: { age: Record<string, number>; gender: Record<string, number> } | null;
+  at: number;
+}
+
 export const DEFAULT_COLORS: BrandColors = {
   background: "#f6f4ef",
   foreground: "#1b1a17",

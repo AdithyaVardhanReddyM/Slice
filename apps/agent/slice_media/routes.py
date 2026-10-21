@@ -46,6 +46,8 @@ from . import builder as B
 from . import item as I
 from . import render
 from . import store
+from . import pretest as P
+from . import why as W
 
 router = APIRouter(prefix="/media", tags=["media"])
 
@@ -573,6 +575,8 @@ ACTIONS: dict[str, tuple[Any, tuple[str, ...]]] = {
     "edit_clip": (B.edit_clip, ("asset_id", "instruction", "reference_urls")),
     "extend_clip": (B.extend_clip, ("asset_id", "seconds", "prompt", "model")),
     "resize_creative": (B.resize_creative, ("creative_id", "formats")),
+    "why": (W.report, ("item_id",)),
+    "pretest": (P.pretest, ("item_id", "audience_id")),
 }
 
 

@@ -172,7 +172,7 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
       <>
         <Tool icon={<Pencil />} label={c ? "Edit" : "Open"} onClick={() => openFocus(one.key)} />
         <Tool icon={<MessageSquareText />} label="Ask" onClick={() => compose("")} title="Ask Slice about it (it is attached to the prompt)" />
-        {c && <WhyButton creative={c} className={btn} />}
+        <WhyButton creative={c} asset={c ? undefined : a} name={one.name} className={btn} />
         {c && <ResizeMenu node={one} />}
         {one.kind === "image" && a && (
           <>

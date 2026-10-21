@@ -105,6 +105,22 @@ export const itemChat = query({
   },
 });
 
+/** The latest insight of a kind about one creative or asset ("why": its Why report), or null. */
+export const insight = query({
+  args: { campaignId: v.id("mediaCampaigns"), kind: v.string(), key: v.string() },
+  handler: async (ctx, { campaignId, kind, key }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const campaign = await ctx.db.get(campaignId);
+    if (!campaign || identity?.subject !== campaign.owner) return null;
+    const row = await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId).eq("kind", kind).eq("key", key)).first();
+    return row ? { data: row.data as unknown, createdAt: row.createdAt } : null;
+  },
+});
+
+async function dropInsights(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, key: string) {
+  for (const i of await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId)).collect()) if (i.key === key) await ctx.db.delete(i._id);
+}
+
 export const versions = query({
   args: { creativeId: v.id("mediaCreatives") },
   handler: async (ctx, { creativeId }) => {
@@ -154,7 +170,7 @@ const assetInput = v.object({
 
 const boardValidator = v.object({ x: v.number(), y: v.number(), w: v.number() });
 
-async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a: { url?: string; storageId?: Id<"_storage">; kind: string; source: string; mime?: string; name?: string; w?: number; h?: number; duration?: number; prompt?: string; model?: string; parentId?: Id<"mediaAssets">; cost?: number; credit?: string; board?: BoardPos; review?: unknown }) {
+async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a: { url?: string; storageId?: Id<"_storage">; kind: string; source: string; mime?: string; name?: string; w?: number; h?: number; duration?: number; prompt?: string; model?: string; parentId?: Id<"mediaAssets">; cost?: number; credit?: string; board?: BoardPos; review?: unknown; audienceKey?: string }) {
   const url = a.storageId ? await ctx.storage.getUrl(a.storageId) : safeUrl(a.url);
   if (!url) throw new Error("Unknown file: expected a storageId or an https url");
   const kind = ["image", "video", "audio"].includes(a.kind) ? a.kind : "image";
@@ -176,6 +192,7 @@ async function insertAsset(ctx: MutationCtx, campaignId: Id<"mediaCampaigns">, a
     ...(a.credit ? { credit: a.credit.slice(0, 200) } : {}),
     ...(a.board ? { board: a.board } : {}),
     ...(a.review && typeof a.review === "object" ? { review: a.review } : {}),
+    ...(a.audienceKey ? { audienceKey: a.audienceKey.slice(0, 80) } : {}),
     createdAt: Date.now(),
   });
   return { id, url };
@@ -447,6 +464,7 @@ export const remove = mutation({
     const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
     if (chat) await ctx.db.delete(chat._id);
     for (const c of await ctx.db.query("mediaItemChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(c._id);
+    for (const i of await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(i._id);
     await ctx.db.delete(id);
     return null;
   },
@@ -479,6 +497,7 @@ export const removeAsset = mutation({
     if (!asset) return null;
     await ownCampaign(ctx, asset.campaignId);
     // Docs may still point at the URL; keep the file, drop it from the library.
+    await dropInsights(ctx, asset.campaignId, id);
     await ctx.db.delete(id);
     return null;
   },
@@ -535,8 +554,9 @@ export const removeCreative = mutation({
   args: { id: v.id("mediaCreatives") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    await ownCreative(ctx, id);
+    const { creative } = await ownCreative(ctx, id);
     for (const x of await ctx.db.query("mediaVersions").withIndex("by_creative", (q) => q.eq("creativeId", id)).collect()) await ctx.db.delete(x._id);
+    await dropInsights(ctx, creative.campaignId, id);
     await ctx.db.delete(id);
     return null;
   },
@@ -652,6 +672,19 @@ export const readForAgent = internalQuery({
     }
     const committed = jobs.filter((j) => j.status === "queued" || j.status === "running").reduce((s, j) => s + j.estimate, 0);
     return { campaign: { ...campaign, audiences }, brand, creatives, assets, jobs, committed };
+  },
+});
+
+/** The agent's latest insight about a creative or asset replaces the one before. */
+export const putInsight = internalMutation({
+  args: { campaignId: v.id("mediaCampaigns"), kind: v.string(), key: v.string(), data: v.any() },
+  returns: v.null(),
+  handler: async (ctx, { campaignId, kind, key, data }) => {
+    if (!(await ctx.db.get(campaignId))) throw new Error("Unknown campaign");
+    const old = await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", campaignId).eq("kind", kind).eq("key", key)).collect();
+    for (const o of old) await ctx.db.delete(o._id);
+    await ctx.db.insert("mediaInsights", { campaignId, kind, key: key.slice(0, 80), data, createdAt: Date.now() });
+    return null;
   },
 });
 
@@ -816,6 +849,7 @@ export const addAssetInternal = internalMutation({
       cost: v.optional(v.number()),
       credit: v.optional(v.string()),
       review: v.optional(v.any()),
+      audienceKey: v.optional(v.string()),
     }),
     /** Put it on the canvas, next to `nearId` when given. */
     place: v.optional(v.boolean()),
@@ -824,7 +858,9 @@ export const addAssetInternal = internalMutation({
   handler: async (ctx, { campaignId, asset, place, nearId }) => {
     if (!(await ctx.db.get(campaignId))) throw new Error("Unknown campaign");
     const board = place ? await placeOnBoard(ctx, campaignId, { w: asset.w ?? 1, h: asset.h ?? 1, audio: asset.kind === "audio" }, nearId) : undefined;
-    return insertAsset(ctx, campaignId, { ...asset, ...(board ? { board } : {}) });
+    // A new version is for the same audience as the one it was made from.
+    const audienceKey = asset.audienceKey ?? (asset.parentId ? (await ctx.db.get(asset.parentId))?.audienceKey : undefined);
+    return insertAsset(ctx, campaignId, { ...asset, ...(audienceKey ? { audienceKey } : {}), ...(board ? { board } : {}) });
   },
 });
 

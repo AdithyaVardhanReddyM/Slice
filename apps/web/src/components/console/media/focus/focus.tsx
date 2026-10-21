@@ -346,6 +346,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
       onClose={onClose}
       right={
         <>
+          <WhyButton asset={v} name={node.name} className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950 [&_svg]:size-4" />
           {v.board && (
             <Button variant="ghost" size="sm" className="h-8 rounded-lg text-neutral-600" onClick={() => (remove([keyOf({ kind: "asset", id: v._id })]), v._id === opened._id && onClose())}>
               <X /> Take off canvas

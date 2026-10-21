@@ -341,6 +341,14 @@ emailRoute("/media/campaign", async (ctx, { campaignId, patch }) => {
   return json({ ok: true });
 });
 
+/** An insight about something on the canvas (kind "why" or "pretest": key = the creative or asset id), replacing the one before. */
+emailRoute("/media/insight", async (ctx, { campaignId, kind, key, data }) => {
+  const id = asId<"mediaCampaigns">(campaignId);
+  if (!id || (kind !== "why" && kind !== "pretest") || typeof key !== "string" || !key || !data || typeof data !== "object") return json({ error: "expected { campaignId, kind, key, data }" }, 400);
+  await ctx.runMutation(internal.media.putInsight, { campaignId: id, kind, key, data });
+  return json({ ok: true });
+});
+
 /** A new creative (no creativeId) or a new version of one. */
 emailRoute("/media/creative", async (ctx, body) => {
   const campaignId = asId<"mediaCampaigns">(body.campaignId);
@@ -384,7 +392,7 @@ emailRoute("/media/asset", async (ctx, { campaignId, asset, place, nearId }) => 
     await ctx.runMutation(internal.media.addAssetInternal, {
       campaignId: id,
       asset: {
-        ...pick(a, ["url", "mime", "name", "w", "h", "duration", "prompt", "model", "cost", "credit", "review"]),
+        ...pick(a, ["url", "mime", "name", "w", "h", "duration", "prompt", "model", "cost", "credit", "review", "audienceKey"]),
         ...(a.storageId ? { storageId: (a.storageId as Id<"_storage">)! } : {}),
         ...(a.parentId ? { parentId: asId<"mediaAssets">(a.parentId)! } : {}),
         kind: String(a.kind ?? "image"),

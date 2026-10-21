@@ -127,27 +127,29 @@ async def start_asset(
     target: str | None = None,
     job_id: str | None = None,
     thread: str | None = None,
+    audience: str | None = None,
 ) -> str:
     """A standalone generation (an image, a clip, a track): the job holds a spot on the canvas
     while it runs, and the file takes that spot when it lands. `target` marks the job as a new
     version of that item (its editor shows it coming). With `job_id`, a design spot already on
-    the canvas becomes this generation. `thread` is the conversation it was asked for in.
+    the canvas becomes this generation. `thread` is the conversation it was asked for in, and
+    `audience` the audience it was made for (the asset keeps it, for its Why).
     Returns the job id."""
     if job_id:
         await store.job(campaign_id, jobId=job_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", aspect=aspect, **({"thread": thread} if thread else {}))
     else:
         job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}), **({"targetId": target} if target else {}), **({"thread": thread} if thread else {}))
-    task = asyncio.create_task(_run_asset(campaign_id, job_id, kind, model, prompt, work, lane, source, parent))
+    task = asyncio.create_task(_run_asset(campaign_id, job_id, kind, model, prompt, work, lane, source, parent, audience))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)
     return job_id
 
 
-async def _run_asset(campaign_id: str, job_id: str, kind: str, model: str, prompt: str, work: Callable[[], Awaitable[Landed]], lane: str, source: str, parent: str | None) -> None:
+async def _run_asset(campaign_id: str, job_id: str, kind: str, model: str, prompt: str, work: Callable[[], Awaitable[Landed]], lane: str, source: str, parent: str | None, audience: str | None = None) -> None:
     try:
         async with _limits.get(lane, _limits["image"]):
             out = await work()
-        asset = await store.add_asset(campaign_id, data=out.data, mime=out.mime, kind=out.asset_kind, source=source, prompt=prompt[:2000], model=out.patch.get("model") or model, cost=out.cost, **({"parentId": parent} if parent else {}), **out.meta)
+        asset = await store.add_asset(campaign_id, data=out.data, mime=out.mime, kind=out.asset_kind, source=source, prompt=prompt[:2000], model=out.patch.get("model") or model, cost=out.cost, **({"parentId": parent} if parent else {}), **({"audienceKey": audience} if audience else {}), **out.meta)
         await store.job(campaign_id, jobId=job_id, status="done", cost=round(out.cost, 3), assetId=asset["id"])
     except Exception as e:
         msg = _friendly(e)

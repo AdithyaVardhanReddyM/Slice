@@ -602,6 +602,12 @@ def _option(state: dict[str, Any], key: str) -> str:
     return str((state.get(OPTIONS) or {}).get(key) or "")
 
 
+def _for_audience(state: dict[str, Any]) -> str | None:
+    """The audience picked in the prompt bar (not Everyone), which what is made keeps for its Why."""
+    aid = _option(state, "audienceId")
+    return aid if aid and aid != "all" and any(a["id"] == aid for a in _audiences(state)) else None
+
+
 def _video_aspect(aspect: str) -> str:
     """Veo makes 9:16 or 16:9: anything taller than square is 9:16."""
     try:
@@ -657,7 +663,7 @@ async def make_image(prompt: str, tool_context: ToolContext, aspect: str = "1:1"
     jobs: list[str] = []
     for i in range(count):
         take = prompt if count == 1 else f"{prompt} (Take {i + 1} of {count}: vary the framing and moment.)"
-        jobs.append(await J.start_asset(cid, kind="image", model=m, prompt=take, estimate=M.image_cost(m), work=J.image_asset_work(prompt=take + _style_suffix(state), model=m, aspect=aspect, refs=refs, rules=rules), aspect=aspect, near=near or (jobs[-1] if jobs else None), lane="image", job_id=spot if i == 0 else None, thread=thread))
+        jobs.append(await J.start_asset(cid, kind="image", model=m, prompt=take, estimate=M.image_cost(m), work=J.image_asset_work(prompt=take + _style_suffix(state), model=m, aspect=aspect, refs=refs, rules=rules), aspect=aspect, near=near or (jobs[-1] if jobs else None), lane="image", job_id=spot if i == 0 else None, thread=thread, audience=_for_audience(state)))
     _bump(state)
     record("slice", "Make images", f"{count} on {M.IMAGE_LABEL.get(m, m)}, ~${estimate:.2f}", ms=0)
     return {"ok": True, "jobs": jobs, "model": M.IMAGE_LABEL.get(m, m), "estimate": estimate, "brandCheck": bool(rules)}
@@ -690,7 +696,7 @@ async def make_clip(prompt: str, tool_context: ToolContext, aspect: str = "9:16"
     except J.BudgetError as e:
         return {"ok": False, "error": str(e)}
     full = prompt + _style_suffix(state) + " No on-screen text, captions, logos or watermarks."
-    job = await J.start_asset(cid, kind="video", model=m, prompt=prompt, estimate=estimate, work=J.clip_asset_work(prompt=full, model=m, aspect=aspect, seconds=secs, resolution=res, audio=bool(sound), first_frame=image or None, refs=[]), aspect=aspect, near=near or None, lane="video")
+    job = await J.start_asset(cid, kind="video", model=m, prompt=prompt, estimate=estimate, work=J.clip_asset_work(prompt=full, model=m, aspect=aspect, seconds=secs, resolution=res, audio=bool(sound), first_frame=image or None, refs=[]), aspect=aspect, near=near or None, lane="video", audience=_for_audience(state))
     _bump(state)
     return {"ok": True, "job": job, "model": M.VIDEO_LABEL.get(m, m), "seconds": secs, "estimate": estimate}
 

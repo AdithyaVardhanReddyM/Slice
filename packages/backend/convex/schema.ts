@@ -1056,6 +1056,8 @@ export default defineSchema({
     review: v.optional(v.any()),
     /** The conversation it was made in, when that began at its own spot on the canvas; else its first version's id is its thread. */
     thread: v.optional(v.string()),
+    /** The audience it was made for (an id in the campaign's audiences), when one was picked; versions inherit it. */
+    audienceKey: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
 
@@ -1144,4 +1146,19 @@ export default defineSchema({
   })
     .index("by_item", ["campaignId", "itemId"])
     .index("by_campaign", ["campaignId"]),
+
+  /**
+   * What the agent worked out about something on a campaign's canvas, latest
+   * per key. "why": the Why report of a poster, video, image or clip (key: its
+   * id; MediaWhyReport), made when the merchant first opens Why. "pretest": a
+   * simulated panel's reaction to it (MediaPretest), run from the Why modal.
+   */
+  mediaInsights: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    kind: v.string(),
+    /** The creative or asset it is about. */
+    key: v.string(),
+    data: v.any(),
+    createdAt: v.number(),
+  }).index("by_campaign", ["campaignId", "kind", "key"]),
 });
