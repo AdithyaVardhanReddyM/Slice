@@ -28,8 +28,8 @@ export interface FocusEnv {
   /** Run a studio action on the agent (no chat turn). Resolves to ok. */
   act: (action: string, args: Record<string, unknown>, label: string) => Promise<boolean>;
   pending: string[];
-  /** Point the Ask bar at something: it names it and takes the caret. */
-  ask: (block: { id: string; label: string; type: string; text: string }) => void;
+  /** Put the caret in Slice's box on the right (it already knows what is selected). */
+  ask: () => void;
 }
 
 export const FocusContext = createContext<FocusEnv | null>(null);

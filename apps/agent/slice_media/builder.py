@@ -95,6 +95,8 @@ def _asset(a: dict[str, Any]) -> dict[str, Any]:
     for k in ("name", "prompt", "w", "h", "duration", "model"):
         if a.get(k):
             out[k] = a[k] if k != "prompt" else str(a[k])[:120]
+    if a.get("parentId"):
+        out["parent"] = a["parentId"]
     if a.get("board"):
         out["onCanvas"] = True
     return out

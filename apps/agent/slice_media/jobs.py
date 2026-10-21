@@ -124,10 +124,12 @@ async def start_asset(
     lane: str = "image",
     source: str = "generated",
     parent: str | None = None,
+    target: str | None = None,
 ) -> str:
     """A standalone generation (an image, a clip, a track): the job holds a spot on the canvas
-    while it runs, and the file takes that spot when it lands. Returns the job id."""
-    job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}))
+    while it runs, and the file takes that spot when it lands. `target` marks the job as a new
+    version of that item (its editor shows it coming). Returns the job id."""
+    job_id = await store.job(campaign_id, kind=kind, model=model, prompt=prompt[:2000], estimate=round(estimate, 3), status="running", place=True, aspect=aspect, **({"nearId": near} if near else {}), **({"targetId": target} if target else {}))
     task = asyncio.create_task(_run_asset(campaign_id, job_id, kind, model, prompt, work, lane, source, parent))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)

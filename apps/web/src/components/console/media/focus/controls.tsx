@@ -1,11 +1,36 @@
 "use client";
 
-// Compact inspector controls for the studio's narrow side panel.
+// Compact controls for the editors: the bar over the page and its popovers.
 
 import { ImageOff } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { MediaKit } from "@slice/backend/convex/mediaTypes";
+
+/** A control on the bar over the page. */
+export const ctl = "inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md px-2 text-[13px] text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-950 disabled:pointer-events-none disabled:opacity-40 data-popup-open:bg-neutral-100 aria-pressed:bg-neutral-900 aria-pressed:text-white [&_svg]:size-4";
+
+export const BarSep = () => <span className="mx-1 h-5 w-px shrink-0 bg-neutral-200" />;
+
+/** A bar control that opens its settings below it. */
+export function Pop({ trigger, title, children, className, defaultOpen, disabled }: { trigger: ReactNode; title: string; children: ReactNode; className?: string; defaultOpen?: boolean; disabled?: boolean }) {
+  return (
+    <Popover defaultOpen={defaultOpen}>
+      <PopoverTrigger className={ctl} title={title} disabled={disabled}>
+        {trigger}
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className={cn("max-h-[min(70vh,560px)] w-64 gap-3 overflow-y-auto p-3", className)}>
+        <p className="text-xs font-medium text-muted-foreground">{title}</p>
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+export function Swatch({ value }: { value: string | undefined }) {
+  return <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: value ?? "transparent", backgroundImage: value ? undefined : "linear-gradient(135deg, transparent 45%, #ef4444 45% 55%, transparent 55%)" }} />;
+}
 
 export function Section({ title, aside, children, className }: { title: ReactNode; aside?: ReactNode; children: ReactNode; className?: string }) {
   return (

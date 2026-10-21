@@ -93,6 +93,18 @@ export const get = query({
   },
 });
 
+/** An editor's own conversation (mediaItemChats). */
+export const itemChat = query({
+  args: { campaignId: v.id("mediaCampaigns"), itemId: v.string() },
+  handler: async (ctx, { campaignId, itemId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const campaign = await ctx.db.get(campaignId);
+    if (!campaign || identity?.subject !== campaign.owner) return [];
+    const chat = await ctx.db.query("mediaItemChats").withIndex("by_item", (q) => q.eq("campaignId", campaignId).eq("itemId", itemId)).unique();
+    return chat?.messages ?? [];
+  },
+});
+
 export const versions = query({
   args: { creativeId: v.id("mediaCreatives") },
   handler: async (ctx, { creativeId }) => {
@@ -426,6 +438,7 @@ export const remove = mutation({
     for (const j of await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(j._id);
     const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
     if (chat) await ctx.db.delete(chat._id);
+    for (const c of await ctx.db.query("mediaItemChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(c._id);
     await ctx.db.delete(id);
     return null;
   },
@@ -894,6 +907,28 @@ export const appendChat = internalMutation({
     const kept = merged.slice(-120);
     if (existing) await ctx.db.patch(existing._id, { messages: kept, updatedAt: now });
     else await ctx.db.insert("mediaChats", { campaignId: id, messages: kept, updatedAt: now });
+    return null;
+  },
+});
+
+export const appendItemChat = internalMutation({
+  args: { id: v.id("mediaCampaigns"), itemId: v.string(), messages: v.array(v.any()) },
+  returns: v.null(),
+  handler: async (ctx, { id, itemId, messages }) => {
+    if (!(await ctx.db.get(id))) throw new Error("Unknown campaign");
+    const now = Date.now();
+    const incoming = messages.map((m) => cleanMessage(m, now)).filter((m): m is NonNullable<ReturnType<typeof cleanMessage>> => m !== null);
+    const key = itemId.slice(0, 60);
+    const existing = await ctx.db.query("mediaItemChats").withIndex("by_item", (q) => q.eq("campaignId", id).eq("itemId", key)).unique();
+    const merged = [...(existing?.messages ?? [])];
+    for (const m of incoming) {
+      const at = merged.findIndex((x) => x.id === m.id);
+      if (at >= 0) merged[at] = m;
+      else merged.push(m);
+    }
+    const kept = merged.slice(-80);
+    if (existing) await ctx.db.patch(existing._id, { messages: kept, updatedAt: now });
+    else await ctx.db.insert("mediaItemChats", { campaignId: id, itemId: key, messages: kept, updatedAt: now });
     return null;
   },
 });

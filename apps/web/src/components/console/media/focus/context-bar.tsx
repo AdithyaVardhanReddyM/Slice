@@ -2,9 +2,13 @@
 
 // The bar over the page that changes with what is selected, as in Canva: for
 // text its font, size, colour, weight, case, alignment and spacing; for a
-// picture fill or fit, corners and shadow; for a shape its fill; and for
-// anything its order, alignment on the page, opacity, lock and delete. With
-// nothing selected it sets the page background.
+// picture fill or fit, focal point, corners and shadow; for a shape its fill;
+// for a logo its wordmark; for a QR code its link; and for anything its order,
+// alignment, exact position, opacity, lock and delete (and, in a video, when
+// it is on screen). A selected shot or sound track gets its own bar
+// (shot-bar.tsx). With nothing selected it sets the page background. The
+// editors' right side is Slice (item-agent.tsx), so every manual setting
+// lives here.
 
 import {
   AlignCenter,
@@ -27,34 +31,13 @@ import {
   Trash2,
   Unlock,
 } from "lucide-react";
-import type { ReactNode } from "react";
-import { FORMATS, type Layer, type TextLayer } from "@slice/backend/convex/mediaTypes";
+import { useState } from "react";
+import { FORMATS, type Anim, type Layer, type MediaDoc, type TextLayer } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useStudio } from "./context";
-import { ColorPick, Num, Row, Seg } from "./controls";
-import { useLayerEdits } from "./inspector";
-
-const ctl = "inline-flex h-8 shrink-0 items-center justify-center gap-1 rounded-md px-2 text-[13px] text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-950 data-popup-open:bg-neutral-100 aria-pressed:bg-neutral-900 aria-pressed:text-white [&_svg]:size-4";
-const Sep = () => <span className="mx-1 h-5 w-px shrink-0 bg-neutral-200" />;
-
-function Pop({ trigger, title, children, className }: { trigger: ReactNode; title: string; children: ReactNode; className?: string }) {
-  return (
-    <Popover>
-      <PopoverTrigger className={ctl} title={title}>
-        {trigger}
-      </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className={cn("w-64 gap-3 p-3", className)}>
-        <p className="text-xs font-medium text-muted-foreground">{title}</p>
-        {children}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function Swatch({ value }: { value: string | undefined }) {
-  return <span className="size-4 rounded-full ring-1 ring-black/15" style={{ background: value ?? "transparent", backgroundImage: value ? undefined : "linear-gradient(135deg, transparent 45%, #ef4444 45% 55%, transparent 55%)" }} />;
-}
+import { BarSep as Sep, ColorPick, ctl, ImagePreview, Num, Pop, Row, Seg, Swatch } from "./controls";
+import { useLayerEdits } from "./edits";
+import { AudioBar, ShotBar } from "./shot-bar";
 
 function TextControls({ l }: { l: TextLayer }) {
   const { kit } = useStudio();
@@ -146,6 +129,10 @@ function LayerControls({ l }: { l: Layer }) {
     return (
       <>
         <Seg value={l.fit ?? "cover"} onChange={(fit) => set({ fit } as Partial<Layer>)} options={[{ value: "cover", label: "Fill" }, { value: "contain", label: "Fit" }]} className="w-32 flex-none" />
+        <Pop trigger={<span className="text-xs font-medium">Focus</span>} title="What stays in view when it crops">
+          <ImagePreview src={l.src} focal={l.focal} onFocal={(focal) => set({ focal } as Partial<Layer>)} />
+          <p className="text-[11px] text-muted-foreground">Click the picture to set the point that stays in view.</p>
+        </Pop>
         <Pop trigger={<span className="text-xs font-medium">Corners</span>} title="Corners">
           <Num value={l.radius ?? 0} min={0} max={2000} onChange={(radius) => set({ radius: radius || undefined } as Partial<Layer>)} suffix="px" />
           <button type="button" onClick={() => set({ radius: 9999 } as Partial<Layer>)} className="rounded-md bg-neutral-100 px-2 py-1 text-xs hover:bg-neutral-200">
@@ -173,14 +160,24 @@ function LayerControls({ l }: { l: Layer }) {
     );
   if (l.type === "logo")
     return (
-      <Pop trigger={<span className="flex items-center gap-1.5 text-xs font-medium"><Swatch value={l.color} /> Colour</span>} title="Wordmark colour">
-        <ColorPick value={l.color} kit={kit} none onChange={(color) => set({ color } as Partial<Layer>)} />
-        <p className="text-[11px] text-muted-foreground">Only the text wordmark takes a colour; logo images keep theirs.</p>
-      </Pop>
+      <>
+        <Pop trigger={<span className="text-xs font-medium">Wordmark</span>} title="Wordmark">
+          <input value={l.text ?? ""} onChange={(e) => set({ text: e.target.value || undefined } as Partial<Layer>)} placeholder="The brand's name" className="h-8 w-full rounded-md bg-neutral-100/80 px-2 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-sky-500" />
+          <p className="text-[11px] text-muted-foreground">{l.src ? "Shown only when there is no logo image." : "No logo image, so the wordmark shows in the heading font."}</p>
+        </Pop>
+        <Pop trigger={<span className="flex items-center gap-1.5 text-xs font-medium"><Swatch value={l.color} /> Colour</span>} title="Wordmark colour">
+          <ColorPick value={l.color} kit={kit} none onChange={(color) => set({ color } as Partial<Layer>)} />
+          <p className="text-[11px] text-muted-foreground">Only the text wordmark takes a colour; logo images keep theirs.</p>
+        </Pop>
+      </>
     );
   if (l.type === "qr")
     return (
       <>
+        <Pop trigger={<span className="text-xs font-medium">Link</span>} title="Where it opens">
+          <UrlInput value={l.url} onChange={(url) => set({ url } as Partial<Layer>)} />
+          <p className="text-[11px] text-muted-foreground">Keep strong contrast so phones can scan it.</p>
+        </Pop>
         <Pop trigger={<span className="flex items-center gap-1.5 text-xs font-medium"><Swatch value={l.color} /> Code</span>} title="Code colour">
           <ColorPick value={l.color} kit={kit} onChange={(color) => set({ color } as Partial<Layer>)} />
         </Pop>
@@ -234,12 +231,65 @@ function Arrange({ layers }: { layers: Layer[] }) {
         </button>
       </div>
       {one && (
-        <Row label="Opacity">
-          <input type="range" min={0} max={100} value={opacity} onChange={(e) => patch(layers[0].id, { opacity: Number(e.target.value) >= 100 ? undefined : Number(e.target.value) / 100 })} className="w-full accent-neutral-900" />
-          <span className="w-9 text-right text-xs tabular-nums">{opacity}%</span>
-        </Row>
+        <>
+          <div className="grid grid-cols-2 gap-1.5">
+            <Num label="X" value={layers[0].x} onChange={(x) => patch(layers[0].id, { x })} />
+            <Num label="Y" value={layers[0].y} onChange={(y) => patch(layers[0].id, { y })} />
+            <Num label="W" value={layers[0].w} min={1} onChange={(w) => patch(layers[0].id, { w })} />
+            <Num label="H" value={layers[0].h} min={1} onChange={(h) => patch(layers[0].id, { h })} />
+            <Num label="Turn" value={layers[0].rotation ?? 0} min={-360} max={360} suffix="°" onChange={(rotation) => patch(layers[0].id, { rotation: rotation || undefined })} className="col-span-2" />
+          </div>
+          <Row label="Opacity">
+            <input type="range" min={0} max={100} value={opacity} onChange={(e) => patch(layers[0].id, { opacity: Number(e.target.value) >= 100 ? undefined : Number(e.target.value) / 100 })} className="w-full accent-neutral-900" />
+            <span className="w-9 text-right text-xs tabular-nums">{opacity}%</span>
+          </Row>
+        </>
       )}
     </Pop>
+  );
+}
+
+const ANIMS: { value: Anim; label: string }[] = [
+  { value: "none", label: "None" },
+  { value: "fade", label: "Fade" },
+  { value: "rise", label: "Rise" },
+  { value: "slide", label: "Slide" },
+];
+
+/** When a layer is on screen in a video, and how it comes in. */
+function Timing({ l, doc }: { l: Layer; doc: MediaDoc }) {
+  const { patch } = useLayerEdits();
+  const set = (p: Partial<Layer>) => patch(l.id, p);
+  const total = (doc.video ?? []).reduce((s, c) => s + Math.max(0, c.out - c.in), 0);
+  return (
+    <Pop trigger={<span className="text-xs font-medium">Timing</span>} title={`On screen, of ${total.toFixed(1)} s`}>
+      <div className="grid grid-cols-2 gap-1.5">
+        <Num label="From" value={l.start ?? 0} min={0} max={total} step={0.1} suffix="s" onChange={(start) => set({ start: start > 0 ? start : undefined })} />
+        <Num label="To" value={l.end ?? total} min={0} max={total} step={0.1} suffix="s" onChange={(end) => set({ end: end >= total - 0.05 ? undefined : end })} />
+      </div>
+      <Row label="Enter">
+        <Seg value={l.anim === "pop" || l.anim === "wipe" ? "fade" : (l.anim ?? "none")} onChange={(anim) => set({ anim: anim === "none" ? undefined : anim })} options={ANIMS} />
+      </Row>
+      <p className="text-[11px] text-muted-foreground">Or pull its ends on the timeline.</p>
+    </Pop>
+  );
+}
+
+function UrlInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const bad = draft !== null && !/^https?:\/\/\S+$/i.test(draft.trim());
+  return (
+    <input
+      value={draft ?? value}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        if (draft !== null && !bad) onChange(draft.trim());
+        setDraft(null);
+      }}
+      onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+      placeholder="https://"
+      className={cn("h-8 w-full rounded-md bg-neutral-100/80 px-2 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-sky-500", bad && "ring-1 ring-destructive")}
+    />
   );
 }
 
@@ -248,9 +298,14 @@ export function ContextBar() {
   const { remove, duplicate, patch } = useLayerEdits();
   const layers = selection.kind === "layers" ? doc.layers.filter((l) => selection.ids.includes(l.id)) : [];
   const one = layers.length === 1 ? layers[0] : null;
+  const video = doc.kind === "video";
   return (
     <div className="flex h-12 shrink-0 items-center gap-1 overflow-x-auto border-b border-black/[0.06] bg-white px-3 [scrollbar-width:none]">
-      {layers.length === 0 ? (
+      {selection.kind === "clip" ? (
+        <ShotBar key={selection.id} id={selection.id} />
+      ) : selection.kind === "audio" ? (
+        <AudioBar key={selection.id} id={selection.id} />
+      ) : layers.length === 0 ? (
         <>
           <span className="pr-2 text-[13px] font-medium text-neutral-500">
             {FORMATS[doc.format].label}, {doc.w}×{doc.h}
@@ -259,7 +314,7 @@ export function ContextBar() {
           <Pop trigger={<span className="flex items-center gap-1.5 text-xs font-medium"><Swatch value={doc.background.includes("gradient") ? undefined : doc.background} /> Background</span>} title="Page background">
             <ColorPick value={doc.background} kit={kit} onChange={(v) => editor.update((d) => ({ ...d, background: v ?? kit?.colors.background ?? "#ffffff" }))} />
           </Pop>
-          <span className="ml-auto pl-3 text-xs text-neutral-400">Double-click text to edit it, or drag pictures in from the left</span>
+          <span className="ml-auto truncate pl-3 text-xs text-neutral-400">{video ? "Select a shot, a layer or a track to change it" : "Double-click text to edit it, or drag pictures in from the left"}</span>
         </>
       ) : (
         <>
@@ -267,6 +322,7 @@ export function ContextBar() {
           {!one && <span className="pr-1 text-[13px] font-medium text-neutral-500">{layers.length} layers</span>}
           <Sep />
           <Arrange layers={layers} />
+          {video && one && <Timing l={one} doc={doc} />}
           <span className="ml-auto" />
           <button type="button" className={cn(ctl, "w-8")} title="Duplicate (⌘D)" onClick={() => duplicate(layers.map((l) => l.id))}>
             <Copy />

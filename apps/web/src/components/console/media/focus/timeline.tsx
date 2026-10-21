@@ -69,8 +69,11 @@ type Drag =
   | { kind: "scrub" }
   | { kind: "shot-move"; id: string; x0: number; moved: boolean; to: number | null }
   | { kind: "shot-trim"; id: string; edge: "in" | "out"; x0: number; in0: number; out0: number; max: number }
-  | { kind: "layer"; id: string; mode: "start" | "end" | "move"; x0: number; s0: number; e0: number }
-  | { kind: "audio"; id: string; mode: "move" | "end"; x0: number; s0: number; d0: number; max: number };
+  | { kind: "layer"; id: string; mode: "start" | "end" | "move"; x0: number; s0: number; e0: number; moved?: boolean }
+  | { kind: "audio"; id: string; mode: "move" | "end"; x0: number; s0: number; d0: number; max: number; moved?: boolean };
+
+/** Pointer travel (px) before pressing on a shot, layer or track counts as a drag rather than a click. */
+const CLICK_SLOP = 4;
 
 export function Timeline({ height }: { height: number }) {
   const { doc, editor, selection, select, playback, jobs, assets } = useStudio();
@@ -165,7 +168,7 @@ export function Timeline({ height }: { height: number }) {
     }
     const dt = (e.clientX - ("x0" in d ? d.x0 : 0)) / scale;
     if (d.kind === "shot-move") {
-      if (!d.moved && Math.abs(e.clientX - d.x0) < 4) return;
+      if (!d.moved && Math.abs(e.clientX - d.x0) < CLICK_SLOP) return;
       const t = timeAt(e.clientX);
       const others = shots.filter((s) => s.clip.id !== d.id);
       let to = others.findIndex((s) => t < (s.start + s.end) / 2);
@@ -188,6 +191,11 @@ export function Timeline({ height }: { height: number }) {
         { history: false },
       );
       return;
+    }
+    if ((d.kind === "layer" || d.kind === "audio") && d.mode === "move" && !d.moved) {
+      // A click selects and moves the playhead; only a real drag moves the layer or track.
+      if (Math.abs(e.clientX - d.x0) < CLICK_SLOP) return;
+      d.moved = true;
     }
     if (d.kind === "layer") {
       let start = d.s0;
@@ -236,10 +244,12 @@ export function Timeline({ height }: { height: number }) {
     drag.current = null;
     setDragState(null);
     setSnapLine(null);
+    // A click (no drag) on a shot, layer or track puts the playhead where it landed.
+    if ((d?.kind === "layer" || d?.kind === "audio") && d.mode === "move" && !d.moved) playback.seek(timeAt(d.x0));
     if (d?.kind === "shot-move") {
       if (!d.moved) {
         const s = shots.find((x) => x.clip.id === d.id);
-        if (s) playback.seek(s.start + 0.01);
+        if (s) playback.seek(Math.min(s.end - 0.01, Math.max(s.start, timeAt(d.x0))));
         return;
       }
       if (d.to === null) return;
@@ -322,7 +332,7 @@ export function Timeline({ height }: { height: number }) {
   ];
 
   return (
-    <div className="flex shrink-0 flex-col border-t border-black/[0.08] bg-white select-none" style={{ height }}>
+    <div className="flex shrink-0 flex-col bg-white select-none" style={{ height }}>
       {/* Toolbar */}
       <div className="flex h-10 shrink-0 items-center gap-1 border-b border-black/[0.06] px-2">
         <TBtn icon={<Scissors />} label="Split" kbd="S" onClick={split} />

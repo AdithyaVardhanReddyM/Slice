@@ -3,7 +3,9 @@
 // Drives /api/media/agent turns (slice_media/routes.py): one live turn at a
 // time with its steps, as the Email chat does. Everything the agent makes
 // lands in Convex (and so on the canvas) by itself, so the stream only tells
-// the chat what is happening.
+// the chat what is happening. With `item`, it is an editor's own agent
+// (slice_media/item.py): it changes only that poster, video, image or clip,
+// in a conversation of its own.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
@@ -26,7 +28,7 @@ export const MEDIA_PHASES: Phase[] = [
   { id: "read", label: "Reading the audience's taste", tools: ["get_audience"] },
   { id: "taste", label: "Finding cultural hooks with Qloo", tools: ["qloo_search", "qloo_insights", "save_concepts"] },
   { id: "imagery", label: "Choosing and generating imagery", tools: ["search_images", "generate_image"] },
-  { id: "make", label: "Generating on the canvas", tools: ["make_image", "make_clip", "make_music", "edit_image", "edit_clip", "extend_clip"] },
+  { id: "make", label: "Generating on the canvas", tools: ["make_image", "make_clip", "make_music", "edit_image", "edit_clip", "extend_clip", "change_image", "remake_image", "change_clip", "remake_clip"] },
   { id: "write", label: "Designing", tools: ["write_creative", "edit_creative", "resize_creative", "rename_campaign"] },
   { id: "video", label: "Shooting video, music and voice", tools: ["add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover"] },
   { id: "review", label: "Reviewing", tools: ["review_creative", "export_creative"] },
@@ -37,7 +39,7 @@ export const MEDIA_COPY: TurnCopy = {
   editing: "Working on it",
   wrote: "Made it",
   worked: "Worked on it",
-  writeTools: ["write_creative", "edit_creative", "resize_creative", "add_shots", "make_image", "make_clip", "make_music", "edit_image", "edit_clip"],
+  writeTools: ["write_creative", "edit_creative", "resize_creative", "add_shots", "make_image", "make_clip", "make_music", "edit_image", "edit_clip", "change_image", "remake_image", "change_clip", "remake_clip"],
 };
 
 /** What the prompt bar sends with a turn. */
@@ -54,15 +56,20 @@ export interface PromptRequest {
 
 export type CanvasNodeRef = { kind: "creative" | "asset"; id: string };
 
+/** What an editor's own agent works on: the open creative or version, and its conversation's id. */
+export type ItemRef = { kind: "creative" | "asset"; id: string; thread: string };
+
 type HistoryItem = { role: string; text: string };
 
-export function useMediaAgent({ campaignId, history, model, beforeTurn }: { campaignId: Id<"mediaCampaigns">; history: HistoryItem[]; model?: string; beforeTurn?: () => Promise<void> }) {
+export function useMediaAgent({ campaignId, history, model, beforeTurn, item }: { campaignId: Id<"mediaCampaigns">; history: HistoryItem[]; model?: string; beforeTurn?: () => Promise<void>; item?: ItemRef }) {
   const [live, setLive] = useState<MediaLiveTurn | null>(null);
   const abort = useRef<AbortController | null>(null);
   const historyRef = useRef(history);
+  const itemRef = useRef(item);
   useEffect(() => {
     historyRef.current = history;
-  }, [history]);
+    itemRef.current = item;
+  }, [history, item]);
 
   const run = useCallback(
     async (kind: "generate" | "edit" | "prompt", message: string, attachments: Attachment[] = [], selection?: MediaSelection, extra?: { options?: PromptRequest; nodes?: CanvasNodeRef[] }) => {
@@ -76,7 +83,8 @@ export function useMediaAgent({ campaignId, history, model, beforeTurn }: { camp
         if (abort.current === ctrl) setLive(null);
         return;
       }
-      const body = { campaignId, kind, message, history: historyRef.current.slice(-12), attachments, selection, model, ...(extra?.options ? { options: extra.options } : {}), ...(extra?.nodes?.length ? { nodes: extra.nodes } : {}) };
+      const target = kind === "edit" ? itemRef.current : undefined;
+      const body = { campaignId, kind: target ? "item" : kind, message, history: historyRef.current.slice(-12), attachments, selection, model, ...(target ? { item: target } : {}), ...(extra?.options ? { options: extra.options } : {}), ...(extra?.nodes?.length ? { nodes: extra.nodes } : {}) };
       try {
         for await (const raw of postStream("/api/media/agent", body, ctrl.signal)) {
           const ev = raw as unknown as EmailAgentEvent;

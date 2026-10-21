@@ -2,9 +2,11 @@
 
 // The conversation with the agent, in the sidebar. The prompt bar docks under
 // it, so this is only the thread: what was asked, what the agent did (its
-// steps), and its answers and questions.
+// steps), and its answers and questions. The editors' own agents show their
+// threads with the same Thread.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import type { BuildStep } from "@/lib/pages/stream";
 import type { Attachment } from "@/components/console/pages/builder/attachments";
 import { AttachmentStrip } from "@/components/console/pages/builder/attachments";
@@ -12,8 +14,8 @@ import { StreamingText, ThinkingLine } from "@/components/console/pages/builder/
 import { QuestionCard, type Answer } from "@/components/console/pages/builder/question-card";
 import { PillText } from "@/components/console/email/editor/chat-composer";
 import { DoneTurnCard, LiveTurnCard } from "@/components/console/email/editor/turn-card";
-import { useCanvas } from "../canvas/context";
-import { MEDIA_COPY, MEDIA_PHASES } from "../canvas/use-media-agent";
+import { useCanvas, type ChatMessage } from "../canvas/context";
+import { MEDIA_COPY, MEDIA_PHASES, type MediaAgent } from "../canvas/use-media-agent";
 
 function useStickToBottom() {
   const scroller = useRef<HTMLDivElement>(null);
@@ -60,12 +62,25 @@ const clock = (at: number) => new Date(at).toLocaleTimeString("en-US", { hour: "
 
 export function ChatThread() {
   const { agent, messages, sendPrompt } = useCanvas();
+  return (
+    <Thread
+      agent={agent}
+      messages={messages}
+      onAnswer={sendPrompt}
+      className="pb-[calc(var(--dock-h,120px)+20px)]"
+      empty={<div className="rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-neutral-600 ring-1 ring-black/[0.04]">Ask for anything: an image, a poster, a clip, a video ad or music. Select things on the canvas first to change them or build from them.</div>}
+    />
+  );
+}
+
+/** One agent's conversation: the saved turns, then the live one. */
+export function Thread({ agent, messages, onAnswer, empty, className }: { agent: MediaAgent; messages: ChatMessage[]; onAnswer: (text: string) => void; empty?: ReactNode; className?: string }) {
   const { scroller, content, pin } = useStickToBottom();
   const live = agent.live && !(agent.live.status === null && !agent.live.error && messages.length > agent.live.baseCount) ? agent.live : null;
 
   const answer = (a: Answer) => {
     pin();
-    sendPrompt(a.text);
+    onAnswer(a.text);
   };
 
   const lastAgent = messages.length - 1;
@@ -79,12 +94,8 @@ export function ChatThread() {
 
   return (
     <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain" data-board-scroll>
-      <div ref={content} className="space-y-5 px-4 pt-4 pb-[calc(var(--dock-h,120px)+20px)]">
-        {messages.length === 0 && !live && (
-          <div className="rounded-xl bg-neutral-50 p-4 text-sm leading-6 text-neutral-600 ring-1 ring-black/[0.04]">
-            Ask for anything: an image, a poster, a clip, a video ad or music. Select things on the canvas first to change them or build from them.
-          </div>
-        )}
+      <div ref={content} className={cn("space-y-5 px-4 pt-4", className)}>
+        {messages.length === 0 && !live && empty}
         {messages.map((m, i) => {
           if (m.role === "merchant") return <MerchantBubble key={m.id} text={m.text} attachments={m.attachments} time={clock(m.at)} />;
           const steps = (m.steps ?? []) as BuildStep[];

@@ -1,13 +1,15 @@
 """FastAPI routes for the Media service (registered in server.py).
 
-POST /media/agent   {campaignId, kind, message?, history?, attachments?, selection?, nodes?, options?, model?}  NDJSON stream
+POST /media/agent   {campaignId, kind, message?, history?, attachments?, selection?, nodes?, options?, item?, model?}  NDJSON stream
 POST /media/action  {campaignId, action, args}                                                {ok, ...}
 POST /media/export  {campaignId, creativeId}                                                  {ok, url, mime}
 POST /media/brand   {brandId, url}                                                            {ok, error?}
 
 `kind` "prompt" is a turn from the canvas prompt bar: `options` carries what to make
 (output, imageModel, videoModel, musicModel, aspect, count, audienceId, check) and
-`nodes` what is selected on the canvas.
+`nodes` what is selected on the canvas. `kind` "item" is a turn from an editor's own
+agent (item.py): `item` names the poster, video, image or clip open in it, with the id of
+its conversation, which has its own session and its own saved thread.
 
 The agent stream speaks the /pages/build protocol (start, status, span, thought,
 text, text_done, tool_call, tool_result, question, doc, error, done), so the
@@ -41,6 +43,7 @@ from slice_pages.routes import _image_part, _ndjson, _preview as pages_preview, 
 
 from . import brand as brand_setup
 from . import builder as B
+from . import item as I
 from . import render
 from . import store
 
@@ -49,6 +52,8 @@ router = APIRouter(prefix="/media", tags=["media"])
 APP_NAME = "slice_media"
 sessions = InMemorySessionService()
 runners = {key: Runner(app_name=APP_NAME, agent=a, session_service=sessions) for key, a in B.agents.items()}
+item_runners = {key: Runner(app_name=APP_NAME, agent=a, session_service=sessions) for key, a in I.agents.items()}
+STATUS_FOR_TOOL = {**B.STATUS_FOR_TOOL, **I.STATUS_FOR_TOOL}
 
 
 def _error(err: Exception) -> str:
@@ -117,6 +122,12 @@ class Node(BaseModel):
     id: str
 
 
+class Item(BaseModel):
+    kind: str  # "creative" | "asset"
+    id: str  # the open creative, or the open version of an image or clip
+    thread: str  # the conversation's id: the creative, or the first version of the image or clip
+
+
 class AgentRequest(BaseModel):
     campaignId: str
     kind: str = "generate"  # "generate" | "edit" | "prompt"
@@ -126,10 +137,11 @@ class AgentRequest(BaseModel):
     selection: Selection | None = None
     nodes: list[Node] = []
     options: dict[str, Any] = {}
+    item: Item | None = None
     model: str | None = None
 
 
-async def _replay(session: Any, history: list[HistoryMessage]) -> None:
+async def _replay(session: Any, history: list[HistoryMessage], author: str = B.root_agent.name) -> None:
     invocation = f"replay-{uuid.uuid4().hex[:8]}"
     prev: str | None = None
     for m in history:
@@ -142,7 +154,7 @@ async def _replay(session: Any, history: list[HistoryMessage]) -> None:
         else:
             if prev != "user":
                 await sessions.append_event(session, Event(invocation_id=invocation, author="user", content=types.Content(role="user", parts=[types.Part(text="[Make the creatives.]")])))
-            await sessions.append_event(session, Event(invocation_id=invocation, author=B.root_agent.name, content=types.Content(role="model", parts=[types.Part(text=text)])))
+            await sessions.append_event(session, Event(invocation_id=invocation, author=author, content=types.Content(role="model", parts=[types.Part(text=text)])))
             prev = "model"
 
 
@@ -172,7 +184,7 @@ def _label(name: str, args: Any) -> str:
         return f"Making {n} image{'s' if n != 1 else ''}"
     if name == "get_audience" and a.get("audience_id"):
         return f"Reading the taste of {a['audience_id']}"
-    return B.STATUS_FOR_TOOL.get(name, "Working")
+    return STATUS_FOR_TOOL.get(name, "Working")
 
 
 def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
@@ -191,7 +203,7 @@ def _summarise(name: str, args: Any, resp: dict[str, Any]) -> str:
         return ", ".join(m.get("format", "") for m in resp.get("made") or [] if m.get("creativeId"))
     if name == "rename_campaign":
         return str(resp.get("name") or "")
-    if name in ("add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover", "generate_image", "make_image", "make_clip", "make_music", "edit_image", "edit_clip", "extend_clip"):
+    if name in ("add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover", "generate_image", "make_image", "make_clip", "make_music", "edit_image", "edit_clip", "extend_clip", "change_image", "remake_image", "change_clip", "remake_clip"):
         cost = resp.get("estimate", resp.get("cost"))
         return (f"~${cost:.2f}" if isinstance(cost, (int, float)) else "") + (f" on {resp['model']}" if resp.get("model") else "")
     if name == "review_creative":
@@ -237,28 +249,34 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         yield _ndjson({"type": "error", "message": _error(err)})
         return
     message = (req.message or "").strip()
-    kind = req.kind if req.kind in ("edit", "prompt") else "generate"
-    if kind in ("edit", "prompt") and not message and not req.attachments:
+    item = req.item if req.kind == "item" and req.item and req.item.kind in ("creative", "asset") else None
+    kind = "item" if item else req.kind if req.kind in ("edit", "prompt") else "generate"
+    if kind in ("edit", "prompt", "item") and not message and not req.attachments:
         yield _ndjson({"type": "error", "message": "Say what to make"})
         return
-    state[B.KIND] = kind
+    state[B.KIND] = "edit" if kind == "item" else kind
     state[B.SELECTION] = req.selection.model_dump() if req.selection else {}
     state[B.NODES] = [n.model_dump() for n in req.nodes][:12]
     state[B.OPTIONS] = _options(req.options)
     state[B.WRITES] = 0
+    if item:
+        state[I.ITEM] = item.model_dump()
+    # The canvas conversation is one session per campaign; each editor's agent has its own.
+    sid = f"{cid}:{item.thread}" if item else cid
+    author = I.AGENT_NAME if item else B.root_agent.name
 
-    session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=cid)
+    session = await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=sid)
     attached_urls = [a.url for a in req.attachments]
     if session is None:
         state[B.MEDIA] = attached_urls
-        session = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=cid, state=state)
-        await _replay(session, req.history)
+        session = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=sid, state=state)
+        await _replay(session, req.history, author)
         delta: dict[str, Any] = {}
     else:
         media = list(session.state.get(B.MEDIA) or [])
         delta = {**state, B.MEDIA: media + [u for u in attached_urls if u not in media]}
 
-    user_text = message if kind == "edit" else B.prompt_message(state, message or "Use the attached pictures.") if kind == "prompt" else B.turn_message(state, message)
+    user_text = message if kind in ("edit", "item") else B.prompt_message(state, message or "Use the attached pictures.") if kind == "prompt" else B.turn_message(state, message)
     parts: list[types.Part] = [types.Part(text=user_text)]
     attached = [p for p in [await _image_part(a.url, a.type) for a in req.attachments[:6]] if p]
     if attached:
@@ -290,7 +308,7 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
 
     model = req.model if req.model in B.MODELS else B.MODEL
     heavy = kind == "generate" or state[B.OPTIONS].get("output") in ("poster", "video", "campaign")
-    runner = runners[(model, "build" if heavy else B.RUNNER_FOR_KIND[kind])]
+    runner = item_runners[(model, item.kind)] if item else runners[(model, "build" if heavy else B.RUNNER_FOR_KIND[kind])]
 
     async def events() -> AsyncIterator[Any]:
         """The turn's events; None marks a retry. A model call that hangs or times out is tried
@@ -300,7 +318,7 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
         for attempt in (1, 2):
             got = False
             try:
-                async for ev in _within(runner.run_async(user_id=cid, session_id=cid, new_message=message_in, state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)), STALL_S, first=FIRST_S):
+                async for ev in _within(runner.run_async(user_id=cid, session_id=sid, new_message=message_in, state_delta=delta or None, run_config=RunConfig(streaming_mode=StreamingMode.SSE)), STALL_S, first=FIRST_S):
                     got = True
                     yield ev
                 return
@@ -314,10 +332,10 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                 delta = {}
                 continue
             # Nothing came back: a fresh session, so the message is not in the conversation twice.
-            media = list(((await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=cid)) or SimpleNamespace(state={})).state.get(B.MEDIA) or [])
-            await sessions.delete_session(app_name=APP_NAME, user_id=cid, session_id=cid)
-            fresh = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=cid, state={**state, B.MEDIA: media + [u for u in attached_urls if u not in media]})
-            await _replay(fresh, req.history)
+            media = list(((await sessions.get_session(app_name=APP_NAME, user_id=cid, session_id=sid)) or SimpleNamespace(state={})).state.get(B.MEDIA) or [])
+            await sessions.delete_session(app_name=APP_NAME, user_id=cid, session_id=sid)
+            fresh = await sessions.create_session(app_name=APP_NAME, user_id=cid, session_id=sid, state={**state, B.MEDIA: media + [u for u in attached_urls if u not in media]})
+            await _replay(fresh, req.history, author)
             delta = {}
 
     try:
@@ -444,7 +462,7 @@ async def _persist(req: AgentRequest, message_id: str, merchant_text: str, reply
         messages.append({"id": f"{message_id}-m", "role": "merchant", "at": now, "text": merchant_text, **({"attachments": [a.model_dump() for a in req.attachments]} if req.attachments else {})})
     messages.append({"id": message_id, "role": "agent", "at": now + 1, "text": reply, "trace": spans, "steps": steps})
     try:
-        await store.post("/media/chat", {"campaignId": req.campaignId, "messages": messages})
+        await store.post("/media/chat", {"campaignId": req.campaignId, "messages": messages, **({"itemId": req.item.thread} if req.kind == "item" and req.item else {})})
     except Exception as err:
         print(f"[slice-media] could not persist the turn: {err}")
 

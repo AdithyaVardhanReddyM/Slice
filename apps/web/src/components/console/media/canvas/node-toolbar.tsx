@@ -3,7 +3,7 @@
 // The bar that floats over what is selected on the canvas: open it in its
 // editor, ask the agent about it, see why it was made, and the quick moves for
 // its kind (more takes of an image, animate it, continue a clip, make a poster
-// from it), each priced before it runs. Studio buttons call the models
+// from it, a free copy of a creative in another size), each priced before it runs. Studio buttons call the models
 // directly; only "Ask" starts a chat turn.
 
 import { useMutation } from "convex/react";
@@ -13,7 +13,7 @@ import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { FORMATS, FORMAT_KEYS, VIDEO_MODELS, imageModel, veoSeconds, videoModel, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { usd, usePromptPicks } from "../prompt/options";
@@ -104,14 +104,46 @@ function AnimatePopover({ node }: { node: BoardNode }) {
   );
 }
 
-function MoreMenu({ node }: { node: BoardNode }) {
-  const { remove, campaign } = useCanvas();
-  const duplicate = useMutation(api.media.duplicate);
+/** A free copy of a poster or video laid out in another size; sizes this audience already has are left out. */
+function ResizeMenu({ node }: { node: BoardNode }) {
+  const { nodes } = useCanvas();
   const resize = useMutation(api.media.resize);
+  const c = node.creative!;
+  const doc = c.doc as MediaDoc;
+  const have = new Set(nodes.filter((n) => n.creative?.audienceKey === c.audienceKey).map((n) => n.creative!.format));
+  const missing = FORMAT_KEYS.filter((f) => !have.has(f) && (doc.kind === "poster" || FORMATS[f].video));
+  if (!missing.length) return null;
+  return (
+    <>
+      <Sep />
+      <DropdownMenu>
+        <DropdownMenuTrigger className={btn} title="A copy in another size (free)">
+          <Scaling />
+          <span>Resize</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-60">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>A copy laid out for (free)</DropdownMenuLabel>
+            {missing.map((f: FormatPreset) => (
+              <DropdownMenuItem key={f} onClick={() => void resize({ id: c._id, formats: [f] })}>
+                <span className="flex-1">{FORMATS[f].label}</span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {FORMATS[f].w}×{FORMATS[f].h}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+          {doc.kind === "video" && <p className="px-2 pt-1 pb-1.5 text-[11px] leading-4 text-muted-foreground">Shots are cropped around their focal point; regenerate the ones that matter in the new shape.</p>}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
+
+function MoreMenu({ node }: { node: BoardNode }) {
+  const { remove } = useCanvas();
+  const duplicate = useMutation(api.media.duplicate);
   const c = node.creative;
-  const doc = c?.doc as MediaDoc | undefined;
-  const missing = doc ? FORMAT_KEYS.filter((f) => f !== doc.format && (doc.kind === "poster" || FORMATS[f].video)) : [];
-  void campaign;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={cn(btn, "px-2")} aria-label="More">
@@ -123,24 +155,6 @@ function MoreMenu({ node }: { node: BoardNode }) {
             <DropdownMenuItem onClick={() => void duplicate({ id: c._id })}>
               <Copy /> Duplicate
             </DropdownMenuItem>
-            {missing.length > 0 && (
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Scaling /> Resize to
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56">
-                  <DropdownMenuLabel>A copy laid out for (free)</DropdownMenuLabel>
-                  {missing.map((f: FormatPreset) => (
-                    <DropdownMenuItem key={f} onClick={() => void resize({ id: c._id, formats: [f] })}>
-                      <span className="flex-1">{FORMATS[f].label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {FORMATS[f].w}×{FORMATS[f].h}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            )}
             <DropdownMenuSeparator />
           </DropdownMenuGroup>
         )}
@@ -213,6 +227,7 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
         <Tool icon={<Pencil />} label={c ? "Edit" : "Open"} onClick={() => openFocus(one.key)} />
         <Tool icon={<MessageSquareText />} label="Ask" onClick={() => compose("")} title="Ask Slice about it (it is attached to the prompt)" />
         {c && <WhyButton creative={c} className={btn} />}
+        {c && <ResizeMenu node={one} />}
         {one.kind === "image" && a && (
           <>
             <Sep />

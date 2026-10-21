@@ -1,9 +1,10 @@
 "use client";
 
 // The video editor: a media bin on the left (the library, text styles, new
-// shots and sound), the preview in the middle with transport controls (text
-// and pictures stay editable on the frame at the playhead), the inspector on
-// the right, and the timeline below, which can be pulled taller.
+// shots and sound), the preview in the middle under the bar for what is
+// selected (a layer, a shot, a track) and over the transport controls (text
+// and pictures stay editable on the frame at the playhead), Slice on the
+// right, and the timeline below, which can be pulled taller.
 
 import { Film, Image as ImageIcon, Loader2, Mic, Music, Pause, Play, Plus, Repeat, SkipBack, SkipForward, StepBack, StepForward, Type, Volume2, VolumeX, Clapperboard } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -11,11 +12,12 @@ import { VIDEO_MODELS, docDuration, newId, timeline, type Layer, type MediaBrief
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { usd, usePromptPicks } from "../prompt/options";
+import { EDGE } from "../prompt/prompt-bar";
 import type { DragItem } from "../sidebar/assets";
 import { useStudio } from "./context";
 import { shotEstimate } from "./costs";
+import { ContextBar } from "./context-bar";
 import { useLayerKeys, useStageZoom } from "./hooks";
-import { Inspector } from "./inspector";
 import { newLayer } from "./layers";
 import { MediaPanel, PanelTitle } from "./panels";
 import { PosterCanvas } from "./poster-canvas";
@@ -28,7 +30,7 @@ const BIN = [
   { id: "generate", label: "Generate", icon: <Clapperboard /> },
 ] as const;
 
-export function VideoEditor({ onClose }: { onClose: () => void }) {
+export function VideoEditor({ onClose, agent }: { onClose: () => void; agent: ReactNode }) {
   const env = useStudio();
   const { doc, kit, editor, selection, select, playback } = env;
   const [bin, setBin] = useState<(typeof BIN)[number]["id"]>("media");
@@ -90,20 +92,20 @@ export function VideoEditor({ onClose }: { onClose: () => void }) {
 
         {/* Preview */}
         <main className="flex min-w-0 flex-1 flex-col bg-[#ececea]">
+          <ContextBar />
           <div ref={box} className="relative flex min-h-0 flex-1 items-center justify-center" onPointerDown={(e) => e.target === e.currentTarget && select({ kind: "none" })}>
             {scale > 0 && <PosterCanvas doc={doc} kit={kit} scale={scale} time={playback.time} playing={playback.playing} muted={muted} selected={selectedLayers} onSelect={(ids) => select(ids.length ? { kind: "layers", ids } : { kind: "none" })} editor={editor} />}
           </div>
           <Transport muted={muted} setMuted={setMuted} loop={loop} setLoop={setLoop} />
         </main>
 
-        <aside className="scrollbar-thin w-[320px] shrink-0 overflow-y-auto border-l border-black/[0.06]">
-          <Inspector />
-        </aside>
+        {agent}
       </div>
 
       {/* Pull the timeline taller or shorter. */}
       <div
-        className="group relative z-10 h-1.5 shrink-0 cursor-row-resize bg-transparent"
+        className="group relative z-10 flex h-3 shrink-0 cursor-row-resize items-center justify-center bg-white"
+        title="Drag to resize the timeline"
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
           const y0 = e.clientY;
@@ -117,7 +119,9 @@ export function VideoEditor({ onClose }: { onClose: () => void }) {
           window.addEventListener("pointerup", up);
         }}
       >
-        <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-transparent transition-colors group-hover:bg-blue-500" />
+        {/* The Slice gradient as the line between the preview and the timeline, with a grip that says it pulls. */}
+        <span className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 transition-[height] group-hover:h-[3px] group-active:h-[3px]" style={{ background: EDGE }} />
+        <span className="relative h-1.5 w-10 rounded-full bg-white shadow-sm ring-1 ring-black/10 transition-colors group-hover:ring-orange-300" />
       </div>
       <Timeline height={tlHeight} />
     </div>

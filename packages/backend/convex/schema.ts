@@ -1123,4 +1123,15 @@ export default defineSchema({
     messages: v.array(emailChatMessageValidator),
     updatedAt: v.number(),
   }).index("by_campaign", ["campaignId"]),
+
+  /** Each editor's own conversation: one per poster or video, and one per image or clip (shared by its versions). */
+  mediaItemChats: defineTable({
+    campaignId: v.id("mediaCampaigns"),
+    /** The creative's id, or the first version of the image or clip. */
+    itemId: v.string(),
+    messages: v.array(emailChatMessageValidator),
+    updatedAt: v.number(),
+  })
+    .index("by_item", ["campaignId", "itemId"])
+    .index("by_campaign", ["campaignId"]),
 });

@@ -423,10 +423,12 @@ emailRoute("/media/export", async (ctx, body) => {
   return json({ ok: true });
 });
 
-emailRoute("/media/chat", async (ctx, { campaignId, messages }) => {
+emailRoute("/media/chat", async (ctx, { campaignId, messages, itemId }) => {
   const id = asId<"mediaCampaigns">(campaignId);
-  if (!id || !Array.isArray(messages)) return json({ error: "expected { campaignId, messages }" }, 400);
-  await ctx.runMutation(internal.media.appendChat, { id, messages });
+  if (!id || !Array.isArray(messages)) return json({ error: "expected { campaignId, messages, itemId? }" }, 400);
+  // An editor's own agent keeps its thread apart from the canvas conversation.
+  if (typeof itemId === "string" && itemId) await ctx.runMutation(internal.media.appendItemChat, { id, itemId, messages });
+  else await ctx.runMutation(internal.media.appendChat, { id, messages });
   return json({ ok: true });
 });
 

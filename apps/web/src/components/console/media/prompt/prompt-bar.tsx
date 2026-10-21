@@ -30,10 +30,10 @@ export interface PromptBarHandle {
 }
 
 /** The bar's edge in the Slice palette: orange at the corners, through amber and yellow to sand. */
-const EDGE = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 28%, var(--color-brand-yellow) 50%, var(--color-brand-sand) 70%, var(--color-brand-orange) 100%)";
+export const EDGE = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 28%, var(--color-brand-yellow) 50%, var(--color-brand-sand) 70%, var(--color-brand-orange) 100%)";
 const GLOW = "linear-gradient(125deg, var(--color-brand-orange) 0%, var(--color-brand-amber) 35%, var(--color-brand-yellow) 55%, var(--color-brand-orange) 100%)";
 /** The tray around the composer: a warm off-white. */
-const TRAY = "#fff8ee";
+export const TRAY = "#fff8ee";
 
 type Pending = Attachment & { id: number; pending: boolean; error?: string; preview: string };
 
