@@ -15,11 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BrandDialog, SourceRow, brandHost } from "./prompt/brand-dialog";
 
-type Kit = { logo?: { src?: string }; colors?: { primary: string; accent: string; background: string } };
+type Kit = { logo?: { src?: string; onDark?: boolean }; colors?: { primary: string; accent: string; background: string; foreground?: string } };
 
 const look = (kit: unknown) => {
   const k = kit as Kit | undefined;
-  return { logo: k?.logo?.src, colors: k?.colors ? [k.colors.primary, k.colors.accent, k.colors.background] : undefined };
+  // A light logo (made for dark backgrounds) sits on the brand's foreground colour, like the brand chip.
+  return { logo: k?.logo?.src, logoBackground: k?.logo?.onDark ? k.colors?.foreground : undefined, colors: k?.colors ? [k.colors.primary, k.colors.accent, k.colors.background] : undefined };
 };
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
