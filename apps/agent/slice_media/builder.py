@@ -362,9 +362,7 @@ VIDEO RULES
 OUTPUT_HINT = {
     "image": "an image: make_image (a photograph or illustration, no words in it)",
     "poster": "a poster: write_creative with kind poster (a designed ad: picture, headline, logo, button)",
-    "clip": "a video clip: make_clip (one generated shot)",
-    "video": "a video ad: write_creative with kind video (3 to 6 shots, text layers, then add_music)",
-    "music": "music: make_music (an instrumental track)",
+    "video": "a video ad: write_creative with kind video (any moving picture: one shot when that is all they want, else 3 to 6 shots with text layers), then its music and voiceover (add_music, add_voiceover) as they chose",
     "campaign": "the whole set: for every audience, a poster and a video in each campaign format (follow the steps for a full set)",
 }
 
@@ -379,9 +377,9 @@ def _prompt_rules(state: dict[str, Any]) -> str:
     if out in OUTPUT_HINT:
         lines.append(f"- Make {OUTPUT_HINT[out]}. Make several only when they ask for several.")
     else:
-        lines.append("- Make: your call from their words. A scene or photo: make_image. A designed ad with words, logo or a button: a poster (write_creative). One moving shot: make_clip. An edited ad with several shots, text and music: a video (write_creative). A soundtrack: make_music. Several things when they ask for several.")
+        lines.append("- Make: your call from their words. A scene or photo: make_image. A designed ad with words, logo or a button: a poster (write_creative). Anything that moves, from one shot to an edited ad with text: a video ad (write_creative kind video), with its music and voiceover inside it (add_music, add_voiceover). There is no separate clip or music: music and voice only ever come as part of a video ad. Several things when they ask for several.")
     if aspect:
-        lines.append(f"- Shape {aspect}" + (f" (poster and video format {ASPECT_FORMAT[aspect]})" if aspect in ASPECT_FORMAT else "") + ". Video models make 9:16 or 16:9 only: a clip or video asked in another shape uses the nearer of the two.")
+        lines.append(f"- Shape {aspect}" + (f" (poster and video format {ASPECT_FORMAT[aspect]})" if aspect in ASPECT_FORMAT else "") + ". Video models make 9:16 or 16:9 only: a video asked in another shape uses the nearer of the two.")
     models = []
     if o.get("imageModel"):
         models.append(f"images {M.IMAGE_LABEL.get(o['imageModel'], o['imageModel'])} (model \"{o['imageModel']}\")")
@@ -398,15 +396,25 @@ def _prompt_rules(state: dict[str, Any]) -> str:
         lines.append(f"- For the audience {aud['id']} ({aud.get('name')}): call get_audience first, ground the idea in its taste, and save_concepts one short concept for it.")
     if state.get(NODES):
         lines.append("- Something is selected on the canvas: when the words ask to change it, change it (edit_image, edit_clip, edit_creative) instead of making something new; when they ask for something new from it, use it (its URL as a reference or first frame, near its id).")
+    lines.append(QUESTIONS_FIRST)
     lines.append(
         """HOW
 1. Write every generation prompt on brand (you are the prompt writer): restate the request as subject, setting, light, lens, composition and mood in the brand's imagery style; write the "never show" list in as plain negatives; keep the merchant's products true by passing their photos in reference_urls (or image, for a clip's first frame); never ask for text, captions or logos inside a picture or shot (posters carry words and the logo as layers).
-2. Images, clips and music generate in the background and appear on the canvas by themselves, each next to what it came from (near). Start them and finish the turn: never wait, never start the same thing twice.
+2. Images and video shots generate in the background and appear on the canvas by themselves, each next to what it came from (near). Start them and finish the turn: never wait, never start the same thing twice.
 3. Posters and videos: write_creative (near the image it builds on, when there is one). A poster's format comes from the shape; without one, story.
 4. If the campaign is still called "Untitled campaign", rename_campaign it (2 to 4 words about what it is for).
 5. Reply in one or two short sentences: what is coming, on which model, about what it costs. No lists, no markdown."""
     )
     return "\n".join(lines)
+
+
+QUESTIONS_FIRST = """ASK FIRST, like a good studio checking the brief, then make it.
+- Before you make a new poster or video ad, ask with ask_questions: one call, 1 to 3 questions, then stop. Ask only what changes the result and what their words, the picks and the brief do not already settle.
+  - A video ad: the music (two or three styles that suit this brand and audience, and "No music"), the voiceover (no voiceover, or two or three voice and tone choices), and, only when unclear, the length (6, 15 or 30 seconds) or whether people appear on camera.
+  - A poster: what it pushes (the offer or the one message) and the call to action, when the brief does not give them.
+  - An image: only when the request is too vague to picture; usually just make it.
+- Options are concrete and specific to this brand, audience and request, never generic ("Warm acoustic guitar, unhurried" beats "Upbeat"). Each has a short detail line. They can always type their own answer.
+- Do not ask when they are changing something selected, when they say to just make it, or when their message answers your questions (lines like "Music: Warm acoustic guitar"): then make it now with those choices, and never ask the same thing twice. "Your call" means you choose."""
 
 
 def _turn_rules(kind: str, campaign: dict[str, Any], state: dict[str, Any] | None = None) -> str:
@@ -782,6 +790,46 @@ async def extend_clip(asset_id: str, tool_context: ToolContext, seconds: int = 6
     state[MEDIA] = list(state.get(MEDIA) or []) + [frame_url]
     aspect = "16:9" if int(src.get("w") or 9) > int(src.get("h") or 16) else "9:16"
     return await make_clip(prompt or f"Continue the same shot seamlessly: {src.get('prompt') or ''}", tool_context, aspect=aspect, seconds=seconds, image=frame_url, model=model, near=asset_id)
+
+
+async def ask_questions(questions: list, tool_context: ToolContext, intro: str = "") -> dict:
+    """Ask the merchant a few quick questions before you make something, the way a studio checks
+    the brief. Each question has 2 to 4 concrete options; they can always type their own answer.
+    They answer them all at once, and the answers arrive as the next message, one line per
+    question ("Music: Warm acoustic guitar"). Call it alone, write nothing after it, end the turn.
+
+    Args:
+        questions: 1 to 4 questions, each {header, question, options, multi}. header: 1 or 2 words
+            naming the topic ("Music", "Voiceover", "Length", "Offer"). question: one short sentence
+            ending with a question mark. options: 2 to 4 {label, detail}, label 1 to 5 words naming
+            a concrete choice that suits this brand and audience, detail one short line on what it
+            means. multi: true when several options can be picked together.
+        intro: One short sentence before the questions ("A few quick choices before I make it."), or "".
+    """
+    raw = _coerce(questions)
+    if isinstance(raw, dict):
+        raw = [raw]
+    out: list[dict[str, Any]] = []
+    for q in raw if isinstance(raw, list) else []:
+        if not isinstance(q, dict):
+            continue
+        opts = _coerce(q.get("options"))
+        options = [
+            {"label": str(o.get("label") or "").strip()[:60], "detail": str(o.get("detail") or "").strip()[:120]}
+            for o in (opts if isinstance(opts, list) else [])
+            if isinstance(o, dict) and str(o.get("label") or "").strip()
+        ][:4]
+        text = str(q.get("question") or "").strip()
+        if not text or len(options) < 2:
+            continue
+        header = str(q.get("header") or "").strip()[:20] or text.split()[0]
+        out.append({"header": header, "question": text[:160], "options": options, "multi": bool(q.get("multi"))})
+    if not out:
+        return {"ok": False, "error": "ask 1 to 4 questions, each with a question and at least 2 options"}
+    # The answers are the merchant's next message: end the turn here.
+    tool_context.actions.skip_summarization = True
+    record("slice", "Ask the merchant", "; ".join(q["header"] for q in out[:4]), ms=0)
+    return {"ok": True, "intro": " ".join(str(intro or "").split())[:160], "questions": out[:4]}
 
 
 async def rename_campaign(name: str, tool_context: ToolContext) -> dict:
@@ -1432,8 +1480,6 @@ TOOLS = [
     PB.search_images,
     generate_image,
     make_image,
-    make_clip,
-    make_music,
     edit_image,
     edit_clip,
     extend_clip,
@@ -1449,7 +1495,7 @@ TOOLS = [
     add_voiceover,
     review_creative,
     export_creative,
-    PB.ask_merchant,
+    ask_questions,
 ]
 
 STATUS_FOR_TOOL = {
@@ -1478,6 +1524,7 @@ STATUS_FOR_TOOL = {
     "review_creative": "Reviewing the render",
     "export_creative": "Rendering the file",
     "ask_merchant": "Asking you a question",
+    "ask_questions": "Asking you a few questions",
 }
 
 THINKING = {

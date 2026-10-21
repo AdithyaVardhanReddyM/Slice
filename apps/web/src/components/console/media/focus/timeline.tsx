@@ -7,7 +7,7 @@
 // snaps to the playhead and to shot edges; ⌘ + scroll zooms; S splits at the
 // playhead.
 
-import { AlertTriangle, Film, Image as ImageIcon, Loader2, Magnet, Mic, Minus, Music, Plus, QrCode, Scissors, Shapes, Stamp, Trash2, Type } from "lucide-react";
+import { AlertTriangle, Film, Image as ImageIcon, Loader2, Magnet, Mic, Minus, Music, Pin, Plus, QrCode, Scissors, Shapes, Stamp, Trash2, Type } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { clipLength, docDuration, newId, timeline, type AudioClip, type Clip, type Layer } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
@@ -324,7 +324,7 @@ export function Timeline({ height }: { height: number }) {
   const tracksTop = RULER_H;
 
   const headers: { key: string; h: number; icon: ReactNode; label: string; sub?: string }[] = [
-    ...(always.length ? [{ key: "on", h: TEXT_H, icon: <Shapes />, label: "Always on", sub: `${always.length}` }] : []),
+    ...(always.length ? [{ key: "on", h: TEXT_H, icon: <Pin />, label: "Whole video" }] : []),
     ...lanes.map((_, i) => ({ key: `t${i}`, h: TEXT_H, icon: <Type />, label: i === 0 ? "Text & graphics" : "", sub: undefined })),
     { key: "v", h: VIDEO_H, icon: <Film />, label: "Shots", sub: `${shots.length}` },
     { key: "m", h: AUDIO_H, icon: <Music />, label: "Music" },
@@ -396,10 +396,10 @@ export function Timeline({ height }: { height: number }) {
               <span className="absolute inset-y-0 bg-neutral-100/70" style={{ left: x(duration), right: 0 }} />
             </div>
 
-            {/* On screen throughout: one chip each, click to select. */}
+            {/* On screen the whole video: one chip per layer, click to select. */}
             {always.length > 0 && (
               <div className="relative border-b border-black/[0.04]" style={{ height: TEXT_H }}>
-                <div className="absolute top-1 bottom-1 flex items-center gap-1 overflow-hidden rounded-md bg-neutral-100 px-1 ring-1 ring-black/[0.05]" style={{ left: x(0), width: Math.max(40, duration * scale) }}>
+                <div className="absolute inset-y-0 flex items-center gap-1 overflow-hidden px-[3px]" style={{ left: x(0), width: Math.max(40, duration * scale) }}>
                   {always.map((l) => {
                     const active = selection.kind === "layers" && selection.ids.includes(l.id);
                     return (
@@ -408,10 +408,10 @@ export function Timeline({ height }: { height: number }) {
                         type="button"
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={() => select({ kind: "layers", ids: [l.id] })}
-                        title={`${layerLabel(l)}: on screen the whole video. Select it and set From/To to time it.`}
-                        className={cn("flex h-[18px] max-w-40 shrink-0 items-center gap-1 rounded px-1.5 text-[11px] font-medium [&_svg]:size-3 [&_svg]:shrink-0", active ? "bg-blue-500 text-white" : "bg-white text-neutral-700 ring-1 ring-black/[0.06] hover:bg-neutral-50", l.hidden && "opacity-40")}
+                        title={`${layerLabel(l)}, on screen the whole video. Select it and use Timing to show it for part of it.`}
+                        className={cn("flex h-[18px] max-w-44 shrink-0 items-center gap-1.5 rounded-[4px] pr-2 pl-[3px] text-[11px] font-medium transition-colors [&_svg]:size-3 [&_svg]:shrink-0", active ? "bg-blue-500 text-white" : "bg-white text-neutral-700 shadow-[0_1px_1px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.08] hover:ring-black/20", l.hidden && "opacity-40")}
                       >
-                        {TYPE_ICON[l.type]}
+                        <LayerMark l={l} />
                         <span className="truncate">{layerLabel(l)}</span>
                       </button>
                     );
@@ -551,6 +551,20 @@ export function Timeline({ height }: { height: number }) {
       </div>
     </div>
   );
+}
+
+/** What a layer looks like, small: a shape's colour, the logo, a photo; else its kind's icon. */
+function LayerMark({ l }: { l: Layer }) {
+  const { kit } = useStudio();
+  const box = "size-3 shrink-0 rounded-[3px] ring-1 ring-black/10";
+  if (l.type === "shape") return <span className={box} style={{ background: l.fill }} />;
+  const src = l.type === "image" ? l.src : l.type === "logo" ? (l.src ?? kit?.logo?.src) : undefined;
+  if (src)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt="" className={cn(box, "bg-white", l.type === "logo" ? "object-contain p-px" : "object-cover")} />
+    );
+  return <span className="flex size-3 shrink-0 items-center justify-center">{TYPE_ICON[l.type]}</span>;
 }
 
 function TBtn({ icon, label, kbd, onClick, disabled }: { icon: ReactNode; label: string; kbd?: string; onClick: () => void; disabled?: boolean }) {

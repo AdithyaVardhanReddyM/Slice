@@ -327,9 +327,9 @@ CREATIVE_TOOLS = [
     B.add_music,
     B.add_voiceover,
     B.review_creative,
-    PB.ask_merchant,
+    B.ask_questions,
 ]
-ASSET_TOOLS = [change_image, remake_image, change_clip, remake_clip, PB.ask_merchant]
+ASSET_TOOLS = [change_image, remake_image, change_clip, remake_clip, B.ask_questions]
 
 _PINNED = {"edit_creative", "write_creative", "add_shots", "regenerate_shot", "edit_shot", "extend_shot", "add_music", "add_voiceover", "review_creative"}
 

@@ -358,7 +358,7 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                         continue
                     seen_calls.add(key)
                     call_args[name] = part.function_call.args
-                    if name == "ask_merchant":
+                    if name in ("ask_merchant", "ask_questions"):
                         continue
                     label = _label(name, part.function_call.args)
                     yield _ndjson({"type": "status", "text": label})
@@ -368,9 +368,13 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
                     name = part.function_response.name or ""
                     resp = part.function_response.response or {}
                     ok = bool(resp.get("ok", True))
-                    if name == "ask_merchant":
+                    if name in ("ask_merchant", "ask_questions"):
                         if ok:
-                            question = {"text": resp.get("question"), "options": resp.get("options") or [], "other": resp.get("other") or ""}
+                            if name == "ask_questions":
+                                # Several questions answered together (the chat shows them one by one, with tabs).
+                                question = {"text": resp.get("intro") or "", "options": [], "other": "", "questions": resp.get("questions") or []}
+                            else:
+                                question = {"text": resp.get("question"), "options": resp.get("options") or [], "other": resp.get("other") or ""}
                             push({"kind": "question", "question": question})
                             yield _ndjson({"type": "question", "question": question})
                         continue
@@ -429,7 +433,9 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
     spans.sort(key=lambda sp: sp.get("started", 0))
     full_text = re.sub(r"(\*\*|\*|__)(\S(?:.*?\S)?)\1", r"\2", "\n\n".join(t.strip() for t in text_parts if t.strip()))
     if question and not full_text:
-        full_text = str(question.get("text") or "")
+        # What was asked, so a replayed conversation still knows.
+        asked = " ".join(f"{q.get('header')}: {q.get('question')} ({', '.join(o.get('label', '') for o in q.get('options') or [])})" for q in question.get("questions") or [])
+        full_text = " ".join(x for x in (str(question.get("text") or ""), asked) if x)
     total_ms = at()
     for st in steps:
         if st.get("kind") == "tool" and st.get("status") == "running":
@@ -443,8 +449,10 @@ async def _stream(req: AgentRequest) -> AsyncIterator[bytes]:
 def _options(raw: dict[str, Any]) -> dict[str, Any]:
     """The prompt bar's picks, kept to what the builder understands."""
     out: dict[str, Any] = {}
-    if raw.get("output") in ("auto", "image", "poster", "clip", "video", "music", "campaign"):
-        out["output"] = raw["output"]
+    # Clips and music only come inside a video ad now; an old pick for them means one.
+    output = {"clip": "video", "music": "video"}.get(raw.get("output"), raw.get("output"))
+    if output in ("auto", "image", "poster", "video", "campaign"):
+        out["output"] = output
     for key in ("imageModel", "videoModel", "musicModel", "aspect", "audienceId"):
         if isinstance(raw.get(key), str) and raw[key]:
             out[key] = raw[key][:60]

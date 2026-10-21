@@ -15,7 +15,6 @@ import {
   VIDEO_MODELS,
   imageModel,
   musicModel,
-  veoSeconds,
   videoModel,
   type Aspect,
   type MediaOutput,
@@ -51,7 +50,8 @@ let cached: { raw: string | null; value: PromptPicks } | null = null;
 function clean(raw: unknown): PromptPicks {
   const r = (raw ?? {}) as Partial<PromptPicks>;
   return {
-    output: r.output && ["auto", "image", "poster", "clip", "video", "music"].includes(r.output) ? r.output : DEFAULT_PICKS.output,
+    // Clips and music only come inside a video ad now.
+    output: (r.output as string) === "clip" || (r.output as string) === "music" ? "video" : r.output && ["auto", "image", "poster", "video"].includes(r.output) ? r.output : DEFAULT_PICKS.output,
     imageModel: IMAGE_MODELS.some((m) => m.id === r.imageModel) ? r.imageModel! : DEFAULT_PICKS.imageModel,
     videoModel: VIDEO_MODELS.some((m) => m.id === r.videoModel) ? r.videoModel! : DEFAULT_PICKS.videoModel,
     musicModel: MUSIC_MODELS.some((m) => m.id === r.musicModel) ? r.musicModel! : DEFAULT_PICKS.musicModel,
@@ -110,18 +110,10 @@ export function promptEstimate(p: PromptPicks): { usd: number; label: string } |
     case "poster":
       // One picture for it, at most; brand and product photos are free.
       return { usd: img.price, label: `Up to one ${img.label} image` };
-    case "clip": {
-      const s = veoSeconds(6, vid.hd);
-      return { usd: vid.perSecond * s, label: `${s}s on ${vid.label}` };
-    }
     case "video": {
       // About 15 s: half on the chosen model, a quarter of b-roll a step cheaper, the rest stills; plus music.
       const broll = VIDEO_MODELS[Math.min(VIDEO_MODELS.length - 1, VIDEO_MODELS.indexOf(vid) + 1)];
       return { usd: 15 * 0.55 * vid.perSecond + 15 * 0.25 * broll.perSecond + img.price + musicModel(p.musicModel).price, label: `About 15s, ${vid.label} hero shots` };
-    }
-    case "music": {
-      const m = musicModel(p.musicModel);
-      return { usd: m.price, label: m.label };
     }
     default:
       return null;

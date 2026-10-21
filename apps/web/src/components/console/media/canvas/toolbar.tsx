@@ -20,15 +20,13 @@ import { useCanvas } from "./context";
 /** The strip the toolbar keeps on the left of the canvas (fits and the node toolbar stay clear of it). */
 export const TOOLBAR_ROOM = 64;
 
-const MAKERS: MediaOutput[] = ["image", "poster", "clip", "video", "music"];
+const MAKERS: MediaOutput[] = ["image", "poster", "video"];
 
 /** Each maker's tooltip. */
 const MAKER_TIP: Partial<Record<MediaOutput, string>> = {
   image: "Make an image",
   poster: "Make a poster",
-  clip: "Make a video clip",
-  video: "Make a video ad",
-  music: "Make music",
+  video: "Make a video ad (any video, with music and voice)",
 };
 
 const Sep = () => <span className="my-1 h-px w-5 shrink-0 bg-neutral-200" />;
@@ -73,7 +71,7 @@ export function CanvasToolbar({ left }: { left: number }) {
   const make = (o: MediaOutput) => {
     const patch: Partial<PromptPicks> = { output: o };
     // Video models make 9:16 and 16:9 only.
-    if ((o === "clip" || o === "video") && !ASPECTS.find((a) => a.value === picks.aspect)?.video) patch.aspect = "9:16";
+    if (o === "video" && !ASPECTS.find((a) => a.value === picks.aspect)?.video) patch.aspect = "9:16";
     setPicks(patch);
     focusPrompt();
   };

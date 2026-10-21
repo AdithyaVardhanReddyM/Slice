@@ -7,7 +7,7 @@
 // on an empty canvas.
 
 import { useMutation } from "convex/react";
-import { ArrowLeft, Clapperboard, Film, Image as ImageIcon, LayoutTemplate, Loader2, Maximize, Minus, Music, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
+import { ArrowLeft, Clapperboard, Film, Image as ImageIcon, LayoutTemplate, Loader2, Maximize, Minus, PanelLeft, PanelLeftClose, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactElement, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
@@ -175,9 +175,8 @@ export function ZoomControl({ zoom }: { zoom: number }) {
 const STARTERS: { output: MediaOutput; icon: ReactNode; label: string; prompt: (brand: string) => string }[] = [
   { output: "image", icon: <ImageIcon />, label: "A hero image", prompt: (b) => `A hero photograph for ${b}: our product in its best setting, warm and inviting` },
   { output: "poster", icon: <LayoutTemplate />, label: "A launch poster", prompt: () => "A poster for this week's offer, with a clear call to action" },
-  { output: "clip", icon: <Clapperboard />, label: "A 6-second clip", prompt: (b) => `A 6-second opening shot that sells the feeling of ${b}` },
   { output: "video", icon: <Film />, label: "A 15-second ad", prompt: () => "A 15-second story ad: hook, product, end card with the offer" },
-  { output: "music", icon: <Music />, label: "A soundtrack", prompt: (b) => `A 30-second instrumental that sounds like ${b}` },
+  { output: "video", icon: <Clapperboard />, label: "A 6-second moment", prompt: (b) => `A 6-second video of one shot that sells the feeling of ${b}` },
 ];
 
 /** What an empty canvas says: who it is designing for and a few ways to start. */
@@ -191,7 +190,7 @@ export function EmptyHero({ left, bottom }: { left: number; bottom: number }) {
         {brand ? <BrandMark kit={kit as MediaKit} name={brand.name} className="mb-5 h-12 w-20 rounded-xl" /> : null}
         <h1 className="text-[28px] font-medium tracking-[-0.02em] text-neutral-950">What should we make for {name}?</h1>
         <p className="mt-2 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-          {brand ? "Images, posters, clips, video ads and music, in its look and voice. Everything lands here on the canvas." : "Add your brand in the bar below, so everything Slice makes looks and sounds like you."}
+          {brand ? "Images, posters and video ads with music and voice, in its look and voice. Everything lands here on the canvas." : "Add your brand in the bar below, so everything Slice makes looks and sounds like you."}
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-2">
           {STARTERS.map((s) => (
@@ -199,7 +198,7 @@ export function EmptyHero({ left, bottom }: { left: number; bottom: number }) {
               key={s.label}
               type="button"
               onClick={() => {
-                setPicks({ output: s.output, ...(s.output === "clip" || s.output === "video" ? { aspect: "9:16" } : {}) });
+                setPicks({ output: s.output, ...(s.output === "video" ? { aspect: "9:16" } : {}) });
                 compose(s.prompt(name));
               }}
               className="flex h-9 items-center gap-2 rounded-full bg-white px-3.5 text-[13px] font-medium text-neutral-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.07] transition-colors hover:bg-neutral-50 hover:text-neutral-950 [&_svg]:size-4 [&_svg]:text-neutral-500"

@@ -16,6 +16,7 @@ import { PillText } from "@/components/console/email/editor/chat-composer";
 import { DoneTurnCard, LiveTurnCard } from "@/components/console/email/editor/turn-card";
 import { useCanvas, type ChatMessage } from "../canvas/context";
 import { MEDIA_COPY, MEDIA_PHASES, type MediaAgent } from "../canvas/use-media-agent";
+import { QuestionsCard } from "./questions-card";
 
 function useStickToBottom() {
   const scroller = useRef<HTMLDivElement>(null);
@@ -58,6 +59,13 @@ function MerchantBubble({ text, attachments, time }: { text: string; attachments
   );
 }
 
+/** The agent's questions in a saved turn, when it asked several at once. */
+const questionsOf = (m: ChatMessage | undefined) => {
+  if (m?.role !== "agent") return null;
+  const step = ((m.steps ?? []) as BuildStep[]).find((s): s is Extract<BuildStep, { kind: "question" }> => s.kind === "question");
+  return step?.question.questions?.length ? step.question : null;
+};
+
 const clock = (at: number) => new Date(at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
 export function ChatThread() {
@@ -91,13 +99,15 @@ export function Thread({ agent, messages, onAnswer, empty, className }: { agent:
   const running = !!live && live.status !== null && !live.error;
   const hasTools = !!live?.steps.some((s) => s.kind === "tool");
   const promptSaved = !!live && messages.slice(live.baseCount).some((m) => m.role === "merchant" && m.text.startsWith(live.prompt ?? "\u0000"));
+  // A reply to a questions card shows in the card, not as a bubble of its own.
+  const answeringCard = !!live && !promptSaved && !!questionsOf(messages[messages.length - 1]);
 
   return (
     <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain" data-board-scroll>
       <div ref={content} className={cn("space-y-5 px-4 pt-4", className)}>
         {messages.length === 0 && !live && empty}
         {messages.map((m, i) => {
-          if (m.role === "merchant") return <MerchantBubble key={m.id} text={m.text} attachments={m.attachments} time={clock(m.at)} />;
+          if (m.role === "merchant") return questionsOf(messages[i - 1]) ? null : <MerchantBubble key={m.id} text={m.text} attachments={m.attachments} time={clock(m.at)} />;
           const steps = (m.steps ?? []) as BuildStep[];
           const question = steps.find((s): s is Extract<BuildStep, { kind: "question" }> => s.kind === "question");
           const replies = steps.filter((s): s is Extract<BuildStep, { kind: "text" }> => s.kind === "text");
@@ -107,7 +117,9 @@ export function Thread({ agent, messages, onAnswer, empty, className }: { agent:
           return (
             <div key={m.id} className="flex flex-col items-start gap-2">
               <DoneTurnCard steps={steps} phases={MEDIA_PHASES} copy={MEDIA_COPY} />
-              {question ? (
+              {question?.question.questions?.length ? (
+                <QuestionsCard intro={question.question.text} questions={question.question.questions} answer={next?.text ?? (i === lastAgent && answeringCard ? live?.prompt : undefined)} onAnswer={open ? (t) => (pin(), onAnswer(t)) : undefined} />
+              ) : question ? (
                 <QuestionCard question={question.question} answer={next?.text} onAnswer={open ? answer : undefined} audiences={[]} items={[]} />
               ) : reply ? (
                 <p className="text-sm leading-6 whitespace-pre-wrap">{reply}</p>
@@ -120,7 +132,7 @@ export function Thread({ agent, messages, onAnswer, empty, className }: { agent:
         })}
         {live && (
           <>
-            {!!(live.prompt || live.attachments?.length) && !promptSaved && <MerchantBubble text={live.prompt ?? ""} attachments={live.attachments} />}
+            {!!(live.prompt || live.attachments?.length) && !promptSaved && !answeringCard && <MerchantBubble text={live.prompt ?? ""} attachments={live.attachments} />}
             <div className="flex flex-col items-start gap-2 text-sm leading-6">
               {live.error ? (
                 <div className="w-full rounded-xl border border-destructive/20 bg-destructive/5 px-3.5 py-2.5 text-sm">
@@ -134,7 +146,13 @@ export function Thread({ agent, messages, onAnswer, empty, className }: { agent:
               ) : (
                 running && !liveReply && !liveQuestion && <ThinkingLine label="Thinking" thought={liveThought} />
               )}
-              {liveQuestion ? <QuestionCard question={liveQuestion.question} onAnswer={live.status === null ? answer : undefined} audiences={[]} items={[]} /> : liveReply && <StreamingText text={liveReply} live={running} />}
+              {liveQuestion?.question.questions?.length ? (
+                <QuestionsCard intro={liveQuestion.question.text} questions={liveQuestion.question.questions} onAnswer={live.status === null ? (t) => (pin(), onAnswer(t)) : undefined} />
+              ) : liveQuestion ? (
+                <QuestionCard question={liveQuestion.question} onAnswer={live.status === null ? answer : undefined} audiences={[]} items={[]} />
+              ) : (
+                liveReply && <StreamingText text={liveReply} live={running} />
+              )}
             </div>
           </>
         )}

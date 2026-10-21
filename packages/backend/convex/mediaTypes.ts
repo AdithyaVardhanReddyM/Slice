@@ -175,15 +175,14 @@ export function modelLabel(id: string | undefined): string {
 /* What the prompt bar makes ------------------------------------------------- */
 
 /** "auto": the agent decides from the words. */
-export type MediaOutput = "auto" | "image" | "poster" | "clip" | "video" | "music";
+/** What the canvas prompt bar makes. Moving pictures, music and voice all come as a video ad. */
+export type MediaOutput = "auto" | "image" | "poster" | "video";
 
 export const OUTPUTS: Record<MediaOutput, { label: string; hint: string }> = {
   auto: { label: "Auto", hint: "Slice picks from what you ask" },
   image: { label: "Image", hint: "A photograph or illustration" },
   poster: { label: "Poster", hint: "A designed ad with your logo, copy and button" },
-  clip: { label: "Video clip", hint: "One generated shot, 4 to 8 seconds" },
-  video: { label: "Video ad", hint: "Shots, text, music and voice, edited together" },
-  music: { label: "Music", hint: "An instrumental track, about 30 seconds" },
+  video: { label: "Video ad", hint: "Any video, from one shot to an edited ad, with music and voice" },
 };
 
 export type Aspect = "9:16" | "4:5" | "1:1" | "16:9";

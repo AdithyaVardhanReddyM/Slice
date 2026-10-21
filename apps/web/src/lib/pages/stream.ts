@@ -41,11 +41,23 @@ export interface QuestionOption {
   itemId?: string;
 }
 
+/** One of several questions asked together (Media's ask_questions). */
+export interface AskQuestion {
+  /** One or two words naming the topic: "Music", "Voiceover". */
+  header: string;
+  question: string;
+  options: { label: string; detail?: string }[];
+  /** Several options can be picked together. */
+  multi?: boolean;
+}
+
 export interface Question {
   text: string;
   options: QuestionOption[];
   /** Placeholder for a typed answer; empty when only the options make sense. */
   other?: string;
+  /** Several questions answered in one go; `text` is then a short intro. */
+  questions?: AskQuestion[];
 }
 
 /** The page the planner set up, as the chat recaps it. */

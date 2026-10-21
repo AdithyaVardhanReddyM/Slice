@@ -2,21 +2,19 @@
 
 // The bar that floats over what is selected on the canvas: open it in its
 // editor, ask the agent about it, see why it was made, and the quick moves for
-// its kind (more takes of an image, animate it, continue a clip, make a poster
-// from it, a free copy of a creative in another size), each priced before it runs. Studio buttons call the models
+// its kind (more takes of an image, a poster or a video ad from it, continue a
+// clip, a free copy of a creative in another size), each priced before it runs. Studio buttons call the models
 // directly; only "Ask" starts a chat turn.
 
 import { useMutation } from "convex/react";
-import { Clapperboard, Copy, Download, FastForward, Layers2, LayoutTemplate, Loader2, MessageSquareText, MoreHorizontal, Pencil, RefreshCw, Scaling, Trash2, X } from "lucide-react";
+import { Copy, Download, FastForward, Film, Layers2, LayoutTemplate, Loader2, MessageSquareText, MoreHorizontal, Pencil, RefreshCw, Scaling, Trash2, X } from "lucide-react";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
-import { FORMATS, FORMAT_KEYS, VIDEO_MODELS, imageModel, veoSeconds, videoModel, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
+import { FORMATS, FORMAT_KEYS, imageModel, videoModel, type FormatPreset, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { usd, usePromptPicks } from "../prompt/options";
+import { usd } from "../prompt/options";
 import { SIDEBAR_W, useCanvas } from "./context";
 import type { BoardNode } from "./model";
 import { TOOLBAR_ROOM } from "./toolbar";
@@ -40,69 +38,6 @@ const aspectOf = (w?: number, h?: number) => {
   const r = (w ?? 1) / (h ?? 1);
   return r < 0.7 ? "9:16" : r < 0.9 ? "4:5" : r < 1.2 ? "1:1" : "16:9";
 };
-
-function AnimatePopover({ node }: { node: BoardNode }) {
-  const { act, pending } = useCanvas();
-  const [picks] = usePromptPicks();
-  const a = node.asset!;
-  const [prompt, setPrompt] = useState("");
-  const [seconds, setSeconds] = useState(6);
-  const [model, setModel] = useState(picks.videoModel);
-  const [open, setOpen] = useState(false);
-  const m = videoModel(model);
-  const secs = veoSeconds(seconds, m.hd);
-  const busy = pending.includes(`animate:${a._id}`);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className={btn} title="Turn it into a video clip">
-        {busy ? <Loader2 className="animate-spin" /> : <Clapperboard />}
-        <span>Animate</span>
-      </PopoverTrigger>
-      <PopoverContent side="bottom" sideOffset={8} className="w-80 gap-3 p-3.5">
-        <p className="text-sm font-semibold">Animate this image</p>
-        <textarea
-          autoFocus
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          rows={3}
-          placeholder="What moves: slow push-in, steam rising, people walk past, candles flicker"
-          className="w-full resize-none rounded-lg bg-neutral-50 px-2.5 py-2 text-sm ring-1 ring-black/[0.08] outline-none focus:bg-white focus:ring-blue-500"
-        />
-        <div className="flex items-center gap-2">
-          <select value={model} onChange={(e) => setModel(e.target.value)} className="h-8 min-w-0 flex-1 rounded-md bg-neutral-50 px-2 text-xs ring-1 ring-black/[0.08] outline-none">
-            {VIDEO_MODELS.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-          <span className="flex rounded-md bg-neutral-100 p-0.5">
-            {[4, 6, 8].map((s) => (
-              <button key={s} type="button" disabled={m.hd && s !== 8} onClick={() => setSeconds(s)} className={cn("h-7 w-9 rounded-[5px] text-xs font-medium text-neutral-600 disabled:opacity-40", secs === s && "bg-white text-neutral-950 shadow-sm")}>
-                {s}s
-              </button>
-            ))}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground tabular-nums">
-            ≈ {usd(m.perSecond * secs)} with {m.label}
-          </span>
-          <Button
-            size="sm"
-            disabled={busy}
-            onClick={() => {
-              setOpen(false);
-              void act("make_clip", { prompt: prompt.trim() || "Bring the picture to life with a slow, natural camera move; keep everything in it true.", aspect: aspectOf(a.w, a.h) === "16:9" ? "16:9" : "9:16", seconds: secs, image: a.url, model, near: a._id }, `animate:${a._id}`);
-            }}
-          >
-            <Clapperboard /> Animate
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 /** A free copy of a poster or video laid out in another size; sizes this audience already has are left out. */
 function ResizeMenu({ node }: { node: BoardNode }) {
@@ -238,8 +173,8 @@ export function NodeToolbar({ rect }: { rect: { x: number; y: number; w: number;
               busy={pending.includes(`takes:${a._id}`)}
               onClick={() => void act("make_image", { prompt: a.prompt ? `${a.prompt} (another take of image 1: same subject and look, a different moment and framing)` : "Another take of image 1: same subject and look, a different moment and framing", aspect: aspectOf(a.w, a.h), count: 2, reference_urls: [a.url], model: a.model && a.model.includes("image") ? a.model : undefined, near: a._id }, `takes:${a._id}`)}
             />
-            <AnimatePopover node={one} />
             <Tool icon={<LayoutTemplate />} label="Poster" title="Design a poster around it" onClick={() => sendPrompt("Design a poster around this image, in our brand.", { output: "poster" })} />
+            <Tool icon={<Film />} label="Video ad" title="Make a video ad that starts on it, with music and voice" onClick={() => sendPrompt("Make a video ad that opens on this image and brings it to life.", { output: "video" })} />
           </>
         )}
         {one.kind === "clip" && a && (

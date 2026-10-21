@@ -4,9 +4,9 @@
 // settings (model, takes and brand check) in one panel, summarised on the
 // pill. Who it is for sits in the bar's top strip (audience.tsx).
 
-import { Check, ChevronDown, Clapperboard, Film, Image as ImageIcon, Layers, LayoutTemplate, Music } from "lucide-react";
+import { Check, ChevronDown, Film, Image as ImageIcon, Layers, LayoutTemplate } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { ASPECTS, IMAGE_MODELS, MUSIC_MODELS, OUTPUTS, VIDEO_MODELS, imageModel, musicModel, videoModel, type Aspect, type MediaOutput } from "@slice/backend/convex/mediaTypes";
+import { ASPECTS, IMAGE_MODELS, MUSIC_MODELS, OUTPUTS, VIDEO_MODELS, imageModel, videoModel, type Aspect, type MediaOutput } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,9 +17,7 @@ export const OUTPUT_ICON: Record<MediaOutput, ReactNode> = {
   auto: <Layers />,
   image: <ImageIcon />,
   poster: <LayoutTemplate />,
-  clip: <Clapperboard />,
   video: <Film />,
-  music: <Music />,
 };
 
 /** A soft filled pill: the prompt bar's controls (a little tighter in the docked bar). */
@@ -60,7 +58,7 @@ export function OutputMenu({ picks, set }: { picks: PromptPicks; set: (p: Partia
               onClick={() => {
                 const patch: Partial<PromptPicks> = { output: o };
                 // Video models make 9:16 and 16:9 only.
-                if ((o === "clip" || o === "video") && !ASPECTS.find((a) => a.value === picks.aspect)?.video) patch.aspect = "9:16";
+                if (o === "video" && !ASPECTS.find((a) => a.value === picks.aspect)?.video) patch.aspect = "9:16";
                 set(patch);
               }}
             >
@@ -85,11 +83,10 @@ export function AspectGlyph({ aspect, className }: { aspect: string; className?:
   );
 }
 
-/** The shape, a pill of its own; music has none. */
+/** The shape, a pill of its own. */
 export function AspectMenu({ picks, set }: { picks: PromptPicks; set: (p: Partial<PromptPicks>) => void }) {
   const [open, setOpen] = useState(false);
-  if (picks.output === "music") return null;
-  const videoOnly = picks.output === "clip" || picks.output === "video";
+  const videoOnly = picks.output === "video";
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className={chipClass} title="Aspect ratio">
@@ -141,8 +138,7 @@ function GeminiMark({ className }: { className?: string }) {
 function summary(p: PromptPicks) {
   if (p.output === "image") return [imageModel(p.imageModel).label, p.count > 1 ? `${p.count} takes` : ""].filter(Boolean).join(", ");
   if (p.output === "poster") return imageModel(p.imageModel).label;
-  if (p.output === "clip" || p.output === "video") return videoModel(p.videoModel).label;
-  if (p.output === "music") return musicModel(p.musicModel).label;
+  if (p.output === "video") return videoModel(p.videoModel).label;
   return "Settings";
 }
 
@@ -172,8 +168,8 @@ function Models<T extends { id: string; label: string; blurb: string }>({ title,
 export function SettingsMenu({ picks, set }: { picks: PromptPicks; set: (p: Partial<PromptPicks>) => void }) {
   const o = picks.output;
   const showImage = o === "auto" || o === "image" || o === "poster";
-  const showVideo = o === "auto" || o === "clip" || o === "video";
-  const showMusic = o === "auto" || o === "music" || o === "video";
+  const showVideo = o === "auto" || o === "video";
+  const showMusic = o === "auto" || o === "video";
   return (
     <Popover>
       <PopoverTrigger className={cn(chipClass, "shrink")} title="Model">
@@ -185,7 +181,7 @@ export function SettingsMenu({ picks, set }: { picks: PromptPicks; set: (p: Part
         <div className="max-h-[min(70vh,600px)] overflow-y-auto overscroll-contain">
           {showImage && <Models title={o === "auto" ? "Image model" : "Model"} list={IMAGE_MODELS} value={picks.imageModel} onPick={(id) => set({ imageModel: id })} price={(m) => `${usd(m.price)} / image`} />}
           {showVideo && <Models title={o === "auto" || o === "video" ? "Video model" : "Model"} list={VIDEO_MODELS} value={picks.videoModel} onPick={(id) => set({ videoModel: id })} price={(m) => `${usd(m.perSecond)} / s`} />}
-          {showMusic && <Models title={o === "music" ? "Model" : "Music"} list={MUSIC_MODELS} value={picks.musicModel} onPick={(id) => set({ musicModel: id })} price={(m) => usd(m.price)} />}
+          {showMusic && <Models title="Music" list={MUSIC_MODELS} value={picks.musicModel} onPick={(id) => set({ musicModel: id })} price={(m) => usd(m.price)} />}
 
           {o === "image" && (
             <Section>

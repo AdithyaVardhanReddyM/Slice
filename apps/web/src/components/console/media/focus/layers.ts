@@ -65,5 +65,9 @@ export const layerLabel = (l: Layer) => {
   if (l.type === "image") return l.role === "background" ? "Background photo" : l.role === "product" ? "Product photo" : "Photo";
   if (l.type === "logo") return "Logo";
   if (l.type === "qr") return "QR code";
-  return "Shape";
+  // Shapes are named by what they look like, so two of them can be told apart.
+  if (l.fill.includes("gradient")) return "Gradient overlay";
+  if (Math.min(l.w, l.h) <= 12) return "Line";
+  if ((l.radius ?? 0) >= Math.min(l.w, l.h) / 2) return "Circle";
+  return "Colour block";
 };

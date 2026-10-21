@@ -7,13 +7,14 @@
 // open. Manual settings live in the bar over the page (context-bar.tsx).
 
 import { useMutation } from "convex/react";
-import { ArrowLeft, Download, History as HistoryIcon, Image as ImageIcon, Layers, Loader2, Mic, Music, Pause, Play, Redo2, Shapes, Undo2, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Download, History as HistoryIcon, Image as ImageIcon, Layers, Loader2, Mic, Music, Pause, Play, Redo2, Shapes, Undo2, X } from "lucide-react";
 import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
 import { MUSIC_MODELS, creativeName, docDuration, modelLabel, timeline, type MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCanvas } from "../canvas/context";
 import { keyOf, type BoardNode } from "../canvas/model";
 import { CheckBadge } from "../canvas/nodes";
@@ -42,17 +43,33 @@ export function FocusEditor({ node, onClose }: { node: BoardNode; onClose: () =>
 /* Shell ------------------------------------------------------------------------------ */
 
 export function FocusShell({ title, meta, onClose, left, center, right, children }: { title: ReactNode; meta?: ReactNode; onClose: () => void; left?: ReactNode; center?: ReactNode; right?: ReactNode; children: ReactNode }) {
+  const { campaign } = useCanvas();
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white duration-200 animate-in fade-in-0 zoom-in-[0.985]" role="dialog" aria-modal="true" aria-label="Editor">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-black/[0.06] px-2.5">
-        <button type="button" onClick={onClose} className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-neutral-600 hover:bg-neutral-100 hover:text-neutral-950" title="Back to the canvas (Esc)">
-          <ArrowLeft className="size-4" /> Canvas
-        </button>
-        <span className="text-neutral-300">/</span>
-        <div className="flex min-w-0 items-center gap-2">
-          {title}
-          {meta && <span className="shrink-0 text-xs text-neutral-400">{meta}</span>}
-        </div>
+      <header className="flex h-12 shrink-0 items-center gap-1 border-b border-black/[0.06] px-2.5">
+        {/* Where this is: back to the campaign's canvas, then what is open and its shape. */}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button type="button" onClick={onClose} aria-label="Back to the canvas" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-neutral-600 ring-1 ring-black/[0.08] transition-colors hover:bg-neutral-100 hover:text-neutral-950">
+                <ArrowLeft className="size-4" />
+              </button>
+            }
+          />
+          <TooltipContent side="bottom" sideOffset={8}>
+            Back to the canvas (Esc)
+          </TooltipContent>
+        </Tooltip>
+        <nav aria-label="Breadcrumb" className="ml-1.5 flex min-w-0 items-center gap-0.5">
+          <button type="button" onClick={onClose} className="h-8 max-w-48 shrink-0 truncate rounded-lg px-2 text-[13px] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950">
+            {campaign.name}
+          </button>
+          <ChevronRight className="size-3.5 shrink-0 text-neutral-300" />
+          <div className="flex min-w-0 items-center gap-1.5">
+            {title}
+            {meta && <span className="shrink-0 rounded-md bg-neutral-100 px-1.5 py-0.5 text-[11px] font-medium text-neutral-600 tabular-nums">{meta}</span>}
+          </div>
+        </nav>
         {left}
         <div className="flex min-w-0 flex-1 justify-center px-4">{center}</div>
         <div className="flex shrink-0 items-center gap-1">{right}</div>
@@ -85,7 +102,8 @@ function NameInput({ value, onSave }: { value: string; onSave: (v: string) => vo
           e.currentTarget.blur();
         }
       }}
-      className="h-8 w-56 min-w-0 truncate rounded-lg px-2 text-[13px] font-semibold outline-none hover:bg-neutral-50 focus:ring-2 focus:ring-blue-500/40"
+      title="Rename"
+      className="field-sizing-content h-8 max-w-72 min-w-12 truncate rounded-lg px-2 text-[13px] font-semibold text-neutral-950 outline-none hover:bg-neutral-100 focus:bg-white focus:ring-2 focus:ring-blue-500/40"
     />
   );
 }
@@ -169,7 +187,8 @@ function CreativeFocus({ creative, node, onClose, video }: { creative: Doc<"medi
       meta={node.meta}
       onClose={close}
       left={
-        <div className="ml-2 flex items-center gap-0.5">
+        <div className="flex items-center gap-0.5">
+          <span className="mx-2 h-5 w-px bg-neutral-200" />
           <button type="button" title="Undo (⌘Z)" disabled={!env.editor.canUndo} onClick={env.editor.undo} className="flex size-8 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100 disabled:opacity-35">
             <Undo2 className="size-4" />
           </button>
@@ -321,7 +340,7 @@ function AssetFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
 
   return (
     <FocusShell
-      title={<span className="max-w-72 truncate text-[13px] font-semibold">{node.name}</span>}
+      title={<span className="max-w-72 truncate px-2 text-[13px] font-semibold text-neutral-950">{node.name}</span>}
       meta={family.length > 1 ? `${index <= 0 ? "Original" : `Version ${index + 1}`} of ${family.length}` : node.meta}
       onClose={onClose}
       right={
@@ -419,7 +438,7 @@ function MusicFocus({ node, onClose }: { node: BoardNode; onClose: () => void })
   const busy = pending.includes(`music:${a._id}`);
   return (
     <FocusShell
-      title={<span className="max-w-72 truncate text-[13px] font-semibold">{node.name}</span>}
+      title={<span className="max-w-72 truncate px-2 text-[13px] font-semibold text-neutral-950">{node.name}</span>}
       meta={node.meta}
       onClose={onClose}
       right={
