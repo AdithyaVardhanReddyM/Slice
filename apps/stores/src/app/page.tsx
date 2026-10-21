@@ -51,6 +51,18 @@ const stores = [
     kind: "Restaurant booking app for 48 London restaurants",
     note: "Brand site for the Email service: campaign picks and links point at its restaurant pages.",
   },
+  {
+    href: "/knock",
+    name: "Knock",
+    kind: "Food delivery app for 15 Los Angeles restaurants",
+    note: "Brand site for the Media service: real LA kitchens, menus and the week's trending dishes. Its posters and video ads change per audience (game night, wellness, anime, Latin LA).",
+  },
+  {
+    href: "/halfmoon",
+    name: "Half Moon Coffee",
+    kind: "Small-batch roaster in Half Moon Bay, California, with four coffees",
+    note: "Brand site for the Media service: First Light, Crescent, Eclipse and Moonrise. Each audience's creative leads with the coffee its taste points to.",
+  },
 ];
 
 export default function Index() {

@@ -1,0 +1,158 @@
+/* Half Moon Coffee: a small-batch roaster on the California coast. A real
+   daytime sky (blue, clouds, the half moon) behind floating product, white
+   pages, near-black ink, and one pastel per coffee taken from its bag. Inter
+   Tight for headlines (bold, tightly tracked, sentence case), Inter for
+   everything you read; both load via <link> in the layout. Tokens and
+   components are scoped to .halfmoon-root; pages use Tailwind with these
+   variables, e.g. bg-(--hm-sky). */
+
+body:has(.halfmoon-root) {
+  background: #ffffff;
+}
+
+.halfmoon-root {
+  --hm-bg: #ffffff;
+  --hm-sky: #3da8f2;
+  --hm-sky-deep: #1f8ee0;
+  --hm-sky-light: #e2f1fc;
+  --hm-ink: #0b0b0c;
+  --hm-ink-soft: #45474d;
+  --hm-mute: #7b7e86;
+  --hm-line: #e6e8ec;
+  --hm-peach: #f8e3d2;
+  --hm-blush: #f7dbe0;
+  --hm-lilac: #e5e3ee;
+  --hm-mist: #dbeaf7;
+  --hm-display: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --hm-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+
+  background: var(--hm-bg);
+  color: var(--hm-ink);
+  font-family: var(--hm-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-variation-settings: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+.halfmoon-root ::selection {
+  background: var(--hm-sky);
+  color: #fff;
+}
+
+.halfmoon-root :focus-visible {
+  outline: 2px solid var(--hm-sky-deep);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .hm-container {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+  @media (min-width: 768px) {
+    .hm-container {
+      padding-inline: 40px;
+    }
+  }
+
+  .hm-display {
+    font-family: var(--hm-display);
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+  .hm-title {
+    font-family: var(--hm-display);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .hm-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hm-sky-deep);
+  }
+
+  .hm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    padding-inline: 26px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color 150ms,
+      color 150ms,
+      transform 150ms;
+  }
+  .hm-btn:active {
+    transform: scale(0.98);
+  }
+  .hm-btn-sm {
+    height: 40px;
+    padding-inline: 18px;
+    font-size: 14px;
+  }
+  .hm-btn-ink {
+    background: var(--hm-ink);
+    color: #fff;
+  }
+  .hm-btn-ink:hover {
+    background: #2a2b30;
+  }
+  .hm-btn-white {
+    background: #fff;
+    color: var(--hm-ink);
+    box-shadow: 0 1px 2px rgb(11 11 12 / 0.08);
+  }
+  .hm-btn-white:hover {
+    background: #f3f4f6;
+  }
+  .hm-btn-line {
+    background: transparent;
+    color: var(--hm-ink);
+    box-shadow: inset 0 0 0 1.5px var(--hm-line);
+  }
+  .hm-btn-line:hover {
+    box-shadow: inset 0 0 0 1.5px var(--hm-ink);
+  }
+
+  .hm-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hm-drift {
+    animation: hm-drift 7s ease-in-out infinite;
+  }
+}
+
+@keyframes hm-drift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-1deg);
+  }
+}

@@ -1,0 +1,229 @@
+/* Knock: an LA food-delivery app. Mustard yellow and tomato red on warm cream,
+   dark roast-brown ink. Archivo Black-weight caps (upright for headlines,
+   italic for the loud banner lines) and DM Sans for everything you read; both
+   load via <link> in the layout. Pill buttons carry a hard ink drop shadow,
+   like stickers on a delivery bag. Tokens and components are scoped to
+   .knock-root; pages use Tailwind with these variables, e.g. bg-(--kn-yellow). */
+
+body:has(.knock-root) {
+  background: #fff4de;
+}
+
+.knock-root {
+  --kn-cream: #fff4de;
+  --kn-cream-deep: #fbe6bf;
+  --kn-surface: #ffffff;
+  --kn-yellow: #ffb627;
+  --kn-yellow-deep: #f2a20c;
+  --kn-red: #e0251b;
+  --kn-red-deep: #b9180f;
+  --kn-ink: #26160d;
+  --kn-ink-soft: #5c4637;
+  --kn-mute: #8a735f;
+  --kn-line: #ead2a8;
+  --kn-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --kn-sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+
+  background: var(--kn-cream);
+  color: var(--kn-ink);
+  font-family: var(--kn-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-variation-settings: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+.knock-root ::selection {
+  background: var(--kn-yellow);
+  color: var(--kn-ink);
+}
+
+.knock-root :focus-visible {
+  outline: 2px solid var(--kn-red);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .kn-container {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+  @media (min-width: 768px) {
+    .kn-container {
+      padding-inline: 32px;
+    }
+  }
+
+  /* Heavy caps for headlines. */
+  .kn-display {
+    font-family: var(--kn-display);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+  .kn-display-italic {
+    font-family: var(--kn-display);
+    font-style: italic;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+  .kn-title {
+    font-family: var(--kn-display);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  .kn-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    padding-inline: 24px;
+    border-radius: 999px;
+    border: 1.5px solid var(--kn-ink);
+    font-size: 15.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 3px 0 var(--kn-ink);
+    transition:
+      transform 120ms,
+      box-shadow 120ms,
+      background-color 150ms;
+  }
+  .kn-btn:hover {
+    transform: translateY(1px);
+    box-shadow: 0 2px 0 var(--kn-ink);
+  }
+  .kn-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 var(--kn-ink);
+  }
+  .kn-btn-sm {
+    height: 40px;
+    padding-inline: 18px;
+    font-size: 14.5px;
+  }
+  .kn-btn-red {
+    background: var(--kn-red);
+    color: #fff;
+  }
+  .kn-btn-red:hover {
+    background: var(--kn-red-deep);
+  }
+  .kn-btn-light {
+    background: var(--kn-cream);
+    color: var(--kn-ink);
+  }
+  .kn-btn-yellow {
+    background: var(--kn-yellow);
+    color: var(--kn-ink);
+  }
+
+  /* Outlined pill: nav items, filters. */
+  .kn-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding-inline: 18px;
+    border-radius: 999px;
+    border: 1.25px solid var(--kn-ink);
+    color: var(--kn-ink);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+  .kn-pill:hover {
+    background: color-mix(in srgb, var(--kn-ink) 8%, transparent);
+  }
+  .kn-pill[aria-current="page"],
+  .kn-pill[aria-current="true"] {
+    background: var(--kn-ink);
+    color: var(--kn-cream);
+  }
+
+  /* Small facts under a card: rating, time, fee. */
+  .kn-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding-inline: 10px;
+    border-radius: 999px;
+    border: 1px solid var(--kn-ink);
+    font-size: 13.5px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* Category chip with a round photo, like the ones on the app's home tab. */
+  .kn-chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    height: 56px;
+    padding: 5px 20px 5px 5px;
+    border-radius: 999px;
+    border: 1.25px solid var(--kn-ink);
+    background: var(--kn-cream);
+    font-size: 15.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: box-shadow 120ms;
+  }
+  .kn-chip:hover,
+  .kn-chip[aria-current="true"] {
+    box-shadow: 0 3px 0 var(--kn-ink);
+  }
+  .kn-chip[aria-current="true"] {
+    background: var(--kn-yellow);
+  }
+
+  .kn-link {
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+
+  /* Hide the scrollbar on horizontal rails. */
+  .kn-rail {
+    scrollbar-width: none;
+  }
+  .kn-rail::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .kn-float {
+    animation: kn-float 6s ease-in-out infinite;
+  }
+  .kn-float-late {
+    animation: kn-float 7s ease-in-out 1.2s infinite;
+  }
+}
+
+@keyframes kn-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--kn-tilt, 0deg));
+  }
+  50% {
+    transform: translateY(-10px) rotate(var(--kn-tilt, 0deg));
+  }
+}
