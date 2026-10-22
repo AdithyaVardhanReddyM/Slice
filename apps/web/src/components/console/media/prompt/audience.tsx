@@ -92,8 +92,10 @@ function useAudiences() {
     .filter((a) => a.kind === "seed")
     .map((a) => ({ key: `seed:${a.id}`, name: a.name, hint: a.seed?.interests?.join(", "), icon: Users, status: "ready", ref: a }));
 
+  /** The live row behind one of the campaign's audiences (face, name, status), while it still exists. */
+  const liveOf = (a: MediaAudience) => (a.pagesAudienceId ? pages.find((o) => o.ref.pagesAudienceId === a.pagesAudienceId) : a.emailAudienceId ? email.find((o) => o.ref.emailAudienceId === a.emailAudienceId) : described.find((o) => o.key === `seed:${a.id}`));
   const current = audiences.find((a) => a.id === audienceId) ?? EVERYONE;
-  const live = current.pagesAudienceId ? pages.find((o) => o.ref.pagesAudienceId === current.pagesAudienceId) : current.emailAudienceId ? email.find((o) => o.ref.emailAudienceId === current.emailAudienceId) : described.find((o) => o.key === `seed:${current.id}`);
+  const live = liveOf(current);
 
   const add = async (a: Omit<MediaAudience, "id">) => {
     const id = slug(a.name, new Set(audiences.map((x) => x.id)));
@@ -112,7 +114,22 @@ function useAudiences() {
     void add(o.ref);
   };
 
-  return { pages, email, described, current, live, choose, pagesBrand, emailBrand, loading: (!!pagesId && pagesRows === undefined) || (!!emailId && emailRows === undefined) };
+  return { pages, email, described, audiences, current, live, liveOf, choose, pagesBrand, emailBrand, loading: (!!pagesId && pagesRows === undefined) || (!!emailId && emailRows === undefined) };
+}
+
+/** Who a piece on the canvas was made for, in the strip while its own conversation is open. It is part of what the piece is, so not a picker. */
+export function MadeForPill({ audienceKey }: { audienceKey?: string }) {
+  const { audiences, liveOf } = useAudiences();
+  const made = audiences.find((a) => a.id === audienceKey) ?? EVERYONE;
+  const everyone = made.id === "all";
+  const live = everyone ? undefined : liveOf(made);
+  return (
+    <span title="Who it was made for" className="inline-flex h-8 max-w-full min-w-0 items-center gap-2 rounded-full pr-2.5 pl-1 text-[13px]">
+      <Face image={live?.image} icon={everyone ? Users : (live?.icon ?? Users)} />
+      <span className="shrink-0 text-neutral-500">Made for</span>
+      <span className="truncate font-semibold text-neutral-900">{live?.name ?? made.name}</span>
+    </span>
+  );
 }
 
 function Face({ image, icon: Icon, className }: { image?: string; icon: LucideIcon; className?: string }) {

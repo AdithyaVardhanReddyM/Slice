@@ -12,7 +12,7 @@
 // item's own, where it only changes that item.
 
 import { ArrowUp, Paperclip, Square, Type, X } from "lucide-react";
-import { forwardRef, useImperativeHandle, useRef, useState, type ClipboardEvent } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState, type ClipboardEvent } from "react";
 import { cn } from "@/lib/utils";
 import { useMediaUpload } from "@/lib/media/upload";
 import { AttachmentStrip, type Attachment } from "@/components/console/pages/builder/attachments";
@@ -23,7 +23,7 @@ import { STICKY_COLORS, swatch } from "../canvas/shapes";
 import { FixedStage } from "../stage";
 import type { MediaDoc } from "@slice/backend/convex/mediaTypes";
 import { BrandChip } from "./brand-chip";
-import { AudiencePill } from "./audience";
+import { AudiencePill, MadeForPill } from "./audience";
 import { AspectMenu, OutputMenu, SettingsMenu } from "./menus";
 import { promptEstimate, usd, usePromptPicks } from "./options";
 
@@ -91,6 +91,19 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
   const estimate = shaping ? promptEstimate(picks) : null;
   // What goes with a canvas prompt: things made, and notes and text with words in them (not frames or arrows).
   const context = thread.kind === "campaign" ? nodes.filter((n) => selected.includes(n.key) && n.kind !== "pending" && n.kind !== "ghost" && n.kind !== "frame" && n.kind !== "arrow" && (!n.shape || !!n.shape.text?.trim())) : [];
+  // In an item's own conversation the item sits at the start of the text, like a mention; the words run on after it.
+  const item = thread.kind === "item" ? thread.node : null;
+  const pill = useRef<HTMLSpanElement>(null);
+  const [indent, setIndent] = useState(0);
+  useLayoutEffect(() => {
+    const el = pill.current;
+    if (!el) return setIndent(0);
+    const measure = () => setIndent(el.offsetWidth + 6);
+    measure();
+    const seen = new ResizeObserver(measure);
+    seen.observe(el);
+    return () => seen.disconnect();
+  }, [item?.key, docked]);
 
   useImperativeHandle(ref, () => ({
     set: (t: string) => {
@@ -160,19 +173,7 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
             Its top strip says who it is for, since that changes everything the bar makes; the white composer sits inside, its corners
             the tray's radius less the edge and the padding. */}
         <div className={cn("relative border-[1.5px] border-transparent p-1.5 shadow-[0_12px_32px_-14px_rgba(160,70,0,0.3)] transition-[border-radius] duration-500", docked ? "rounded-[20px]" : "rounded-[26px]")} style={{ background: `linear-gradient(${TRAY}, ${TRAY}) padding-box, ${EDGE} border-box` }}>
-          <div className="mb-1.5 flex min-w-0 items-center px-0.5">
-            {thread.kind === "item" ? (
-              <span className="flex h-7 min-w-0 items-center gap-1.5 rounded-full bg-orange-100/80 pr-1 pl-1 text-xs font-medium text-orange-950">
-                <Thumb node={thread.node} />
-                <span className="truncate">Changing {thread.node.name}</span>
-                <button type="button" aria-label="Back to the canvas chat" title="Back to the canvas chat" onClick={() => select([])} className="flex size-5 shrink-0 items-center justify-center rounded-full text-orange-900/60 hover:bg-orange-900/10 hover:text-orange-950">
-                  <X className="size-3" />
-                </button>
-              </span>
-            ) : (
-              <AudiencePill />
-            )}
-          </div>
+          <div className="mb-1.5 flex min-w-0 items-center px-0.5">{item ? <MadeForPill audienceKey={item.creative?.audienceKey ?? item.asset?.audienceKey} /> : <AudiencePill />}</div>
           <div className={cn("@container flex flex-col bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-6px_rgba(120,60,0,0.12)] ring-1 ring-black/[0.05] transition-[border-radius,padding] duration-500", docked ? "gap-1 rounded-[12.5px] p-2" : "gap-2 rounded-[18.5px] p-2.5")}>
             {(context.length > 0 || files.length > 0) && (
               <div className="flex flex-wrap items-center gap-1.5 px-1 pt-1">
@@ -189,26 +190,38 @@ export const PromptBar = forwardRef<PromptBarHandle, { docked: boolean; onSent?:
                 {files.length > 0 && <AttachmentStrip items={files} size="sm" onRemove={(i) => setFiles((f) => f.filter((_, j) => j !== i))} />}
               </div>
             )}
-            <textarea
-              ref={field}
-              value={text}
-              rows={1}
-              onChange={(e) => {
-                setText(e.target.value);
-                const el = e.currentTarget;
-                el.style.height = "auto";
-                el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 220)}px`;
-              }}
-              onPaste={onPaste}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder={thread.kind === "item" ? "Describe a change, or ask for a new take" : thread.kind === "draft" ? (shaping ? PLACEHOLDER[picks.output] : "Reply, or tell it what to change") : context.length && context.every((n) => n.shape) ? `Say what to make from ${context.length === 1 ? "this note" : "these notes"}` : context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
-              className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
-            />
+            <div className="relative">
+              {item && (
+                <span ref={pill} title={`Changing ${item.name}`} className={cn("absolute z-10 flex h-6 max-w-[60%] min-w-0 items-center gap-1 rounded-full bg-orange-100/80 pr-0.5 pl-0.5 text-xs font-medium text-orange-950", docked ? "top-1.5 left-2" : "top-2 left-2.5")}>
+                  <Thumb node={item} />
+                  <span className="truncate">{item.name}</span>
+                  <button type="button" aria-label="Back to the canvas chat" title="Back to the canvas chat" onClick={() => select([])} className="flex size-5 shrink-0 items-center justify-center rounded-full text-orange-900/60 hover:bg-orange-900/10 hover:text-orange-950">
+                    <X className="size-3" />
+                  </button>
+                </span>
+              )}
+              <textarea
+                ref={field}
+                value={text}
+                rows={1}
+                style={item ? { textIndent: indent } : undefined}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  const el = e.currentTarget;
+                  el.style.height = "auto";
+                  el.style.height = `${Math.min(el.scrollHeight, docked ? 160 : 220)}px`;
+                }}
+                onPaste={onPaste}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder={thread.kind === "item" ? "Describe a change, or ask for a new take" : thread.kind === "draft" ? (shaping ? PLACEHOLDER[picks.output] : "Reply, or tell it what to change") : context.length && context.every((n) => n.shape) ? `Say what to make from ${context.length === 1 ? "this note" : "these notes"}` : context.length ? `Describe the change, or what to make from ${context.length === 1 ? "it" : "them"}` : docked ? "Ask for anything, or a change" : PLACEHOLDER[picks.output]}
+                className={cn("w-full resize-none bg-transparent leading-6 text-neutral-950 outline-none placeholder:text-neutral-400", docked ? "min-h-[52px] px-2 pt-1.5 text-sm" : "min-h-[60px] px-2.5 pt-2 text-[15px]")}
+              />
+            </div>
             <div className="flex items-center gap-1.5 @max-[480px]:gap-1">
               <div className="flex min-w-0 flex-1 items-center gap-1.5 @max-[480px]:gap-1">
                 <button type="button" title="Attach images" aria-label="Attach images" onClick={() => fileInput.current?.click()} className="flex size-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
