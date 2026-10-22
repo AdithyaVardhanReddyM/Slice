@@ -31,6 +31,7 @@ from google.genai import types
 
 from slice_agent import convex_client as convex
 from slice_agent.trace import record
+from slice_pages.audience_brief import tag_kind, trait_rank
 from slice_pages.llm import generate_json
 from slice_pages.timing import timer
 
@@ -52,7 +53,6 @@ TAG_GROUP = {
     "lifestyle": "Lifestyle",
     "customer_identity": "Identity",
     "core_values": "Values",
-    "keyword": "Theme",
     "audience": "Identity",
 }
 
@@ -93,12 +93,14 @@ class Lookup:
             self._add({"name": e["name"], "kind": "love", "image": e.get("image"), "as": kind})
         best: dict[str, dict[str, Any]] = {}
         for t in profile.get("tags") or []:
-            if not t.get("name"):
+            rank = trait_rank(tag_kind(t.get("type") or t.get("id") or ""))
+            if not t.get("name") or rank is None:
                 continue
             k = _norm(t["name"])
             if k not in best or float(t.get("affinity") or 0) > best[k]["affinity"]:
-                best[k] = {"name": _nice(t["name"]), "kind": "trait", "affinity": round(float(t.get("affinity") or 0), 3), "group": _group(t.get("type") or t.get("id") or "")}
-        self.traits = sorted(best.values(), key=lambda t: -t["affinity"])
+                best[k] = {"name": _nice(t["name"]), "kind": "trait", "affinity": round(float(t.get("affinity") or 0), 3), "group": _group(t.get("type") or t.get("id") or ""), "rank": rank}
+        # Who they are (lifestyle, identity, style) leads, the look of what they like follows; strongest first within each.
+        self.traits = sorted(best.values(), key=lambda t: (t["rank"], -t["affinity"]))
         for t in self.traits:
             self._add(t)
         self.brands = [{"name": b["name"], "kind": "brand", **({"affinity": round(float(b["affinity"]), 3)} if b.get("affinity") is not None else {}), **({"image": b["image"]} if b.get("image") else {})} for b in profile.get("brands") or [] if b.get("name")]
@@ -144,7 +146,7 @@ def _profile_block(aud: dict[str, Any], look: Lookup) -> str:
     if loves:
         lines.append(f"LOVES (what the audience was built from): {', '.join(loves)}")
     if look.traits:
-        lines.append("TRAITS (Qloo tags, strongest first): " + ", ".join(t["name"] for t in look.traits[:30]))
+        lines.append("TRAITS (Qloo tags, who they are first, then mood and look): " + ", ".join(t["name"] for t in look.traits[:30]))
     if look.brands:
         lines.append("BRANDS they over-index on: " + ", ".join(b["name"] for b in look.brands[:14]))
     by_kind: dict[str, list[str]] = {}

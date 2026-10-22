@@ -39,7 +39,7 @@ from slice_agent.trace import Span, record, start_turn
 
 from . import builder as B
 from . import capture, crm, images
-from .audience_brief import name_clusters, write_audience_brief
+from .audience_brief import name_clusters, trait_rank, write_audience_brief
 from .audience_parse import parse_audience
 from .insights import write_insights
 from .intake import run_intake
@@ -485,8 +485,9 @@ def _preview(name: str, resp: Any) -> dict[str, Any] | None:
         return None
     out: dict[str, Any] = {}
     if name == "get_audience_detail":
-        tags = [t for v in (resp.get("tags") or {}).values() for t in v if isinstance(t, dict) and t.get("name")]
-        out["chips"] = [t["name"] for t in sorted(tags, key=lambda t: -(t.get("affinity") or 0))[:8]]
+        # Who they are, not the plot keywords of what they watch.
+        tags = [(trait_rank(k), t) for k, v in (resp.get("tags") or {}).items() if trait_rank(k) is not None for t in v if isinstance(t, dict) and t.get("name")]
+        out["chips"] = list(dict.fromkeys(t["name"] for _, t in sorted(tags, key=lambda rt: (rt[0], -(rt[1].get("affinity") or 0)))))[:8]
         out["faces"] = _faces([e for v in (resp.get("culture") or {}).values() for e in v] + list(resp.get("brands") or []))
     elif name == "get_brand_site":
         out["images"] = _urls(i.get("src") for i in resp.get("images") or [] if isinstance(i, dict))

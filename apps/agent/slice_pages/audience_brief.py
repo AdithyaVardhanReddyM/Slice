@@ -55,6 +55,17 @@ def tag_kind(tag_type: str) -> str:
     return parts[2] if len(parts) > 2 else "tag"
 
 
+# Shown as an audience's traits: who they are first, the look of what they like last. Keyword tags
+# are not traits: they are plot words of the films and shows they watch ("police", "teenager"),
+# some of them identity terms.
+TRAIT_RANK = {"lifestyle": 0, "customer_identity": 0, "personal_style": 0, "audience": 0, "style": 0, "aesthetic_property": 2}
+
+
+def trait_rank(kind: str) -> int | None:
+    """Where a tag of this kind sorts among traits (lower leads); None for one never shown."""
+    return None if kind == "keyword" else TRAIT_RANK.get(kind, 1)
+
+
 def profile_summary(profile: dict[str, Any] | None, *, tags_per_type: int = 10, brands: int = 12, culture: int = 8) -> dict[str, Any]:
     """An AudienceProfile as the model should read it: short, in words, with provenance."""
     if not profile:
