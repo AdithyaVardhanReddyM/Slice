@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
-import { ArrowDown, ArrowDownRight, ArrowLeft, ArrowUp, ArrowUpRight, Check, ChevronsUpDown, ExternalLink, Globe, PenLine, Search } from "lucide-react";
+import { ArrowDown, ArrowDownRight, ArrowLeft, ArrowUp, ArrowUpRight, Check, ChevronsUpDown, ExternalLink, FlaskConical, Globe, PenLine, Search } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
@@ -15,14 +15,16 @@ import { Segmented } from "@/components/console/form";
 import { EmptyState, PageHeader, PageSkeleton, Panel, Skeleton } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageAnalytics, type Range } from "./analytics/page-analytics";
+import { createSample, SampleProvider, useSample, useSampleSetting } from "./analytics/sample";
 import { useBrand } from "./brand-context";
 import { LiveThumb } from "./pages-list";
 
 export type PageRow = Page & {
   variants?: { _id: Id<"pagesVariants">; status: string; screenshot?: string }[];
-  audiences?: Pick<Audience, "_id" | "name">[];
+  audiences?: Pick<Audience, "_id" | "name" | "kind" | "profile">[];
 };
 
 interface Totals {
@@ -33,7 +35,7 @@ interface Totals {
   avgEngagedMs: number;
   ctaRate: number;
 }
-type Overview = Totals & { pageId: Id<"pages">; prev: Totals; trend: number[] };
+export type Overview = Totals & { pageId: Id<"pages">; prev: Totals; trend: number[] };
 
 export const audienceOf = (p: PageRow) => (p.audiences?.length ? p.audiences.map((a) => a.name).join(" + ") : "Everyone");
 
@@ -401,6 +403,7 @@ function PageReport({
   onBack: () => void;
 }) {
   const brand = useBrand();
+  const sample = useSample();
   const bundle = useQuery(api.pages.get, { id: page._id }) as { page: Page; variants: Variant[] } | null | undefined;
   const variant = bundle ? (bundle.variants.find((v) => v._id === bundle.page.defaultVariantId) ?? bundle.variants[0] ?? null) : null;
   const live = page.status === "published";
@@ -427,7 +430,7 @@ function PageReport({
           )}
         </div>
       </div>
-      {!live && <p className="text-sm text-muted-foreground">This page is a draft, so it only collects test traffic until it is published.</p>}
+      {!live && !sample && <p className="text-sm text-muted-foreground">This page is a draft, so it only collects test traffic until it is published.</p>}
       {bundle === undefined ? <Skeleton className="h-96 rounded-xl" /> : bundle ? <PageAnalytics page={bundle.page} variant={variant} range={range} /> : null}
     </div>
   );
@@ -441,46 +444,75 @@ export function BrandAnalytics() {
   const router = useRouter();
   const params = useSearchParams();
   const [range, setRange] = useState<Range>(30);
+  const [sampleOn, setSampleOn] = useSampleSetting();
   const pages = useQuery(api.pages.list, { brandId: brand._id }) as PageRow[] | undefined;
-  const overview = useQuery(api.pagesEvents.brandOverview, { brandId: brand._id, days: range }) as Overview[] | undefined;
+  // Sample data stands in for every analytics query on this screen; the real ones are skipped meanwhile.
+  const sample = useMemo(() => (sampleOn && pages ? createSample(brand, pages) : null), [sampleOn, pages, brand]);
+  const realOverview = useQuery(api.pagesEvents.brandOverview, sampleOn ? "skip" : { brandId: brand._id, days: range }) as Overview[] | undefined;
+  const sampleOverview = useMemo(() => sample?.overview(range), [sample, range]);
+  const overview = sampleOn ? sampleOverview : realOverview;
   const slug = params.get("page");
   const page = slug ? (pages?.find((p) => p.slug === slug) ?? null) : null;
   const base = `/dashboard/pages/${brand.slug}/analytics`;
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-6">
-      <PageHeader
-        title="Analytics"
-        description={page ? "One page in depth: who came, what they did and where they clicked." : "How each page performs with the people it was built for."}
-        actions={
-          <Segmented
-            value={String(range) as "7" | "14" | "30"}
-            onChange={(v) => setRange(Number(v) as Range)}
-            options={[
-              { value: "7", label: "7 days" },
-              { value: "14", label: "14 days" },
-              { value: "30", label: "30 days" },
-            ]}
-          />
-        }
-      />
-      {pages === undefined ? (
-        <PageSkeleton />
-      ) : pages.length === 0 ? (
-        <EmptyState title="No pages to measure" body="Create and publish a page; its traffic shows up here within seconds." />
-      ) : page ? (
-        <PageReport
-          key={page._id}
-          page={page}
-          pages={pages}
-          overview={overview}
-          range={range}
-          onSelect={(s) => router.replace(`${base}?page=${encodeURIComponent(s)}`, { scroll: false })}
-          onBack={() => router.push(base)}
+    <SampleProvider value={sample}>
+      <div className="mx-auto w-full max-w-7xl px-6 py-6">
+        <PageHeader
+          title="Analytics"
+          description={page ? "One page in depth: who came, what they did and where they clicked." : "How each page performs with the people it was built for."}
+          actions={
+            <div className="flex items-center gap-4">
+              <label className="flex cursor-pointer items-center gap-2 text-sm">
+                <Switch checked={sampleOn} onCheckedChange={setSampleOn} />
+                Sample data
+              </label>
+              <Segmented
+                value={String(range) as "7" | "14" | "30"}
+                onChange={(v) => setRange(Number(v) as Range)}
+                options={[
+                  { value: "7", label: "7 days" },
+                  { value: "14", label: "14 days" },
+                  { value: "30", label: "30 days" },
+                ]}
+              />
+            </div>
+          }
         />
-      ) : (
-        <AllPages pages={pages} overview={overview} range={range} onOpen={(s) => router.push(`${base}?page=${encodeURIComponent(s)}`)} />
-      )}
-    </div>
+        {sampleOn && (
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border bg-muted/40 px-4 py-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground ring-1 ring-foreground/10">
+              <FlaskConical className="size-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">You are looking at sample data</p>
+              <p className="text-sm text-muted-foreground">
+                Made up in your browser to show how these reports read once real visitors arrive. Nothing is saved, and real visits keep counting while it is on.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setSampleOn(false)}>
+              Show real data
+            </Button>
+          </div>
+        )}
+        {pages === undefined ? (
+          <PageSkeleton />
+        ) : pages.length === 0 ? (
+          <EmptyState title="No pages to measure" body="Create and publish a page; its traffic shows up here within seconds." />
+        ) : page ? (
+          <PageReport
+            key={page._id}
+            page={page}
+            pages={pages}
+            overview={overview}
+            range={range}
+            onSelect={(s) => router.replace(`${base}?page=${encodeURIComponent(s)}`, { scroll: false })}
+            onBack={() => router.push(base)}
+          />
+        ) : (
+          <AllPages pages={pages} overview={overview} range={range} onOpen={(s) => router.push(`${base}?page=${encodeURIComponent(s)}`)} />
+        )}
+      </div>
+    </SampleProvider>
   );
 }

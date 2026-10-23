@@ -41,6 +41,7 @@ import { useBrand } from "../brand-context";
 import { relativeTime } from "../shared";
 import { gridColor, heatLegend } from "./colors";
 import { type HeatMode, useHeatLayer } from "./heat-layer";
+import { hasForm, measureTargets, type Target as ClickTarget, useSample, useSampleSetting } from "./sample";
 
 /* Shapes from pagesEvents.stats / heatmap ----------------------------------------- */
 
@@ -53,12 +54,12 @@ interface Totals {
   engagedMs: number;
 }
 
-interface DayRow extends Totals {
+export interface DayRow extends Totals {
   day: string;
   clicks: number;
 }
 
-interface Stats {
+export interface Stats {
   daily: DayRow[];
   byDevice: Record<string, number>;
   byBrowser: Record<string, number>;
@@ -68,10 +69,13 @@ interface Stats {
   hourly: number[][];
 }
 
-interface Heatmap {
+export interface Heatmap {
   points: { sectionId: string; x: number; y: number; label?: string }[];
   sections: Record<string, { seen: number; clicks: number }>;
 }
+
+export type ActivityRow = Pick<EventRow, "_id" | "type" | "at" | "sessionId" | "label" | "sectionId" | "city" | "country" | "device" | "source">;
+export type LeadRow = Pick<FormRow, "_id" | "at" | "sectionId" | "fields">;
 
 export type Range = 7 | 14 | 30;
 
@@ -333,7 +337,16 @@ const titleCase = (s: string) => s.replace(/[-_]+/g, " ").replace(/^\w/, (c) => 
 
 function ClickMap({ page, variant, sessions, from, to, range }: { page: Page; variant: Variant; sessions: number | undefined; from: string; to: string; range: Range }) {
   const brand = useBrand();
-  const heatmap = useQuery(api.pagesEvents.heatmap, { variantId: variant._id, from, to }) as Heatmap | undefined;
+  const sample = useSample();
+  const real = useQuery(api.pagesEvents.heatmap, sample ? "skip" : { variantId: variant._id, from, to }) as Heatmap | undefined;
+  // Sample clicks land on the page's real controls, measured once the preview has loaded.
+  const [targets, setTargets] = useState<ClickTarget[] | null>(null);
+  const made = useMemo(() => {
+    if (!sample || !targets) return undefined;
+    const doc = docOf(variant) as { sections?: { id: string }[] } | null;
+    return sample.heatmap(page._id, targets, (doc?.sections ?? []).map((s) => s.id), from, to);
+  }, [sample, targets, variant, page._id, from, to]);
+  const heatmap = sample ? made : real;
   const [mode, setMode] = useState<HeatMode>("clicks");
   const [list, setList] = useState<"sections" | "elements">("sections");
   const [hover, setHover] = useState<string | null>(null);
@@ -418,6 +431,10 @@ function ClickMap({ page, variant, sessions, from, to, range }: { page: Page; va
                 onLoad={() => {
                   detach.current?.();
                   detach.current = layer.attach();
+                  const doc = frame.current?.contentDocument;
+                  if (!doc) return;
+                  setTargets(measureTargets(doc));
+                  void doc.fonts?.ready.then(() => setTargets(measureTargets(doc)));
                 }}
               />
             </div>
@@ -691,11 +708,14 @@ const ACTIVITY: Record<string, { verb: string; icon: LucideIcon; tone?: string }
   outbound: { verb: "Left via a link", icon: ExternalLink },
 };
 
-function LiveActivity({ page, sectionName }: { page: Page; sectionName: (id: string) => string }) {
-  const recent = useQuery(api.pagesEvents.recent, { pageId: page._id, take: 150 }) as EventRow[] | undefined;
+function LiveActivity({ page, variant, sectionName }: { page: Page; variant: Variant | null; sectionName: (id: string) => string }) {
+  const sample = useSample();
+  const real = useQuery(api.pagesEvents.recent, sample ? "skip" : { pageId: page._id, take: 150 }) as ActivityRow[] | undefined;
+  const made = useMemo(() => sample?.recent(page._id, variant), [sample, page._id, variant]);
+  const recent = sample ? made : real;
   // A CTA press also sends a plain click; show it once.
   const rows = useMemo(() => {
-    const out: EventRow[] = [];
+    const out: ActivityRow[] = [];
     for (const e of recent ?? []) {
       if (!ACTIVITY[e.type]) continue;
       if (e.type === "click" && out.some((o) => o.type === "cta_click" && o.sessionId === e.sessionId && Math.abs(o.at - e.at) < 5)) continue;
@@ -757,8 +777,23 @@ const fieldRank = (k: string) => {
   return i < 0 ? FIELD_ORDER.length : i;
 };
 
-function Leads({ page, sectionName, hasSection }: { page: Page; sectionName: (id: string) => string; hasSection: (id: string) => boolean }) {
-  const forms = useQuery(api.pagesEvents.forms, { pageId: page._id, take: 200 }) as FormRow[] | undefined;
+/** Why a page without a form has no leads, and where its CTA sends people instead. */
+function noFormNote(page: Page) {
+  const { label, href } = page.brief.cta;
+  let host = "";
+  try {
+    host = new URL(href).host;
+  } catch {
+    // a relative or empty link
+  }
+  return `This page has no form, so it collects no leads.${host && label ? ` “${label}” takes people on to ${host}.` : ""}`;
+}
+
+function Leads({ page, variant, sectionName, hasSection }: { page: Page; variant: Variant | null; sectionName: (id: string) => string; hasSection: (id: string) => boolean }) {
+  const sample = useSample();
+  const real = useQuery(api.pagesEvents.forms, sample ? "skip" : { pageId: page._id, take: 200 }) as LeadRow[] | undefined;
+  const made = useMemo(() => sample?.forms(page._id, variant), [sample, page._id, variant]);
+  const forms = sample ? made : real;
   // Fields anyone filled in, best first; the section column only when it names one of the page's sections.
   const columns = useMemo(() => {
     const set = new Set<string>();
@@ -786,7 +821,7 @@ function Leads({ page, sectionName, hasSection }: { page: Page; sectionName: (id
       {forms === undefined ? (
         <Skeleton className="m-4 h-24" />
       ) : forms.length === 0 ? (
-        <p className="px-4 py-8 text-center text-sm text-muted-foreground">No one has sent the form yet.</p>
+        <p className="px-4 py-8 text-center text-sm text-muted-foreground">{hasForm(variant) ? "No one has sent the form yet." : noFormNote(page)}</p>
       ) : (
         <div className="scrollbar-thin max-h-[26rem] overflow-auto">
           <Table>
@@ -825,8 +860,13 @@ function Leads({ page, sectionName, hasSection }: { page: Page; sectionName: (id
 
 export function PageAnalytics({ page, variant, range }: { page: Page; variant: Variant | null; range: Range }) {
   const w = useWindow(range);
-  const stats = useQuery(api.pagesEvents.stats, { pageId: page._id, from: w.from, to: w.to }) as Stats | undefined;
-  const prev = useQuery(api.pagesEvents.stats, { pageId: page._id, from: w.prevFrom, to: w.prevTo }) as Stats | undefined;
+  const sample = useSample();
+  const [, setSample] = useSampleSetting();
+  const realStats = useQuery(api.pagesEvents.stats, sample ? "skip" : { pageId: page._id, from: w.from, to: w.to }) as Stats | undefined;
+  const realPrev = useQuery(api.pagesEvents.stats, sample ? "skip" : { pageId: page._id, from: w.prevFrom, to: w.prevTo }) as Stats | undefined;
+  const made = useMemo(() => sample && { stats: sample.stats(page._id, w.from, w.to), prev: sample.stats(page._id, w.prevFrom, w.prevTo) }, [sample, page._id, w]);
+  const stats = made ? made.stats : realStats;
+  const prev = made ? made.prev : realPrev;
   const sessions = stats ? sum(stats.daily).sessions : undefined;
 
   const { sectionName, hasSection } = useMemo(() => {
@@ -837,7 +877,19 @@ export function PageAnalytics({ page, variant, range }: { page: Page; variant: V
 
   return (
     <div className="space-y-6">
-      <MetricOverview stats={stats} prev={prev} range={range} window={w} />
+      <MetricOverview
+        stats={stats}
+        prev={prev}
+        range={range}
+        window={w}
+        emptyAction={
+          !sample && (
+            <Button variant="outline" size="sm" onClick={() => setSample(true)}>
+              Preview with sample data
+            </Button>
+          )
+        }
+      />
 
       {variant?.doc ? (
         <ClickMap key={variant._id} page={page} variant={variant} sessions={sessions} from={w.from} to={w.to} range={range} />
@@ -870,10 +922,10 @@ export function PageAnalytics({ page, variant, range }: { page: Page; variant: V
           <PanelHeader title="When people visit" hint={`Page views by weekday and hour, last ${range} days`} />
           <div className="p-4">{stats ? <WeekGrid hourly={stats.hourly ?? []} /> : <Skeleton className="h-[220px]" />}</div>
         </Panel>
-        <LiveActivity page={page} sectionName={sectionName} />
+        <LiveActivity page={page} variant={variant} sectionName={sectionName} />
       </div>
 
-      <Leads page={page} sectionName={sectionName} hasSection={hasSection} />
+      <Leads page={page} variant={variant} sectionName={sectionName} hasSection={hasSection} />
     </div>
   );
 }
