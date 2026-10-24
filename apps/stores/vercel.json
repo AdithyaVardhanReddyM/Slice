@@ -1,0 +1,5 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/only-store.mjs && turbo run build",
+  "ignoreCommand": "sh scripts/vercel-ignore.sh"
+}
