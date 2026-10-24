@@ -2,12 +2,13 @@
 
 import {
   ArrowUpRight,
+  Check,
   ChevronLeft,
   ChevronRight,
   X,
   UserStar,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Pick } from "./types";
 import { Chip, money } from "./ui";
@@ -35,13 +36,44 @@ function fitLabel(pick: Pick): { text: string; title: string } | null {
     const pct = Math.round(((r.pool - r.position) / (r.pool - 1)) * 100);
     return {
       text: `${pct}% match`,
-      title: `Fits your taste better than ${pct}% of the ${r.pool} products in this store. Tap to see why.`,
+      title: `Fits your taste better than ${pct}% of the ${r.pool} pieces I compared. Tap to see why.`,
     };
   }
   if (pick.fit !== undefined && pick.fit !== null) {
     return { text: `${Math.round(pick.fit * 100)}% match`, title: "How closely this fits your taste. Tap to see why." };
   }
   return null;
+}
+
+const andList = (xs: string[]) =>
+  xs.length < 2 ? (xs[0] ?? "") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
+
+/**
+ * Why the pick suits the shopper, as short sentences built from what the
+ * ranker actually matched. The ask only counts when the shopper asked for
+ * something: with no keywords the ranker scores every product 1 on it.
+ */
+function matchReasons(pick: Pick, labels?: Record<string, string>): ReactNode[] {
+  const m = pick.matched ?? {};
+  const lower = (xs: string[] | undefined, n: number) => (xs ?? []).slice(0, n).map((x) => x.toLowerCase());
+  const out: ReactNode[] = [];
+  if (m.keywords?.length) out.push(<>Has the <b>{andList(lower(m.keywords, 2))}</b> you asked for</>);
+  if (m.styles?.length) out.push(<><b>{styleLabel(m.styles[0], labels)}</b>, one of your styles</>);
+  const tags = m.tags?.length ? m.tags : m.terms;
+  if (tags?.length) out.push(<>Qloo links your taste to <b>{andList(lower(tags, 2))}</b></>);
+  if (m.materials?.length) out.push(<>Made in <b>{andList(lower(m.materials, 2))}</b>, materials you like</>);
+  if (m.palette?.length) out.push(<>In <b>{andList(lower(m.palette, 2))}</b>, colors you like</>);
+  if (m.brand) out.push(<>From <b>{m.brand}</b>, a brand you&apos;d like</>);
+  return out.slice(0, 3);
+}
+
+/** What the percent on the pill means, in one sentence. */
+function rankNote(pick: Pick): string | null {
+  const r = pick.rank;
+  if (!r || r.pool < 2) return null;
+  if (r.position === 1) return `Your closest fit of the ${r.pool} pieces I compared.`;
+  const pct = Math.round(((r.pool - r.position) / (r.pool - 1)) * 100);
+  return `A closer fit for you than ${pct}% of the ${r.pool} pieces I compared.`;
 }
 
 /** Picks laid out as a horizontal, snapping rail with a scroll track and step buttons. */
@@ -185,6 +217,8 @@ export function ProductCard({
   const m = pick.matched ?? {};
   const open = () => p.url && onOpen(p.url, p.id);
   const fit = showFit ? fitLabel(pick) : null;
+  const reasons = matchReasons(pick, styleLabels);
+  const note = rankNote(pick);
 
   const evidence = [
     ...(m.tags ?? [])
@@ -256,31 +290,25 @@ export function ProductCard({
           </button>
         )}
 
-        {why && pick.breakdown && (
-          <div className="absolute inset-0 flex flex-col justify-end rounded-[inherit] bg-white/90 p-3 backdrop-blur-md">
-            <dl className="space-y-1.5 text-[11.5px] text-[var(--ink-2)]">
-              {(
-                [
-                  ["Style", pick.breakdown.style],
-                  ["Qloo tags", pick.breakdown.terms],
-                  ["Palette & material", pick.breakdown.details],
-                  ["Brand affinity", pick.breakdown.brand],
-                  ["Your ask", pick.breakdown.intent],
-                ] as const
-              ).map(([label, v]) => (
-                <div key={label} className="flex items-center gap-2">
-                  <dt className="w-[104px] shrink-0 truncate">{label}</dt>
-                  <dd className="flex flex-1 items-center gap-1.5">
-                    <span className="bar h-1 flex-1">
-                      <i style={{ width: `${Math.round(v * 100)}%` }} />
-                    </span>
-                    <span className="w-6 text-right tabular-nums">
-                      {Math.round(v * 100)}
-                    </span>
-                  </dd>
-                </div>
-              ))}
-            </dl>
+        {why && (
+          <div className="absolute inset-0 flex flex-col justify-end rounded-[inherit] bg-white/90 px-3 pb-3 pt-12 backdrop-blur-md">
+            {reasons.length > 0 ? (
+              <ul className="space-y-1.5">
+                {reasons.map((r, i) => (
+                  <li key={i} className="flex gap-1.5 text-[12px] leading-snug text-[var(--ink-2)] [&_b]:font-semibold [&_b]:text-[var(--ink)]">
+                    <Check className="mt-px size-3.5 shrink-0 text-[var(--tang)]" strokeWidth={2.5} />
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="line-clamp-4 text-[12px] leading-snug text-[var(--ink-2)]">{pick.reason}</p>
+            )}
+            {note && (
+              <p className="mt-2.5 border-t border-[var(--line)] pt-2 text-[11px] leading-snug text-[var(--mute)]">
+                {note}
+              </p>
+            )}
           </div>
         )}
       </div>

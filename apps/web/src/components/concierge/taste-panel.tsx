@@ -9,8 +9,8 @@ import { Trace } from "./trace";
 
 // The panel reads top to bottom as one story: what you told me (the
 // constellation), what that says about you (the reading, with the terms it
-// rests on highlighted), how that maps to this store (styles), and the threads
-// the picks will follow. Everything Qloo returned in full sits folded at the end.
+// rests on highlighted), your styles in this store, and what I look for in
+// every pick. Everything Qloo returned in full sits folded at the end.
 
 const TAG_GROUPS: [string, string][] = [
   ["personal_style", "Personal style"],
@@ -38,6 +38,9 @@ const TONE_CLASS: Record<Tone, string> = {
   tag: "bg-[var(--qloo-soft)]",
   brand: "bg-[var(--cream-2)]",
 };
+
+/** A style's weight in words; a bare "40" means nothing to a shopper. */
+const strength = (w: number) => (w >= 0.75 ? "Strong" : w >= 0.45 ? "Medium" : "Light");
 
 export function TastePanel({
   profile,
@@ -154,8 +157,9 @@ export function TastePanel({
 
           {/* Styles in this store */}
           <section>
-            <Eyebrow>How that maps to {storeName}</Eyebrow>
-            <ul className="mt-2 divide-y divide-[var(--line-2)]">
+            <Eyebrow>Your styles at {storeName}</Eyebrow>
+            <p className="mt-0.5 text-[12px] text-[var(--mute)]">The looks I pick from first. Tap one to see why.</p>
+            <ul className="mt-1.5 divide-y divide-[var(--line-2)]">
               {styles.map((s) => {
                 const open = openStyle === s.id;
                 return (
@@ -170,9 +174,7 @@ export function TastePanel({
                       <span className="flex-1">
                         <Bar value={s.weight} tone="sun" />
                       </span>
-                      <span className="w-7 text-right text-[12px] tabular-nums text-[var(--mute)]">
-                        {Math.round(s.weight * 100)}
-                      </span>
+                      <span className="w-12 text-right text-[12px] text-[var(--mute)]">{strength(s.weight)}</span>
                       <ChevronDown
                         className={cn("size-4 shrink-0 text-[var(--mute)] transition-transform", open && "rotate-180")}
                       />
@@ -188,13 +190,13 @@ export function TastePanel({
             </ul>
           </section>
 
-          {/* Threads the picks follow */}
+          {/* What every pick is checked against */}
           {(inStore.length > 0 || (brief && (brief.palette.length > 0 || brief.materials.length > 0))) && (
             <section>
-              <Eyebrow>Threads your picks follow</Eyebrow>
+              <Eyebrow>What I look for in your picks</Eyebrow>
               <div className="mt-2.5 space-y-2.5">
                 {inStore.length > 0 && (
-                  <Row label="Brands here">
+                  <Row label="Brands">
                     {inStore.slice(0, 6).map((b) => (
                       <Chip key={b.id} tone="neutral" title={`Affinity ${Math.round(b.affinity * 100)}`}>
                         {b.name}
@@ -221,7 +223,7 @@ export function TastePanel({
                   </Row>
                 )}
                 {brief && brief.avoid.length > 0 && (
-                  <Row label="Probably not">
+                  <Row label="Not for you">
                     {brief.avoid.slice(0, 5).map((a) => (
                       <Chip key={a} tone="neutral" className="opacity-70">
                         {a}
