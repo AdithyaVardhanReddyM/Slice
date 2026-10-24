@@ -8,7 +8,6 @@ import {
   conciergeDefaults,
   defaultDomains,
   demoProfiles,
-  installState,
   ostroCatalog,
   ostroProfile,
   type CatalogPreview,
@@ -212,10 +211,5 @@ export function setupDataFor(widget: Widget) {
     catalog: key ? demoCatalog(widget, key) : ostroCatalog,
     concierge: conciergeDefaults[widget.id] ?? conciergeDefaults.ostro,
     domains: defaultDomains[widget.id] ?? ["music", "film", "travel"],
-    install: installState[widget.id] ?? {
-      domains: [
-        { host: widget.domain, status: "pending" as const, primary: true },
-      ],
-    },
   };
 }

@@ -188,15 +188,17 @@ export function DeltaChip({
   );
 }
 
-/** A store or brand initial on its own colour, for places with no logo. */
+/** A store or brand logo on white, or its initial on its own colour when it has no logo. */
 export function Initial({
   name,
   color,
+  logo,
   className,
   style,
 }: {
   name: string;
   color: string;
+  logo?: string;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -205,11 +207,18 @@ export function Initial({
       aria-hidden
       className={cn(
         "flex size-5 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold text-white",
+        logo && "bg-white ring-1 ring-black/[0.08]",
         className,
       )}
-      style={{ background: color, ...style }}
+      style={logo ? style : { background: color, ...style }}
     >
-      {name.slice(0, 1)}
+      {logo ? (
+        // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt="" className="size-[62%] object-contain" />
+      ) : (
+        name.slice(0, 1)
+      )}
     </span>
   );
 }

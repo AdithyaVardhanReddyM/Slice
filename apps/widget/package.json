@@ -1,6 +1,6 @@
 {
   "name": "@slice/widget",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "slice.js — the script tag merchants embed on their site",
   "type": "module",

@@ -10,12 +10,12 @@ export const HOME_RANGES = [7, 14] as const;
 export type HomeRange = (typeof HOME_RANGES)[number];
 
 export interface FunnelTotals {
+  visitors: number;
   conversations: number;
   recsShown: number;
   clicks: number;
   addToCart: number;
-  purchases: number;
-  revenue: number;
+  cartValue: number;
 }
 
 export interface ConciergeRangeData {
@@ -26,21 +26,10 @@ export interface ConciergeRangeData {
   /** Every widget in the range summed, oldest first. */
   daily: {
     date: string;
-    revenue: number;
+    cartValue: number;
     conversations: number;
     addToCart: number;
   }[];
-}
-
-export interface HomePick {
-  id: string;
-  name: string;
-  price: number;
-  image: string | null;
-  widgetId: string;
-  widgetName: string;
-  picked: number;
-  carted: number;
 }
 
 export interface HomeConversation {
@@ -48,10 +37,12 @@ export interface HomeConversation {
   widgetId: string;
   widgetName: string;
   accent: string;
+  logo?: string;
   city: string;
   intent: string;
   outcome: Outcome;
-  revenue: number;
+  /** Price of the picks the shopper added to their cart. */
+  carted: number;
   startedAt: string;
   picks: { id: string; name: string; image: string | null }[];
 }
@@ -62,30 +53,30 @@ export interface ConciergeHome {
     name: string;
     domain: string;
     accent: string;
+    logo?: string;
     status: string;
   }[];
   ranges: Record<HomeRange, ConciergeRangeData>;
-  picks: HomePick[];
   recent: HomeConversation[];
 }
 
 const KEYS = [
+  "visitors",
   "conversations",
   "recsShown",
   "clicks",
   "addToCart",
-  "purchases",
-  "revenue",
+  "cartValue",
 ] as const;
 
 function sum(days: DailyMetric[]): FunnelTotals {
   const t = {
+    visitors: 0,
     conversations: 0,
     recsShown: 0,
     clicks: 0,
     addToCart: 0,
-    purchases: 0,
-    revenue: 0,
+    cartValue: 0,
   };
   for (const d of days) for (const k of KEYS) t[k] += d[k];
   return t;
@@ -111,11 +102,11 @@ export function rangeData(span: number, ids?: string[]): ConciergeRangeData {
   totals.all = merge(live.map((id) => totals[id]));
   prev.all = merge(live.map((id) => prev[id]));
   const daily = metrics[live[0]].slice(-span).map((d, i) => {
-    const day = (k: "revenue" | "conversations" | "addToCart") =>
+    const day = (k: "cartValue" | "conversations" | "addToCart") =>
       live.reduce((s, id) => s + metrics[id].slice(-span)[i][k], 0);
     return {
       date: d.date,
-      revenue: day("revenue"),
+      cartValue: day("cartValue"),
       conversations: day("conversations"),
       addToCart: day("addToCart"),
     };
@@ -134,15 +125,20 @@ export function recent(widgetId?: string): HomeConversation[] {
     .slice(0, 6)
     .map((c) => {
       const widget = widgets.find((w) => w.id === c.widgetId)!;
+      const carted = c.messages
+        .flatMap((m) => m.recs ?? [])
+        .filter((r) => r.addedToCart)
+        .reduce((s, r) => s + product(r.productId).price, 0);
       return {
         id: c.id,
         widgetId: widget.id,
         widgetName: widget.name,
         accent: widget.accent,
+        logo: widget.logo,
         city: c.shopper.city,
         intent: c.intent,
         outcome: c.outcome,
-        revenue: c.revenue,
+        carted,
         startedAt: c.startedAt,
         picks: finalRecs(c)
           .slice(0, 3)

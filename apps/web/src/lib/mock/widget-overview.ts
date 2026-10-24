@@ -6,24 +6,14 @@ import {
   type ConciergeRangeData,
   type HomeConversation,
 } from "./home";
-import type { QlooEntityType, Widget } from "./types";
+import { personas } from "./personas";
+import type { Widget } from "./types";
 
 // A widget's Overview, computed on the server so the catalog and conversation
 // mocks stay out of the browser bundle.
 
 export const OVERVIEW_RANGES = [7, 14, 30] as const;
 export type OverviewRange = (typeof OVERVIEW_RANGES)[number];
-
-const TYPE_LABEL: Record<QlooEntityType, string> = {
-  artist: "Artist",
-  movie: "Film",
-  tv_show: "TV show",
-  book: "Book",
-  person: "Person",
-  place: "Destination",
-  brand: "Brand",
-  podcast: "Podcast",
-};
 
 export interface OverviewProduct {
   id: string;
@@ -37,11 +27,12 @@ export interface OverviewProduct {
   matchedOn: string | null;
 }
 
-export interface OverviewSignal {
-  name: string;
-  type: string;
+export interface OverviewGroup {
+  label: string;
+  summary: string;
   share: number;
-  mapsTo: string | null;
+  /** Their strongest style on the store's own axis. */
+  style: string | null;
 }
 
 export interface OverviewGap {
@@ -55,13 +46,15 @@ export interface OverviewGap {
 export interface WidgetOverviewData {
   widget: Pick<
     Widget,
-    "id" | "name" | "domain" | "accent" | "status" | "vertical"
+    "id" | "name" | "domain" | "accent" | "logo" | "status" | "vertical"
   >;
   ranges: Record<OverviewRange, ConciergeRangeData>;
   sample: number;
   products: OverviewProduct[];
-  signals: OverviewSignal[];
+  groups: OverviewGroup[];
   gaps: OverviewGap[];
+  /** Share of conversations where nothing in the catalog fit. */
+  noMatch: number;
   recent: HomeConversation[];
 }
 
@@ -74,39 +67,24 @@ export function widgetOverview(widget: Widget): WidgetOverviewData {
   ) as Record<OverviewRange, ConciergeRangeData>;
   const monthly = ranges[30].totals.all.conversations;
 
-  const entities = new Map<
-    string,
-    {
-      name: string;
-      type: QlooEntityType;
-      count: number;
-      styles: Map<string, number>;
-    }
-  >();
-  for (const c of convs) {
-    for (const e of c.profile.entities) {
-      const cur = entities.get(e.name) ?? {
-        name: e.name,
-        type: e.type,
-        count: 0,
-        styles: new Map(),
+  const byGroup = new Map<string, number>();
+  for (const c of convs)
+    byGroup.set(c.persona, (byGroup.get(c.persona) ?? 0) + 1);
+  const groups = [...byGroup.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([label, count]) => {
+      const persona = personas.find(
+        (p) => p.store === store && p.label === label,
+      );
+      const top = persona?.styles[0]?.style;
+      return {
+        label,
+        summary: persona?.summary ?? "",
+        share: count / n,
+        style: top ? styleLabel(store, top) : null,
       };
-      cur.count++;
-      const top = c.profile.styles[0];
-      if (top) cur.styles.set(top.label, (cur.styles.get(top.label) ?? 0) + 1);
-      entities.set(e.name, cur);
-    }
-  }
-  const signals = [...entities.values()]
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 6)
-    .map((e) => ({
-      name: e.name,
-      type: TYPE_LABEL[e.type],
-      share: e.count / n,
-      mapsTo:
-        [...e.styles.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
-    }));
+    });
 
   const stats = new Map<
     string,
@@ -183,14 +161,16 @@ export function widgetOverview(widget: Widget): WidgetOverviewData {
       name: widget.name,
       domain: widget.domain,
       accent: widget.accent,
+      logo: widget.logo,
       status: widget.status,
       vertical: widget.vertical,
     },
     ranges,
     sample: n,
     products,
-    signals,
+    groups,
     gaps,
+    noMatch: convs.filter((c) => c.outcome === "no_match").length / n,
     recent: recent(widget.id),
   };
 }

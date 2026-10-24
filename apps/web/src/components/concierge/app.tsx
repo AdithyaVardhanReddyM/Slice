@@ -277,6 +277,25 @@ export function ConciergeApp() {
     );
   }
 
+  // Switched off in Settings: the store record is live, so an open concierge closes at once.
+  if (store?.paused) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 px-10 text-center">
+        <p className="text-[15px] font-medium">{store.name}&apos;s concierge is taking a break</p>
+        <p className="text-[13px] text-[var(--mute)]">Check back soon.</p>
+        {framed && (
+          <button
+            type="button"
+            onClick={() => send({ type: "slice:close" })}
+            className="mt-3 rounded-full border border-black/10 px-4 py-1.5 text-[13px] font-medium"
+          >
+            Close
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-full">
       {screen === "welcome" && (

@@ -20,8 +20,9 @@ export interface Widget {
   /** Demo catalog backing the mock. Real widgets read their own catalog. */
   storeKey: StoreKey | null;
   createdAt: string;
-  publicKey: string;
   accent: string;
+  /** Square brand mark; widgets without one show their initial on `accent`. */
+  logo?: string;
   completedSteps: SetupStep[];
   catalog: {
     source: CatalogSourceKind | null;
@@ -36,7 +37,8 @@ export interface Widget {
     conversationsDelta: number;
     recCtr: number;
     addToCart: number;
-    influencedRevenue: number;
+    /** Price of the picks shoppers added to their cart. */
+    cartValue: number;
   };
   /** Conversations per day, last 14 days. */
   spark: number[];
@@ -106,8 +108,8 @@ export interface Shopper {
   returning: boolean;
 }
 
+/** How a chat ended, as far as the widget can see: checkout happens in the merchant's systems. */
 export type Outcome =
-  | "purchased"
   | "added_to_cart"
   | "clicked"
   | "browsing"
@@ -207,7 +209,6 @@ export interface Conversation {
   profile: TasteProfile;
   messages: Message[];
   traces: TurnTrace[];
-  revenue: number;
   /** Unmet need, when outcome is no_match. */
   gap?: string;
 }

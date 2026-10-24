@@ -1,29 +1,31 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
-  CircleCheck,
-  CircleMinus,
-} from "lucide-react";
-import { Badge, Kbd } from "@/components/console/primitives";
+import { ArrowUpRight, ChevronDown, ChevronUp, CircleCheck } from "lucide-react";
+import { Kbd } from "@/components/console/primitives";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetFooter,
-  SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { fmt } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { INFERRED_CLASS, ReadinessMeter, Thumb, ValueChip } from "./atoms";
 import type { CatalogRow } from "./types";
+
+/** Readiness checks, phrased as what to add. */
+const ADD: Record<string, string> = {
+  "Description depth": "A longer description",
+  "Style tagged": "A style",
+  Material: "Another material",
+  Colors: "Another color",
+  "Use cases": "More use cases",
+  Room: "A room",
+  Occasion: "An occasion",
+  Fit: "A fit",
+};
 
 export function ProductDrawer({
   row,
@@ -51,7 +53,7 @@ export function ProductDrawer({
             onStep(-1);
           }
         }}
-        className="gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
+        className="gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md"
       >
         {row && <DrawerBody row={row} onStep={onStep} position={position} />}
       </SheetContent>
@@ -69,24 +71,30 @@ function DrawerBody({
   position: { index: number; total: number } | null;
 }) {
   const enriched = new Set(row.enriched);
-  const isInferred = (field: string, value: string) =>
-    enriched.has(`${field}:${value}`);
-  const contextLabel = row.attrs.contextField === "room" ? "Room" : "Occasion";
-  const words = row.description.trim().split(/\s+/).length;
-  const passing = row.readiness.checks.filter((c) => c.ok).length;
+  const missing = row.readiness.checks.filter((c) => !c.ok);
+  const opened = Math.round(row.stats.recommended * row.stats.ctr);
+  const details: [string, string[], string][] = [
+    ["Materials", row.attrs.material, "material"],
+    ["Colors", row.attrs.colors, "colors"],
+    ["Good for", row.attrs.useCase, "useCase"],
+    [
+      row.attrs.contextField === "room" ? "Room" : "Occasion",
+      row.attrs.context,
+      row.attrs.contextField,
+    ],
+    ["Fit", row.attrs.fit ? [row.attrs.fit] : [], "fit"],
+    ["Season", row.attrs.season, "season"],
+  ];
 
   return (
     <>
-      <div className="flex h-14 flex-none items-center gap-1 border-b pr-12 pl-4">
-        <span className="text-sm text-muted-foreground">
-          How Slice reads this product
-        </span>
+      <div className="flex h-14 flex-none items-center gap-1 border-b pr-12 pl-5">
+        {position && (
+          <span className="num text-sm text-muted-foreground">
+            {position.index + 1} of {position.total}
+          </span>
+        )}
         <span className="ml-auto flex items-center gap-1">
-          {position && (
-            <span className="num mr-1 text-sm text-muted-foreground">
-              {position.index + 1} of {position.total}
-            </span>
-          )}
           <Button
             variant="ghost"
             size="icon-sm"
@@ -106,209 +114,134 @@ function DrawerBody({
         </span>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-6">
-        <SheetHeader className="flex-row gap-4 p-6 pb-4">
-          <Thumb src={row.image} size={72} className="rounded-lg" />
-          <div className="min-w-0 flex-1 space-y-1">
-            {row.brand && (
-              <div className="text-sm text-muted-foreground">{row.brand}</div>
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+        <div>
+          <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-black/[0.04]">
+            {row.image && (
+              // Merchant-hosted images; next/image would need every merchant CDN allow-listed.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={row.image} alt="" className="size-full object-cover" />
             )}
-            <SheetTitle className="text-lg font-semibold tracking-tight">
-              {row.name}
-            </SheetTitle>
-            <SheetDescription className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span>
-                {row.category} / {row.subcategory}
-              </span>
-              <span className="num text-foreground">
-                {fmt.money(row.price)}
-                {row.compareAtPrice && (
-                  <span className="ml-1.5 text-muted-foreground line-through">
-                    {fmt.money(row.compareAtPrice)}
-                  </span>
-                )}
-              </span>
-              <span>{row.id}</span>
-            </SheetDescription>
           </div>
-        </SheetHeader>
-
-        <div className="mx-6 grid grid-cols-2 divide-x rounded-lg border sm:grid-cols-4">
-          <MiniStat
-            label="Recommended, 7d"
-            value={fmt.int(row.stats.recommended)}
-          />
-          <MiniStat
-            label="CTR"
-            value={row.stats.recommended ? fmt.pct(row.stats.ctr, 0) : "—"}
-          />
-          <MiniStat label="Add to cart" value={fmt.int(row.stats.addToCart)} />
-          <div className="space-y-1 px-3 py-2.5">
-            <div className="text-xs text-muted-foreground">Readiness</div>
-            <div className="num text-lg font-semibold">
-              {row.readiness.score}
+          <div className="mt-4 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <SheetTitle className="text-lg leading-snug font-semibold tracking-tight">
+                {row.name}
+              </SheetTitle>
+              <SheetDescription>
+                {row.brand ? `${row.brand}, ` : `${row.category}, `}
+                {row.subcategory}
+              </SheetDescription>
             </div>
+            <p className="num shrink-0 text-right text-lg font-semibold text-neutral-950">
+              {fmt.money(row.price)}
+              {row.compareAtPrice && (
+                <span className="block text-sm font-normal text-muted-foreground line-through">
+                  {fmt.money(row.compareAtPrice)}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
-        <Section
-          title="What the concierge reads"
-          aside={<span className="num">{words} words</span>}
-        >
-          <p className="leading-relaxed text-muted-foreground">
+        {missing.length > 0 ? (
+          <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-900/[0.06]">
+            <p className="text-sm font-medium text-amber-950">
+              Add these to help the concierge match it
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-amber-900">
+              {missing.map((c) => (
+                <li key={c.label} className="flex justify-between gap-3">
+                  <span>{ADD[c.label] ?? c.label}</span>
+                  <span className="text-amber-800/80">{c.detail}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="flex items-center gap-2 rounded-2xl bg-emerald-50 p-4 text-sm font-medium text-emerald-800">
+            <CircleCheck className="size-4 shrink-0" />
+            Ready. The concierge has what it needs to match this product.
+          </p>
+        )}
+
+        <dl className="grid grid-cols-3 divide-x divide-black/[0.06] rounded-2xl ring-1 ring-black/[0.06]">
+          {(
+            [
+              ["Picked, 7d", row.stats.recommended],
+              ["Opened", opened],
+              ["Added to cart", row.stats.addToCart],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label} className="px-4 py-3">
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className="num mt-0.5 text-lg font-semibold text-neutral-950">
+                {fmt.int(value)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <Section title="What the concierge reads">
+          <p className="text-sm leading-relaxed text-neutral-700">
             {row.description}
           </p>
         </Section>
 
-        <Section
-          title="Attributes"
-          aside={
-            row.enriched.length > 0 ? (
-              <Badge className={INFERRED_CLASS}>Enriched by Slice</Badge>
-            ) : null
-          }
-        >
-          <dl className="grid grid-cols-4 gap-x-4 gap-y-3">
-            <AttrRow label="Style">
-              {row.styles.map((s) => (
-                <Badge key={s.id}>{s.label}</Badge>
-              ))}
-            </AttrRow>
-            <AttrRow label="Material">
-              {row.attrs.material.map((v) => (
-                <ValueChip key={v} inferred={isInferred("material", v)}>
-                  {v}
-                </ValueChip>
-              ))}
-            </AttrRow>
-            <AttrRow label="Colors">
-              {row.attrs.colors.map((v) => (
-                <ValueChip key={v}>{v}</ValueChip>
-              ))}
-              {row.attrs.colorFamily.map((v) => (
-                <ValueChip
-                  key={`f-${v}`}
-                  inferred={isInferred("colorFamily", v)}
-                >
-                  Family: {v}
-                </ValueChip>
-              ))}
-            </AttrRow>
-            <AttrRow label="Use case">
-              {row.attrs.useCase.map((v) => (
-                <ValueChip key={v} inferred={isInferred("useCase", v)}>
-                  {v}
-                </ValueChip>
-              ))}
-            </AttrRow>
-            <AttrRow label={contextLabel}>
-              {row.attrs.context.map((v) => (
-                <ValueChip
-                  key={v}
-                  inferred={isInferred(row.attrs.contextField, v)}
-                >
-                  {v}
-                </ValueChip>
-              ))}
-            </AttrRow>
-            {row.attrs.fit && (
-              <AttrRow label="Fit">
-                <ValueChip>{row.attrs.fit}</ValueChip>
-              </AttrRow>
-            )}
-            {row.attrs.season.length > 0 && (
-              <AttrRow label="Season">
-                {row.attrs.season.map((v) => (
-                  <ValueChip key={v}>{v}</ValueChip>
+        <Section title="Details">
+          <dl className="space-y-2.5 text-sm">
+            <Detail label="Style">
+              <span className="flex flex-wrap gap-1.5">
+                {row.styles.map((s) => (
+                  <span
+                    key={s.id}
+                    className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-800"
+                  >
+                    {s.label}
+                  </span>
                 ))}
-              </AttrRow>
-            )}
-            <AttrRow label="Price tier">
-              <ValueChip>{row.attrs.priceTier}</ValueChip>
-            </AttrRow>
-          </dl>
-        </Section>
-
-        <Section title="Taste tags it tends to match" aside="Qloo affinity">
-          <p className="mb-3 text-muted-foreground">
-            Shoppers whose taste profile carries these tags score this product
-            higher. Derived from its style{row.styles.length > 1 ? "s" : ""}:{" "}
-            {row.styles.map((s) => s.label).join(" and ")}.
-          </p>
-          <ul className="divide-y rounded-lg border">
-            {row.tags.map((t) => (
-              <li key={t.id} className="flex h-10 items-center gap-3 px-3">
-                <span className="min-w-0 flex-1 truncate">
-                  {t.name}
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    urn:tag:keyword
+              </span>
+            </Detail>
+            {details
+              .filter(([, values]) => values.length > 0)
+              .map(([label, values, field]) => (
+                <Detail key={label} label={label}>
+                  {values.map((v, i) => (
+                    <span key={v}>
+                      {i > 0 && ", "}
+                      <span
+                        className={cn(
+                          enriched.has(`${field}:${v}`) &&
+                            "font-medium text-orange-700",
+                        )}
+                      >
+                        {v}
+                      </span>
+                    </span>
+                  ))}
+                </Detail>
+              ))}
+            <Detail label="Options">
+              {row.variants.map((v, i) => (
+                <span key={v.label}>
+                  {i > 0 && ", "}
+                  <span
+                    className={cn(
+                      !v.inStock && "text-muted-foreground line-through",
+                    )}
+                  >
+                    {v.label}
                   </span>
                 </span>
-                <Progress
-                  value={t.weight * 100}
-                  className="w-24"
-                  aria-label={`${t.name} affinity`}
-                />
-                <span className="num w-10 text-right">
-                  {t.weight.toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section
-          title="Readiness checks"
-          aside={
-            <span className="flex items-center gap-2">
-              <span className="num">
-                {passing} of {row.readiness.checks.length} pass
-              </span>
-              <ReadinessMeter
-                score={row.readiness.score}
-                tier={row.readiness.tier}
-                showLabel
-              />
-            </span>
-          }
-        >
-          <ul className="space-y-2">
-            {row.readiness.checks.map((c) => (
-              <li key={c.label} className="flex items-center gap-2.5">
-                {c.ok ? (
-                  <CircleCheck className="size-4 flex-none text-emerald-600" />
-                ) : (
-                  <CircleMinus className="size-4 flex-none text-amber-600" />
-                )}
-                <span>{c.label}</span>
-                <span className="ml-auto text-muted-foreground">
-                  {c.detail}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section
-          title="Variants"
-          aside={
-            <span className="num">
-              {row.inStock} of {row.variants.length} in stock
-            </span>
-          }
-        >
-          <div className="flex flex-wrap gap-1.5">
-            {row.variants.map((v) => (
-              <ValueChip
-                key={v.label}
-                className={cn(
-                  !v.inStock && "text-muted-foreground line-through",
-                )}
-              >
-                {v.label}
-              </ValueChip>
-            ))}
-          </div>
+              ))}
+            </Detail>
+          </dl>
+          {row.enriched.length > 0 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              <span className="font-medium text-orange-700">Orange</span>{" "}
+              details were filled in by Slice from the description.
+            </p>
+          )}
         </Section>
       </div>
 
@@ -332,43 +265,20 @@ function DrawerBody({
   );
 }
 
-function Section({
-  title,
-  aside,
-  children,
-}: {
-  title: string;
-  aside?: ReactNode;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="px-6 pt-6">
-      <Separator className="mb-6" />
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="font-medium">{title}</h3>
-        {aside && (
-          <span className="text-sm text-muted-foreground">{aside}</span>
-        )}
-      </div>
+    <section>
+      <h3 className="mb-2 text-sm font-medium text-neutral-950">{title}</h3>
       {children}
     </section>
   );
 }
 
-function AttrRow({ label, children }: { label: string; children: ReactNode }) {
+function Detail({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="contents">
-      <dt className="pt-0.5 text-muted-foreground">{label}</dt>
-      <dd className="col-span-3 flex flex-wrap gap-1.5">{children}</dd>
-    </div>
-  );
-}
-
-function MiniStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1 px-3 py-2.5">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="num text-lg font-semibold">{value}</div>
+    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-3">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-neutral-900">{children}</dd>
     </div>
   );
 }

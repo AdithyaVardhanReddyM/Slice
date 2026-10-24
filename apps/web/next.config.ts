@@ -17,14 +17,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      {
-        // The widget iframes these routes from merchant sites.
-        // TODO: narrow to each merchant's registered domains.
-        source: "/embed/:path*",
-        headers: [
-          { key: "Content-Security-Policy", value: "frame-ancestors *" },
-        ],
-      },
+      // /embed gets a per-store frame-ancestors from src/proxy.ts.
       {
         source: "/((?!embed).*)",
         headers: [

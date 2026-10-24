@@ -3,9 +3,13 @@
 // bridges what only the host page knows: which page the shopper is on, the
 // product they're looking at, and the shopper's profile and transcript, which
 // live in the host page's storage because third-party iframe storage is
-// partitioned per site.
+// partitioned per site. Before showing anything it pings Slice, once per
+// shopper session, which records the install and says whether this site is
+// one of the store's allowed domains.
 
-const APP_URL = import.meta.env.VITE_SLICE_APP_URL ?? "http://localhost:3000";
+declare const __SLICE_VERSION__: string | undefined;
+/** Set at build time; a dev server that predates the define reports "dev". */
+const VERSION = typeof __SLICE_VERSION__ === "string" ? __SLICE_VERSION__ : "dev";
 
 type PageContext = {
   url: string;
@@ -197,117 +201,148 @@ function boot() {
   });
   (window as unknown as { slice: { track: typeof track } }).slice = { track };
 
-  const host = document.createElement("div");
-  host.id = "slice-root";
-  const shadow = host.attachShadow({ mode: "open" });
-  shadow.innerHTML = `
-    <style>${styles}</style>
-    <iframe class="panel" title="Slice concierge" hidden allow="clipboard-write"></iframe>
-    <div class="teaser" hidden role="button" tabindex="0">
-      <button class="x" type="button" aria-label="Dismiss">×</button>
-      <strong>Can't decide?</strong>
-      <span>Tell me three things you love and I'll pick what matches your taste.</span>
-    </div>
-    <button class="launcher" type="button" aria-label="Open Slice concierge" aria-expanded="false">
-      ${logo}<span class="label">Curated for you</span>
-    </button>
-  `;
+  // Where Slice lives: the dev server while developing, otherwise wherever
+  // this script was served from (the app serves /slice.js beside the concierge).
+  const appUrl = import.meta.env.DEV
+    ? (import.meta.env.VITE_SLICE_APP_URL ?? "http://localhost:3000")
+    : new URL(script!.src, location.href).origin;
 
-  const panel = shadow.querySelector<HTMLIFrameElement>("iframe")!;
-  const launcher = shadow.querySelector<HTMLButtonElement>(".launcher")!;
-  const teaser = shadow.querySelector<HTMLDivElement>(".teaser")!;
-  const embedOrigin = new URL(APP_URL).origin;
+  const mount = () => {
+    const host = document.createElement("div");
+    host.id = "slice-root";
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = `
+      <style>${styles}</style>
+      <iframe class="panel" title="Slice concierge" hidden allow="clipboard-write"></iframe>
+      <div class="teaser" hidden role="button" tabindex="0">
+        <button class="x" type="button" aria-label="Dismiss">×</button>
+        <strong>Can't decide?</strong>
+        <span>Tell me three things you love and I'll pick what matches your taste.</span>
+      </div>
+      <button class="launcher" type="button" aria-label="Open Slice concierge" aria-expanded="false">
+        ${logo}<span class="label">Curated for you</span>
+      </button>
+    `;
 
-  const sendContext = () => {
-    let messages: unknown[] = [];
-    try {
-      messages = JSON.parse(get(storage.transcript, sessionStorage) ?? "[]");
-    } catch {
-      messages = [];
+    const panel = shadow.querySelector<HTMLIFrameElement>("iframe")!;
+    const launcher = shadow.querySelector<HTMLButtonElement>(".launcher")!;
+    const teaser = shadow.querySelector<HTMLDivElement>(".teaser")!;
+    const embedOrigin = new URL(appUrl).origin;
+
+    const sendContext = () => {
+      let messages: unknown[] = [];
+      try {
+        messages = JSON.parse(get(storage.transcript, sessionStorage) ?? "[]");
+      } catch {
+        messages = [];
+      }
+      panel.contentWindow?.postMessage(
+        {
+          type: "slice:context",
+          key,
+          sessionId,
+          profileId: get(storage.profile),
+          page,
+          messages,
+          signals: readSignals(),
+          mobile: window.matchMedia("(max-width: 640px)").matches,
+        },
+        embedOrigin,
+      );
+    };
+
+    const hideTeaser = () => {
+      teaser.classList.remove("show");
+      teaser.hidden = true;
+    };
+
+    const load = () => {
+      if (!panel.src) panel.src = `${appUrl}/embed/concierge?key=${encodeURIComponent(key)}`;
+    };
+    const setOpen = (open: boolean) => {
+      if (open) load();
+      panel.hidden = !open;
+      launcher.setAttribute("aria-expanded", String(open));
+      set(storage.open, open ? "1" : null, sessionStorage);
+      if (open) hideTeaser();
+    };
+
+    launcher.addEventListener("click", () => setOpen(panel.hidden));
+    teaser.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).classList.contains("x")) {
+        hideTeaser();
+        set(storage.teased, "1");
+        return;
+      }
+      setOpen(true);
+    });
+
+    window.addEventListener("message", (ev: MessageEvent) => {
+      if (ev.origin !== embedOrigin || ev.source !== panel.contentWindow) return;
+      const msg = ev.data as { type?: string } & Record<string, unknown>;
+      switch (msg?.type) {
+        case "slice:ready":
+          sendContext();
+          break;
+        case "slice:state":
+          set(storage.profile, (msg.profileId as string | null) ?? null);
+          set(storage.transcript, JSON.stringify((msg.messages as unknown[]) ?? []).slice(0, 400_000), sessionStorage);
+          break;
+        case "slice:navigate":
+          track("click", msg.productId);
+          if (typeof msg.url === "string") location.href = msg.url;
+          break;
+        case "slice:close":
+          setOpen(false);
+          launcher.focus({ preventScroll: true });
+          break;
+      }
+    });
+
+    document.body.append(host);
+
+    // Stay open across page loads within the session; otherwise nudge once.
+    if (get(storage.open, sessionStorage) === "1") {
+      setOpen(true);
+    } else if (get(storage.profile) || get(storage.transcript, sessionStorage)) {
+      // A returning shopper: load the concierge in the background so its opener
+      // (picks for this page) is ready the moment they tap the launcher.
+      const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void })
+        .requestIdleCallback;
+      if (idle) idle(load, { timeout: 2500 });
+      else setTimeout(load, 1200);
+    } else if (!get(storage.teased) && !get(storage.profile)) {
+      setTimeout(() => {
+        if (!panel.hidden) return;
+        teaser.hidden = false;
+        requestAnimationFrame(() => teaser.classList.add("show"));
+        setTimeout(hideTeaser, 14000);
+      }, 6000);
     }
-    panel.contentWindow?.postMessage(
-      {
-        type: "slice:context",
-        key,
-        sessionId,
-        profileId: get(storage.profile),
-        page,
-        messages,
-        signals: readSignals(),
-        mobile: window.matchMedia("(max-width: 640px)").matches,
-      },
-      embedOrigin,
-    );
   };
 
-  const hideTeaser = () => {
-    teaser.classList.remove("show");
-    teaser.hidden = true;
-  };
-
-  const load = () => {
-    if (!panel.src) panel.src = `${APP_URL}/embed/concierge?key=${encodeURIComponent(key)}`;
-  };
-  const setOpen = (open: boolean) => {
-    if (open) load();
-    panel.hidden = !open;
-    launcher.setAttribute("aria-expanded", String(open));
-    set(storage.open, open ? "1" : null, sessionStorage);
-    if (open) hideTeaser();
-  };
-
-  launcher.addEventListener("click", () => setOpen(panel.hidden));
-  teaser.addEventListener("click", (e) => {
-    if ((e.target as HTMLElement).classList.contains("x")) {
-      hideTeaser();
-      set(storage.teased, "1");
-      return;
-    }
-    setOpen(true);
-  });
-
-  window.addEventListener("message", (ev: MessageEvent) => {
-    if (ev.origin !== embedOrigin || ev.source !== panel.contentWindow) return;
-    const msg = ev.data as { type?: string } & Record<string, unknown>;
-    switch (msg?.type) {
-      case "slice:ready":
-        sendContext();
-        break;
-      case "slice:state":
-        set(storage.profile, (msg.profileId as string | null) ?? null);
-        set(storage.transcript, JSON.stringify((msg.messages as unknown[]) ?? []).slice(0, 400_000), sessionStorage);
-        break;
-      case "slice:navigate":
-        track("click", msg.productId);
-        if (typeof msg.url === "string") location.href = msg.url;
-        break;
-      case "slice:close":
-        setOpen(false);
-        launcher.focus({ preventScroll: true });
-        break;
-    }
-  });
-
-  document.body.append(host);
-
-  // Stay open across page loads within the session; otherwise nudge once.
-  if (get(storage.open, sessionStorage) === "1") {
-    setOpen(true);
-  } else if (get(storage.profile) || get(storage.transcript, sessionStorage)) {
-    // A returning shopper: load the concierge in the background so its opener
-    // (picks for this page) is ready the moment they tap the launcher.
-    const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void })
-      .requestIdleCallback;
-    if (idle) idle(load, { timeout: 2500 });
-    else setTimeout(load, 1200);
-  } else if (!get(storage.teased) && !get(storage.profile)) {
-    setTimeout(() => {
-      if (!panel.hidden) return;
-      teaser.hidden = false;
-      requestAnimationFrame(() => teaser.classList.add("show"));
-      setTimeout(hideTeaser, 14000);
-    }, 6000);
-  }
+  // Ask Slice whether this site may run the concierge, which also records the
+  // install for the console. Once per shopper session.
+  const allowedKey = `slice:${key}:allowed`;
+  if (get(allowedKey, sessionStorage) === "1") mount();
+  else
+    // A text/plain body keeps this a simple request: no CORS preflight.
+    fetch(`${appUrl}/api/widget/ping`, {
+      method: "POST",
+      body: JSON.stringify({ key, page: location.pathname, version: VERSION }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res: { allowed?: boolean } | null) => {
+        if (!res?.allowed) {
+          console.warn(
+            `[slice] ${location.hostname} isn't an allowed domain for this store. Add it on the Install page in Slice.`,
+          );
+          return;
+        }
+        set(allowedKey, "1", sessionStorage);
+        mount();
+      })
+      .catch(() => console.warn("[slice] couldn't reach Slice, so the concierge stays hidden"));
 }
 
 if (document.readyState === "loading") {

@@ -58,6 +58,8 @@ export const storeFields = {
   description: v.string(),
   /** Absolute URL of a square mark, shown next to the store name in the concierge. */
   logo: v.optional(v.string()),
+  /** Paused from Settings: slice.js stops showing the launcher and an open concierge closes. */
+  paused: v.optional(v.boolean()),
   currency: v.string(),
   /** "home" | "fashion" | ... free-form, for the agent's framing. */
   vertical: v.string(),
@@ -279,6 +281,30 @@ export default defineSchema({
   }).index("by_hash", ["hash"]),
 
   stores: defineTable(storeFields).index("by_key", ["key"]),
+
+  /** Sites a store's concierge may run on. No rows means anywhere (widgetInstall.ts). */
+  widgetDomains: defineTable({
+    storeKey: v.string(),
+    /** A hostname, or "*.example.com" for every subdomain. */
+    host: v.string(),
+    addedAt: v.number(),
+  })
+    .index("by_store", ["storeKey"])
+    .index("by_store_host", ["storeKey", "host"]),
+
+  /** Where slice.js has loaded: one row per store and host, refreshed at most once a minute. */
+  widgetPings: defineTable({
+    storeKey: v.string(),
+    host: v.string(),
+    /** Whether the host was allowed when it last pinged. */
+    allowed: v.boolean(),
+    page: v.string(),
+    version: v.string(),
+    firstSeenAt: v.number(),
+    lastSeenAt: v.number(),
+  })
+    .index("by_store", ["storeKey"])
+    .index("by_store_host", ["storeKey", "host"]),
 
   products: defineTable(productFields)
     .index("by_store", ["storeKey"])

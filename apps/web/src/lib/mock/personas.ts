@@ -32,11 +32,15 @@ export interface Scenario {
   outcomes: Outcome[];
   /** For no_match scenarios: the unmet need. */
   gap?: string;
+  /** How often it comes up against the persona's other scenarios. Defaults to 1. */
+  weight?: number;
 }
 
 export interface Persona {
   id: string;
   label: string;
+  /** One line a merchant reads: the group's taste in plain words. */
+  summary: string;
   store: StoreKey;
   entities: PersonaEntity[];
   tags: PersonaTag[];
@@ -59,6 +63,7 @@ export const personas: Persona[] = [
   {
     id: "quiet-naturalist",
     label: "Quiet naturalist",
+    summary: "Calm, natural and Nordic. Pale wood, linen and soft paper light.",
     store: "marlow",
     entities: [
       { name: "Bon Iver", type: "artist", source: "questionnaire" },
@@ -116,6 +121,7 @@ export const personas: Persona[] = [
       ["Portland", "OR"],
       ["Seattle", "WA"],
       ["Minneapolis", "MN"],
+      ["Brooklyn", "NY"],
     ],
     scenarios: [
       {
@@ -136,7 +142,7 @@ export const personas: Persona[] = [
             "Washed cotton in a muted clay or natural would keep it quiet. The Sato set is the closest match to the lamp's warmth.",
           picks: ["mw-bed-03", "mw-liv-34", "mw-liv-30"],
         },
-        outcomes: ["purchased", "added_to_cart", "added_to_cart", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "added_to_cart", "clicked"],
       },
       {
         intent: "Housewarming gift under $80",
@@ -149,7 +155,7 @@ export const personas: Persona[] = [
         constraints: ["gift", "≤ $80"],
         picks: ["mw-dec-09", "mw-kit-22", "mw-dec-01"],
         alsoRan: ["mw-dec-07", "mw-dec-05", "mw-kit-10", "mw-dec-11"],
-        outcomes: ["added_to_cart", "clicked", "purchased"],
+        outcomes: ["added_to_cart", "clicked", "added_to_cart"],
       },
       {
         intent: "Small living room shelving",
@@ -170,6 +176,7 @@ export const personas: Persona[] = [
   {
     id: "warm-retro",
     label: "Warm retro romantic",
+    summary: "Nostalgic and warm. Burnt orange, brass and a little 1970s whimsy.",
     store: "marlow",
     entities: [
       { name: "Wes Anderson", type: "person", source: "chat" },
@@ -217,6 +224,7 @@ export const personas: Persona[] = [
       ["Austin", "TX"],
       ["Los Angeles", "CA"],
       ["Chicago", "IL"],
+      ["Brooklyn", "NY"],
     ],
     scenarios: [
       {
@@ -237,7 +245,7 @@ export const personas: Persona[] = [
             "The Disco table has the same smoked glass and chrome as the Arlo's shade, so the corner reads as one idea.",
           picks: ["mw-liv-16", "mw-dec-11", "mw-liv-14"],
         },
-        outcomes: ["purchased", "added_to_cart", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "clicked"],
       },
       {
         intent: "Dinner party table",
@@ -257,6 +265,7 @@ export const personas: Persona[] = [
   {
     id: "after-dark-glam",
     label: "After-dark glam",
+    summary: "Bold and glamorous. Velvet, brass and jewel tones for evenings in.",
     store: "marlow",
     entities: [
       { name: "Beyoncé", type: "artist", source: "questionnaire" },
@@ -292,8 +301,9 @@ export const personas: Persona[] = [
     ],
     cities: [
       ["Atlanta", "GA"],
-      ["New York", "NY"],
+      ["Brooklyn", "NY"],
       ["Miami", "FL"],
+      ["Los Angeles", "CA"],
     ],
     scenarios: [
       {
@@ -308,7 +318,7 @@ export const personas: Persona[] = [
         constraints: ["statement piece", "comfortable", "≤ $900"],
         picks: ["mw-liv-08", "mw-lgt-05", "mw-liv-28"],
         alsoRan: ["mw-liv-04", "mw-liv-06", "mw-liv-22"],
-        outcomes: ["purchased", "added_to_cart", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "clicked"],
       },
       {
         intent: "Bar cart styling",
@@ -327,6 +337,7 @@ export const personas: Persona[] = [
   {
     id: "rustic-folk",
     label: "Folk & farmhouse",
+    summary: "Cozy and pastoral. Stoneware, wool and soft, faded colour.",
     store: "marlow",
     entities: [
       { name: "Fleet Foxes", type: "artist", source: "questionnaire" },
@@ -376,6 +387,7 @@ export const personas: Persona[] = [
       ["Burlington", "VT"],
       ["Asheville", "NC"],
       ["Madison", "WI"],
+      ["Portland", "OR"],
     ],
     scenarios: [
       {
@@ -389,7 +401,7 @@ export const personas: Persona[] = [
         constraints: ["cozy", "fall"],
         picks: ["mw-liv-06", "mw-liv-26", "mw-lgt-07"],
         alsoRan: ["mw-liv-32", "mw-liv-30", "mw-liv-02"],
-        outcomes: ["added_to_cart", "purchased", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "clicked"],
       },
       {
         intent: "Outdoor rug",
@@ -409,6 +421,7 @@ export const personas: Persona[] = [
   {
     id: "line-cook",
     label: "Line-cook industrial",
+    summary: "Urban and hands-on. Steel, cast iron and tools that get used.",
     store: "marlow",
     entities: [
       { name: "The Bear", type: "tv_show", source: "questionnaire" },
@@ -447,6 +460,7 @@ export const personas: Persona[] = [
       ["Chicago", "IL"],
       ["Brooklyn", "NY"],
       ["Philadelphia", "PA"],
+      ["Austin", "TX"],
     ],
     scenarios: [
       {
@@ -460,7 +474,7 @@ export const personas: Persona[] = [
         constraints: ["durable", "no nonstick"],
         picks: ["mw-kit-02", "mw-kit-34", "mw-kit-22"],
         alsoRan: ["mw-kit-06", "mw-kit-04", "mw-kit-24"],
-        outcomes: ["purchased", "added_to_cart"],
+        outcomes: ["added_to_cart", "added_to_cart"],
       },
       {
         intent: "Sleeper sofa",
@@ -481,6 +495,7 @@ export const personas: Persona[] = [
   {
     id: "coastal-ease",
     label: "Coastal ease",
+    summary: "Relaxed and sun-washed. White linen, jute and sea-salt blues.",
     store: "marlow",
     entities: [
       { name: "The White Lotus", type: "tv_show", source: "questionnaire" },
@@ -534,6 +549,8 @@ export const personas: Persona[] = [
       ["San Diego", "CA"],
       ["Charleston", "SC"],
       ["Santa Cruz", "CA"],
+      ["Los Angeles", "CA"],
+      ["Miami", "FL"],
     ],
     scenarios: [
       {
@@ -547,7 +564,7 @@ export const personas: Persona[] = [
         constraints: ["airy", "no nautical motifs"],
         picks: ["mw-bed-01", "mw-lgt-11", "mw-dec-23"],
         alsoRan: ["mw-bed-03", "mw-dec-15", "mw-kit-26"],
-        outcomes: ["added_to_cart", "clicked", "purchased", "abandoned"],
+        outcomes: ["added_to_cart", "clicked", "added_to_cart", "abandoned"],
       },
     ],
   },
@@ -556,6 +573,7 @@ export const personas: Persona[] = [
   {
     id: "night-street",
     label: "Night-shift streetwear",
+    summary: "Loud and made for after dark. Nylon, metallics and Y2K edges.",
     store: "fold",
     entities: [
       { name: "Kendrick Lamar", type: "artist", source: "questionnaire" },
@@ -600,6 +618,7 @@ export const personas: Persona[] = [
       ["Los Angeles", "CA"],
       ["Brooklyn", "NY"],
       ["Houston", "TX"],
+      ["Chicago", "IL"],
     ],
     scenarios: [
       {
@@ -613,13 +632,14 @@ export const personas: Persona[] = [
         constraints: ["night out", "≤ $300 total"],
         picks: ["fd-bot-11", "fd-bag-09", "fd-ftw-04"],
         alsoRan: ["fd-ftw-12", "fd-out-23", "fd-bot-07"],
-        outcomes: ["purchased", "added_to_cart", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "clicked"],
       },
     ],
   },
   {
     id: "trail-quiet",
     label: "Trailhead quiet",
+    summary: "Outdoorsy and practical. Earthy layers that work on the trail and in town.",
     store: "fold",
     entities: [
       { name: "Bon Iver", type: "artist", source: "questionnaire" },
@@ -657,6 +677,7 @@ export const personas: Persona[] = [
       ["Denver", "CO"],
       ["Portland", "OR"],
       ["Salt Lake City", "UT"],
+      ["Seattle", "WA"],
     ],
     scenarios: [
       {
@@ -669,13 +690,28 @@ export const personas: Persona[] = [
         constraints: ["fall", "hike-to-town"],
         picks: ["fd-out-19", "fd-ftw-16", "fd-bag-07"],
         alsoRan: ["fd-out-21", "fd-ftw-08", "fd-bag-05"],
-        outcomes: ["added_to_cart", "purchased", "clicked"],
+        outcomes: ["added_to_cart", "added_to_cart", "clicked"],
+      },
+      {
+        intent: "Waterproof hiking trousers",
+        opener:
+          "Do you have waterproof trousers for hiking in the rain? Mine soak through by lunch.",
+        reply:
+          "We don't carry rain trousers yet, and I won't pass off ripstop as waterproof. For wet hikes, a proper shell up top does most of the work.",
+        category: ["Trousers", "Shells & fleece"],
+        constraints: ["waterproof", "hiking"],
+        picks: ["fd-out-20", "fd-out-21", "fd-bot-09"],
+        alsoRan: ["fd-bot-10", "fd-out-22"],
+        outcomes: ["no_match"],
+        gap: "Rain trousers",
+        weight: 0.2,
       },
     ],
   },
   {
     id: "quiet-minimal",
     label: "Gallery-quiet minimal",
+    summary: "Understated and precise. Ecru, charcoal and clean lines.",
     store: "fold",
     entities: [
       { name: "Past Lives", type: "movie", source: "questionnaire" },
@@ -716,8 +752,10 @@ export const personas: Persona[] = [
     ],
     cities: [
       ["San Francisco", "CA"],
-      ["New York", "NY"],
+      ["Brooklyn", "NY"],
       ["Boston", "MA"],
+      ["Portland", "OR"],
+      ["Los Angeles", "CA"],
     ],
     scenarios: [
       {
@@ -730,7 +768,21 @@ export const personas: Persona[] = [
         constraints: ["office", "capsule"],
         picks: ["fd-top-16", "fd-top-24", "fd-ftw-10"],
         alsoRan: ["fd-dre-04", "fd-out-15", "fd-bot-15"],
-        outcomes: ["purchased", "added_to_cart", "browsing"],
+        outcomes: ["added_to_cart", "added_to_cart", "browsing"],
+      },
+      {
+        intent: "Plain black swimsuit",
+        opener:
+          "Looking for a simple black swimsuit, nothing loud. Do you have any?",
+        reply:
+          "We don't carry swimwear yet. If you're packing for somewhere warm, these are the quietest pieces we have for the beach.",
+        category: ["Dresses", "Shorts", "Hats"],
+        constraints: ["swimwear", "minimal"],
+        picks: ["fd-dre-06", "fd-bot-19", "fd-acc-05"],
+        alsoRan: ["fd-bot-13"],
+        outcomes: ["no_match"],
+        gap: "Swimwear",
+        weight: 0.2,
       },
     ],
   },

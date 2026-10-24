@@ -23,7 +23,6 @@ import { cn } from "@/lib/utils";
 const SECTION_LABELS: Record<string, string> = {
   conversations: "Conversations",
   taste: "Taste insights",
-  activity: "Signal log",
   catalog: "Catalog",
   install: "Install",
   settings: "Settings",
@@ -38,8 +37,12 @@ export function Topbar() {
   const pathname = usePathname();
   const widget = getWidget(widgetId);
   const base = `/dashboard/concierge/${widgetId}`;
-  // "/dashboard/concierge/marlow/conversations/cnv_1" → ["conversations", "cnv_1"]
-  const parts = pathname.split("/").slice(4).filter(Boolean);
+  // "/dashboard/concierge/marlow/conversations/cnv_1" → ["conversations"]; record
+  // ids stay out of the trail, the page names the record itself.
+  const parts = pathname
+    .split("/")
+    .slice(4)
+    .filter((part) => part in SECTION_LABELS);
 
   const crumbs: { label: string; href?: string }[] = [
     { label: "Concierge", href: "/dashboard/concierge" },
@@ -51,7 +54,7 @@ export function Topbar() {
     parts.forEach((part, i) => {
       const last = i === parts.length - 1;
       crumbs.push({
-        label: SECTION_LABELS[part] ?? part,
+        label: SECTION_LABELS[part],
         href: last ? undefined : `${base}/${parts.slice(0, i + 1).join("/")}`,
       });
     });

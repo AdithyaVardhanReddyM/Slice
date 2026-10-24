@@ -10,7 +10,6 @@ import type {
   ConciergeRangeData,
   FunnelTotals,
   HomeConversation,
-  HomePick,
 } from "@/lib/mock/home";
 import { OutcomeBadge } from "@/components/console/primitives";
 import {
@@ -29,7 +28,6 @@ const STAGES: { key: keyof FunnelTotals; label: string; noun: string }[] = [
   { key: "recsShown", label: "Saw picks", noun: "saw picks" },
   { key: "clicks", label: "Opened a pick", noun: "opened a pick" },
   { key: "addToCart", label: "Added to cart", noun: "added to cart" },
-  { key: "purchases", label: "Purchased", noun: "purchased" },
 ];
 
 /** Share of a column the bar takes; the rest is the slope down to the next stage. */
@@ -114,8 +112,8 @@ export function FunnelCard({
         title="Shopper journey"
         hint={
           p
-            ? `From first message to checkout. Marks show the ${range} days before.`
-            : `From first message to checkout, last ${range} days.`
+            ? `From first message to the cart. Marks show the ${range} days before.`
+            : `From first message to the cart, last ${range} days.`
         }
         actions={
           live.length > 1 && (
@@ -133,6 +131,7 @@ export function FunnelCard({
                       <Initial
                         name={w.name}
                         color={w.accent}
+                        logo={w.logo}
                         className="size-4 rounded-[5px] text-[9px]"
                       />
                       {w.name}
@@ -283,10 +282,10 @@ export function FunnelCard({
         {(
           [
             [
-              "Overall conversion",
-              fmt.pct(ratio(t.purchases, t.conversations)),
-              ratio(t.purchases, t.conversations),
-              p && ratio(p.purchases, p.conversations),
+              "Visitors who chatted",
+              fmt.pct(ratio(t.conversations, t.visitors)),
+              ratio(t.conversations, t.visitors),
+              p && ratio(p.conversations, p.visitors),
             ],
             [
               "Pick click-through",
@@ -295,10 +294,10 @@ export function FunnelCard({
               p && ratio(p.clicks, p.recsShown),
             ],
             [
-              "Average order",
-              fmt.money(ratio(t.revenue, t.purchases)),
-              ratio(t.revenue, t.purchases),
-              p && ratio(p.revenue, p.purchases),
+              "Chat to cart",
+              fmt.pct(ratio(t.addToCart, t.conversations)),
+              ratio(t.addToCart, t.conversations),
+              p && ratio(p.addToCart, p.conversations),
             ],
           ] as const
         ).map(([label, value, now, before]) => (
@@ -317,7 +316,8 @@ export function FunnelCard({
   );
 }
 
-/* Revenue ----------------------------------------------------------------------------------- */
+/* Cart value -------------------------------------------------------------------------------- */
+
 
 const JUICE = [
   "radial-gradient(110% 90% at 0% 0%, #ffe642 0%, rgba(255,230,66,0) 62%)",
@@ -340,7 +340,7 @@ function smooth(pts: [number, number][]) {
   return d;
 }
 
-function RevenueSpark({ values }: { values: number[] }) {
+function CartSpark({ values }: { values: number[] }) {
   const max = Math.max(1, ...values);
   const min = Math.min(...values);
   const pts = values.map(
@@ -388,7 +388,8 @@ function RevenueSpark({ values }: { values: number[] }) {
   );
 }
 
-export function RevenueCard({
+/** What shoppers put in their cart from the concierge's picks: the last step the widget can see. */
+export function CartValueCard({
   data,
   widgets,
   range,
@@ -418,10 +419,10 @@ export function RevenueCard({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-[15px] font-semibold tracking-tight">
-            Revenue influenced
+            Picks added to cart
           </h3>
           <p className="mt-0.5 text-sm text-black/60">
-            Orders that began with a concierge pick
+            Value of concierge picks shoppers put in their cart
           </p>
         </div>
         <Link
@@ -434,12 +435,12 @@ export function RevenueCard({
       </div>
 
       <p className="num mt-7 text-5xl leading-none font-medium tracking-[-0.045em] sm:text-[56px]">
-        {fmt.money(t.revenue)}
+        {fmt.money(t.cartValue)}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-black/65">
         {p ? (
           <>
-            <DeltaChip now={t.revenue} before={p.revenue} inverse />
+            <DeltaChip now={t.cartValue} before={p.cartValue} inverse />
             <span>vs the {range} days before</span>
           </>
         ) : (
@@ -448,19 +449,19 @@ export function RevenueCard({
       </div>
 
       <div className="mt-6 flex min-h-20 flex-1 flex-col *:flex-1">
-        <RevenueSpark values={data.daily.map((d) => d.revenue)} />
+        <CartSpark values={data.daily.map((d) => d.cartValue)} />
       </div>
 
       {children ?? (
         <ul className="mt-5 space-y-3 border-t border-black/10 pt-5">
           {live.map((w) => {
-            const rev = data.totals[w.id]?.revenue ?? 0;
-            const share = ratio(rev, t.revenue);
+            const rev = data.totals[w.id]?.cartValue ?? 0;
+            const share = ratio(rev, t.cartValue);
             return (
               <li key={w.id}>
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="flex min-w-0 items-center gap-2 font-medium">
-                    <Initial name={w.name} color={w.accent} />
+                    <Initial name={w.name} color={w.accent} logo={w.logo} />
                     <span className="truncate">{w.name}</span>
                   </span>
                   <span className="num shrink-0">
@@ -554,6 +555,7 @@ export function RecentConversations({
                   <Initial
                     name={c.widgetName}
                     color={c.accent}
+                    logo={c.logo}
                     className="size-3.5 rounded-[4px] text-[8px]"
                   />
                   {c.widgetName}, shopper in {c.city}
@@ -565,12 +567,12 @@ export function RecentConversations({
               <span
                 className={cn(
                   "num hidden text-right text-sm sm:block",
-                  c.revenue
+                  c.carted
                     ? "font-semibold text-neutral-950"
                     : "text-muted-foreground",
                 )}
               >
-                {c.revenue ? fmt.money(c.revenue) : "—"}
+                {c.carted ? fmt.money(c.carted) : "—"}
               </span>
               <span className="text-right text-xs text-muted-foreground">
                 {fmt.ago(c.startedAt)}
@@ -579,58 +581,6 @@ export function RecentConversations({
           </li>
         ))}
       </ul>
-    </Tile>
-  );
-}
-
-/* Top picks --------------------------------------------------------------------------------- */
-
-export function TopPicks({
-  picks,
-  delay,
-  className,
-}: {
-  picks: HomePick[];
-  delay?: number;
-  className?: string;
-}) {
-  return (
-    <Tile delay={delay} className={cn("flex flex-col", className)}>
-      <TileHeader
-        title="Most picked"
-        hint="Products the concierge recommends most"
-      />
-      <div className="grid flex-1 grid-cols-2 content-start gap-x-3 gap-y-4 p-6 pt-4">
-        {picks.map((p) => (
-          <Link
-            key={p.id}
-            href={`/dashboard/concierge/${p.widgetId}/catalog`}
-            className="group min-w-0"
-          >
-            <span className="relative block aspect-[5/4] overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-black/[0.04]">
-              <RemoteImage
-                src={p.image}
-                alt={p.name}
-                className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-              <span className="absolute top-2 left-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-neutral-800 shadow-sm backdrop-blur">
-                {p.widgetName}
-              </span>
-            </span>
-            <span className="mt-2 block truncate text-sm font-medium text-neutral-950">
-              {p.name}
-            </span>
-            <span className="num mt-0.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-              <span className="truncate">
-                {p.picked} picks, {p.carted} carted
-              </span>
-              <span className="shrink-0 text-neutral-700">
-                {fmt.money(p.price)}
-              </span>
-            </span>
-          </Link>
-        ))}
-      </div>
     </Tile>
   );
 }

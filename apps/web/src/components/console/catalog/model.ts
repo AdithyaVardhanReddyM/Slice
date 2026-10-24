@@ -1,9 +1,9 @@
 import type { Product } from "@slice/demo-catalogs";
-import { hash, slug } from "@/lib/mock/random";
+import { hash } from "@/lib/mock/random";
 
-// How Slice "reads" a product: readiness, mock 7-day stats, inferred
-// attributes and the Qloo tags its style tends to match. Server-only by
-// convention: the page builds plain rows from it and ships only those.
+// How Slice "reads" a product: readiness, mock 7-day stats and inferred
+// attributes. Server-only by convention: the page builds plain rows from it
+// and ships only those.
 
 export type ReadinessTier = "strong" | "good" | "thin";
 
@@ -80,8 +80,8 @@ export function readiness(p: Product): Readiness {
       label: "Use cases",
       weight: 10,
       credit: Math.min(1, a.useCase.length / 3),
-      ok: a.useCase.length >= 3,
-      detail: `${a.useCase.length} listed${a.useCase.length < 3 ? ", aim for 3+" : ""}`,
+      ok: a.useCase.length >= 2,
+      detail: `${a.useCase.length} listed${a.useCase.length < 2 ? ", aim for 2+" : ""}`,
     },
     {
       label: contextLabel,
@@ -117,7 +117,7 @@ export function attributeGaps(p: Product): string[] {
   const a = p.attributes;
   const gaps: string[] = [];
   if (a.colors.length < 2) gaps.push("Fewer than 2 colors");
-  if (a.useCase.length < 3) gaps.push("Fewer than 3 use cases");
+  if (a.useCase.length < 2) gaps.push("Fewer than 2 use cases");
   if (!(a.room ?? a.occasion)?.length)
     gaps.push(a.room ? "No room" : "No occasion");
   if (APPAREL.has(p.category) && !a.fit) gaps.push("No fit");
@@ -163,118 +163,4 @@ export function enrichedAttributes(p: Product): string[] {
   const ctxField = a.room ? "room" : "occasion";
   if ((h >>> 6) % 3 === 0 && ctx?.at(-1)) out.push(`${ctxField}:${ctx.at(-1)}`);
   return out;
-}
-
-/** Plausible Qloo taste tags per catalog style. Mirrors the persona seeds. */
-const STYLE_TAGS: Record<string, string[]> = {
-  // Marlow
-  japandi: [
-    "minimalism",
-    "craftsmanship",
-    "contemplative",
-    "wabi-sabi",
-    "nature",
-  ],
-  "scandi-minimal": [
-    "minimalism",
-    "nordic",
-    "understated",
-    "hygge",
-    "functional",
-  ],
-  "mid-century": [
-    "modernist",
-    "1960s",
-    "symmetry",
-    "nostalgic",
-    "design classic",
-  ],
-  "retro-70s": [
-    "1970s",
-    "nostalgic",
-    "warm color palette",
-    "whimsical",
-    "groovy",
-  ],
-  "art-deco-glam": [
-    "opulent",
-    "glamorous",
-    "jazz age",
-    "romantic",
-    "geometric",
-  ],
-  "cottage-rustic": ["cozy", "pastoral", "autumnal", "folk", "small town"],
-  coastal: ["beach", "breezy", "sun-washed", "relaxed", "mediterranean"],
-  industrial: ["urban", "gritty", "loft", "craft", "culinary"],
-  "boho-global": ["eclectic", "wanderlust", "folk", "handmade", "earthy"],
-  "maximalist-eclectic": [
-    "eclectic",
-    "bold",
-    "whimsical",
-    "layered",
-    "warm color palette",
-  ],
-  // Fold
-  streetwear: ["streetwear", "hip hop", "urban", "bold", "skate"],
-  "gorpcore-outdoor": [
-    "outdoors",
-    "utilitarian",
-    "earthy",
-    "adventure",
-    "technical",
-  ],
-  "quiet-minimal": [
-    "understated",
-    "introspective",
-    "scandinavian",
-    "minimalism",
-    "melancholic",
-  ],
-  "heritage-workwear": [
-    "workwear",
-    "utilitarian",
-    "craftsmanship",
-    "americana",
-    "rugged",
-  ],
-  athletic: ["sporty", "energetic", "performance", "streetwear", "hip hop"],
-  "preppy-ivy": ["preppy", "collegiate", "classic", "new england", "old money"],
-  "romantic-boho": ["romantic", "whimsical", "folk", "dreamy", "vintage"],
-  "y2k-retro": ["y2k", "neon", "nostalgic", "pop", "bold"],
-  "dark-gothic": ["gothic", "dark", "moody", "punk", "melancholic"],
-  "coastal-resort": [
-    "beach",
-    "resort",
-    "sun-washed",
-    "mediterranean",
-    "breezy",
-  ],
-};
-
-export interface MatchedTag {
-  id: string;
-  name: string;
-  weight: number;
-  via: string;
-}
-
-/** Tags a product tends to match, strongest first. Primary style weighs more. */
-export function matchedTags(p: Product): MatchedTag[] {
-  const best = new Map<string, MatchedTag>();
-  p.attributes.style.forEach((style, si) => {
-    (STYLE_TAGS[style] ?? []).forEach((name, ti) => {
-      const jitter = (hash(`${p.id}:${name}`) % 7) / 100;
-      const weight = Math.max(0.3, 0.9 - ti * 0.07 - si * 0.12 - jitter);
-      const prev = best.get(name);
-      if (!prev || prev.weight < weight) {
-        best.set(name, {
-          id: `urn:tag:keyword:qloo:${slug(name)}`,
-          name,
-          weight,
-          via: style,
-        });
-      }
-    });
-  });
-  return [...best.values()].sort((a, b) => b.weight - a.weight).slice(0, 6);
 }

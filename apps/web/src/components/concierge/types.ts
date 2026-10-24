@@ -92,6 +92,8 @@ export interface StoreInfo {
   name: string;
   tagline: string;
   logo?: string;
+  /** The merchant switched the concierge off in Settings. */
+  paused?: boolean;
   vertical: string;
   siteUrl: string;
   styles: { id: string; label: string; description: string }[];

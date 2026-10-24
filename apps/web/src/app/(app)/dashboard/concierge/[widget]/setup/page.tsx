@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PageSkeleton } from "@/components/console/primitives";
 import { setupDataFor } from "@/components/console/setup/setup-data";
 import { SetupFlow } from "@/components/console/setup/setup-flow";
+import { appOrigin } from "@/lib/app-origin";
 import { getWidget } from "@/lib/mock/widgets";
 
 export const metadata: Metadata = { title: "Setup" };
@@ -27,5 +28,11 @@ async function Setup({
   const widget = getWidget(id);
   if (!widget) notFound();
 
-  return <SetupFlow widget={widget} {...setupDataFor(widget)} />;
+  return (
+    <SetupFlow
+      widget={widget}
+      origin={await appOrigin()}
+      {...setupDataFor(widget)}
+    />
+  );
 }

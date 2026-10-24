@@ -1,4 +1,4 @@
-import type { MatchedTag, Readiness, RecStats } from "./model";
+import type { Readiness, RecStats } from "./model";
 
 /** The slice of a product the catalog screen renders. Plain and serializable. */
 export interface CatalogRow {
@@ -31,7 +31,6 @@ export interface CatalogRow {
   stats: RecStats;
   /** `field:value` keys Slice inferred from the description. */
   enriched: string[];
-  tags: MatchedTag[];
   /** Lowercased haystack for client search. */
   haystack: string;
 }

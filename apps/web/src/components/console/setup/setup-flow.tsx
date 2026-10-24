@@ -25,7 +25,6 @@ import { NOW } from "@/lib/mock/random";
 import {
   SETUP_STEPS,
   TASTE_DOMAINS,
-  type AllowedDomain,
   type CatalogPreview,
   type ConciergeDefaults,
   type StoreProfileDraft,
@@ -33,7 +32,7 @@ import {
 } from "@/lib/mock/setup";
 import type { SetupStep, Widget } from "@/lib/mock/types";
 import { cn } from "@/lib/utils";
-import { InstallStep, type LastSeen } from "./install";
+import { InstallStep } from "../install/install-view";
 import { AppearanceStep, type AppearanceConfig } from "./step-appearance";
 import { CatalogStep } from "./step-catalog";
 import { ConciergeStep, type ConciergeConfig } from "./step-concierge";
@@ -79,14 +78,15 @@ export function SetupFlow({
   catalog,
   concierge: conciergeDefaults,
   domains: domainDefaults,
-  install,
+  origin,
 }: {
   widget: Widget;
   profile: StoreProfileDraft;
   catalog: CatalogPreview;
   concierge: ConciergeDefaults;
   domains: TasteDomain[];
-  install: { domains: AllowedDomain[]; lastSeen?: LastSeen };
+  /** This app's origin, which serves slice.js. */
+  origin: string;
 }) {
   const [completed, setCompleted] = useState<SetupStep[]>(
     widget.completedSteps,
@@ -102,7 +102,7 @@ export function SetupFlow({
   const [catalogConnected, setCatalogConnected] = useState(
     widget.catalog.source !== null,
   );
-  const [verified, setVerified] = useState(!!install.lastSeen);
+  const [verified, setVerified] = useState(false);
   const [taste, setTaste] = useState<TasteConfig>({
     domains: domainDefaults,
     questions: Math.min(5, Math.max(3, domainDefaults.length)) as 3 | 4 | 5,
@@ -146,7 +146,7 @@ export function SetupFlow({
     }
   }
 
-  // The install step's verify flips this too, so the review reflects it right away.
+  // The install step flips this when slice.js first loads on an allowed site.
   function markVerified() {
     setVerified(true);
     setCompleted((c) => (c.includes("install") ? c : [...c, "install"]));
@@ -161,7 +161,7 @@ export function SetupFlow({
     taste: `${taste.questions}${taste.localize ? " localized" : ""} questions ${tasteDomains ? `on ${tasteDomains}` : "with no domains"}`,
     concierge: `${concierge.name || "Unnamed"}, ${concierge.recs} ${concierge.recs === 1 ? "pick" : "picks"} per reply`,
     appearance: `${look.accent.toUpperCase()}, bottom ${look.position}`,
-    install: verified ? `Detected on ${widget.domain}` : "Not verified",
+    install: verified ? "Live on your store" : "Not detected yet",
   };
 
   return (
@@ -315,10 +315,8 @@ export function SetupFlow({
               </div>
               <div hidden={step.id !== "install"}>
                 <InstallStep
-                  publicKey={widget.publicKey}
-                  domain={widget.domain}
-                  domains={install.domains}
-                  lastSeen={install.lastSeen}
+                  storeKey={widget.storeKey ?? widget.id}
+                  origin={origin}
                   onVerified={markVerified}
                 />
               </div>

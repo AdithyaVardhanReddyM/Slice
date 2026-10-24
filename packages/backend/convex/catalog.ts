@@ -99,7 +99,13 @@ export async function replaceCatalog(
     .query("stores")
     .withIndex("by_key", (q) => q.eq("key", store.key))
     .unique();
-  const doc = { ...store, productCount: products.length, updatedAt: Date.now() };
+  const doc = {
+    ...store,
+    // A re-import refreshes the catalog; it doesn't switch a paused concierge back on.
+    ...(existing?.paused ? { paused: true } : {}),
+    productCount: products.length,
+    updatedAt: Date.now(),
+  };
   if (existing) await ctx.db.replace(existing._id, doc);
   else await ctx.db.insert("stores", doc);
 

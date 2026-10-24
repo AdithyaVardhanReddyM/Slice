@@ -1,8 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { getWidget } from "@/lib/mock/widgets";
 import { parseRemoved, REMOVED_WIDGETS_COOKIE } from "@/lib/concierge/removed";
 
 async function updateRemoved(change: (ids: Set<string>) => void) {
@@ -16,13 +14,6 @@ async function updateRemoved(change: (ids: Set<string>) => void) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 365,
     });
-}
-
-/** Deletes a widget and returns to the widget list. */
-export async function deleteWidget(id: string) {
-  if (!getWidget(id)) return;
-  await updateRemoved((ids) => ids.add(id));
-  redirect("/dashboard/concierge");
 }
 
 /** Brings a deleted widget back; creating a widget does this for the one it opens. */

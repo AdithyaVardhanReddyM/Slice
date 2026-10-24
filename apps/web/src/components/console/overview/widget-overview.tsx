@@ -11,9 +11,9 @@ import type {
 } from "@/lib/mock/widget-overview";
 import { TrendChart } from "@/components/console/charts";
 import {
+  CartValueCard,
   FunnelCard,
   RecentConversations,
-  RevenueCard,
 } from "@/components/console/home/concierge";
 import {
   PillTabs,
@@ -104,7 +104,7 @@ function ProductsCard({
   );
 }
 
-function SignalsCard({
+function ShoppersCard({
   data,
   base,
   className,
@@ -113,40 +113,33 @@ function SignalsCard({
   base: string;
   className?: string;
 }) {
-  const top = Math.max(...data.signals.map((s) => s.share), 0.01);
+  const top = Math.max(...data.groups.map((g) => g.share), 0.01);
   return (
     <Tile delay={300} className={cn("flex flex-col", className)}>
       <TileHeader
-        title="What shoppers are into"
-        hint={`Qloo signals across ${data.sample} recent conversations`}
-        actions={<TileLink href={`${base}/taste`}>Taste</TileLink>}
+        title="Who's shopping"
+        hint={`Your biggest taste groups, from ${data.sample} shoppers`}
+        actions={<TileLink href={`${base}/taste`}>Taste insights</TileLink>}
       />
-      <ol className="flex-1 space-y-4 px-6 pt-5 pb-6">
-        {data.signals.map((s, i) => (
-          <li
-            key={s.name}
-            className="grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-start gap-x-3"
-          >
-            <span className="num pt-px text-sm text-muted-foreground">
-              {i + 1}
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-neutral-950">
-                {s.name}
+      <ol className="flex-1 space-y-5 px-6 pt-5 pb-6">
+        {data.groups.map((g) => (
+          <li key={g.label}>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="truncate text-sm font-medium text-neutral-950">
+                {g.label}
               </span>
-              <span className="block truncate text-xs text-muted-foreground">
-                {s.type}
-                {s.mapsTo && <>, reads as {s.mapsTo}</>}
+              <span className="num shrink-0 text-sm font-semibold text-neutral-950">
+                {fmt.pct(g.share, 0)}
               </span>
-              <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-neutral-100">
-                <span
-                  className="block h-full rounded-full bg-linear-to-r from-orange-400 to-orange-600"
-                  style={{ width: `${(s.share / top) * 100}%` }}
-                />
-              </span>
-            </span>
-            <span className="num text-sm font-semibold text-neutral-950">
-              {fmt.pct(s.share, 0)}
+            </div>
+            <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+              {g.summary}
+            </p>
+            <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-neutral-100">
+              <span
+                className="block h-full rounded-full bg-linear-to-r from-orange-400 to-orange-600"
+                style={{ width: `${(g.share / top) * 100}%` }}
+              />
             </span>
           </li>
         ))}
@@ -203,13 +196,20 @@ function GapsCard({
         )}
       </ul>
       <p className="border-t border-black/[0.05] px-6 py-3.5 text-xs text-muted-foreground">
-        When nothing fits, the concierge says so instead of forcing a pick.
+        <span className="num font-medium text-neutral-950">
+          {fmt.pct(data.noMatch, 0)}
+        </span>{" "}
+        of chats asked for something you don&apos;t sell. The concierge says
+        so instead of forcing a pick.
       </p>
     </Tile>
   );
 }
 
-/** A widget's Overview: the journey, revenue, daily activity, gaps, products, taste and the latest chats. */
+/**
+ * A widget's Overview: only what the widget itself sees. The journey ends at
+ * the cart because checkout runs in the merchant's systems.
+ */
 export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
   const [range, setRange] = useState<OverviewRange>(30);
   const r = data.ranges[range];
@@ -223,7 +223,11 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
       <header className="home-rise flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-            <WidgetGlyph name={data.widget.name} accent={data.widget.accent} />
+            <WidgetGlyph
+              name={data.widget.name}
+              accent={data.widget.accent}
+              logo={data.widget.logo}
+            />
             <span className="truncate">
               {data.widget.domain}, {data.widget.vertical}
             </span>
@@ -257,7 +261,7 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
           delay={60}
           className="lg:col-span-8"
         />
-        <RevenueCard
+        <CartValueCard
           data={r}
           widgets={widgets}
           range={range}
@@ -267,9 +271,9 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
           <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-black/10 pt-5">
             {(
               [
-                ["Orders", fmt.int(t.purchases)],
-                ["Average order", fmt.money(per(t.revenue, t.purchases))],
-                ["Per chat", fmt.money(per(t.revenue, t.conversations))],
+                ["Items", fmt.int(t.addToCart)],
+                ["Average item", fmt.money(per(t.cartValue, t.addToCart))],
+                ["Per chat", fmt.money(per(t.cartValue, t.conversations))],
               ] as const
             ).map(([label, value]) => (
               <div key={label} className="min-w-0">
@@ -280,7 +284,7 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
               </div>
             ))}
           </dl>
-        </RevenueCard>
+        </CartValueCard>
 
         <Tile delay={150} className="lg:col-span-8">
           <TileHeader
@@ -300,7 +304,7 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
         <GapsCard data={data} base={base} className="lg:col-span-4" />
 
         <ProductsCard data={data} base={base} className="lg:col-span-7" />
-        <SignalsCard data={data} base={base} className="lg:col-span-5" />
+        <ShoppersCard data={data} base={base} className="lg:col-span-5" />
 
         <RecentConversations
           recent={data.recent}

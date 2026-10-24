@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Initial } from "@/components/console/home/ui";
 import { StatusText } from "@/components/console/sidebar";
 import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +21,7 @@ export function WidgetCard({ widget }: { widget: Widget }) {
       href={href}
       className="group flex flex-col overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-shadow hover:shadow-md"
     >
-      <div className="relative aspect-[477/305] overflow-hidden border-b bg-muted">
+      <div className="@container relative aspect-[477/305] overflow-hidden border-b bg-muted">
         <Image
           src="/illustrations/widget-card.svg"
           alt=""
@@ -28,6 +29,21 @@ export function WidgetCard({ widget }: { widget: Widget }) {
           sizes="(min-width: 1280px) 400px, (min-width: 768px) 50vw, 100vw"
           className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
         />
+        <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.02]">
+          {/* Chat header: x 170–306, y 19–41 of the 477×305 art, over its icon and title bar. */}
+          <span
+            className="absolute flex items-center gap-[1.6cqw] bg-white text-[2.5cqw] leading-none font-medium text-neutral-900"
+            style={{ left: "35.65%", width: "28.52%", top: "6.22%", height: "7.21%" }}
+          >
+            <Initial
+              name={widget.name}
+              color={widget.accent}
+              logo={widget.logo}
+              className="size-[3.8cqw] rounded-[0.8cqw] text-[2cqw]"
+            />
+            <span className="truncate">{widget.name}</span>
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 p-4">
@@ -47,7 +63,7 @@ export function WidgetCard({ widget }: { widget: Widget }) {
               [
                 ["Conversations", fmt.int(widget.stats7d.conversations)],
                 ["Click-through", fmt.pct(widget.stats7d.recCtr)],
-                ["Revenue", fmt.money(widget.stats7d.influencedRevenue)],
+                ["Added to cart", fmt.money(widget.stats7d.cartValue)],
               ] as const
             ).map(([label, value]) => (
               <div key={label} className="min-w-0">

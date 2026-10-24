@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
 import {
-  Activity,
   BookOpen,
   Check,
   ChevronsUpDown,
@@ -87,7 +86,6 @@ export function WidgetSidebar({
           count: conversationCounts[widget.id] ?? 0,
         },
         { href: `${base}/taste`, label: "Taste insights", icon: Fingerprint },
-        { href: `${base}/activity`, label: "Signal log", icon: Activity },
       ],
     },
     {
@@ -258,7 +256,11 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
           <DropdownMenuTrigger
             render={<SidebarMenuButton size="lg" className={switcherClass} />}
           >
-            <WidgetGlyph name={current.name} accent={current.accent} />
+            <WidgetGlyph
+              name={current.name}
+              accent={current.accent}
+              logo={current.logo}
+            />
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{current.name}</span>
               <span className="truncate text-xs text-muted-foreground">
@@ -277,7 +279,12 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
                   key={w.id}
                   render={<Link href={`/dashboard/concierge/${w.id}`} />}
                 >
-                  <WidgetGlyph name={w.name} accent={w.accent} size="sm" />
+                  <WidgetGlyph
+                    name={w.name}
+                    accent={w.accent}
+                    logo={w.logo}
+                    size="sm"
+                  />
                   <span className="flex-1 truncate">{w.name}</span>
                   {w.id === current.id && <Check className="size-4" />}
                 </DropdownMenuItem>
@@ -298,23 +305,41 @@ function WidgetSwitcher({ currentId }: { currentId: string }) {
 export function WidgetGlyph({
   name,
   accent,
+  logo,
   size = "md",
 }: {
   name: string;
   accent: string;
+  logo?: string;
   size?: "sm" | "md" | "lg";
 }) {
   return (
     <span
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-md font-semibold text-white",
+        "flex shrink-0 items-center justify-center rounded-md",
+        logo ? "bg-white ring-1 ring-black/[0.08]" : "font-semibold text-white",
         size === "sm" && "size-5 text-[10px]",
         size === "md" && "size-8 text-sm",
         size === "lg" && "size-10 text-base",
       )}
-      style={{ background: accent }}
+      style={logo ? undefined : { background: accent }}
     >
-      {name.charAt(0)}
+      {logo ? (
+        // Merchant logos live on arbitrary hosts; next/image would need every one allow-listed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logo}
+          alt=""
+          className={cn(
+            "object-contain",
+            size === "sm" && "size-3",
+            size === "md" && "size-5",
+            size === "lg" && "size-6",
+          )}
+        />
+      ) : (
+        name.charAt(0)
+      )}
     </span>
   );
 }

@@ -145,9 +145,9 @@ function buildRecs(
       clicked:
         primary &&
         i === 0 &&
-        ["purchased", "added_to_cart", "clicked"].includes(outcome),
+        ["added_to_cart", "clicked"].includes(outcome),
       addedToCart:
-        primary && i === 0 && ["purchased", "added_to_cart"].includes(outcome),
+        primary && i === 0 && outcome === "added_to_cart",
     };
   });
 }
@@ -372,6 +372,16 @@ function weighted(x: number, n: number): number {
   return Math.min(n - 1, Math.floor(Math.pow(x, 1.7) * n));
 }
 
+/** A scenario by weight; with equal weights it lands where `r.pick` would. */
+function scenarioAt(x: number, scenarios: Scenario[]): Scenario {
+  let at = x * scenarios.reduce((sum, s) => sum + (s.weight ?? 1), 0);
+  for (const s of scenarios) {
+    at -= s.weight ?? 1;
+    if (at < 0) return s;
+  }
+  return scenarios[scenarios.length - 1];
+}
+
 function generate(
   widgetId: string,
   store: StoreKey,
@@ -385,7 +395,7 @@ function generate(
 
   for (let i = 0; i < count; i++) {
     const persona = pool[i < pool.length ? i : weighted(r.next(), pool.length)];
-    const scenario = r.pick(persona.scenarios);
+    const scenario = scenarioAt(r.next(), persona.scenarios);
     const outcome = r.pick(scenario.outcomes);
     const [city, region] = r.pick(persona.cities);
     const profile = buildProfile(persona);
@@ -504,7 +514,6 @@ function generate(
     const top = product(finalRecs[0].productId);
     s += r.int(20, 90);
     const outcomeText: Record<Outcome, string> = {
-      purchased: `Checked out with ${top.name} for $${top.price}`,
       added_to_cart: `Added ${top.name} to cart`,
       clicked: `Opened ${top.name}`,
       browsing: "Still browsing the store",
@@ -543,7 +552,6 @@ function generate(
       profile,
       messages,
       traces,
-      revenue: outcome === "purchased" ? top.price : 0,
       gap: scenario.gap,
     });
 

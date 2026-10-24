@@ -131,7 +131,6 @@ const outcomeMeta: Record<
   Outcome,
   { label: string; tone: keyof typeof badgeTones }
 > = {
-  purchased: { label: "Purchased", tone: "ok" },
   added_to_cart: { label: "Added to cart", tone: "ok" },
   clicked: { label: "Opened a pick", tone: "neutral" },
   browsing: { label: "Browsing", tone: "outline" },
@@ -157,28 +156,6 @@ export const spanMeta: Record<
   },
   slice: { label: "Slice", color: "var(--color-span-slice)", bg: "#fbf5e6" },
 };
-
-export function SpanChip({
-  kind,
-  className,
-}: {
-  kind: SpanKind;
-  className?: string;
-}) {
-  const m = spanMeta[kind];
-  return (
-    <span
-      className={cn(
-        "inline-flex h-5 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-foreground/80",
-        className,
-      )}
-      style={{ background: m.bg }}
-    >
-      <span className="size-2 rounded-full" style={{ background: m.color }} />
-      {m.label}
-    </span>
-  );
-}
 
 export function CacheBadge({ cache }: { cache: "hit" | "miss" | "stale" }) {
   return (

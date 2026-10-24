@@ -4,7 +4,6 @@ import type { StoreKey } from "@/lib/mock/types";
 import {
   attributeGaps,
   enrichedAttributes,
-  matchedTags,
   readiness,
   recStats,
 } from "./model";
@@ -63,7 +62,6 @@ export function catalogRows(
       gaps: attributeGaps(p),
       stats: recStats(p, r.score, scale),
       enriched: enrichedAttributes(p),
-      tags: matchedTags(p),
       haystack: [
         p.name,
         p.brand,

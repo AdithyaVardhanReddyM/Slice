@@ -52,9 +52,12 @@ import type * as qlooApi from "../qlooApi.js";
 import type * as qlooProbe from "../qlooProbe.js";
 import type * as qlooWarmList from "../qlooWarmList.js";
 import type * as seedDemo from "../seedDemo.js";
+import type * as storeSettings from "../storeSettings.js";
 import type * as taste from "../taste.js";
 import type * as tasteHints from "../tasteHints.js";
 import type * as users from "../users.js";
+import type * as widgetHosts from "../widgetHosts.js";
+import type * as widgetInstall from "../widgetInstall.js";
 
 import type {
   ApiFromModules,
@@ -107,9 +110,12 @@ declare const fullApi: ApiFromModules<{
   qlooProbe: typeof qlooProbe;
   qlooWarmList: typeof qlooWarmList;
   seedDemo: typeof seedDemo;
+  storeSettings: typeof storeSettings;
   taste: typeof taste;
   tasteHints: typeof tasteHints;
   users: typeof users;
+  widgetHosts: typeof widgetHosts;
+  widgetInstall: typeof widgetInstall;
 }>;
 
 /**
