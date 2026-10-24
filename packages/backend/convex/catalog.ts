@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import { tasteByProduct } from "./catalogTaste";
 import { productFields, storeFields } from "./schema";
+import { resolveKey } from "./conciergeWidgets";
 
 // The merchant's catalog as the agent sees it: a store record with its style
 // vocabulary, and products in the Slice shape. Demo stores are seeded from
@@ -99,13 +100,7 @@ export async function replaceCatalog(
     .query("stores")
     .withIndex("by_key", (q) => q.eq("key", store.key))
     .unique();
-  const doc = {
-    ...store,
-    // A re-import refreshes the catalog; it doesn't switch a paused concierge back on.
-    ...(existing?.paused ? { paused: true } : {}),
-    productCount: products.length,
-    updatedAt: Date.now(),
-  };
+  const doc = { ...store, productCount: products.length, updatedAt: Date.now() };
   if (existing) await ctx.db.replace(existing._id, doc);
   else await ctx.db.insert("stores", doc);
 
@@ -133,13 +128,25 @@ export const importCatalog = mutation({
   handler: (ctx, { store, products }) => replaceCatalog(ctx, store, products),
 });
 
+/**
+ * The store a concierge key opens: a widget's key resolves to its store with
+ * the widget's profile and pause applied (`key` stays the store's, for
+ * catalog lookups); a bare store key is the store as imported.
+ */
 export const store = query({
   args: { key: v.string() },
-  handler: async (ctx, { key }) =>
-    ctx.db
-      .query("stores")
-      .withIndex("by_key", (q) => q.eq("key", key))
-      .unique(),
+  handler: async (ctx, { key }) => {
+    const { widget, store } = await resolveKey(ctx, key);
+    if (!store || !widget) return store;
+    return {
+      ...store,
+      name: widget.name ?? store.name,
+      tagline: widget.tagline ?? store.tagline,
+      description: widget.description ?? store.description,
+      paused: widget.paused ?? false,
+      widgetKey: widget.key,
+    };
+  },
 });
 
 export const stores = query({

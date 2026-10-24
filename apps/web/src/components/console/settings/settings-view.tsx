@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { Check, CircleCheck } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
@@ -11,6 +11,7 @@ import { Field, Input, Switch, Textarea } from "@/components/console/form";
 import { Tile, TileHeader } from "@/components/console/home/ui";
 import { ConsolePage } from "@/components/console/shell-ui";
 import { WidgetGlyph } from "@/components/console/sidebar";
+import { useMyWidget } from "@/components/console/use-my-widget";
 import type { Widget } from "@/lib/mock/types";
 
 /** Rules the concierge's agent follows on every reply. Not settings: they can't be turned off. */
@@ -24,15 +25,15 @@ const RULES = [
 type Profile = { name: string; tagline: string; description: string };
 
 function ProfileForm({
-  storeKey,
+  widgetKey,
   saved,
   className,
 }: {
-  storeKey: string;
+  widgetKey: string;
   saved: Profile;
   className?: string;
 }) {
-  const update = useMutation(api.storeSettings.updateProfile);
+  const update = useMutation(api.conciergeWidgets.updateProfile);
   const [form, setForm] = useState(saved);
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +52,7 @@ function ProfileForm({
     setState("saving");
     try {
       await update({
-        key: storeKey,
+        key: widgetKey,
         name: form.name,
         tagline: form.tagline,
         description: form.description,
@@ -150,8 +151,8 @@ export function SettingsView({
   widget: Pick<Widget, "name" | "domain" | "accent" | "logo">;
   storeKey: string;
 }) {
-  const settings = useQuery(api.storeSettings.get, { key: storeKey });
-  const setPaused = useMutation(api.storeSettings.setPaused);
+  const settings = useMyWidget(storeKey);
+  const setPaused = useMutation(api.conciergeWidgets.setPaused);
 
   return (
     <ConsolePage>
@@ -214,7 +215,7 @@ export function SettingsView({
                 checked={settings ? !settings.paused : false}
                 disabled={!settings}
                 onCheckedChange={(on) =>
-                  setPaused({ key: storeKey, paused: !on })
+                  settings && setPaused({ key: settings.key, paused: !on })
                 }
                 aria-label="Show the concierge"
               />
@@ -223,8 +224,8 @@ export function SettingsView({
 
           {settings ? (
             <ProfileForm
-              key={storeKey}
-              storeKey={storeKey}
+              key={settings.key}
+              widgetKey={settings.key}
               saved={settings}
               className="lg:col-span-7"
             />

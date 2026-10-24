@@ -11,6 +11,7 @@
 import type * as catalog from "../catalog.js";
 import type * as catalogImport from "../catalogImport.js";
 import type * as catalogTaste from "../catalogTaste.js";
+import type * as conciergeWidgets from "../conciergeWidgets.js";
 import type * as conversations from "../conversations.js";
 import type * as emailAudiences from "../emailAudiences.js";
 import type * as emailBrands from "../emailBrands.js";
@@ -52,7 +53,6 @@ import type * as qlooApi from "../qlooApi.js";
 import type * as qlooProbe from "../qlooProbe.js";
 import type * as qlooWarmList from "../qlooWarmList.js";
 import type * as seedDemo from "../seedDemo.js";
-import type * as storeSettings from "../storeSettings.js";
 import type * as taste from "../taste.js";
 import type * as tasteHints from "../tasteHints.js";
 import type * as users from "../users.js";
@@ -69,6 +69,7 @@ declare const fullApi: ApiFromModules<{
   catalog: typeof catalog;
   catalogImport: typeof catalogImport;
   catalogTaste: typeof catalogTaste;
+  conciergeWidgets: typeof conciergeWidgets;
   conversations: typeof conversations;
   emailAudiences: typeof emailAudiences;
   emailBrands: typeof emailBrands;
@@ -110,7 +111,6 @@ declare const fullApi: ApiFromModules<{
   qlooProbe: typeof qlooProbe;
   qlooWarmList: typeof qlooWarmList;
   seedDemo: typeof seedDemo;
-  storeSettings: typeof storeSettings;
   taste: typeof taste;
   tasteHints: typeof tasteHints;
   users: typeof users;

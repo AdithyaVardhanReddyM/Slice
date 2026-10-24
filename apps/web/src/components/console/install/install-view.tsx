@@ -13,6 +13,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { PillTabs, Tile, TileHeader } from "@/components/console/home/ui";
 import { ConsolePage } from "@/components/console/shell-ui";
 import { WidgetGlyph } from "@/components/console/sidebar";
+import { useMyWidget } from "@/components/console/use-my-widget";
 import { AdornedInput, CopyButton } from "@/components/console/setup/atoms";
 import { CodeBlock, type CodeLanguage } from "@/components/console/setup/code";
 import type { Widget } from "@/lib/mock/types";
@@ -138,17 +139,17 @@ window.dispatchEvent(
 
 function SnippetCard({
   src,
-  storeKey,
+  widgetKey,
   className,
 }: {
   src: string;
-  storeKey: string;
+  widgetKey: string;
   className?: string;
 }) {
   const [platform, setPlatform] = useState<Platform>("html");
   const [cart, setCart] = useState(false);
   const p = PLATFORMS.find((x) => x.id === platform)!;
-  const code = p.code(src, storeKey);
+  const code = p.code(src, widgetKey);
   return (
     <Tile delay={120} className={cn("flex flex-col", className)}>
       <TileHeader
@@ -305,11 +306,11 @@ function StatusCard({
 /* Allowed domains ---------------------------------------------------------- */
 
 function DomainsCard({
-  storeKey,
+  widgetKey,
   status,
   className,
 }: {
-  storeKey: string;
+  widgetKey: string;
   status: Status | undefined;
   className?: string;
 }) {
@@ -327,7 +328,7 @@ function DomainsCard({
       return;
     }
     try {
-      await add({ key: storeKey, host });
+      await add({ key: widgetKey, host });
       setDraft("");
       setError(null);
     } catch (err) {
@@ -361,7 +362,7 @@ function DomainsCard({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Remove ${host}`}
-                  onClick={() => remove({ key: storeKey, host })}
+                  onClick={() => remove({ key: widgetKey, host })}
                 >
                   <X />
                 </Button>
@@ -464,7 +465,20 @@ function DetailsCard({
 
 /* Page --------------------------------------------------------------------- */
 
-/** The Install page: the snippet, where it's running, and which sites may run it. */
+function NoStore() {
+  return (
+    <Tile className="p-10 text-center">
+      <p className="text-[15px] font-medium text-neutral-950">
+        Connect a catalog first
+      </p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        The snippet appears once the concierge has a store to work with.
+      </p>
+    </Tile>
+  );
+}
+
+/** The Install page for the signed-in account's own widget: the snippet, where it's running, and which sites may run it. */
 export function InstallView({
   widget,
   storeKey,
@@ -474,7 +488,9 @@ export function InstallView({
   storeKey: string;
   origin: string;
 }) {
-  const status = useQuery(api.widgetInstall.status, { key: storeKey });
+  const mine = useMyWidget(storeKey);
+  const key = mine?.key;
+  const status = useQuery(api.widgetInstall.status, key ? { key } : "skip");
   const add = useMutation(api.widgetInstall.addDomain);
   const now = useNow();
   const src = `${origin}/slice.js`;
@@ -490,7 +506,9 @@ export function InstallView({
               accent={widget.accent}
               logo={widget.logo}
             />
-            {status === undefined ? (
+            {mine === null ? (
+              <span>No catalog connected</span>
+            ) : !status ? (
               <span>Checking…</span>
             ) : latest ? (
               <span className="flex items-center gap-1.5">
@@ -512,32 +530,41 @@ export function InstallView({
             Add one line to {widget.domain} and the concierge appears.
           </p>
         </div>
-        <Link
-          href={`/embed/concierge?key=${encodeURIComponent(storeKey)}`}
-          target="_blank"
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Preview the concierge <ArrowUpRight />
-        </Link>
+        {key && (
+          <Link
+            href={`/embed/concierge?key=${encodeURIComponent(key)}`}
+            target="_blank"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Preview the concierge <ArrowUpRight />
+          </Link>
+        )}
       </header>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-12">
-        <SnippetCard
-          src={src}
-          storeKey={storeKey}
-          className="lg:col-span-7"
-        />
-        <StatusCard
-          status={status}
-          onAllow={(host) => add({ key: storeKey, host })}
-          className="lg:col-span-5"
-        />
-        <DomainsCard
-          storeKey={storeKey}
-          status={status}
-          className="lg:col-span-7"
-        />
-        <DetailsCard origin={origin} src={src} className="lg:col-span-5" />
+      <div className="mt-10">
+        {mine === null ? (
+          <NoStore />
+        ) : !key ? (
+          <div className="grid gap-5 lg:grid-cols-12">
+            <Tile className="h-72 animate-pulse lg:col-span-7" />
+            <Tile className="h-72 animate-pulse lg:col-span-5" />
+          </div>
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-12">
+            <SnippetCard src={src} widgetKey={key} className="lg:col-span-7" />
+            <StatusCard
+              status={status}
+              onAllow={(host) => add({ key, host })}
+              className="lg:col-span-5"
+            />
+            <DomainsCard
+              widgetKey={key}
+              status={status}
+              className="lg:col-span-7"
+            />
+            <DetailsCard origin={origin} src={src} className="lg:col-span-5" />
+          </div>
+        )}
       </div>
     </ConsolePage>
   );
@@ -553,22 +580,26 @@ export function InstallStep({
   origin: string;
   onVerified: () => void;
 }) {
-  const status = useQuery(api.widgetInstall.status, { key: storeKey });
+  const mine = useMyWidget(storeKey);
+  const key = mine?.key;
+  const status = useQuery(api.widgetInstall.status, key ? { key } : "skip");
   const add = useMutation(api.widgetInstall.addDomain);
   const live = !!status?.pings.some((p) => p.allowed);
   useEffect(() => {
     if (live) onVerified();
   }, [live, onVerified]);
+  if (mine === null) return <NoStore />;
+  if (!key) return <Tile className="h-72 animate-pulse" />;
   return (
     <div className="grid gap-5 lg:grid-cols-12">
       <SnippetCard
         src={`${origin}/slice.js`}
-        storeKey={storeKey}
+        widgetKey={key}
         className="lg:col-span-7"
       />
       <StatusCard
         status={status}
-        onAllow={(host) => add({ key: storeKey, host })}
+        onAllow={(host) => add({ key, host })}
         className="lg:col-span-5"
       />
     </div>

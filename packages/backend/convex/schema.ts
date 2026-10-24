@@ -58,8 +58,6 @@ export const storeFields = {
   description: v.string(),
   /** Absolute URL of a square mark, shown next to the store name in the concierge. */
   logo: v.optional(v.string()),
-  /** Paused from Settings: slice.js stops showing the launcher and an open concierge closes. */
-  paused: v.optional(v.boolean()),
   currency: v.string(),
   /** "home" | "fashion" | ... free-form, for the agent's framing. */
   vertical: v.string(),
@@ -282,19 +280,40 @@ export default defineSchema({
 
   stores: defineTable(storeFields).index("by_key", ["key"]),
 
-  /** Sites a store's concierge may run on. No rows means anywhere (widgetInstall.ts). */
-  widgetDomains: defineTable({
+  /**
+   * An account's concierge for one store (conciergeWidgets.ts). `key` is what
+   * data-slice-key carries; the demo owner's masters use the store key itself.
+   */
+  conciergeWidgets: defineTable({
+    /** Clerk subject. */
+    owner: v.string(),
+    /** The store whose catalog it serves. */
     storeKey: v.string(),
+    key: v.string(),
+    /** Overrides for the store profile; unset falls back to the catalog's values. */
+    name: v.optional(v.string()),
+    tagline: v.optional(v.string()),
+    description: v.optional(v.string()),
+    /** Switched off in Settings: slice.js hides the launcher and an open concierge closes. */
+    paused: v.optional(v.boolean()),
+    createdAt: v.number(),
+  })
+    .index("by_key", ["key"])
+    .index("by_owner_store", ["owner", "storeKey"]),
+
+  /** Sites a widget may run on. No rows means anywhere (widgetInstall.ts). */
+  widgetDomains: defineTable({
+    widgetKey: v.string(),
     /** A hostname, or "*.example.com" for every subdomain. */
     host: v.string(),
     addedAt: v.number(),
   })
-    .index("by_store", ["storeKey"])
-    .index("by_store_host", ["storeKey", "host"]),
+    .index("by_widget", ["widgetKey"])
+    .index("by_widget_host", ["widgetKey", "host"]),
 
-  /** Where slice.js has loaded: one row per store and host, refreshed at most once a minute. */
+  /** Where slice.js has loaded: one row per widget key and host, refreshed at most once a minute. */
   widgetPings: defineTable({
-    storeKey: v.string(),
+    widgetKey: v.string(),
     host: v.string(),
     /** Whether the host was allowed when it last pinged. */
     allowed: v.boolean(),
@@ -303,8 +322,8 @@ export default defineSchema({
     firstSeenAt: v.number(),
     lastSeenAt: v.number(),
   })
-    .index("by_store", ["storeKey"])
-    .index("by_store_host", ["storeKey", "host"]),
+    .index("by_widget", ["widgetKey"])
+    .index("by_widget_host", ["widgetKey", "host"]),
 
   products: defineTable(productFields)
     .index("by_store", ["storeKey"])

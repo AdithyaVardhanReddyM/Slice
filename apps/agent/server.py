@@ -158,14 +158,17 @@ STATUS_FOR_TOOL = {
 
 async def _ensure_session(req: ChatRequest) -> tuple[Any, dict[str, Any], dict[str, Any]]:
     """Returns (session, state delta for this run, the merged state as the run will see it)."""
+    # req.store_key is the widget key from the snippet; an account's own copy
+    # resolves to the shared store, whose key the catalog tools query by.
     store = await T.load_store(req.store_key)
     if not store:
         raise ValueError(f"Unknown store key {req.store_key!r}")
+    catalog_key = store.get("key") or req.store_key
     profile, session_layer = await asyncio.gather(
-        T.load_profile(req.profile_id), T.load_session(req.store_key, req.signals)
+        T.load_profile(req.profile_id), T.load_session(catalog_key, req.signals)
     )
     state = {
-        T.STORE_KEY: req.store_key,
+        T.STORE_KEY: catalog_key,
         T.STORE: store,
         T.PROFILE_ID: req.profile_id if profile else None,
         T.PROFILE: profile,

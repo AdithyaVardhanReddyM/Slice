@@ -227,7 +227,8 @@ export function ConciergeApp() {
     setBriefing(false);
     try {
       const { profileId: pid } = await build({
-        storeKey: ctx.key,
+        // The catalog's own key: a widget key from another account resolves to the same store.
+        storeKey: store?.key ?? ctx.key,
         city: r.city,
         age: r.age,
         gender: r.gender,
