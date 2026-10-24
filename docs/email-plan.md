@@ -12,7 +12,8 @@ not change a shape without updating this file and telling the other tracks).
 ## Running it
 
 - Apps: `pnpm dev` (or web on :3000, the agent on :8000, the stores on :3002
-  for the Stackhouse Books site). Email lives at `/dashboard/email`.
+  for the Stackhouse Books site, deployed at https://stackhouse-books.vercel.app). Email
+  lives at `/dashboard/email`.
 - Demo: `cd packages/backend && npx convex run emailSeed:run` rebuilds the
   Stackhouse Books master (~5 min cold, ~1 min warm; follow it with
   `emailSeed:status`). Then personalise the book-club campaign from its
@@ -21,7 +22,7 @@ not change a shape without updating this file and telling the other tracks).
   first visit; every other account gets its own copy.
 - Second demo: `npx convex run emailSeedCovers:run` rebuilds **Covers**, a
   London restaurant booking app (~1 min; `emailSeed:status '{"slug":"covers"}'`).
-  Site at `localhost:3002/covers`.
+  Site at `localhost:3002/covers`, deployed at https://covers-london.vercel.app.
 - Real sending: `npx convex env set RESEND_API_KEY re_…`, then connect and
   verify a domain on the brand's Sending page. Demo brands always simulate.
 - Templates render to HTML for a visual check with

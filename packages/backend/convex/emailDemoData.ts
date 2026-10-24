@@ -781,8 +781,8 @@ export const FOLIO_SHOP = {
 
 /* Brand --------------------------------------------------------------------- */
 
-/** Where the site runs locally; the seed passes the deployed one when there is one. */
-export const FOLIO_SITE = "http://localhost:3002/stackhouse";
+/** The deployed site (Vercel project stackhouse-books, STORE=stackhouse); seed with `{"site":"http://localhost:3002/stackhouse"}` to point at the dev server. */
+export const FOLIO_SITE = "https://stackhouse-books.vercel.app/stackhouse";
 
 /** A ref the seed maps to an emailItems id. */
 export const folioRef = (slug: string, kind: "book" | "event" = "book") => (kind === "book" ? `slug:${slug}` : `event:${slug}`);

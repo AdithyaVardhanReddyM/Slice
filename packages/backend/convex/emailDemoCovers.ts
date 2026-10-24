@@ -985,8 +985,8 @@ export const COVERS_APP = {
 
 /* Brand --------------------------------------------------------------------- */
 
-/** Where the site runs locally; the seed passes the deployed one when there is one. */
-export const COVERS_SITE = "http://localhost:3002/covers";
+/** The deployed site (Vercel project covers-london, STORE=covers); seed with `{"site":"http://localhost:3002/covers"}` to point at the dev server. */
+export const COVERS_SITE = "https://covers-london.vercel.app/covers";
 
 export function coversKit(site = COVERS_SITE): EmailKit {
   return {
