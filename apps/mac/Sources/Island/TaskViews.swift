@@ -152,7 +152,7 @@ struct TaskCardView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if !task.cards.isEmpty {
-                PicksRow(cards: task.cards)
+                PicksRow(cards: task.cards, agent: agent)
             }
             views
         case "failed":
@@ -170,9 +170,12 @@ struct TaskCardView: View {
     }
 }
 
-/// A pick from a task (a place, a film, a gift), with its image when Qloo has one.
+/// A pick from a task (a place, a film, a gift), with its image when Qloo has one. Picks for the
+/// user get a thumbs up and down on hover: up adds it to their taste, down means not for them.
 struct CardTile: View {
     let card: TaskItem.Card
+    var agent: AgentSession?
+    @State private var hovering = false
 
     var body: some View {
         Button {
@@ -194,6 +197,9 @@ struct CardTile: View {
                 }
                 .frame(width: 132, height: 78)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(alignment: .bottomTrailing) {
+                    if let agent, card.forPerson == nil { Thumbs(card: card, agent: agent, hovering: hovering).padding(5) }
+                }
                 Text(card.title)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
@@ -211,6 +217,44 @@ struct CardTile: View {
         }
         .buttonStyle(.plain)
         .help(card.reason ?? card.title)
+        .onHover { hovering = $0 }
+    }
+}
+
+/// Thumbs on a pick: shown on hover, and kept once given ("Added" or "Not for you").
+private struct Thumbs: View {
+    let card: TaskItem.Card
+    let agent: AgentSession
+    let hovering: Bool
+
+    var body: some View {
+        let given = agent.feedback[card.title]
+        if let given {
+            let up = given.hasPrefix("up")
+            Label(given.hasSuffix("saved") ? (up ? "In your taste" : "Not for you") : "Saving", systemImage: up ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+                .font(.system(size: 9.5, weight: .bold))
+                .foregroundStyle(up ? Color.black : Color.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(up ? AnyShapeStyle(Brand.yellow) : AnyShapeStyle(Color.black.opacity(0.7))))
+        } else if hovering {
+            HStack(spacing: 3) {
+                thumb("hand.thumbsup.fill", "up", help: "I love this: add it to my taste")
+                thumb("hand.thumbsdown.fill", "down", help: "Not for me")
+            }
+        }
+    }
+
+    private func thumb(_ symbol: String, _ verdict: String, help: String) -> some View {
+        Button { agent.give(verdict, to: card) } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 20)
+                .background(Capsule().fill(.black.opacity(0.7)))
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 }
 

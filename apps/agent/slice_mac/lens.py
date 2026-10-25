@@ -31,6 +31,7 @@ from google import genai
 from google.adk.tools import ToolContext
 from google.genai import types
 
+from . import learning
 from .connection import Connection, for_talker, for_worker, report
 from .plans import score_places
 from .taste import explain, rank, save_person, whose
@@ -151,7 +152,12 @@ async def lens(conn: Connection, task: Any, question: str = "", for_person: str 
         for r in ranked:
             if r.get("own"):
                 rows.append({**r, "label": "One of your loves" if not for_person else f"One of {for_person}'s loves", "detail": None, "own": True})
+            if r.get("disliked"):
+                rows.append({**r, "label": "Not for you", "detail": None, "own": True})
             if r["match"] is None:
+                continue
+            if r.get("generic"):
+                rows.append({**r, "label": f"{r['match']} overall", "detail": "Popular in general (taste off)"})
                 continue
             by_brand = r.get("brand") and r.get("kind") == "product"
             who = "you" if not for_person else for_person
@@ -165,6 +171,7 @@ async def lens(conn: Connection, task: Any, question: str = "", for_person: str 
     # The loves themselves badge last and never take a top spot.
     rows = [r for r in rows if not r.get("own")] + [r for r in rows if r.get("own")]
     conn.lens = rows
+    conn.lens_for = for_person
     badges = [_badge(r, i < TOP_BADGES and not r.get("own")) for i, r in enumerate(rows)]
     shown = await conn.bridge.call("lens_show", {"badges": badges}, timeout=8)
     took = time.monotonic() - started
@@ -187,6 +194,8 @@ async def tap(conn: Connection, which: str) -> dict[str, Any]:
         want = re.sub(r"[^a-z0-9]+", " ", which.lower()).strip()
         pick = next((r for r in rows if want and want in re.sub(r"[^a-z0-9]+", " ", r["name"].lower())), None)
     pick = pick or rows[0]
+    if pick.get("entity") and not pick.get("own") and conn.lens_for == "":
+        await learning.observe(conn, pick["entity"], "tapped")
     ymin, xmin, ymax, xmax = pick["box_2d"]
     await conn.bridge.call("lens_clear", {}, timeout=4)
     res = await conn.bridge.call("computer", {"action": "click", "x": round((xmin + xmax) / 2 * 0.999),
@@ -248,6 +257,8 @@ async def why_now(conn: Connection, thing: str = "", kind: str = "", for_person:
     out = await explain(conn, thing, kind, for_person)
     if out.get("error"):
         return out
+    if not for_person and not out.get("generic"):
+        await learning.observe(conn, await learning.resolve(conn, thing, kind), "asked_why")
     await conn.bridge.send_json({"type": "nudge", "nudge": _nudge(out, out["thing"]["name"], show=True)})
     await report(conn, None, "qloo", f"Why {out['thing']['name']} fits", f"{out['match']}% match" if out.get("match") is not None else None)
     return {k: out.get(k) for k in ("match", "line", "because")} | {"thing": out["thing"]["name"],
@@ -255,9 +266,9 @@ async def why_now(conn: Connection, thing: str = "", kind: str = "", for_person:
 
 
 async def noticed(conn: Connection, msg: dict[str, Any]) -> None:
-    """The Mac saw a new track or media page. Now and then, when it's very much the user, say so."""
-    now = time.monotonic()
-    if now - conn.last_nudge < NUDGE_EVERY_S or not conn.seed_ids():
+    """The Mac saw a new track or media page: it counts towards learning the user's taste
+    (learning.observe), and now and then, when it's very much the user, a "very you" pill."""
+    if not conn.seed_ids() or conn.taste_off:
         return
     if msg.get("artist"):
         thing, kind = str(msg["artist"]), "artist"
@@ -266,7 +277,13 @@ async def noticed(conn: Connection, msg: dict[str, Any]) -> None:
         if not found:
             return
         thing, kind = found
-    if thing.lower() in conn.noticed:
+    if msg.get("learn", True):
+        try:
+            await learning.observe(conn, await learning.resolve(conn, thing, kind), "played" if msg.get("artist") else "opened")
+        except Exception as err:
+            print(f"mac: learning from {thing} failed: {err}", flush=True)
+    now = time.monotonic()
+    if not msg.get("nudge", True) or now - conn.last_nudge < NUDGE_EVERY_S or thing.lower() in conn.noticed:
         return
     conn.noticed.add(thing.lower())
     try:

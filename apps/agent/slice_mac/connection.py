@@ -6,11 +6,13 @@ tools through the worker session of the task they run in.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 from google.adk.tools import ToolContext
 
+from . import memory
 from .bridge import MacBridge
 
 if TYPE_CHECKING:
@@ -29,16 +31,25 @@ class Connection:
     notify_talker: Callable[[str], None] | None = None
     # The taste lens's last ranking of the screen, for "open that one" (lens.py).
     lens: list[dict[str, Any]] = field(default_factory=list)
+    lens_for: str = ""
     # The "very you" nudge: when it last went out, and what was already looked at.
     last_nudge: float = float("-inf")
     noticed: set[str] = field(default_factory=set)
+    # Settings > General > "Use my taste" off: answers come from generic.py, not Qloo.
+    taste_off: bool = False
+    # Learning (learning.py): names already looked up, the last "add to your taste?" pill,
+    # and the pending re-read of the taste after the loves changed.
+    seen: dict[str, dict[str, Any] | None] = field(default_factory=dict)
+    last_learn_nudge: float = float("-inf")
+    reread_job: "asyncio.Task[None] | None" = None
 
     @property
     def city(self) -> str | None:
         return self.profile.get("city") or None
 
     def seed_ids(self) -> list[str]:
-        return [s["id"] for s in self.profile.get("seeds") or [] if s.get("id")]
+        """The loves that steer Qloo (the strongest 20; memory.signal_seeds)."""
+        return [s["id"] for s in memory.signal_seeds(self.profile)]
 
 
 _by_talker_session: dict[str, Connection] = {}

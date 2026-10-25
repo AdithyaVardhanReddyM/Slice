@@ -12,7 +12,7 @@ from typing import Any
 from google.adk.tools import FunctionTool, ToolContext
 from google.genai import types
 
-from . import lens, taste
+from . import learning, lens, taste
 from .connection import for_talker, report
 
 
@@ -110,5 +110,5 @@ def _background(fn: Any) -> FunctionTool:
 
 TOOLS = [
     look_at_frontmost_app, quick_picks, _background(lens.taste_lens), lens.tap_lens_item, _background(lens.why_this),
-    _background(start_task), _background(continue_task), cancel_task,
+    *learning.TALKER_TOOLS, _background(start_task), _background(continue_task), cancel_task,
 ]

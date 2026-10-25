@@ -204,10 +204,11 @@ private struct GiftTile: View {
 /// A row of picks: plain when they fit, scrolling when there are more.
 struct PicksRow: View {
     let cards: [TaskItem.Card]
+    var agent: AgentSession?
 
     var body: some View {
         let row = HStack(alignment: .top, spacing: 8) {
-            ForEach(cards) { CardTile(card: $0) }
+            ForEach(cards) { CardTile(card: $0, agent: agent) }
         }
         ViewThatFits(in: .horizontal) {
             row
@@ -562,7 +563,7 @@ struct WhyCard: View {
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     if let match = why.match {
-                        Label("\(match)% match for \(who)", systemImage: "touchid")
+                        Label("\(match)% match for \(who)", systemImage: "heart.fill")
                             .font(.system(size: 11.5, weight: .semibold))
                             .foregroundStyle(Brand.yellow)
                     }
@@ -641,7 +642,7 @@ struct NudgeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Image(systemName: nudge.kind == "birthday" ? "gift.fill" : "touchid")
+                Image(systemName: NudgePill.symbol(nudge.kind))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Brand.yellow)
                 Text(nudge.kind == "why" ? (nudge.show ? "Why it fits" : "Very you") : nudge.title)
@@ -653,6 +654,29 @@ struct NudgeCard: View {
             }
             if let why = nudge.why {
                 WhyCard(why: why, agent: agent)
+            } else if let learn = nudge.learn {
+                HStack(alignment: .top, spacing: 10) {
+                    RemoteImage(url: learn.image)
+                        .frame(width: 48, height: 48)
+                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(nudge.line)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Slice will pick with it from now on. You can take it back in Settings > Memory.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                HStack {
+                    Spacer()
+                    Button("Not now") { agent.answerLearn(nudge, accept: false) }
+                        .buttonStyle(IslandButtonStyle(primary: false))
+                    Button(nudge.action ?? "Add to my taste") { agent.answerLearn(nudge, accept: true) }
+                        .buttonStyle(IslandButtonStyle(primary: true))
+                }
             } else {
                 Text(nudge.line)
                     .font(.system(size: 13))

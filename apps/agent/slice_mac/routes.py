@@ -3,7 +3,14 @@
 GET  /mac/health                 {"ok": true, "model": ...}
 WS   /mac/live                   one connected Mac (the talker, its tasks, Mac tools)
 GET  /mac/search?q=&kind=        Qloo entities, for the Taste settings
-POST /mac/profile/build          {seeds: [names], city, base?} -> a taste profile
+POST /mac/profile/build          {seeds: [names], entities?, city, base?, facts?, prefs?, name?, onboarding?}
+                                 -> a taste profile
+POST /mac/profile/edit           {profile, op, ...} -> {profile}: love, forget, dislike, undislike, fact,
+                                 forget_fact, accept, decline, undo, city, forget_person, forget_routine
+                                 (memory.py)
+POST /mac/profile/graph          {profile, fresh?} -> the taste graph (graph.py)
+GET  /mac/onboarding/starters?step=music|screen|everyday   opening tiles
+POST /mac/onboarding/more        {step, picked: [ids], exclude: [ids]} -> tiles that fit the picks
 GET  /mac/accounts?user=         which cloud accounts are connected
 POST /mac/accounts/connect       {user, app} -> {url} to sign in
 
@@ -29,7 +36,7 @@ from google.adk.sessions import InMemorySessionService, Session
 from google.genai import types
 from pydantic import BaseModel
 
-from . import accounts, lens, qloo, taste
+from . import accounts, graph, learning, lens, memory, onboarding, qloo, taste
 from .agent import LIVE_LOCATION, LIVE_MODEL, build_agent, live_run_config
 from .bridge import MacBridge
 from .connection import Connection, register_talker, unregister_talker
@@ -40,8 +47,14 @@ MIC_MIME = "audio/pcm;rate=16000"
 HELLO_WAIT_S = 3.0
 
 router = APIRouter(prefix="/mac")
-# Fire-and-forget work (lens.noticed) is held here so it isn't garbage-collected mid-run.
+# Fire-and-forget work (lens.noticed, learning) is held here so it isn't garbage-collected mid-run.
 _background_jobs: set[asyncio.Task[None]] = set()
+
+
+def background(coro: Any) -> None:
+    job = asyncio.create_task(coro)
+    _background_jobs.add(job)
+    job.add_done_callback(_background_jobs.discard)
 _sessions = InMemorySessionService()
 _runner = Runner(app_name=APP_NAME, agent=build_agent(), session_service=_sessions)
 
@@ -68,14 +81,103 @@ async def search(q: str, kind: str = "") -> dict[str, Any]:
 
 
 class BuildProfile(BaseModel):
-    seeds: list[str]
+    seeds: list[str] = []
+    entities: list[dict[str, Any]] = []
     city: str = ""
     base: dict[str, Any] | None = None
+    facts: list[str] = []
+    prefs: dict[str, Any] | None = None
+    name: str = ""
+    onboarding: bool = False
 
 
 @router.post("/profile/build", dependencies=[Depends(_require_token)])
 async def build_profile(body: BuildProfile) -> dict[str, Any]:
-    return {"profile": await taste.build_profile(body.seeds, body.city, body.base)}
+    entities = [e for e in body.entities if e.get("id") and e.get("name")]
+    return {"profile": await taste.build_profile(
+        body.seeds, body.city, body.base, entities=entities, source="onboarding" if body.onboarding else "settings",
+        facts=body.facts, prefs=body.prefs, name=body.name, onboarding=body.onboarding,
+    )}
+
+
+class EditProfile(BaseModel):
+    profile: dict[str, Any]
+    op: str
+    items: list[Any] = []
+    id: str = ""
+    text: str = ""
+    about: str = ""
+    city: str = ""
+    name: str = ""
+    source: str = "settings"
+
+
+@router.post("/profile/edit", dependencies=[Depends(_require_token)])
+async def edit_profile(body: EditProfile) -> dict[str, Any]:
+    """One change from the Settings window, noted in the journal; the taste is re-read when the
+    loves changed."""
+    profile = body.profile
+    loves_before = sorted(s.get("id", "") for s in profile.get("seeds") or [])
+    op = body.op
+    if op == "love":
+        await memory.add_loves(profile, body.items, body.source if body.source in memory.SOURCE_WEIGHT else "settings")
+    elif op == "forget":
+        memory.forget_love(profile, body.id)
+    elif op == "dislike":
+        for item in body.items:
+            await memory.add_dislike(profile, item)
+    elif op == "undislike":
+        memory.forget_dislike(profile, body.id)
+    elif op == "fact":
+        memory.add_fact(profile, body.text, about=body.about or "me", source="settings")
+    elif op == "forget_fact":
+        memory.forget_fact(profile, body.id)
+    elif op in ("accept", "decline"):
+        await memory.answer_suggestion(profile, body.id, op == "accept")
+    elif op == "undo":
+        await memory.undo(profile, body.id)
+    elif op == "city":
+        profile["city"] = body.city.strip()
+        memory.journal(profile, "fact", f"You live in {profile['city']}")
+    elif op == "forget_routine":
+        profile["routines"] = [r for r in profile.get("routines") or [] if r.get("id") != body.id]
+        memory.journal(profile, "forgot", "Stopped a weekly job")
+    elif op == "forget_person":
+        for key in ("people", "people_notes", "people_info"):
+            (profile.get(key) or {}).pop(body.name, None)
+        profile["facts"] = [f for f in profile.get("facts") or [] if f.get("about") != body.name]
+        memory.journal(profile, "forgot", f"Forgot {body.name}", about=body.name)
+    else:
+        raise HTTPException(status_code=400, detail=f"Unknown op {op!r}")
+    if sorted(s.get("id", "") for s in profile.get("seeds") or []) != loves_before:
+        await taste.reread(profile)
+    return {"profile": profile}
+
+
+class GraphRequest(BaseModel):
+    profile: dict[str, Any]
+    fresh: bool = False
+
+
+@router.post("/profile/graph", dependencies=[Depends(_require_token)])
+async def profile_graph(body: GraphRequest) -> dict[str, Any]:
+    return await graph.taste_graph(body.profile, fresh=body.fresh)
+
+
+@router.get("/onboarding/starters", dependencies=[Depends(_require_token)])
+async def onboarding_starters(step: str) -> dict[str, Any]:
+    return {"tiles": await onboarding.starters(step)}
+
+
+class More(BaseModel):
+    step: str
+    picked: list[str]
+    exclude: list[str] = []
+
+
+@router.post("/onboarding/more", dependencies=[Depends(_require_token)])
+async def onboarding_more(body: More) -> dict[str, Any]:
+    return {"tiles": await onboarding.more(body.step, body.picked, body.exclude)}
 
 
 @router.get("/accounts", dependencies=[Depends(_require_token)])
@@ -174,7 +276,7 @@ async def _new_session(conn: Connection) -> Session:
     return await _sessions.create_session(
         app_name=APP_NAME,
         user_id=conn.user_id,
-        state={"profile_summary": taste.summary_for_talker(conn.profile), "now": _now(conn.timezone)},
+        state={"profile_summary": taste.summary_for_talker(conn.profile, conn.taste_off), "now": _now(conn.timezone)},
     )
 
 
@@ -192,6 +294,7 @@ async def _hello(ws: WebSocket, conn: Connection) -> list[dict[str, Any]]:
         conn.user_id = str(msg.get("user_id") or "anonymous")[:64]
         conn.profile = msg.get("profile") or {}
         conn.timezone = msg.get("timezone")
+        conn.taste_off = msg.get("taste") is False
         if os.environ.get("MAC_DEBUG"):
             print(f"mac: hello from {conn.user_id} ({len(conn.profile.get('seeds') or [])} loves, {conn.timezone})", flush=True)
     elif msg:
@@ -245,10 +348,25 @@ async def live(ws: WebSocket) -> None:
             elif kind == "profile":
                 conn.profile = msg.get("profile") or {}
             elif kind == "noticed":
-                # A new track or media page; now and then that's worth a "very you" nudge.
-                job = asyncio.create_task(lens.noticed(conn, msg))
-                _background_jobs.add(job)
-                job.add_done_callback(_background_jobs.discard)
+                # A new track or media page: it counts towards learning the taste, and now and
+                # then it's worth a "very you" nudge.
+                background(lens.noticed(conn, msg))
+            elif kind == "feedback" and (msg.get("title") or "").strip():
+                # A thumbs up or down on a card.
+                background(learning.card_feedback(conn, str(msg["title"]), "up" if msg.get("verdict") == "up" else "down",
+                                                  str(msg.get("tag") or "")))
+            elif kind == "learn_answer" and msg.get("id"):
+                background(learning.answer(conn, str(msg["id"]), bool(msg.get("accept"))))
+            elif kind == "settings":
+                # "Use my taste" switched: a fresh conversation, so the talker hears it.
+                off = msg.get("taste") is False
+                if off != conn.taste_off:
+                    conn.taste_off = off
+                    convo.close()
+                    unregister_talker(session.id)
+                    session = await _new_session(conn)
+                    register_talker(session.id, conn)
+                    convo = LiveConversation(conn, session)
             elif kind == "run_routine" and (msg.get("goal") or "").strip():
                 # A weekly job came due on the Mac (plans.repeat_weekly).
                 conn.tasks.start(str(msg["goal"]), str(msg.get("title") or "Weekly"), quiet=True)

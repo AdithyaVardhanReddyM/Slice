@@ -1,0 +1,17 @@
+# Keep secrets, local state and everything the Mac brain does not run out of the image.
+.env
+.env.*
+!.env.example
+.venv/
+.ruff_cache/
+.adk/
+.git/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.log
+Dockerfile
+.dockerignore
+.gcloudignore
+scripts/
+package.json

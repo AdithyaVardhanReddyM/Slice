@@ -15,6 +15,7 @@ directly with TICKETMASTER_API_KEY or through the user's Composio account.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import datetime as dt
 import html
@@ -27,7 +28,7 @@ from typing import Any
 import httpx
 from google.adk.tools import ToolContext
 
-from . import accounts, qloo
+from . import accounts, generic, memory, qloo
 from .connection import Connection, for_worker, report, save_profile
 from .taste import Signals, point_of, rank, signals_for, whose
 
@@ -179,8 +180,15 @@ async def shows_for_me(city: str, tool_context: ToolContext, date_from: str = ""
         count: How many to show (1-6).
     """
     conn, task = for_worker(tool_context)
-    start = _date(date_from)
-    end = _date(date_to, start)
+    found = await ranked_shows(conn, task, city, _date(date_from), _date(date_to, _date(date_from)), near, for_person, count)
+    if found.get("shows") and conn.tasks:
+        conn.tasks.show_cards(task, show_cards_for(found["shows"]))
+    return found
+
+
+async def ranked_shows(conn: Connection, task: Any, city: str, start: dt.date, end: dt.date, near: str = "",
+                       for_person: str = "", count: int = 3) -> dict[str, Any]:
+    """Shared by shows_for_me and the playbooks: the shows ranked for a taste, without cards."""
     point = await point_of(conn, near or city)
     found = await _events(conn, city, start, end, point)
     if "events" not in found:
@@ -203,13 +211,15 @@ async def shows_for_me(city: str, tool_context: ToolContext, date_from: str = ""
         because = f", because {who} {' and '.join(r['because'])}" if r.get("because") else ""
         out.append({**events[i], "act": r["name"], "match": r["match"], "because": r.get("because"),
                     "reason": f"{r['match']}% match{because}", "act_image": (r.get("entity") or {}).get("image")})
-    if conn.tasks and out:
-        conn.tasks.show_cards(task, [{k: v for k, v in {
-            "title": e["act"], "tag": "Show", "subtitle": f"{e['venue']}, {e['date']} {e['time']}".strip(),
-            "image": e.get("image") or e.get("act_image"), "url": e.get("url"), "reason": e["reason"],
-        }.items() if v} for e in out])
     await report(conn, task, "qloo", f"Ranked {len(events)} shows for {whose(for_person or 'you')} taste", out[0]["act"] if out else "none known to Qloo")
     return {"shows": out, "looked_at": len(events)}
+
+
+def show_cards_for(shows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [{k: v for k, v in {
+        "title": e["act"], "tag": "Show", "subtitle": f"{e['venue']}, {e['date']} {e['time']}".strip(),
+        "image": e.get("image") or e.get("act_image"), "url": e.get("url"), "reason": e["reason"],
+    }.items() if v} for e in shows]
 
 
 async def plan_walkable_day(start: str, stops: str, tool_context: ToolContext, start_time: str = "10:00",
@@ -238,17 +248,51 @@ async def plan_walkable_day(start: str, stops: str, tool_context: ToolContext, s
     if here is None:
         return {"error": f"Couldn't place {start}."}
     step_free = accessible or sig.step_free
-    clock = dt.datetime.combine(_date(date), dt.time.fromisoformat(start_time if len(start_time) == 5 else "10:00"))
-    used: set[str] = set()
+    clock = dt.datetime.combine(_date(date), _hhmm(start_time))
+    plan, _, _ = await walkable_stops(conn, sig, here, [k.strip() for k in stops.split(",") if k.strip()], clock, step_free, where=start)
+    day_title = title or f"{'Your' if sig.who == 'you' else whose(sig.who).capitalize()} day from {start.split(',')[0]}"
+    if conn.tasks:
+        # One card per day: a trip plans several.
+        conn.tasks.show_view(task, {"type": "timeline", "key": date or day_title, "title": day_title, "stops": [{k: v for k, v in s.items() if k not in ("id", "area")} for s in plan]})
+    walking = sum(s.get("walk_min") or 0 for s in plan)
+    await report(conn, task, "qloo", f"Planned {len(plan)} stops for {whose(sig.who)} taste", f"{walking} min of walking in all")
+    return {"for": sig.who, "stops": plan, "step_free": step_free,
+            "next": "Merge in fixed things (calendar, a show, dinner) with show_day_plan if needed."}
+
+
+def _hhmm(text: str, default: str = "10:00") -> dt.time:
+    try:
+        return dt.time.fromisoformat(text.strip()[:5])
+    except Exception:
+        return dt.time.fromisoformat(default)
+
+
+async def walkable_stops(conn: Connection, sig: Signals, here: dict[str, float], kinds: list[str], clock: dt.datetime,
+                         step_free: bool = False, used: set[str] | None = None, where: str = "",
+                         stand_ins: dict[str, str] | None = None) -> tuple[list[dict[str, Any]], dict[str, float], dt.datetime]:
+    """Shared by plan_walkable_day and the playbooks: one Qloo place per kind, each near the last.
+    `used` can be shared by days planned at the same time, so they don't pick the same places.
+    Returns the stops, where the walk ends and the time after the last stop. A kind with nothing
+    nearby becomes its stand-in (`stand_ins`, record_store -> bookstore) if one is given. With taste
+    off, the popular picks for `where` instead (generic.py), not chained by distance."""
+    used = used if used is not None else set()
+    if conn.taste_off:
+        return await _popular_stops(where or conn.city or "", kinds, clock, used), here, clock
+    # What the user said isn't for them never comes back (memory.py).
+    skip = sig.ids + memory.dislike_ids(conn.profile)
     plan: list[dict[str, Any]] = []
-    for kind in [k.strip() for k in stops.split(",") if k.strip()]:
-        genre = kind if kind in qloo.PLACE_GENRES else None
+    for kind in kinds:
         found: list[dict[str, Any]] = []
-        for radius in (WALK_RADIUS_M, WALK_RADIUS_M * 2):
-            found = [p for p in await qloo.recommend("place", sig.ids, near=here, radius_m=radius, genre=genre, take=8,
-                                                     age=sig.age, accessible=step_free, exclude=sig.ids)
-                     if p["id"] not in used and p.get("location")]
+        for option in [kind] + ([stand_ins[kind]] if stand_ins and kind in stand_ins else []):
+            genre = option if option in qloo.PLACE_GENRES else None
+            for radius in (WALK_RADIUS_M, WALK_RADIUS_M * 2):
+                found = [p for p in await qloo.recommend("place", sig.ids, near=here, radius_m=radius, genre=genre, take=8,
+                                                         age=sig.age, accessible=step_free, exclude=skip)
+                         if p["id"] not in used and p.get("location")]
+                if found:
+                    break
             if found:
+                kind = option
                 break
         if not found:
             plan.append({"kind": kind, "title": f"No {kind.replace('_', ' ')} found nearby", "time": clock.strftime("%H:%M")})
@@ -260,18 +304,27 @@ async def plan_walkable_day(start: str, stops: str, tool_context: ToolContext, s
         plan.append({
             "kind": kind, "time": clock.strftime("%H:%M"), "title": pick["name"], "address": pick.get("address"),
             "lat": pick["location"]["lat"], "lon": pick["location"]["lon"], "walk_min": walk, "image": pick.get("image"),
-            "note": (pick.get("description") or "")[:110], "id": pick["id"],
+            "note": (pick.get("description") or "")[:110], "id": pick["id"], "area": pick.get("neighborhood"),
         })
         clock += dt.timedelta(minutes=STAY_MIN.get(kind, 60))
         here = pick["location"]
-    day_title = title or f"{'Your' if sig.who == 'you' else whose(sig.who).capitalize()} day from {start.split(',')[0]}"
-    if conn.tasks:
-        # One card per day: a trip plans several.
-        conn.tasks.show_view(task, {"type": "timeline", "key": date or day_title, "title": day_title, "stops": [{k: v for k, v in s.items() if k != "id"} for s in plan]})
-    walking = sum(s.get("walk_min") or 0 for s in plan)
-    await report(conn, task, "qloo", f"Planned {len(plan)} stops for {whose(sig.who)} taste", f"{walking} min of walking in all")
-    return {"for": sig.who, "stops": plan, "step_free": step_free,
-            "next": "Merge in fixed things (calendar, a show, dinner) with show_day_plan if needed."}
+    return plan, here, clock
+
+
+async def _popular_stops(where: str, kinds: list[str], clock: dt.datetime, used: set[str]) -> list[dict[str, Any]]:
+    """Taste off: each stop is the most popular of its kind in the area, from a model's general
+    knowledge; no Qloo, so no walking times."""
+    found = await asyncio.gather(*(generic.picks("place", where, k if k in qloo.PLACE_GENRES else "", 3) for k in kinds))
+    plan = []
+    for kind, out in zip(kinds, found):
+        pick = next((p for p in out.get("picks") or [] if p["name"] not in used), None)
+        if pick is None:
+            continue
+        used.add(pick["name"])
+        plan.append({"kind": kind, "time": clock.strftime("%H:%M"), "title": pick["name"], "address": pick.get("address"),
+                     "note": (pick.get("description") or "")[:110]})
+        clock += dt.timedelta(minutes=STAY_MIN.get(kind, 60) + 10)
+    return plan
 
 
 async def show_day_plan(title: str, stops_json: str, tool_context: ToolContext) -> dict[str, Any]:
@@ -288,12 +341,27 @@ async def show_day_plan(title: str, stops_json: str, tool_context: ToolContext) 
         stops = json.loads(stops_json)
     except json.JSONDecodeError as err:
         return {"error": f"stops_json isn't valid JSON: {err}"}
-    clean = [{k: v for k, v in s.items() if k in ("time", "title", "kind", "note", "address", "walk_min", "lat", "lon", "image", "with")}
-             for s in stops if isinstance(s, dict) and s.get("title")]
+    clean = timeline_stops(stops)
     if conn.tasks:
         conn.tasks.show_view(task, {"type": "timeline", "key": title, "title": title, "stops": clean[:10]})
     await report(conn, task, "slice", f"Showed the plan, {len(clean)} stops")
     return {"shown": len(clean)}
+
+
+def timeline_stops(stops: list[Any]) -> list[dict[str, Any]]:
+    """The fields a timeline card draws (RichViews.swift), with walk_min a whole number."""
+    clean = []
+    for s in stops:
+        if not isinstance(s, dict) or not s.get("title"):
+            continue
+        row = {k: v for k, v in s.items() if k in ("time", "title", "kind", "note", "address", "walk_min", "lat", "lon", "image", "with") and v is not None}
+        if "walk_min" in row:
+            try:
+                row["walk_min"] = round(float(row["walk_min"]))
+            except (TypeError, ValueError):
+                row.pop("walk_min")
+        clean.append(row)
+    return clean
 
 
 async def score_addresses(places: str, city: str, tool_context: ToolContext, for_person: str = "") -> dict[str, Any]:

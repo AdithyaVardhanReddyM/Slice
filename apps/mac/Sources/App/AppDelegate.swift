@@ -14,7 +14,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         talkKeys.onCancel = { [agent] in agent.cancelTalking() }
         talkKeys.start()
 
-        agent.connect()
+        #if DEBUG
+        // Drawing Settings for a check: no brain connection, so a sample profile stays on screen only.
+        let checking = UserDefaults.standard.string(forKey: "renderSettings") != nil
+            || UserDefaults.standard.string(forKey: "snapshotWindows") != nil
+        #else
+        let checking = false
+        #endif
+        if !checking { agent.connect() }
 
         #if DEBUG
         // Launch arguments for working on the island without touching it:
@@ -56,8 +63,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
-        // First run, or a permission was turned off: show what's missing.
-        if !Permissions.allGranted {
+        #if DEBUG
+        //   -renderSettings /some/dir                 the taste graph, memory and onboarding as PNGs, then quit
+        if let dir = defaults.string(forKey: "renderSettings") {
+            Task { @MainActor in
+                await SettingsRender.write(agent: self.agent, to: URL(fileURLWithPath: dir))
+                NSApp.terminate(nil)
+            }
+            return
+        }
+        //   -snapshotWindows /some/dir                the real Settings and onboarding windows, as drawn
+        if let dir = defaults.string(forKey: "snapshotWindows") {
+            Task { @MainActor in
+                await SettingsRender.snapshotWindows(agent: self.agent, to: URL(fileURLWithPath: dir))
+                NSApp.terminate(nil)
+            }
+            return
+        }
+        #endif
+
+        // First run: get to know the user's taste (and ask for permissions on the way).
+        // Later, a permission that was turned off opens Settings to show what's missing.
+        if !TasteStore.isOnboarded(agent.profile) || UserDefaults.standard.bool(forKey: "onboarding") {
+            OnboardingWindow.shared.show(agent: agent)
+        } else if !Permissions.allGranted {
             SettingsWindow.shared.show(agent: agent)
         }
     }

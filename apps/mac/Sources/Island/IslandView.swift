@@ -61,12 +61,21 @@ struct IslandView: View {
 }
 
 /// One line under the notch for something Slice brings up by itself; hover to open it.
-private struct NudgePill: View {
+struct NudgePill: View {
     let nudge: Nudge
+
+    /// A nudge's symbol: a gift for a birthday, a heart for taste ("very you", "add it to your taste?").
+    static func symbol(_ kind: String) -> String {
+        switch kind {
+        case "birthday": "gift.fill"
+        case "learn": "heart.circle.fill"
+        default: "heart.fill"
+        }
+    }
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: nudge.kind == "birthday" ? "gift.fill" : "touchid")
+            Image(systemName: Self.symbol(nudge.kind))
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Brand.yellow)
             Text(nudge.kind == "why" ? "\(nudge.title): \(nudge.line)" : nudge.title)

@@ -203,7 +203,8 @@ class TaskManager:
         """Add a rich card ({"type": "person" | "timeline" | "map" | "note", ...}); a newer one of
         the same type and key replaces the old one."""
         same = lambda v: v.get("type") == view.get("type") and v.get("key") == view.get("key")  # noqa: E731
-        task.views = [v for v in task.views if not same(v)][-5:] + [view]
+        # Eight: a week-long trip is a map plus seven day timelines.
+        task.views = [v for v in task.views if not same(v)][-7:] + [view]
         self._emit(task)
 
     # --- internals ----------------------------------------------------------

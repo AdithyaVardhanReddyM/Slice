@@ -6,6 +6,8 @@
   "scripts": {
     "xcode": "xcodegen generate && open SliceMac.xcodeproj",
     "app": "./scripts/run.sh",
-    "app:build": "./scripts/run.sh --build"
+    "app:build": "./scripts/run.sh --build",
+    "release": "./scripts/release.sh",
+    "release:check": "./scripts/release.sh --check"
   }
 }

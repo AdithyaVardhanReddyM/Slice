@@ -7,13 +7,15 @@ import SwiftUI
 @MainActor
 final class SettingsWindow {
     static let shared = SettingsWindow()
-    private var window: NSWindow?
+    private(set) var window: NSWindow?
 
     func show(agent: AgentSession, tab: SettingsView.Tab = .general) {
         if window == nil {
-            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(agent: agent)))
+            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(agent: agent, initial: tab)))
             window.title = "Slice Settings"
-            window.styleMask = [.titled, .closable]
+            window.styleMask = [.titled, .closable, .resizable, .miniaturizable]
+            window.setContentSize(NSSize(width: 1180, height: 760))
+            window.contentMinSize = NSSize(width: 900, height: 600)
             window.isReleasedWhenClosed = false
             window.center()
             self.window = window
@@ -25,25 +27,54 @@ final class SettingsWindow {
 }
 
 struct SettingsView: View {
-    enum Tab: Hashable { case general, taste, accounts }
+    enum Tab: String, Hashable, CaseIterable, Identifiable {
+        case general, taste, memory, accounts
+        var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .general: "General"
+            case .taste: "Your taste"
+            case .memory: "Memory"
+            case .accounts: "Accounts"
+            }
+        }
+
+        var symbol: String {
+            switch self {
+            case .general: "gearshape"
+            case .taste: "heart.circle"
+            case .memory: "brain.head.profile"
+            case .accounts: "person.crop.circle.badge.checkmark"
+            }
+        }
+    }
+
     static let selectTab = Notification.Name("SliceSettingsSelectTab")
 
     let agent: AgentSession
-    @State private var tab: Tab = .general
+    @State private var tab: Tab
+
+    init(agent: AgentSession, initial: Tab = .general) {
+        self.agent = agent
+        _tab = State(initialValue: initial)
+    }
 
     var body: some View {
-        TabView(selection: $tab) {
-            GeneralSettings(agent: agent)
-                .tabItem { Label("General", systemImage: "gearshape") }
-                .tag(Tab.general)
-            TasteSettings(agent: agent)
-                .tabItem { Label("Taste", systemImage: "heart") }
-                .tag(Tab.taste)
-            AccountsSettings()
-                .tabItem { Label("Accounts", systemImage: "person.crop.circle.badge.checkmark") }
-                .tag(Tab.accounts)
+        NavigationSplitView {
+            List(Tab.allCases, selection: $tab) { tab in
+                Label(tab.title, systemImage: tab.symbol).tag(tab)
+            }
+            .navigationSplitViewColumnWidth(min: 170, ideal: 180, max: 220)
+        } detail: {
+            switch tab {
+            case .general: GeneralSettings(agent: agent)
+            case .taste: TasteSpace(agent: agent)
+            case .memory: MemorySpace(agent: agent)
+            case .accounts: AccountsSettings()
+            }
         }
-        .frame(width: 560, height: 620)
+        .frame(minWidth: 900, minHeight: 600)
         .onReceive(NotificationCenter.default.publisher(for: Self.selectTab)) { note in
             if let tab = note.object as? Tab { self.tab = tab }
         }
@@ -57,6 +88,8 @@ private struct GeneralSettings: View {
 
     @State private var granted: [Permissions.Kind: Bool] = [:]
     @State private var suggest = Watchers.suggestVeryYou
+    @State private var learn = Watchers.learnFromPlays
+    @State private var useTaste = true
     @State private var address = BrainSettings.urlString
     @State private var token = BrainSettings.token ?? ""
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -73,13 +106,24 @@ private struct GeneralSettings: View {
                 LabeledContent("Type", value: "Hover over the notch")
             }
             Section {
+                Toggle("Use my taste", isOn: $useTaste)
+                    .onChange(of: useTaste) { if useTaste != agent.useTaste { agent.setUseTaste(useTaste) } }
+                Toggle("Learn from what I play and watch", isOn: $learn)
+                    .onChange(of: learn) { UserDefaults.standard.set(learn, forKey: Watchers.learnKey) }
                 Toggle("Say when something is very you", isOn: $suggest)
                     .onChange(of: suggest) { UserDefaults.standard.set(suggest, forKey: Watchers.suggestKey) }
+                HStack {
+                    Text("Get to know me again")
+                    Spacer()
+                    Button("Start setup") { OnboardingWindow.shared.show(agent: agent) }
+                }
             } header: {
-                Text("Suggestions")
+                Text("Taste")
             } footer: {
-                Text("When what's playing, or the film, show or book page in front, fits your taste very well, a pill drops from the notch with why. At most once an hour.")
-                    .foregroundStyle(.secondary)
+                Text(useTaste
+                     ? "Every pick comes from Qloo's taste graph and what Slice knows about you. Turn it off to see how a plain assistant answers the same thing. What you play and watch adds up in Memory, and Slice asks before adding anything to your taste. A pill can also drop from the notch when something fits you very well, at most once an hour."
+                     : "Taste is off: Slice answers with the popular picks anyone would get, and says so. Turn it back on to compare.")
+                    .foregroundStyle(useTaste ? Color.secondary : Color.orange)
             }
             Section {
                 TextField("Address", text: $address)
@@ -97,12 +141,15 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Brain")
             } footer: {
-                Text("While developing, run the agent server (pnpm --filter @slice/agent dev) and keep \(BrainSettings.defaultURL).")
+                Text("While developing, run the agent server (pnpm --filter @slice/agent dev) and keep \(BrainSettings.localURL).")
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .onAppear(perform: refresh)
+        .onAppear {
+            useTaste = agent.useTaste
+            refresh()
+        }
         .onReceive(tick) { _ in refresh() }
     }
 
@@ -134,226 +181,6 @@ private struct PermissionRow: View {
             } else {
                 Button("Allow") { Permissions.request(kind) }
             }
-        }
-    }
-}
-
-// MARK: Taste
-
-/// The things the user loves, as Qloo entities, and what Qloo reads from them.
-private struct TasteSettings: View {
-    let agent: AgentSession
-
-    @State private var city = ""
-    @State private var loves: [String] = []
-    @State private var query = ""
-    @State private var results: [JSONValue] = []
-    @State private var busy: String?
-    @State private var problem: String?
-    @State private var edited = false
-
-    private var profile: JSONValue { agent.profile }
-
-    var body: some View {
-        Form {
-            Section {
-                TextField("City or neighbourhood", text: $city, prompt: Text("Williamsburg, Brooklyn"))
-                    .onChange(of: city) { edited = true }
-            } header: {
-                Text("Where you live")
-            } footer: {
-                Text("Places are picked around here unless you say otherwise.").foregroundStyle(.secondary)
-            }
-
-            Section {
-                if loves.isEmpty {
-                    Text("Add films, artists, books, places or brands you love. Five is a good start.")
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(loves, id: \.self) { name in
-                    HStack {
-                        Text(name)
-                        Spacer()
-                        Button {
-                            loves.removeAll { $0 == name }
-                            edited = true
-                        } label: {
-                            Image(systemName: "minus.circle")
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                }
-                HStack {
-                    TextField("Search Qloo", text: $query, prompt: Text("Past Lives, Radiohead, Lilia…"))
-                        .onSubmit(search)
-                    Button("Search", action: search)
-                        .disabled(query.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-                ForEach(Array(results.enumerated()), id: \.offset) { _, hit in
-                    let name = hit["name"]?.string ?? ""
-                    HStack(alignment: .firstTextBaseline) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(name)
-                            Text([hit["kind"]?.string, hit["description"]?.string].compactMap { $0 }.joined(separator: ", "))
-                                .font(.callout)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                        }
-                        Spacer()
-                        Button("Add") {
-                            if !loves.contains(name) { loves.append(name) }
-                            results = []
-                            query = ""
-                            edited = true
-                        }
-                    }
-                }
-                HStack {
-                    Button("Add my most played artists from Music", action: importMusic)
-                    Spacer()
-                    Menu("Try a taste") {
-                        ForEach(Self.presets, id: \.name) { preset in
-                            Button(preset.name) {
-                                loves = preset.loves
-                                city = preset.city
-                                edited = true
-                            }
-                        }
-                    }
-                    .fixedSize()
-                    .help("Fill in a ready-made taste, then build it")
-                }
-            } header: {
-                Text("Things you love")
-            }
-
-            Section {
-                if let summary = profile["summary"]?.string, !summary.isEmpty {
-                    Text(summary)
-                } else {
-                    Text("No taste profile yet.").foregroundStyle(.secondary)
-                }
-                let tags = profile["tags"]?.array.compactMap { $0["name"]?.string } ?? []
-                if !tags.isEmpty {
-                    Text(tags.joined(separator: ", "))
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
-                let people = profile["people"]?.object ?? [:]
-                let info = profile["people_info"]?.object ?? [:]
-                ForEach(people.keys.sorted(), id: \.self) { person in
-                    LabeledContent {
-                        Text((people[person]?.array ?? []).compactMap { $0["name"]?.string }.joined(separator: ", "))
-                    } label: {
-                        Text(person)
-                        if let about = Self.about(info[person]) {
-                            Text(about)
-                        }
-                    }
-                }
-                HStack {
-                    if let busy { ProgressView().controlSize(.small); Text(busy).foregroundStyle(.secondary) }
-                    if let problem { Text(problem).foregroundStyle(.red) }
-                    Spacer()
-                    Button(profile["summary"] == nil ? "Build my taste profile" : "Update my taste profile", action: build)
-                        .disabled(busy != nil || loves.isEmpty)
-                        .keyboardShortcut(.defaultAction)
-                }
-            } header: {
-                Text("Your taste, as Qloo reads it")
-            } footer: {
-                Text("Kept on this Mac. Slice adds to it when you tell it what you or your friends love.")
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .formStyle(.grouped)
-        .onAppear(perform: load)
-        .onChange(of: agent.profile) { if !edited { load() } }
-    }
-
-    /// "Dad, 74, Lincoln Park, step-free" for a saved person.
-    static func about(_ info: JSONValue?) -> String? {
-        guard let info else { return nil }
-        var bits = [info["relation"]?.string?.capitalized, info["home"]?.string].compactMap { $0 }
-        if case .number(let age)? = info["age"] { bits.insert("\(Int(age))", at: min(1, bits.count)) }
-        if info["step_free"] == .bool(true) { bits.append("step-free") }
-        if let birthday = info["birthday"]?.string { bits.append("birthday \(birthday)") }
-        return bits.isEmpty ? nil : bits.joined(separator: ", ")
-    }
-
-    /// Two very different tastes, so a demo can be re-run to show the answers come from Qloo.
-    static let presets: [(name: String, city: String, loves: [String])] = [
-        ("Indie, Brooklyn", "Williamsburg, Brooklyn", ["Mitski", "Frank Ocean", "Phoebe Bridgers", "Aftersun", "Lady Bird", "Past Lives"]),
-        ("Country, Nashville", "East Nashville, Nashville", ["Morgan Wallen", "Luke Combs", "Yellowstone", "Top Gun: Maverick", "Patagonia", "Zach Bryan"]),
-    ]
-
-    private func load() {
-        city = profile["city"]?.string ?? ""
-        loves = profile["seeds"]?.array.compactMap { $0["name"]?.string } ?? []
-        edited = false
-    }
-
-    private func search() {
-        let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return }
-        problem = nil
-        Task {
-            do {
-                results = try await BrainHTTP.get("search", query: ["q": q])["results"]?.array ?? []
-                if results.isEmpty { problem = "Qloo has nothing called that." }
-            } catch {
-                problem = "Can't reach the brain: \(error.localizedDescription)"
-            }
-        }
-    }
-
-    private func build() {
-        busy = "Reading your taste…"
-        problem = nil
-        // People and their notes carry over; seeds and tags are rebuilt from the list.
-        var base = profile.object
-        base["seeds"] = nil
-        base["tags"] = nil
-        Task {
-            defer { busy = nil }
-            do {
-                let res = try await BrainHTTP.post("profile/build", body: [
-                    "seeds": .array(loves.map(JSONValue.string)), "city": .string(city), "base": .object(base),
-                ])
-                if let built = res["profile"] {
-                    agent.setProfile(built)
-                    edited = false
-                    load()
-                }
-            } catch {
-                problem = error.localizedDescription
-            }
-        }
-    }
-
-    private func importMusic() {
-        busy = "Reading your Music library…"
-        Task {
-            defer { busy = nil }
-            let script = """
-            tell application "Music"
-                set out to ""
-                repeat with t in (get every track of library playlist 1 whose played count > 2)
-                    set out to out & (artist of t) & linefeed
-                end repeat
-                return out
-            end tell
-            """
-            guard let text = await OSAScript.run(script) else {
-                problem = "Couldn't read Music. Is Slice allowed to control it (System Settings > Privacy > Automation)?"
-                return
-            }
-            var counts: [String: Int] = [:]
-            for artist in text.components(separatedBy: "\n") where !artist.isEmpty { counts[artist, default: 0] += 1 }
-            let top = counts.sorted { $0.value > $1.value }.prefix(8).map(\.key)
-            if top.isEmpty { problem = "Music has no play history to go on." }
-            for name in top where !loves.contains(name) { loves.append(name) }
-            edited = true
         }
     }
 }

@@ -40,10 +40,21 @@ enum JSONValue: Codable, Sendable, Equatable {
         if case .string(let s) = self { return s }
         return nil
     }
+
+    var double: Double? {
+        if case .number(let n) = self { return n }
+        return nil
+    }
+
+    var bool: Bool? {
+        if case .bool(let b) = self { return b }
+        return nil
+    }
 }
 
-extension JSONValue: ExpressibleByStringLiteral, ExpressibleByBooleanLiteral, ExpressibleByDictionaryLiteral {
+extension JSONValue: ExpressibleByStringLiteral, ExpressibleByBooleanLiteral, ExpressibleByDictionaryLiteral, ExpressibleByArrayLiteral {
     init(stringLiteral value: String) { self = .string(value) }
+    init(arrayLiteral elements: JSONValue...) { self = .array(elements) }
     init(booleanLiteral value: Bool) { self = .bool(value) }
     init(dictionaryLiteral elements: (String, JSONValue)...) {
         self = .object(Dictionary(elements, uniquingKeysWith: { $1 }))

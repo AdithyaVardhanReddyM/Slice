@@ -5,6 +5,7 @@ struct BrainEvent: Decodable, Sendable {
     enum Kind: String, Decodable, Sendable {
         case ready, transcript, activity, interrupted, error, task, profile, nudge
         case toolCall = "tool_call"
+        case feedbackAck = "feedback_ack"
         case turnComplete = "turn_complete"
         case operatorStatus = "operator"
         case unknown
@@ -40,9 +41,14 @@ struct BrainEvent: Decodable, Sendable {
     // ready, error
     let model: String?
     let message: String?
+    // feedback_ack: a thumbs up or down on a card was saved (title, verdict, ok, name, message)
+    let title: String?
+    let verdict: String?
+    let ok: Bool?
 
     enum CodingKeys: String, CodingKey {
         case type, role, text, partial, id, name, args, kind, label, detail, active, task, profile, nudge, model, message
+        case title, verdict, ok
         case taskId = "task_id"
     }
 }
@@ -62,7 +68,15 @@ struct TaskItem: Decodable, Sendable, Identifiable, Equatable {
         let reason: String?
         /// A one-word label over the picture ("Brand", "Vinyl", "Show").
         let tag: String?
+        /// Whose picks these are when they aren't the user's (gifts, Dad's week): no thumbs then,
+        /// since a thumbs up teaches the user's own taste.
+        var forPerson: String? = nil
         var id: String { title + (subtitle ?? "") }
+
+        enum CodingKeys: String, CodingKey {
+            case title, subtitle, image, url, reason, tag
+            case forPerson = "for"
+        }
 
         init(title: String, subtitle: String?, image: String?, url: String?, reason: String?, tag: String? = nil) {
             self.title = title
@@ -269,11 +283,20 @@ struct Nudge: Decodable, Sendable, Equatable, Identifiable {
     /// For a nudge with a button: what to ask Slice ("It's Maya's birthday…").
     var prompt: String?
     var action: String?
+    /// A "learn" nudge: what Slice would add to the taste ("Add Big Thief to your taste?").
+    var learn: Learn?
 
-    enum CodingKeys: String, CodingKey { case id, kind, title, line, show, why, prompt, action }
+    struct Learn: Decodable, Sendable, Equatable {
+        let id: String
+        let name: String
+        let kind: String?
+        let image: String?
+    }
+
+    enum CodingKeys: String, CodingKey { case id, kind, title, line, show, why, prompt, action, learn }
 
     init(id: String, kind: String, title: String, line: String, show: Bool = false, why: Why? = nil,
-         prompt: String? = nil, action: String? = nil) {
+         prompt: String? = nil, action: String? = nil, learn: Learn? = nil) {
         self.id = id
         self.kind = kind
         self.title = title
@@ -282,6 +305,7 @@ struct Nudge: Decodable, Sendable, Equatable, Identifiable {
         self.why = why
         self.prompt = prompt
         self.action = action
+        self.learn = learn
     }
 
     init(from decoder: Decoder) throws {
@@ -294,5 +318,6 @@ struct Nudge: Decodable, Sendable, Equatable, Identifiable {
         why = try? c.decodeIfPresent(Why.self, forKey: .why)
         prompt = try? c.decodeIfPresent(String.self, forKey: .prompt)
         action = try? c.decodeIfPresent(String.self, forKey: .action)
+        learn = try? c.decodeIfPresent(Learn.self, forKey: .learn)
     }
 }

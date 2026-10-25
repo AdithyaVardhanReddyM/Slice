@@ -3,7 +3,8 @@ import Contacts
 
 /// What Slice keeps an eye on by itself, lightly (a look every 20 seconds):
 /// - what's playing and the film, show, book or music page in front: sent as `noticed`, so the
-///   brain can say "very you" now and then (at most once an hour; slice_mac/lens.py),
+///   brain learns the user's taste from it (slice_mac/learning.py) and can say "very you" now
+///   and then (at most once an hour; slice_mac/lens.py),
 /// - birthdays of the people the user saved, up to ten days out: a pill with "Sort it",
 /// - weekly jobs the user asked for (slice_mac/plans.py repeat_weekly): `run_routine` when due.
 @MainActor
@@ -12,6 +13,7 @@ final class Watchers {
     static let mediaHosts = ["netflix.com", "letterboxd.com", "imdb.com", "goodreads.com", "open.spotify.com",
                              "music.apple.com", "youtube.com", "wikipedia.org"]
     static let suggestKey = "suggestVeryYou"
+    static let learnKey = "learnFromPlays"
     private static let every: Duration = .seconds(20)
     private static let weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
 
@@ -27,6 +29,10 @@ final class Watchers {
         UserDefaults.standard.object(forKey: suggestKey) as? Bool ?? true
     }
 
+    static var learnFromPlays: Bool {
+        UserDefaults.standard.object(forKey: learnKey) as? Bool ?? true
+    }
+
     func start() {
         loop = Task { [weak self] in
             var tick = 0
@@ -40,7 +46,7 @@ final class Watchers {
 
     private func look(tick: Int) async {
         guard let agent, agent.connection == .online else { return }
-        if Self.suggestVeryYou { await noticeMedia(agent) }
+        if Self.suggestVeryYou || Self.learnFromPlays { await noticeMedia(agent) }
         if tick % 3 == 0 { runDueRoutines(agent) }
         if tick % 90 == 0 { await birthdays(agent) }
     }
@@ -52,7 +58,8 @@ final class Watchers {
             let key = "track:\(artist):\(playing["track"]?.string ?? "")"
             if key != lastNoticed {
                 lastNoticed = key
-                agent.sendFrame(["type": "noticed", "artist": .string(artist), "track": playing["track"] ?? .null])
+                agent.sendFrame(["type": "noticed", "artist": .string(artist), "track": playing["track"] ?? .null,
+                                 "learn": .bool(Self.learnFromPlays), "nudge": .bool(Self.suggestVeryYou)])
             }
             return
         }
@@ -63,7 +70,8 @@ final class Watchers {
         let key = "page:\(link)"
         guard key != lastNoticed else { return }
         lastNoticed = key
-        agent.sendFrame(["type": "noticed", "title": .string(title), "url": .string(link)])
+        agent.sendFrame(["type": "noticed", "title": .string(title), "url": .string(link),
+                         "learn": .bool(Self.learnFromPlays), "nudge": .bool(Self.suggestVeryYou)])
     }
 
     // MARK: Birthdays

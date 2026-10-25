@@ -145,7 +145,7 @@ private struct LensBadge: View {
                         .frame(width: 16, height: 16)
                         .background(Circle().fill(Brand.yellow))
                 }
-                Image(systemName: "touchid")
+                Image(systemName: "heart.fill")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(badge.top ? Brand.yellow : .white.opacity(0.7))
                 Text(badge.label)

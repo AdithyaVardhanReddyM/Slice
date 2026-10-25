@@ -1,0 +1,15 @@
+# What `gcloud builds submit` uploads. Without this file gcloud ignores the repo's .gitignore
+# and would upload .env (real keys) to the build bucket.
+.env
+.env.*
+!.env.example
+.venv/
+.ruff_cache/
+.adk/
+.git/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.log
+scripts/
+package.json

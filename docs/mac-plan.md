@@ -230,6 +230,102 @@ Settings > Taste > Try a taste > Country, Nashville and run a demo again
   prefers a cultural match; a venue name ("Brooklyn Steel") isn't taken for
   the borough it starts with, and Apple Maps places venues and addresses.
 
+## Knowing the user (built 2026-10-26)
+
+How Slice gets to know someone, remembers it, and keeps learning:
+
+- **Onboarding** (`Sources/Onboarding/OnboardingView.swift`, `slice_mac/onboarding.py`):
+  the first launch (no loves yet, or `-onboarding YES`) opens a light, brand
+  window in eight steps: welcome and name, home, three picking steps (artists;
+  films and shows; brands and books), six quick questions, permissions with a
+  "try talking" panel (the first real push-to-talk), and the taste it read.
+  Picking steps open on 20 wide-ranging Qloo entities with pictures; after each
+  pick, "Because of your picks" asks Qloo for what fits everything picked so
+  far, across steps (Mitski and Bon Iver bring Frances Ha and Fleabag to the
+  film step, Patagonia and Herschel to brands). The questions become plain
+  facts ("Doesn't eat meat", "Gets around on foot"), never scores. Settings >
+  General > "Get to know me again" reopens it.
+- **Memory** (`slice_mac/memory.py`): the profile gains `dislikes` (never
+  picked again, "Not for you" on the lens), `facts` (about the user or a saved
+  person), `evidence` (quiet signals adding up), `suggested` (waiting for a
+  yes), `declined`, `journal` (every change and why, with undo) and `prefs`.
+  Loves carry `source` (onboarding, settings, said, liked, learned, screen,
+  music), `at`, `image` and `weight`. Qloo takes 20 signals and no weights
+  (a weighted JSON signal 400s, checked 2026-10-26), so weights decide which
+  20 loves steer (`memory.signal_seeds`); using a love keeps it strong.
+- **The learning loop** (`slice_mac/learning.py`): saying "I loved Perfect
+  Days" or a thumbs up on a card adds a love at once; "not for me" or a thumbs
+  down adds a dislike (only for an exact Qloo match: "horror films" becomes a
+  fact, not the book that starts with those words); "I'm vegetarian" is a fact.
+  Quiet signals (a track playing, a film page open, a lens badge tapped, "why
+  do I love this?") add up per entity, capped per day; past 6 points on two
+  days (`MAC_LEARN_FAST=1`: 3 points, one day) an "Add it to your taste?" pill
+  drops from the notch (one per 20 minutes; the rest wait in Settings >
+  Memory). Each change re-reads the taste five seconds later and the journal
+  says how it moved ("Your taste now reads more folk and indie rock, less
+  identity and vulnerable"). Cards for someone else carry `for` and get no
+  thumbs.
+- **What the profile reads as** is now the words the loves themselves share in
+  Qloo (`graph.reads_as`: Intimate, Introspective, Melancholic, Folk); tag
+  insights for the same loves gave "lesbian", "female protagonist", "friend".
+  The summary speaks to the user ("You love…"); the talker gets it quoted.
+- **The taste graph** (Settings > Your taste, `slice_mac/graph.py`,
+  `Sources/UI/GraphCanvas.swift`, `Sources/Settings/TasteSpace.swift`): you
+  in the middle, loves on a ring (size is weight), the threads two or more
+  loves share around them, Qloo's next picks (dashed, tied to the loves behind
+  them) and saved people outside (their own loves show when selected),
+  dislikes greyed. Planned radially (each thread at the mean angle of its
+  loves) then nudged apart; drag, pan, zoom, hover lights up a node's ties,
+  click opens an inspector with actions (why, remove, not for me, add a pick,
+  forget a person). Filters by kind, people and next picks. The graph is kept
+  in Application Support so Settings opens on it at once.
+- **Memory** (Settings > Memory, `Sources/Settings/MemorySpace.swift`): a graph
+  drawn from the profile (About you, each person, Learning, Not for you,
+  Every week, each fanning its details out), the "Add to your taste?" waiting
+  list, a timeline of every change with Undo, and a box to tell Slice
+  something to remember (about you or a saved person).
+- **Taste on or off** (Settings > General > "Use my taste", `slice_mac/generic.py`):
+  off, picks, rankings, the lens, why cards, gifts and city areas come from
+  Gemini's general knowledge with no Qloo call, labelled as popular picks, and
+  the talker says so. A `settings` frame starts a fresh conversation that
+  knows. Checked over /mac/live: off, "What should I watch tonight?" gave
+  Dune: Part Two; on, Licorice Pizza.
+- **Rendering for checks**: `-renderSettings <dir> [-renderProfile taste.json]`
+  writes the taste graph, an inspector, memory and every onboarding step as
+  PNGs (needs the brain for the graph and tiles; text fields draw as blocks).
+
+## Measured (2026-10-26, combined tools)
+
+Each long demo is now one worker tool (`slice_mac/playbooks.py`: `plan_trip`,
+`plan_day_out`, `plan_for_someone`, `gift_for`) that runs the chain in Python,
+with independent parts at the same time, and shows the same cards. The worker
+takes two model steps: call the playbook, then speak. Follow-ups reuse what
+was planned (`add_this_plan_to_calendar`, `print_this_plan`), so the plan is
+never written back out as JSON. Fake Mac over /mac/live with the indie
+Brooklyn profile; times run from the typed request to the task's answer and
+include the talker's 4 to 5 s hand-off. No Ticketmaster key, so no shows.
+
+| Demo | Before (old playbook, same day) | After | Worker model steps |
+| --- | --- | --- | --- |
+| Lisbon trip, 4 days | 37 s | 16 to 19 s (23 s with a cold cache) | 8 to 2 |
+| Saturday with Sam | 36 s | 13 to 15 s | 4 to 2 |
+| Dad's week | 23 s | 11 to 13 s | 5 to 2 |
+| Gift from Letterboxd | 30 s | 19 to 20 s | 4 to 2 |
+
+- Inside the playbooks: the trip takes 8 s warm and 13 s cold (map, weather and
+  shows in 3 to 5 s, then the four days at once); the day out takes 3 to 5 s;
+  Dad's week takes 3 s warm and 12 s cold; the gift takes 8 s (reading the
+  screen and saving Maya is 7 s of it).
+- Follow-ups: "add all of it to my calendar" took 5 s (one yes, 22 events),
+  and "make the large-print page" took 6 s. Saturday with taste off took 16 s
+  (popular picks from generic.py, the calendar still respected).
+- The old Saturday spent 7 to 11 s per step writing a 1,000-token
+  `show_day_plan` JSON. Today's 3.8 Flash steps were otherwise 2 to 4 s, with
+  one 27 s stall that hit the 25 s step timeout (`STEP_TIMEOUT_S`) and fell
+  back. Slow runs (33 to 39 s for Dad's week) were a stalled step or a 16 s
+  talker hand-off, not the tools.
+- The 21 Oct numbers below were measured on a slower quota day.
+
 ## Measured (2026-10-21, fake Mac over /mac/live, real talker and worker)
 
 - Lens on a Netflix screen by voice: badges at 9 s, the spoken pick at 14 s
@@ -262,7 +358,7 @@ Mac → brain:
 
 | Frame | Meaning |
 | --- | --- |
-| `{"type":"hello","user_id","profile","timezone"}` | Always the first frame |
+| `{"type":"hello","user_id","profile","timezone","taste"}` | Always the first frame; `taste` false means "Use my taste" is off |
 | binary | Mic audio, PCM16 mono 16 kHz, about 100 ms per frame, only between `talk_start` and `talk_end` |
 | `{"type":"talk_start"}` / `{"type":"talk_end"}` | The talk keys went down (held past 180 ms) / up |
 | `{"type":"text","text":"…"}` | Typed in the island |
@@ -272,7 +368,10 @@ Mac → brain:
 | `{"type":"task_cancel","id"}` | The card's Stop |
 | `{"type":"profile","profile"}` | Settings rebuilt the taste profile |
 | `{"type":"reset"}` | New conversation (new talker session; tasks keep running) |
-| `{"type":"noticed","artist","track"}` or `{"type":"noticed","title","url"}` | A new track, or a film, show, book or music page in front (`Agent/Watchers.swift`, every 20 s, only media sites); the brain may answer with a `nudge` |
+| `{"type":"noticed","artist","track","learn","nudge"}` or `{"type":"noticed","title","url","learn","nudge"}` | A new track, or a film, show, book or music page in front (`Agent/Watchers.swift`, every 20 s, only media sites): it counts towards learning (`learn`) and may bring a "very you" `nudge` |
+| `{"type":"feedback","title","verdict":"up"\|"down","tag"}` | A thumbs up or down on a card; answered with `feedback_ack` |
+| `{"type":"learn_answer","id","accept"}` | The answer to an "Add it to your taste?" pill |
+| `{"type":"settings","taste":bool}` | "Use my taste" switched; a fresh talker session |
 | `{"type":"run_routine","title","goal"}` | A weekly job came due (`profile.routines`); it runs as a quiet task (a card, no voice) |
 
 Brain → Mac:
@@ -285,7 +384,8 @@ Brain → Mac:
 | `{"type":"tool_call","id","name","args"}` | Run a Mac tool (below) |
 | `{"type":"activity","kind","label","detail","task_id"}` | One line per tool call; with a `task_id` it belongs to that task's card |
 | `{"type":"task","task":{id,title,status,steps,question,confirm,say,cards,views,error}}` | A task changed (statuses above). `cards` have an optional `tag`; `views` are rich cards by `type`: `person`, `gifts`, `timeline`, `map`, `note`, `file`, `why` |
-| `{"type":"nudge","nudge":{id,kind,title,line,show,why,prompt,action}}` | Something to bring up: `show` false is a pill under the notch (a "very you" moment), `show` true opens the island on a why card the user asked for |
+| `{"type":"nudge","nudge":{id,kind,title,line,show,why,prompt,action,learn}}` | Something to bring up: `show` false is a pill under the notch (a "very you" moment, a birthday, or `kind` "learn" with `learn {id,name,kind,image}`: "Add it to your taste?"), `show` true opens the island on a why card the user asked for |
+| `{"type":"feedback_ack","title","verdict","ok","name","message"}` | A card's thumbs was saved (or why not) |
 | `{"type":"profile","profile"}` | The brain updated the taste profile; the Mac saves it |
 | `{"type":"operator","active","task_id"}` | The operator started or stopped (screen glow) |
 | `{"type":"interrupted"}` | Stop playing (barge-in) |
@@ -306,8 +406,13 @@ wide, Slice's own windows left out, plus the browser `url`),
 `lens_clear`.
 
 HTTP routes beside it: `GET /mac/search?q=&kind=`, `POST /mac/profile/build
-{seeds, city, base}`, `GET /mac/accounts?user=`, `POST /mac/accounts/connect
-{user, app}` → `{url}`.
+{seeds, entities, city, base, facts, prefs, name, onboarding}`, `POST
+/mac/profile/edit {profile, op, …}` (love, forget, dislike, undislike, fact,
+forget_fact, accept, decline, undo, city, forget_person, forget_routine; the
+journal notes each, the taste is re-read when loves change), `POST
+/mac/profile/graph {profile, fresh}`, `GET /mac/onboarding/starters?step=`,
+`POST /mac/onboarding/more {step, picked, exclude}`, `GET /mac/accounts?user=`,
+`POST /mac/accounts/connect {user, app}` → `{url}`.
 
 The Live session opens on the first input, not on connect, and reopens when
 Gemini ends it (about ten minutes of audio).
@@ -321,7 +426,9 @@ Gemini ends it (about ten minutes of audio).
   weekly jobs), `lens.py` (screen reading, badges, why now, the "very you"
   nudge), `qloo.py` (Qloo calls), `mac_tools.py`, `accounts.py` (Composio),
   `computer.py` (operator, `shop_for`), `connection.py` and `bridge.py` (one
-  connected Mac).
+  connected Mac), `playbooks.py` (one tool per long demo), `memory.py` and
+  `learning.py` (what Slice remembers and how it learns), `graph.py` (the taste
+  graph), `onboarding.py` (first-run tiles), `generic.py` (taste off).
 - `apps/mac/Sources/Island/`: the notch panel (`IslandController`), its modes
   (`IslandModel`: closed, compact, captioned, nudge, open; it opens by itself
   when a task needs you or a why card was asked for), `IslandView`,
@@ -335,21 +442,24 @@ Gemini ends it (about ten minutes of audio).
   `SampleViews` (debug cards).
 - `apps/mac/Sources/Tools/`: Calendar, Contacts, Maps, Music/Messages/Mail,
   Screen, Computer.
-- `apps/mac/Sources/Settings/SettingsView.swift`: General, Taste, Accounts.
+- `apps/mac/Sources/Settings/`: `SettingsView` (sidebar: General, Your taste,
+  Memory, Accounts), `TasteSpace`, `MemorySpace`, `SettingsRender` (debug PNGs).
+  `Sources/UI/GraphCanvas.swift`: the graph engine both use.
+  `Sources/Onboarding/OnboardingView.swift`: the first-run window.
 
 ## Not done yet
 
 - Not tried on a real Mac by a person: holding fn + control and speaking,
-  hover to open, the permission prompts, the operator on the real screen,
-  Composio sign-ins with real accounts. The six demos ran against a fake Mac
-  (mock Netflix, Airbnb, Amazon and Letterboxd pages), not real sites.
-- Needs accounts before the demo: Gmail (trip emails) and Ticketmaster
-  (shows) through Settings > Accounts, or `TICKETMASTER_API_KEY` in
-  apps/agent/.env (Discovery API). Without Ticketmaster, plans skip the show
-  and offer to connect it.
-- `shop_for` (cart, delivery date, stop before payment) is the operator with
-  a fixed job; untested on a real shop.
-- Worker steps of 10 to 20 s on the shared quota make the long demos slow.
-- A "Qloo off / on" switch for the judges (the Country preset does a
-  similar job).
-- Distribution: Developer ID, notarized DMG, hosted brain with a token.
+  hover to open, the operator on the real screen, Composio sign-ins with real
+  accounts. Onboarding now walks through the permission prompts and a first
+  push-to-talk ("Try talking"), but nobody has done it yet. The demos and the
+  learning loop ran against a fake Mac over /mac/live; Settings, Memory and
+  onboarding were checked as rendered pictures, not on screen.
+- Ticketmaster needs a key (`TICKETMASTER_API_KEY` in apps/agent/.env, free
+  from developer.ticketmaster.com) or a Composio connection; without it plans
+  offer a music venue and say shows need it. Gmail must be connected for trip
+  emails.
+- `shop_for` (cart, delivery date, stop before payment) is untested on a real
+  shop.
+- Distribution: scripts are ready (docs/mac-release.md) but need a Developer
+  ID certificate, a notarytool profile and a Cloud Run deploy.

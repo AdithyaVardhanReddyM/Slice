@@ -20,6 +20,8 @@ private struct MenuBarMenu: View {
         Text(agent.connection.label)
         Divider()
         Button("New conversation") { agent.reset() }
+        Button("Your taste…") { SettingsWindow.shared.show(agent: agent, tab: .taste) }
+        Button("Memory…") { SettingsWindow.shared.show(agent: agent, tab: .memory) }
         Button("Settings…") { SettingsWindow.shared.show(agent: agent) }
             .keyboardShortcut(",")
         Divider()

@@ -33,7 +33,7 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import Gemini, LlmRequest, LlmResponse
 from google.genai import types
 
-from . import accounts, lens, mac_tools, plans, taste
+from . import accounts, learning, lens, mac_tools, plans, playbooks, taste
 from .connection import Connection, for_worker, register_worker, report
 from .computer import operate_computer, shop_for
 from .tasks import Task
@@ -77,35 +77,41 @@ How to work:
   show a card already did). Card text is plain words with commas; never
   "·" or "|" between words.
 - Never pay for anything: shop_for and operate_computer stop before payment.
+- Learn as you go: when the user picks one of your suggestions for
+  themselves, says they loved something, or turns one down, note_feedback;
+  plain facts about them or a saved person ("doesn't drink"), remember_fact.
+  Follow what "Who the user is" says to remember (diet, getting around,
+  things that aren't for them).
 - Finish with one to three short sentences that will be read aloud: what
   you did or found, and what's next. No lists, links, ids or markdown.
 
-Playbooks (use the one that fits; skip what the user already told you):
-- A trip ("plan my Lisbon trip"): find_trip_emails for the flight and hotel
-  (or ask the dates and where they stay); taste_map for the city; weather;
-  plan_walkable_day for each day from the hotel (indoor stops if it rains);
-  shows_for_me on those dates; offer to book one dinner on the restaurant's
-  own page (operate_computer), add_plan_to_calendar, and message the plan to
-  a friend with a dinner from recommend(for_person="Sam and me").
-- Someone else ("my dad Ray is 74, uses a walker, loves…"): remember_person
-  with age, home, needs and relation first; then recommend(for_person=...)
-  for what to watch (movie or tv_show), listen to (podcast) and where to go
-  (a place near their home; step-free follows their needs); show_cards; if
-  they'd like it on paper, make_printout (large print), then offer to send
-  it (send_file_imessage, draft_email_in_mail) and to repeat_weekly.
-- A gift ("Maya's birthday is on the 29th"): learn_taste_from_screen if her
-  profile is open, else remember_person; gift_ideas; when the user picks one,
-  shop_for it on the brand's site with the date it must arrive by; offer a
-  card written around one thing they love (show_note) and a reminder to wrap
-  it (add_plan_to_calendar).
-- A day out ("plan my Saturday, Sam joins after 2"): calendar_events for the
-  day; weather; the morning with plan_walkable_day near home for the user;
-  compare_tastes, then the afternoon for "Sam and me"; shows_for_me that
-  evening for "Sam and me"; dinner near the venue with recommend(near=<venue
-  address>, genre=restaurant, also_like=<the act>, for_person="Sam and me");
-  show_day_plan with everything in order; offer to message the friend (in
-  words that suit their taste), add it to the calendar, book dinner and open
-  the ticket page.
+Playbooks: one call does the whole job and shows the cards (use the one that
+fits; skip what the user already told you). Call it as your first step with
+everything the user gave you, then answer from its result and make its offers.
+Ask (ask_user) only when it can't run without an answer.
+- A trip ("plan my Lisbon trip"): plan_trip with the city, dates, where they
+  stay and arrival/departure times. If they gave no dates, find_trip_emails
+  first (or ask). It maps their taste in the city, checks the weather, plans
+  every day and ranks shows. Offer to book dinner_to_book on the restaurant's
+  own page (operate_computer), add_this_plan_to_calendar, and message the
+  plan to a friend with a dinner from recommend(for_person="Sam and me").
+- Someone else ("my dad Ray is 74, uses a walker, loves…"): plan_for_someone
+  with likes, age, home, needs and relation (printout=true if they asked for
+  it on paper). Offer a large-print page (print_this_plan), sending it
+  (send_file_imessage, draft_email_in_mail) and repeat_weekly.
+- A gift ("Maya's birthday is on the 29th"): gift_for (from_screen=true if
+  her profile is open, else likes), with budget and occasion. When the user
+  picks one, shop_for it on the brand's site with the date it must arrive
+  by; offer a card written around one thing they love (show_note) and a
+  reminder to wrap it (add_calendar_event).
+- A day out ("plan my Saturday, Sam joins after 2"): plan_day_out with the
+  date, the friend and when they join. It reads the calendar and weather,
+  plans the morning, the afternoon and evening for both, the best show with
+  dinner near the venue, and shows one timeline. Offer to message the friend
+  (in words that suit friend_loves), book dinner, open the ticket page and
+  add_this_plan_to_calendar.
+- To change one part afterwards, use the single tools (plan_walkable_day,
+  recommend, show_day_plan, shows_for_me).
 - "Which of these would I love?" about the screen: rank_screen.
 """
 
@@ -121,13 +127,15 @@ async def ask_user(question: str, tool_context: ToolContext) -> dict[str, Any]:
     return {"answer": await conn.tasks.ask(task, question)}
 
 
-async def show_cards(cards_json: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Show results as cards in the island (up to 6).
+async def show_cards(cards_json: str, tool_context: ToolContext, for_person: str = "") -> dict[str, Any]:
+    """Show results as cards in the island (up to 6). The user can thumb their own picks up or
+    down, which teaches their taste.
 
     Args:
         cards_json: A JSON list of {"title", "subtitle", "image", "url", "reason", "tag"}; image is a
             URL from the tool results, reason is one short line on why it fits, tag is a one-word
             label ("Watch", "Listen", "Lunch").
+        for_person: When the picks are for someone else (gifts, Dad's week), their name.
     """
     conn, task = for_worker(tool_context)
     assert conn.tasks
@@ -141,6 +149,8 @@ async def show_cards(cards_json: str, tool_context: ToolContext) -> dict[str, An
          for k in ("title", "subtitle", "image", "url", "reason", "tag") if isinstance(c, dict) and c.get(k)}
         for c in cards if isinstance(c, dict) and c.get("title")
     ]
+    if for_person.strip() and for_person.strip().lower() not in ("me", "you", "us"):
+        clean = [{**c, "for": for_person.strip()} for c in clean]
     conn.tasks.show_cards(task, clean)
     await report(conn, task, "slice", f"Showed {len(clean)} picks")
     return {"shown": len(clean)}
@@ -162,7 +172,7 @@ async def show_note(title: str, text: str, tool_context: ToolContext) -> dict[st
 
 
 # A step slower than this is usually stuck behind the shared quota; try the next model.
-STEP_TIMEOUT_S = 25.0
+STEP_TIMEOUT_S = 15.0
 
 
 def _rate_limited(err: Exception) -> bool:
@@ -226,8 +236,8 @@ worker_agent = Agent(
     on_tool_error_callback=tool_failed,
     instruction=_instruction,
     tools=[
-        ask_user, show_cards, show_note, *taste.TOOLS, *plans.TOOLS, *lens.WORKER_TOOLS, *mac_tools.TOOLS,
-        *accounts.TOOLS, operate_computer, shop_for,
+        ask_user, show_cards, show_note, *playbooks.TOOLS, *taste.TOOLS, *plans.TOOLS, *lens.WORKER_TOOLS, *mac_tools.TOOLS,
+        *accounts.TOOLS, *learning.WORKER_TOOLS, operate_computer, shop_for,
     ],
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel(THINKING.upper())),
@@ -262,7 +272,7 @@ async def run_worker(conn: Connection, task: Task, message: str) -> str:
             state={
                 "now": _now(conn.timezone),
                 "timezone": conn.timezone,
-                "profile_summary": taste.summary_for_talker(conn.profile),
+                "profile_summary": taste.summary_for_talker(conn.profile, conn.taste_off),
                 "people": people,
                 "front": _describe_front(await conn.bridge.call("frontmost_app", timeout=4)),
             },

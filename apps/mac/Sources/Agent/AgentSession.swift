@@ -53,6 +53,11 @@ final class AgentSession {
     private(set) var nudge: Nudge?
     /// The island is open to show `nudge` (asked for by voice), not because it's hovered.
     private(set) var presenting = false
+    /// Thumbs given on cards this session, by card title ("up" or "down"; "saving" while it's sent).
+    private(set) var feedback: [String: String] = [:]
+    /// Settings > General > "Use my taste". Off, Slice answers like any assistant (for comparing).
+    private(set) var useTaste: Bool = UserDefaults.standard.object(forKey: AgentSession.useTasteKey) as? Bool ?? true
+    static let useTasteKey = "useTaste"
 
     /// The task that needs an answer or a yes, if any: the island opens for it.
     var taskNeedingYou: TaskItem? { tasks.first { $0.needsYou } }
@@ -95,6 +100,7 @@ final class AgentSession {
                 "user_id": .string(TasteStore.userID),
                 "profile": self?.profile ?? [:],
                 "timezone": .string(TimeZone.current.identifier),
+                "taste": .bool(self?.useTaste ?? true),
             ]
         }
         voice.onIdle = { [weak self] in
@@ -227,6 +233,11 @@ final class AgentSession {
     }
 
     #if DEBUG
+    /// -renderSettings -renderProfile <file>: draw Settings for a given profile, keeping the real one.
+    func useProfileForRender(_ profile: JSONValue) {
+        self.profile = profile
+    }
+
     func loadSampleConversation() {
         turns = [
             Turn(role: .user, text: "I loved Past Lives. What should I watch tonight?", done: true),
@@ -368,6 +379,37 @@ final class AgentSession {
         brain.send(frame)
     }
 
+    // MARK: Learning (slice_mac/learning.py)
+
+    /// A thumbs up or down on a card: up adds it to the user's taste, down means not for them.
+    func give(_ verdict: String, to card: TaskItem.Card) {
+        guard connection == .online else {
+            lastError = "Slice can't reach its brain. Is the agent server running?"
+            return
+        }
+        feedback[card.title] = verdict
+        var frame: [String: JSONValue] = ["type": "feedback", "title": .string(card.title), "verdict": .string(verdict)]
+        if let tag = card.tag { frame["tag"] = .string(tag) }
+        brain.send(.object(frame))
+    }
+
+    /// The answer to "Add it to your taste?".
+    func answerLearn(_ nudge: Nudge, accept: Bool) {
+        dismissNudge()
+        guard let learn = nudge.learn else { return }
+        brain.send(["type": "learn_answer", "id": .string(learn.id), "accept": .bool(accept)])
+    }
+
+    /// Settings switched taste on or off: the brain starts a fresh conversation that knows.
+    func setUseTaste(_ on: Bool) {
+        useTaste = on
+        UserDefaults.standard.set(on, forKey: Self.useTasteKey)
+        stopEverything()
+        turns = []
+        activities = []
+        brain.send(["type": "settings", "taste": .bool(on)])
+    }
+
     /// A Mac tool run from the app itself (the why card's play button).
     func runTool(_ name: String, args: JSONValue) {
         Task { _ = await tools.run(name, args: args) }
@@ -414,6 +456,14 @@ final class AgentSession {
         case .nudge:
             guard let nudge = event.nudge else { return }
             show(nudge)
+        case .feedbackAck:
+            guard let title = event.title else { return }
+            if event.ok == true {
+                feedback[title] = (event.verdict ?? "up") + "-saved"
+            } else {
+                feedback[title] = nil
+                lastError = event.message ?? "Couldn't save that."
+            }
         case .toolCall:
             guard let id = event.id, let name = event.name else { return }
             Task {

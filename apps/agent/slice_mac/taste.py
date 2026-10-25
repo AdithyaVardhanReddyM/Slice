@@ -4,9 +4,12 @@ The profile is local-first: the Mac stores it and sends it in `hello`; the
 brain builds and updates it and hands it back (`save_profile`). Shape:
 
     {"city": "Brooklyn, New York",
-     "seeds":  [{"id", "name", "kind"}],      things the user loves (Qloo entities)
+     "name": "Alex",                          what to call them (onboarding)
+     "seeds":  [{"id", "name", "kind", "image", "source", "at", "weight"}],  things the user loves
      "tags":   [{"name", "type"}],            what those say about them (Qloo)
      "summary": "Two sentences in plain words",
+     "dislikes", "facts", "evidence", "suggested", "declined", "journal", "prefs", "onboarding":
+              what Slice remembers and learns over time (memory.py),
      "people": {"Sam": [{"id", "name", "kind"}]},  other people's loved things
      "people_notes": {"Sam": ["natural wine bars"]},  loves that aren't Qloo entities
      "people_info": {"Ray": {"age": 74, "home": "Lincoln Park, Chicago", "needs": "uses a walker",
@@ -23,7 +26,6 @@ whether they need a step-free way in.
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -31,7 +33,7 @@ from typing import Any
 from google import genai
 from google.adk.tools import ToolContext
 
-from . import qloo
+from . import generic, graph, memory, qloo
 from .connection import Connection, for_worker, report, save_profile
 
 SUMMARY_MODEL = "gemini-3.8-flash"
@@ -54,33 +56,71 @@ def _client() -> genai.Client:
     return _genai
 
 
-async def build_profile(seed_names: list[str], city: str = "", base: dict[str, Any] | None = None) -> dict[str, Any]:
-    """Seeds (names or entities) to a full profile: entities, Qloo tags, a short summary."""
+async def build_profile(seed_names: list[str], city: str = "", base: dict[str, Any] | None = None,
+                        entities: list[dict[str, Any]] | None = None, source: str = "settings",
+                        facts: list[str] | None = None, prefs: dict[str, Any] | None = None,
+                        name: str = "", onboarding: bool = False) -> dict[str, Any]:
+    """Loves (names, or entities already found) to a full profile: entities, Qloo tags, a short
+    summary. Onboarding also brings what to call them, plain facts and preferences."""
     profile = dict(base or {})
-    seeds = list(profile.get("seeds") or [])
-    known = {s["name"].lower() for s in seeds if s.get("name")}
-    for hit in await qloo.resolve([n for n in seed_names if n.lower() not in known]):
-        seeds.append({"id": hit["id"], "name": hit["name"], "kind": hit.get("kind")})
-    profile["seeds"] = seeds[-30:]
+    added = await memory.add_loves(profile, [*(entities or []), *seed_names], source, quiet=True)
     if city:
         profile["city"] = city
-    tags = await qloo.taste_tags([s["id"] for s in profile["seeds"]], take=14)
-    profile["tags"] = [{"name": t["name"], "type": t["type"]} for t in tags if t.get("name")]
-    profile["summary"] = await _summarise(profile)
-    profile["updated"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    if name.strip():
+        profile["name"] = name.strip()
+    for text in facts or []:
+        memory.add_fact(profile, text, source=source, quiet=True)
+    if prefs:
+        profile["prefs"] = {**(profile.get("prefs") or {}), **prefs}
+    if onboarding:
+        profile["onboarding"] = {"done": True, "at": memory.now_iso()}
+    if added:
+        memory.journal(profile, "started" if onboarding else "added",
+                       (f"Started your taste with {memory.names_of(added)}" if onboarding else f"Added {memory.names_of(added)}"),
+                       ref=[{k: a[k] for k in ("id", "name", "kind", "image") if a.get(k)} for a in added])
+    await reread(profile, note=False)
     profile.setdefault("people", {})
     return profile
 
 
+async def reread(profile: dict[str, Any], note: bool = True) -> dict[str, Any] | None:
+    """What Qloo reads from the loves, again (tags and the summary), after they changed. Notes in
+    the journal how the taste moved ("now reads more folk and melancholic").
+
+    The tags are the words the loves themselves share in Qloo (graph.reads_as: "Intimate",
+    "Introspective", "Melancholic"); checked 2026-10-26, tag insights for the same loves gave
+    "lesbian", "female protagonist" and "friend", which say little about a person."""
+    old = [t["name"] for t in profile.get("tags") or []]
+    ids = [s["id"] for s in memory.signal_seeds(profile)]
+    tags = await graph.reads_as(profile) if ids else []
+    if ids and len(tags) < 4:
+        tags += [t for t in await qloo.taste_tags(ids, take=10) if t.get("name") and t["name"] not in {x["name"] for x in tags}]
+    profile["tags"] = [{"name": t["name"], "type": t["type"]} for t in tags[:14] if t.get("name")]
+    profile["summary"] = await _summarise(profile) if ids else ""
+    profile["updated"] = memory.now_iso()
+    if not note or not old:
+        return None
+    new = [t["name"] for t in profile["tags"]]
+    gained = [t.lower() for t in new[:8] if t not in old[:8]][:2]
+    lost = [t.lower() for t in old[:8] if t not in new[:8]][:2]
+    if not gained and not lost:
+        return None
+    text = "Your taste now reads " + ", ".join(
+        part for part in (f"more {' and '.join(gained)}" if gained else "", f"less {' and '.join(lost)}" if lost else "") if part)
+    return memory.journal(profile, "reread", text, ref={"gained": gained, "lost": lost})
+
+
 async def _summarise(profile: dict[str, Any]) -> str:
-    loves = ", ".join(f"{s['name']} ({s.get('kind') or 'thing'})" for s in profile.get("seeds") or [])
+    loves = ", ".join(f"{s['name']} ({s.get('kind') or 'thing'})" for s in memory.signal_seeds(profile))
     tags = ", ".join(t["name"] for t in profile.get("tags") or [])
     if not loves:
         return ""
+    facts = "; ".join(memory.facts_about(profile)[:8])
     prompt = (
-        "In two short sentences, describe this person's taste for a friend who's about to plan their evening. "
-        "Plain words, no lists, no names of data sources.\n"
+        "In two short sentences, tell this person what their taste is like, speaking to them (\"You love…\"), "
+        "the way a friend who's about to plan their evening would. Plain words, no lists, no names of data sources.\n"
         f"They love: {loves}\nQloo reads their taste as: {tags}\nThey live in: {profile.get('city') or 'unknown'}"
+        + (f"\nAlso known about them: {facts}" if facts else "")
     )
     try:
         res = await _client().aio.models.generate_content(model=SUMMARY_MODEL, contents=prompt)
@@ -94,11 +134,24 @@ def _key(text: str) -> str:
     return text.lower().strip()
 
 
-def summary_for_talker(profile: dict[str, Any]) -> str:
+def summary_for_talker(profile: dict[str, Any], taste_off: bool = False) -> str:
+    if taste_off:
+        return ("Taste is OFF for this conversation (the user switched it off to compare): you know nothing about "
+                "their taste; answers are the popular picks anyone would get, and you say so.")
+    called = f"Call them {profile['name']}. " if profile.get("name") else ""
     if not profile.get("seeds"):
-        return "No taste profile yet. If it comes up, suggest they add a few things they love in Settings > Taste."
-    loves = ", ".join(s["name"] for s in profile["seeds"][:8])
-    return f"{profile.get('summary') or ''} They love {loves}. City: {profile.get('city') or 'unknown'}.".strip()
+        return called + "No taste profile yet. If it comes up, suggest they add a few things they love in Settings > Taste."
+    loves = ", ".join(s["name"] for s in memory.signal_seeds(profile)[:8])
+    # The summary speaks to the user ("You love…"), since they read it in Settings.
+    summary = f'Their taste, as Slice described it to them: "{profile["summary"]}" ' if profile.get("summary") else ""
+    out = f"{called}{summary}They love {loves}. City: {profile.get('city') or 'unknown'}."
+    facts = memory.facts_about(profile)
+    if facts:
+        out += f" Remember: {'; '.join(facts[:10])}."
+    dislikes = [d["name"] for d in profile.get("dislikes") or []][-6:]
+    if dislikes:
+        out += f" Not for them: {', '.join(dislikes)}."
+    return out.strip()
 
 
 def people_line(profile: dict[str, Any]) -> str:
@@ -109,6 +162,7 @@ def people_line(profile: dict[str, Any]) -> str:
     for name, likes in (profile.get("people") or {}).items():
         about = info.get(name) or {}
         bits = [about.get("relation"), f"{about['age']}" if about.get("age") else None, about.get("home"), about.get("needs")]
+        bits += memory.facts_about(profile, name)[:3]
         who = ", ".join(str(b) for b in bits if b)
         loves = ", ".join([p["name"] for p in likes[:4]] + notes.get(name, [])[:3])
         out.append(f"{name} ({who + '; ' if who else ''}loves {loves or 'unknown'})")
@@ -153,10 +207,9 @@ async def signals_for(conn: Connection, also_like: str = "", for_person: str = "
             sig.step_free = bool(info.get("step_free"))
             sig.who = saved
     if not others or len(others) < len(who):
-        for s in conn.profile.get("seeds") or []:
-            if s.get("id"):
-                sig.ids.append(s["id"])
-                sig.names[s["id"]] = s["name"]
+        for s in memory.signal_seeds(conn.profile):
+            sig.ids.append(s["id"])
+            sig.names[s["id"]] = s["name"]
         if others:
             sig.who = " and ".join(others + ["you"])
     if also_like:
@@ -187,6 +240,10 @@ async def point_of(conn: Connection, place: str) -> dict[str, float] | None:
 async def picks(conn: Connection, task: Any, kind: str, near: str = "", genre: str = "", also_like: str = "",
                 for_person: str = "", count: int = 5, accessible: bool = False) -> dict[str, Any]:
     """Shared by the worker's recommend and the talker's quick_picks."""
+    if conn.taste_off:
+        out = await generic.picks(kind, near or conn.city or "", genre, count)
+        await report(conn, task, "slice", f"Popular {kind.replace('_', ' ')} picks (taste off)", f"{len(out['picks'])} picks")
+        return out
     sig = await signals_for(conn, also_like, for_person)
     if not sig.ids:
         who = f"{for_person} loves" if for_person and sig.who != "you" else "they love"
@@ -201,9 +258,11 @@ async def picks(conn: Connection, task: Any, kind: str, near: str = "", genre: s
     # Films, music and books follow a place only when one is named ("big in Lisbon"); a home
     # city as a signal drags in whatever is locally popular.
     city = (None if point else where or None) if kind == "place" else (near or None)
+    # What the user said isn't for them never comes back (memory.py).
+    skip = sig.ids + memory.dislike_ids(conn.profile)
     results = await qloo.with_timeout(qloo.recommend(
         kind, sig.ids, near=point, radius_m=1500 if step_free else 2500, city=city,
-        genre=genre or None, take=count + 2, age=sig.age, accessible=step_free and kind == "place", exclude=sig.ids,
+        genre=genre or None, take=count + 2, age=sig.age, accessible=step_free and kind == "place", exclude=skip,
     ))
     # The film of a loved series (Downton Abbey) is still the same love.
     loved = {_key(n) for n in sig.names.values()}
@@ -265,7 +324,10 @@ async def rank(conn: Connection, items: list[dict[str, Any]], kind: str = "", fo
     """Score things (read off a screen, or named by the user) for a taste. Each item is a dict with
     a "name" (and optional "kind", "brand"); products rank by their brand. Returns the items with
     `match` (0-100), `because` (loved things behind it) and the Qloo entity, best first; things Qloo
-    can't place keep match None and sort last."""
+    can't place keep match None and sort last; things the user said aren't for them are flagged
+    `disliked` and sort last too."""
+    if conn.taste_off:
+        return await generic.rank(items)
     sig = await signals_for(conn, "", for_person)
     if not sig.ids:
         return [dict(item, match=None) for item in items]
@@ -295,13 +357,17 @@ async def rank(conn: Connection, items: list[dict[str, Any]], kind: str = "", fo
         except Exception as err:  # e.g. albums reject film signals
             print(f"mac: scoring {k} failed: {err}", flush=True)
     drivers = standouts(scores)
+    disliked = set(memory.dislike_ids(conn.profile)) if sig.who == "you" else set()
     out = []
     for item, hit in zip(items, hits):
         row = dict(item)
         found = scores.get(hit["id"]) if hit else None
         if hit:
             row["entity"] = {k: v for k, v in hit.items() if k in ("name", "kind", "id", "image", "description")}
-        if found:
+        if hit and hit["id"] in disliked:
+            row["match"] = None
+            row["disliked"] = True
+        elif found:
             row["match"] = _pct(found["affinity"])
             row["because"] = [sig.names[i] for i in drivers[hit["id"]] if i in sig.names][:2]
         else:
@@ -316,6 +382,8 @@ async def rank(conn: Connection, items: list[dict[str, Any]], kind: str = "", fo
 async def explain(conn: Connection, thing: str, kind: str = "", for_person: str = "") -> dict[str, Any]:
     """Why a thing fits someone's taste, from the taste graph: how well (match), which loved things
     it shares Qloo tags with, and what its fans also love."""
+    if conn.taste_off:
+        return await generic.explain(thing)
     hits = await qloo.resolve([thing], kind) or (await qloo.resolve([thing]) if kind else [])
     if not hits:
         return {"error": f"Qloo doesn't know {thing!r}. Try its exact title or the artist's name."}
@@ -504,10 +572,13 @@ async def remember_my_taste(likes: str, tool_context: ToolContext) -> dict[str, 
         likes: Comma-separated names ("Mitski, Decision to Leave").
     """
     conn, task = for_worker(tool_context)
-    profile = await build_profile(likes.split(","), base=conn.profile)
+    profile = conn.profile
+    added = await memory.add_loves(profile, likes.split(","), "said", why="you said so")
+    if added:
+        await reread(profile)
     await save_profile(conn, profile)
-    await report(conn, task, "qloo", "Updated your taste profile", f"{len(profile['seeds'])} things you love")
-    return {"seeds": [s["name"] for s in profile["seeds"]], "summary": profile.get("summary")}
+    await report(conn, task, "qloo", "Updated your taste profile", f"added {memory.names_of(added)}" if added else "nothing new")
+    return {"added": [a["name"] for a in added], "seeds": [s["name"] for s in profile["seeds"]], "summary": profile.get("summary")}
 
 
 async def compare_tastes(person: str, tool_context: ToolContext) -> dict[str, Any]:
@@ -539,7 +610,14 @@ async def gift_ideas(person: str, tool_context: ToolContext, budget_usd: int = 0
         occasion: e.g. "birthday on the 29th", for the card's title.
     """
     conn, task = for_worker(tool_context)
-    name, loves, _ = _person(conn, person)
+    name, loves, info = _person(conn, person)
+    if conn.taste_off:
+        about = ", ".join(str(b) for b in (info.get("relation"), info.get("age")) if b)
+        cards = await generic.gifts(name, about, budget_usd)
+        if conn.tasks:
+            conn.tasks.show_view(task, {"type": "gifts", "key": name, "title": f"Popular gifts for {name} (taste off)", "cards": cards})
+        await report(conn, task, "slice", "Popular gift ideas (taste off)", f"{len(cards)} ideas")
+        return {"for": name, "ideas": cards, "note": generic.NOTE}
     if not loves:
         return {"error": f"I don't know what {person} loves yet: remember_person, or learn_taste_from_screen if their profile is open."}
     their_ids = [p["id"] for p in loves]
@@ -627,6 +705,18 @@ async def taste_map(near: str, tool_context: ToolContext, for_person: str = "") 
     point = await point_of(conn, near)
     if point is None:
         return {"error": f"Couldn't place {near}."}
+    if conn.taste_off:
+        city_name = near.split(",")[0]
+        areas = []
+        for area in await generic.areas(near):
+            spot = await point_of(conn, f"{area['name']}, {city_name}")
+            if spot:
+                areas.append({**area, "lat": spot["lat"], "lon": spot["lon"], "weight": round(1 - 0.15 * len(areas), 2)})
+        if conn.tasks and areas:
+            conn.tasks.show_view(task, {"type": "map", "key": "taste", "title": f"Popular {city_name} (taste off)", "center": point,
+                                        "areas": [{k: a[k] for k in ("name", "lat", "lon", "weight")} for a in areas]})
+        await report(conn, task, "slice", f"Popular areas of {near} (taste off)", ", ".join(a["name"] for a in areas[:3]))
+        return {"areas": areas, "note": generic.NOTE}
     sig = await signals_for(conn, "", for_person)
     if not sig.ids:
         return {"error": "No taste to go on yet."}

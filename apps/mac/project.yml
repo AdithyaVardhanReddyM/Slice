@@ -19,10 +19,15 @@ settings:
     # keeps the Microphone, Accessibility and Screen Recording grants across rebuilds.
     CODE_SIGN_IDENTITY: "Apple Development"
     CODE_SIGN_ENTITLEMENTS: Resources/SliceMac.entitlements
+    # Where the app finds the brain until the user changes it in Settings. Both are empty for
+    # Debug (the dev server on this Mac). scripts/release.sh passes them on the xcodebuild
+    # command line, so neither the address nor the token is ever written into this repo.
+    SLICE_BRAIN_URL: ""
+    SLICE_BRAIN_TOKEN: ""
   configs:
     Release:
       # A notarized build for judges needs a Developer ID Application certificate
-      # (developer.apple.com > Certificates); see docs/mac-plan.md.
+      # (developer.apple.com > Certificates); scripts/release.sh builds it, docs/mac-release.md.
       CODE_SIGN_IDENTITY: "Developer ID Application"
       OTHER_CODE_SIGN_FLAGS: "--timestamp"
 
@@ -48,6 +53,9 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         # Menu bar app: no Dock icon, the notch is the UI.
         LSUIElement: true
+        # The hosted brain a release build talks to (BrainSettings reads these; empty = local dev server).
+        SliceBrainURL: $(SLICE_BRAIN_URL)
+        SliceBrainToken: $(SLICE_BRAIN_TOKEN)
         NSMicrophoneUsageDescription: Slice listens while you hold fn and control, so you can talk to it.
         NSAppleEventsUsageDescription: Slice reads the page you're on, sends messages you approve, and checks what's playing.
         NSCalendarsFullAccessUsageDescription: Slice reads your plans so it can work around them, and adds events you approve.
