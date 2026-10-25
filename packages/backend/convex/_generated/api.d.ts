@@ -9,6 +9,7 @@
  */
 
 import type * as catalog from "../catalog.js";
+import type * as catalogConnections from "../catalogConnections.js";
 import type * as catalogImport from "../catalogImport.js";
 import type * as catalogTaste from "../catalogTaste.js";
 import type * as conciergeWidgets from "../conciergeWidgets.js";
@@ -67,6 +68,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   catalog: typeof catalog;
+  catalogConnections: typeof catalogConnections;
   catalogImport: typeof catalogImport;
   catalogTaste: typeof catalogTaste;
   conciergeWidgets: typeof conciergeWidgets;

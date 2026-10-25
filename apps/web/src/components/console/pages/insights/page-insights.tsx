@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
-import { AlertCircle, Fingerprint, Image as ImageIcon, Lock, Palette, PenLine, Quote, RotateCcw } from "lucide-react";
+import { AlertCircle, UserStar, Image as ImageIcon, Lock, Palette, PenLine, Quote, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -445,7 +445,7 @@ function SectionCard({
             )}
 
             {row.taste.length > 0 && (
-              <Block icon={Fingerprint} label="Taste behind it">
+              <Block icon={UserStar} label="Taste behind it">
                 <ul className="space-y-2">
                   {row.taste.map((t) => (
                     <li key={t.name} className="flex items-start gap-2.5">

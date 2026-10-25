@@ -18,7 +18,7 @@ import { resolveKey } from "./conciergeWidgets";
 
 export type ProductDoc = Doc<"products">;
 
-const productInput = v.object({
+export const productInput = v.object({
   id: v.string(),
   slug: v.string(),
   name: v.string(),
@@ -41,7 +41,7 @@ const productInput = v.object({
   new: v.optional(v.boolean()),
 });
 
-const storeInput = v.object({
+export const storeInput = v.object({
   key: v.string(),
   name: v.string(),
   tagline: v.string(),

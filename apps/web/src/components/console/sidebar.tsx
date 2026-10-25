@@ -14,7 +14,7 @@ import {
   MessagesSquare,
   Plus,
   Settings,
-  Fingerprint,
+  UserStar,
   UserRound,
   Wand2,
 } from "lucide-react";
@@ -85,7 +85,7 @@ export function WidgetSidebar({
           icon: MessagesSquare,
           count: conversationCounts[widget.id] ?? 0,
         },
-        { href: `${base}/taste`, label: "Taste insights", icon: Fingerprint },
+        { href: `${base}/taste`, label: "Taste insights", icon: UserStar },
       ],
     },
     {

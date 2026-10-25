@@ -643,4 +643,62 @@ http.route({
   }),
 });
 
+/* Concierge catalog connections -----------------------------------------------
+   The agent syncs a widget's catalog from Shopify (Composio) or WooCommerce
+   (REST keys stored here encrypted); see catalogConnections.ts. */
+
+/** A widget's connection with its keys, by widget key or by the WooCommerce callback state. */
+http.route({
+  path: "/catalog/connection",
+  method: "POST",
+  handler: withErrors(async (ctx, req) => {
+    const { widgetKey, state } = await req.json();
+    if (typeof widgetKey !== "string" && typeof state !== "string")
+      return json({ error: "expected { widgetKey } or { state }" }, 400);
+    const found = await ctx.runQuery(internal.catalogConnections.get, {
+      widgetKey: typeof widgetKey === "string" ? widgetKey : undefined,
+      state: typeof state === "string" ? state : undefined,
+    });
+    return json({ ok: true, found });
+  }),
+});
+
+/** Starts, updates or replaces a widget's connection. */
+http.route({
+  path: "/catalog/connection/save",
+  method: "POST",
+  handler: withErrors(async (ctx, req) => {
+    const args = await req.json();
+    await ctx.runMutation(internal.catalogConnections.save, args);
+    return json({ ok: true });
+  }),
+});
+
+/** Disconnects a widget; returns what was removed so the agent can drop the Composio account. */
+http.route({
+  path: "/catalog/connection/remove",
+  method: "POST",
+  handler: withErrors(async (ctx, req) => {
+    const { widgetKey } = await req.json();
+    const removed = await ctx.runMutation(internal.catalogConnections.remove, { widgetKey });
+    return json({ ok: true, removed });
+  }),
+});
+
+/** A synced catalog, written to the widget's own store. */
+http.route({
+  path: "/catalog/sync",
+  method: "POST",
+  handler: withErrors(async (ctx, req) => {
+    const { widgetKey, store, products, skipped } = await req.json();
+    const result = await ctx.runMutation(internal.catalogConnections.applySync, {
+      widgetKey,
+      store,
+      products,
+      skipped: skipped ?? 0,
+    });
+    return json({ ok: true, ...result });
+  }),
+});
+
 export default http;

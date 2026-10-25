@@ -6,7 +6,7 @@
 // group's or person's version, with their merge values and personal blocks.
 
 import { usePathname, useRouter } from "next/navigation";
-import { Check, Copy, Eye, Fingerprint, UserStar, UsersRound } from "lucide-react";
+import { Check, Copy, Eye, UserStar, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { allBlocks } from "@slice/backend/convex/emailDoc";
 import { MERGE_TAGS, type EmailDoc } from "@slice/backend/convex/emailTypes";
@@ -160,7 +160,7 @@ function PreviewAsList() {
         )}
       </div>
       <div className="flex items-center gap-2 rounded-xl bg-neutral-50 px-3 py-2 text-xs ring-1 ring-black/[0.06]">
-        {many ? <UserStar className="size-3.5 shrink-0 text-blue-700" /> : <Fingerprint className="size-3.5 shrink-0 text-neutral-500" />}
+        {many ? <UserStar className="size-3.5 shrink-0 text-blue-700" /> : <UserStar className="size-3.5 shrink-0 text-neutral-500" />}
         <span className="min-w-0 truncate">
           <span className="font-medium">{audience.name}</span>
           <span className="text-muted-foreground">, {many ? "a version each" : "one email for the group"}</span>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { AlertCircle, ArrowRight, Eye, Fingerprint, RefreshCw, UserStar, UsersRound } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, UserStar, RefreshCw, UsersRound } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { personalBlocks } from "@slice/backend/convex/emailDoc";
@@ -414,7 +414,7 @@ function RecipientRow({
   else if (!many)
     gets = (
       <p className="line-clamp-2 text-sm text-neutral-700">
-        <Fingerprint className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
+        <UserStar className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
         {group ? (briefOf(target.audience)?.summary ?? "One email, written for this group's taste.") : "The email as written, with their name merged in."}
       </p>
     );
@@ -535,7 +535,7 @@ function VersionPreview({
             </div>
             {why ? (
               <p className="leading-relaxed text-neutral-700">
-                <Fingerprint className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
+                <UserStar className="mr-1 inline size-3.5 align-[-2px] text-muted-foreground" />
                 {why}
               </p>
             ) : (

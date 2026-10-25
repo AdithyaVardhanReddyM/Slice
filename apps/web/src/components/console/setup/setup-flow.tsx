@@ -30,9 +30,10 @@ import {
   type StoreProfileDraft,
   type TasteDomain,
 } from "@/lib/mock/setup";
-import type { SetupStep, Widget } from "@/lib/mock/types";
+import type { CatalogSourceKind, SetupStep, Widget } from "@/lib/mock/types";
 import { cn } from "@/lib/utils";
 import { InstallStep } from "../install/install-view";
+import { useMyWidget } from "../use-my-widget";
 import { AppearanceStep, type AppearanceConfig } from "./step-appearance";
 import { CatalogStep } from "./step-catalog";
 import { ConciergeStep, type ConciergeConfig } from "./step-concierge";
@@ -79,8 +80,11 @@ export function SetupFlow({
   concierge: conciergeDefaults,
   domains: domainDefaults,
   origin,
+  catalogSource,
 }: {
   widget: Widget;
+  /** The store platform picked when the widget was created, opened in the Catalog step. */
+  catalogSource?: CatalogSourceKind | null;
   profile: StoreProfileDraft;
   catalog: CatalogPreview;
   concierge: ConciergeDefaults;
@@ -102,6 +106,8 @@ export function SetupFlow({
   const [catalogConnected, setCatalogConnected] = useState(
     widget.catalog.source !== null,
   );
+  // The account's own copy of this widget, which a store connection is saved under.
+  const mine = useMyWidget(widget.storeKey ?? widget.id);
   const [verified, setVerified] = useState(false);
   const [taste, setTaste] = useState<TasteConfig>({
     domains: domainDefaults,
@@ -229,12 +235,12 @@ export function SetupFlow({
           <Card size="sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FlaskConical className="size-4 text-muted-foreground" /> Test
-                mode
+                <FlaskConical className="size-4 text-muted-foreground" /> Not
+                live yet
               </CardTitle>
               <CardDescription className="text-xs">
-                Everything works with your test key on localhost. Shoppers see
-                nothing until you go live.
+                Try it on localhost as you go. Shoppers see nothing until the
+                script is on your site and you go live.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -276,9 +282,10 @@ export function SetupFlow({
               <div hidden={step.id !== "catalog"}>
                 <CatalogStep
                   widgetId={widget.id}
+                  widgetKey={mine?.key}
                   domain={widget.domain}
                   preview={catalog}
-                  initialSource={widget.catalog.source}
+                  initialSource={catalogSource ?? widget.catalog.source}
                   onConnected={setCatalogConnected}
                 />
               </div>
@@ -433,8 +440,8 @@ function Finish({
             {widget.name} is live on {widget.domain}
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground">
-            Your key switched to pk_live_. First conversations usually show up
-            within the hour. You&apos;ll see each one, with the taste signals
+            The launcher now shows to shoppers. First conversations usually
+            show up within the hour; you&apos;ll see each one, with the taste
             behind every pick, in Conversations.
           </p>
         </div>
@@ -452,7 +459,7 @@ function Finish({
             {remaining.length === 0
               ? alreadyLive
                 ? "The concierge is already live. Changes you made apply to new conversations straight away."
-                : `Going live swaps your test key for a live one and shows the launcher to shoppers on ${widget.domain}.`
+                : `Going live shows the launcher to shoppers on ${widget.domain}.`
               : "You can go back to any step. Everything you've done so far is saved."}
           </p>
         </div>

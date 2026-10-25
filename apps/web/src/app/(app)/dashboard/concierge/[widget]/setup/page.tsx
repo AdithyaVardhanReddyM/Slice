@@ -5,26 +5,33 @@ import { PageSkeleton } from "@/components/console/primitives";
 import { setupDataFor } from "@/components/console/setup/setup-data";
 import { SetupFlow } from "@/components/console/setup/setup-flow";
 import { appOrigin } from "@/lib/app-origin";
+import type { CatalogSourceKind } from "@/lib/mock/types";
 import { getWidget } from "@/lib/mock/widgets";
 
 export const metadata: Metadata = { title: "Setup" };
 
-export default function SetupPage({
-  params,
-}: PageProps<"/dashboard/concierge/[widget]/setup">) {
+type Props = PageProps<"/dashboard/concierge/[widget]/setup">;
+
+/** Store platforms the new-widget form can hand over (?source=shopify). */
+const SOURCES = new Set<CatalogSourceKind>(["shopify", "woocommerce", "upload", "feed", "api"]);
+
+export default function SetupPage({ params, searchParams }: Props) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <Setup params={params} />
+      <Setup params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
 async function Setup({
   params,
+  searchParams,
 }: {
-  params: PageProps<"/dashboard/concierge/[widget]/setup">["params"];
+  params: Props["params"];
+  searchParams: Props["searchParams"];
 }) {
   const { widget: id } = await params;
+  const { source } = await searchParams;
   const widget = getWidget(id);
   if (!widget) notFound();
 
@@ -32,6 +39,11 @@ async function Setup({
     <SetupFlow
       widget={widget}
       origin={await appOrigin()}
+      catalogSource={
+        typeof source === "string" && SOURCES.has(source as CatalogSourceKind)
+          ? (source as CatalogSourceKind)
+          : null
+      }
       {...setupDataFor(widget)}
     />
   );

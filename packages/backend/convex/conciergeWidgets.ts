@@ -29,6 +29,9 @@ export async function storeByKey(ctx: QueryCtx, key: string) {
     .unique();
 }
 
+/** The store whose catalog a widget serves: its synced catalog once it has one. */
+export const servedStoreKey = (widget: WidgetDoc) => widget.catalogKey ?? widget.storeKey;
+
 /**
  * What a key a page loads with resolves to: a widget (when an account has
  * one under that key) and the store whose catalog it serves. A bare store
@@ -36,7 +39,7 @@ export async function storeByKey(ctx: QueryCtx, key: string) {
  */
 export async function resolveKey(ctx: QueryCtx, key: string) {
   const widget = await widgetByKey(ctx, key);
-  const store = await storeByKey(ctx, widget?.storeKey ?? key);
+  const store = await storeByKey(ctx, widget ? servedStoreKey(widget) : key);
   return { widget, store };
 }
 
@@ -60,7 +63,7 @@ export const mine = query({
   handler: async (ctx, { storeKey }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
-    const store = await storeByKey(ctx, storeKey);
+    let store = await storeByKey(ctx, storeKey);
     if (!store) return null;
     const widget = await ctx.db
       .query("conciergeWidgets")
@@ -69,6 +72,8 @@ export const mine = query({
       )
       .unique();
     if (!widget) return "provision" as const;
+    const served = widget.catalogKey ? await storeByKey(ctx, widget.catalogKey) : null;
+    if (served) store = served;
     return {
       key: widget.key,
       name: widget.name ?? store.name,
@@ -145,7 +150,7 @@ export const setPaused = mutation({
   },
 });
 
-/** Removes an account's widgets with their domains and pings. `npx convex run conciergeWidgets:purgeOwner '{"owner":"…"}'`. */
+/** Removes an account's widgets with their domains, pings and store connections. `npx convex run conciergeWidgets:purgeOwner '{"owner":"…"}'`. */
 export const purgeOwner = internalMutation({
   args: { owner: v.string() },
   returns: v.number(),
@@ -155,7 +160,7 @@ export const purgeOwner = internalMutation({
       .withIndex("by_owner_store", (q) => q.eq("owner", owner))
       .collect();
     for (const w of widgets) {
-      for (const table of ["widgetDomains", "widgetPings"] as const)
+      for (const table of ["widgetDomains", "widgetPings", "catalogConnections"] as const)
         for (const row of await ctx.db
           .query(table)
           .withIndex("by_widget", (q) => q.eq("widgetKey", w.key))

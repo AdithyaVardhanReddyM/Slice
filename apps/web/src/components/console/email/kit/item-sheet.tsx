@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "convex/react";
-import { Fingerprint, ImageOff, Trash2, X } from "lucide-react";
+import { UserStar, ImageOff, Trash2, X } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { ITEM_KINDS, errorText } from "@/lib/email/labels";
 import type { EmailBrand, EmailItemRow } from "@/lib/email/types";
@@ -157,7 +157,7 @@ export function ItemSheet({
           {item?.qloo && (
             <div className="flex items-start gap-3 rounded-xl bg-neutral-50 p-3 ring-1 ring-black/[0.05]">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-black/[0.06]">
-                <Fingerprint className="size-4" />
+                <UserStar className="size-4" />
               </span>
               <div className="min-w-0 flex-1 text-sm">
                 <div className="font-medium">Matched on Qloo: {item.qloo.name}</div>

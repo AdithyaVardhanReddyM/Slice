@@ -1,6 +1,6 @@
 "use client";
 
-import { Fingerprint } from "lucide-react";
+import { UserStar } from "lucide-react";
 import type { Brand, ProfileTag } from "@/lib/pages/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DemographicsBars, TagsByGroup } from "./profile-view";
@@ -14,7 +14,7 @@ export function QlooCard({ brand, compact }: { brand: Brand; compact?: boolean }
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-          <Fingerprint className="size-4 text-muted-foreground" />
+          <UserStar className="size-4 text-muted-foreground" />
           <CardTitle>What Qloo knows</CardTitle>
         </div>
         <CardDescription>

@@ -287,8 +287,10 @@ export default defineSchema({
   conciergeWidgets: defineTable({
     /** Clerk subject. */
     owner: v.string(),
-    /** The store whose catalog it serves. */
+    /** The store it's for (its demo storefront, or the merchant's own). */
     storeKey: v.string(),
+    /** Set once a store sync has written the widget a catalog of its own (catalogConnections.ts). */
+    catalogKey: v.optional(v.string()),
     key: v.string(),
     /** Overrides for the store profile; unset falls back to the catalog's values. */
     name: v.optional(v.string()),
@@ -324,6 +326,42 @@ export default defineSchema({
   })
     .index("by_widget", ["widgetKey"])
     .index("by_widget_host", ["widgetKey", "host"]),
+
+  /**
+   * The store platform a widget's catalog syncs from (catalogConnections.ts),
+   * one per widget. Shopify goes through Composio, which holds the OAuth
+   * token; WooCommerce keeps its read-only REST keys here, encrypted by the
+   * agent, the only thing that can read them.
+   */
+  catalogConnections: defineTable({
+    widgetKey: v.string(),
+    platform: v.union(v.literal("shopify"), v.literal("woocommerce")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("connected"),
+      v.literal("syncing"),
+      v.literal("error"),
+    ),
+    /** Shopify: the shop handle (<handle>.myshopify.com). WooCommerce: the site's origin. */
+    shop: v.string(),
+    /** Shopify: the Composio connected account. */
+    accountId: v.optional(v.string()),
+    /** WooCommerce: the consumer key and secret, Fernet-encrypted by the agent. */
+    secret: v.optional(v.string()),
+    /** WooCommerce: the one-time value its key callback has to send back. */
+    state: v.optional(v.string()),
+    /** The store the synced catalog is written to. */
+    storeKey: v.optional(v.string()),
+    products: v.optional(v.number()),
+    /** Products left out of the last sync (drafts, no price, no image). */
+    skipped: v.optional(v.number()),
+    lastSyncAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_widget", ["widgetKey"])
+    .index("by_state", ["state"]),
 
   products: defineTable(productFields)
     .index("by_store", ["storeKey"])

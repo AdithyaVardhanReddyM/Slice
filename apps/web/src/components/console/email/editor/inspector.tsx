@@ -11,11 +11,10 @@ import {
   AlignCenterVertical,
   ChevronRight,
   Columns2,
-  Fingerprint,
+  UserStar,
   Plus,
   Trash2,
   Type,
-  UserStar,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -153,7 +152,7 @@ function ItemsFields({ block, set }: { block: ItemsBlock; set: SetFields }) {
                 onClick={() => set({ pick: p })}
                 className={cn("inline-flex h-6 flex-1 items-center justify-center gap-1 rounded-[5px] text-xs text-muted-foreground", block.pick === p && "bg-background font-medium text-foreground shadow-xs")}
               >
-                {p === "taste" && <Fingerprint className="size-3" />}
+                {p === "taste" && <UserStar className="size-3" />}
                 {p === "manual" ? "By hand" : "By taste"}
               </button>
             ))}
@@ -623,7 +622,7 @@ function SectionFields({ section, index, theme, editor }: { section: EmailSectio
       {section.evidence && (
         <div className="border-b px-3 py-3">
           <p className="mb-1 flex items-center gap-1.5 text-xs font-medium">
-            <Fingerprint className="size-3.5 text-neutral-500" /> Why this section
+            <UserStar className="size-3.5 text-neutral-500" /> Why this section
           </p>
           <p className="text-xs leading-5 text-muted-foreground">{section.evidence}</p>
         </div>

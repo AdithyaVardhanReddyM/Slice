@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUp,
   Braces,
+  Check,
   Download,
+  ExternalLink,
   FileSpreadsheet,
+  RefreshCw,
   Rss,
-  ShoppingBag,
-  Store,
   Upload,
 } from "lucide-react";
 import {
@@ -55,66 +56,91 @@ import {
   Spinner,
 } from "./atoms";
 import { CodeBlock } from "./code";
+import { ShopifyLogo, WooLogo } from "./platform-logos";
+import {
+  useStoreConnection,
+  type StoreConnection,
+  type StorePlatform,
+} from "./use-store-connection";
 
 const SOURCES: {
   id: CatalogSourceKind;
   title: string;
   description: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: ReactNode;
 }[] = [
-  {
-    id: "upload",
-    title: "Upload a file",
-    description: "CSV or JSON, up to 50 MB",
-    icon: Upload,
-  },
   {
     id: "shopify",
     title: "Shopify",
-    description: "Live sync, read-only",
-    icon: ShoppingBag,
+    description: "Approve read-only access",
+    icon: <ShopifyLogo className="size-4" />,
   },
   {
     id: "woocommerce",
     title: "WooCommerce",
-    description: "REST API, read-only",
-    icon: Store,
+    description: "Read-only REST key",
+    icon: <WooLogo className="size-5" />,
+  },
+  {
+    id: "upload",
+    title: "Upload a file",
+    description: "CSV or JSON, up to 50 MB",
+    icon: <Upload className="size-4" />,
   },
   {
     id: "feed",
     title: "Product feed",
     description: "Google Merchant XML",
-    icon: Rss,
+    icon: <Rss className="size-4" />,
   },
   {
     id: "api",
     title: "API push",
     description: "Send products from your backend",
-    icon: Braces,
+    icon: <Braces className="size-4" />,
   },
 ];
 
+const PLATFORM_LABEL: Record<StorePlatform, string> = {
+  shopify: "Shopify",
+  woocommerce: "WooCommerce",
+};
+
 export function CatalogStep({
   widgetId,
+  widgetKey,
   domain,
   preview,
   initialSource,
   onConnected,
 }: {
   widgetId: string;
+  /** The account's widget key, which store connections are saved under. */
+  widgetKey: string | undefined;
   domain: string;
   preview: CatalogPreview;
   /** Already-connected source, if any. */
   initialSource: CatalogSourceKind | null;
   onConnected: (connected: boolean) => void;
 }) {
-  const [source, setSource] = useState<CatalogSourceKind | null>(initialSource);
+  const store = useStoreConnection(widgetKey);
+  const live = store.connection;
+  const [picked, setPicked] = useState<CatalogSourceKind | null>(null);
+  // A store that's already connected opens on its own panel.
+  const source = picked ?? live?.platform ?? initialSource;
   const [ready, setReady] = useState(initialSource === preview.source);
   const [parsing, setParsing] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // A synced store completes the step like an uploaded file does.
+  const synced = live?.status === "connected" && (live.products ?? 0) > 0;
+  useEffect(() => {
+    if (synced) onConnected(true);
+  }, [synced, onConnected]);
+
   function choose(next: CatalogSourceKind) {
-    setSource(next);
+    setPicked(next);
+    store.clearError();
     // Mock: picking Upload stands in for dropping the merchant's file.
     if (next === "upload" && preview.source === "upload" && !ready) {
       setParsing(true);
@@ -137,18 +163,19 @@ export function CatalogStep({
         onValueChange={choose}
         className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-5"
       >
-        {SOURCES.map((s) => {
-          const Icon = s.icon;
-          return (
-            <ChoiceCard
-              key={s.id}
-              value={s.id}
-              icon={<Icon className="size-4" />}
-              title={s.title}
-              description={s.description}
-            />
-          );
-        })}
+        {SOURCES.map((s) => (
+          <ChoiceCard
+            key={s.id}
+            value={s.id}
+            icon={s.icon}
+            title={s.title}
+            description={
+              live?.platform === s.id && live.status === "connected"
+                ? "Connected"
+                : s.description
+            }
+          />
+        ))}
       </ChoiceCardGroup>
 
       {source === null && (
@@ -161,8 +188,8 @@ export function CatalogStep({
       {source === "upload" && (
         <UploadPanel preview={preview} parsing={parsing} ready={showPreview} />
       )}
-      {source === "shopify" && <ShopifyPanel domain={domain} />}
-      {source === "woocommerce" && <WooPanel domain={domain} />}
+      {source === "shopify" && <ShopifyPanel domain={domain} store={store} />}
+      {source === "woocommerce" && <WooPanel domain={domain} store={store} />}
       {source === "feed" && (
         <FeedPanel
           domain={domain}
@@ -227,60 +254,326 @@ function UploadPanel({
   );
 }
 
-function ShopifyPanel({ domain }: { domain: string }) {
-  const [pending, setPending] = useState(false);
-  const shop = domain.split(".")[0];
+/* Store platforms: Shopify (through Composio) and WooCommerce (REST key). The
+   agent does the work; see apps/agent/slice_catalog. */
+
+function ShopifyPanel({
+  domain,
+  store,
+}: {
+  domain: string;
+  store: StoreConnection;
+}) {
+  const c = store.connection?.platform === "shopify" ? store.connection : null;
+  const [shop, setShop] = useState(c?.shop || domain.split(".")[0]);
+  if (c && c.status !== "pending") return <ConnectedStore platform="shopify" store={store} />;
+  const pending = c?.status === "pending";
+  const handle = shop.trim().replace(/^https?:\/\//, "").replace(/\.myshopify\.com.*$/, "");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Connect Shopify</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <ShopifyLogo className="size-5" /> Connect Shopify
+        </CardTitle>
         <CardDescription>
-          Products, variants and inventory stay in sync.
+          Slice reads your products, variants and stock, and keeps the
+          concierge in step with them. It never changes anything in your
+          store.
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-end gap-3">
-        <Field label="Store" className="min-w-64 flex-1">
-          <AdornedInput defaultValue={shop} suffix=".myshopify.com" />
-        </Field>
-        <Button onClick={() => setPending(true)} disabled={pending}>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <Field label="Shop address" className="min-w-64 flex-1">
+            <AdornedInput
+              value={shop}
+              onChange={(e) => setShop(e.target.value)}
+              suffix=".myshopify.com"
+              spellCheck={false}
+              autoComplete="off"
+              disabled={pending}
+            />
+          </Field>
           {pending ? (
-            <>
-              <Spinner /> Waiting for approval…
-            </>
+            <Button variant="outline" onClick={store.reopen}>
+              <Spinner /> Waiting for Shopify
+            </Button>
           ) : (
-            "Connect Shopify"
+            <Button
+              onClick={() => store.connect("shopify", handle)}
+              disabled={!handle || store.busy === "connect"}
+            >
+              {store.busy === "connect" ? <Spinner /> : <ExternalLink data-icon="inline-start" />}
+              Connect Shopify
+            </Button>
           )}
-        </Button>
+        </div>
+        {pending && (
+          <Notice>
+            Approve Slice in the Shopify window. This page moves on by itself
+            once you have.
+          </Notice>
+        )}
+        {store.error && <Notice tone="bad">{store.error}</Notice>}
       </CardContent>
       <CardFooter>
-        <p className="text-sm text-muted-foreground">
-          Requests read_products and read_inventory only. Slice never writes to
-          your store.{" "}
-          {pending && "Approve the request in the Shopify tab to continue."}
-        </p>
+        <AccessList
+          items={[
+            "Reads products and inventory only",
+            "You approve it on Shopify",
+            "Remove access any time",
+          ]}
+        />
       </CardFooter>
     </Card>
   );
 }
 
-function WooPanel({ domain }: { domain: string }) {
+function WooPanel({
+  domain,
+  store,
+}: {
+  domain: string;
+  store: StoreConnection;
+}) {
+  const c = store.connection?.platform === "woocommerce" ? store.connection : null;
+  const [site, setSite] = useState(c?.shop.replace(/^https?:\/\//, "") || domain);
+  const [method, setMethod] = useState<"approve" | "keys">("approve");
+  const [consumerKey, setConsumerKey] = useState("");
+  const [consumerSecret, setConsumerSecret] = useState("");
+  if (c && c.status !== "pending") return <ConnectedStore platform="woocommerce" store={store} />;
+  const pending = c?.status === "pending";
+  const address = site.trim();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Connect WooCommerce</CardTitle>
-        <CardDescription>Syncs every 30 minutes.</CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          <WooLogo className="size-6" /> Connect WooCommerce
+        </CardTitle>
+        <CardDescription>
+          Slice reads published products, variations and stock with a
+          read-only key. It never changes anything in your store.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex flex-wrap items-end gap-3">
-        <Field label="Widget URL" className="min-w-64 flex-1">
-          <AdornedInput prefix="https://" defaultValue={domain} />
+      <CardContent className="space-y-5">
+        <Field label="Store address">
+          <AdornedInput
+            prefix="https://"
+            value={site}
+            onChange={(e) => setSite(e.target.value.replace(/^https?:\/\//, ""))}
+            placeholder={domain}
+            inputMode="url"
+            spellCheck={false}
+            disabled={pending}
+          />
         </Field>
-        <Button>Continue to WooCommerce</Button>
+
+        <div className="space-y-3">
+          <Segmented
+            value={method}
+            onChange={setMethod}
+            options={[
+              { value: "approve", label: "Approve in WooCommerce" },
+              { value: "keys", label: "Paste a REST key" },
+            ]}
+          />
+          {method === "approve" ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+              <p className="max-w-md text-sm text-muted-foreground">
+                Sign in to WordPress and approve read access. WooCommerce
+                makes the key and sends it straight to Slice.
+              </p>
+              {pending ? (
+                <Button variant="outline" onClick={store.reopen}>
+                  <Spinner /> Waiting for WooCommerce
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => store.connect("woocommerce", address)}
+                  disabled={!address || store.busy === "connect"}
+                >
+                  {store.busy === "connect" ? <Spinner /> : <ExternalLink data-icon="inline-start" />}
+                  Continue to WooCommerce
+                </Button>
+              )}
+            </div>
+          ) : (
+            <form
+              className="space-y-3 rounded-lg border p-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void store.saveKeys(address, consumerKey, consumerSecret);
+              }}
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Consumer key">
+                  <Input
+                    value={consumerKey}
+                    onChange={(e) => setConsumerKey(e.target.value)}
+                    placeholder="ck_"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                </Field>
+                <Field label="Consumer secret">
+                  <Input
+                    type="password"
+                    value={consumerSecret}
+                    onChange={(e) => setConsumerSecret(e.target.value)}
+                    placeholder="cs_"
+                    autoComplete="off"
+                  />
+                </Field>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="max-w-md text-xs text-muted-foreground">
+                  Make one in WooCommerce under Settings, Advanced, REST API,
+                  with Read permission. Slice stores it encrypted.
+                </p>
+                <Button
+                  type="submit"
+                  disabled={
+                    !address ||
+                    !consumerKey.trim() ||
+                    !consumerSecret.trim() ||
+                    store.busy === "keys"
+                  }
+                >
+                  {store.busy === "keys" && <Spinner />}
+                  Connect
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+        {pending && method === "approve" && (
+          <Notice>
+            Approve Slice in the WooCommerce window. This page moves on by
+            itself once you have.
+          </Notice>
+        )}
+        {store.error && <Notice tone="bad">{store.error}</Notice>}
       </CardContent>
       <CardFooter>
+        <AccessList
+          items={[
+            "Reads products and stock only",
+            "Key stored encrypted",
+            "Revoke it in WooCommerce any time",
+          ]}
+        />
+      </CardFooter>
+    </Card>
+  );
+}
+
+function AccessList({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-wrap gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
+      {items.map((item) => (
+        <li key={item} className="flex items-center gap-1.5">
+          <Check className="size-4 text-emerald-600" /> {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function syncedAgo(at: number) {
+  const s = Math.max(0, Math.round((Date.now() - at) / 1000));
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86_400) return `${Math.floor(s / 3600)} h ago`;
+  return new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/** A connected store: what came over in the last sync, and the controls to sync again or let go. */
+function ConnectedStore({
+  platform,
+  store,
+}: {
+  platform: StorePlatform;
+  store: StoreConnection;
+}) {
+  const c = store.connection!;
+  const label = PLATFORM_LABEL[platform];
+  const syncing = c.status === "syncing" || store.busy === "sync";
+  const Logo = platform === "shopify" ? ShopifyLogo : WooLogo;
+  const shop = platform === "shopify" ? `${c.shop}.myshopify.com` : c.shop.replace(/^https?:\/\//, "");
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Logo className={platform === "shopify" ? "size-5" : "size-6"} /> {label}
+        </CardTitle>
+        <CardDescription className="truncate">{shop}</CardDescription>
+        <CardAction>
+          {syncing ? (
+            <Badge>
+              <Spinner /> Syncing
+            </Badge>
+          ) : c.status === "error" ? (
+            <Badge tone="bad">Needs attention</Badge>
+          ) : (
+            <Badge tone="ok">
+              <Check /> Connected
+            </Badge>
+          )}
+        </CardAction>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {syncing && c.products === null ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Spinner /> Bringing your products over from {label}. Larger
+            stores take a minute or two.
+          </p>
+        ) : (
+          <dl className="grid grid-cols-3 gap-4 rounded-lg border p-3">
+            <div className="min-w-0">
+              <dt className="text-xs text-muted-foreground">Products</dt>
+              <dd className="num mt-0.5 text-sm font-semibold">
+                {c.products === null ? "None yet" : fmt.int(c.products)}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs text-muted-foreground">Last synced</dt>
+              <dd className="mt-0.5 text-sm font-semibold">
+                {c.lastSyncAt ? syncedAgo(c.lastSyncAt) : "Not yet"}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs text-muted-foreground">Left out</dt>
+              <dd className="num mt-0.5 text-sm font-semibold" title="Drafts and products without a price">
+                {c.skipped ? fmt.int(c.skipped) : "None"}
+              </dd>
+            </div>
+          </dl>
+        )}
+        {c.error && <Notice tone="bad">{c.error}</Notice>}
+        {store.error && <Notice tone="bad">{store.error}</Notice>}
+      </CardContent>
+      <CardFooter className="flex-wrap justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          You&apos;ll approve a read-only REST key in WooCommerce. Slice stores
-          it encrypted and only reads products, categories and stock.
+          Changes you make in {label} reach the concierge on the next sync.
         </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => void store.disconnect()}
+            disabled={store.busy !== null}
+          >
+            Disconnect
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => void store.sync()}
+            disabled={syncing || store.busy !== null}
+          >
+            <RefreshCw data-icon="inline-start" /> Sync now
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

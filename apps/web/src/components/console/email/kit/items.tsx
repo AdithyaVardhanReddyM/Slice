@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAction } from "convex/react";
-import { FileUp, Fingerprint, Plus } from "lucide-react";
+import { FileUp, UserStar, Plus } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { errorText } from "@/lib/email/labels";
@@ -45,7 +45,7 @@ export function QlooChip({ item }: { item: Pick<EmailItemRow, "qloo"> }) {
       <TooltipTrigger
         render={
           <span className="inline-flex h-5 items-center gap-1 rounded-full bg-neutral-900 px-1.5 text-[11px] font-medium text-white">
-            <Fingerprint className="size-3" />
+            <UserStar className="size-3" />
             Qloo match
           </span>
         }
@@ -104,7 +104,7 @@ export function ItemsCatalog({ brand, items }: { brand: EmailBrand; items: Email
         <div className="flex flex-wrap gap-2">
           {unmatched > 0 && (
             <Button variant="outline" size="sm" onClick={match} disabled={matching}>
-              {matching ? <Spinner data-icon="inline-start" /> : <Fingerprint data-icon="inline-start" />}
+              {matching ? <Spinner data-icon="inline-start" /> : <UserStar data-icon="inline-start" />}
               {matching ? "Matching…" : "Match with Qloo"}
             </Button>
           )}

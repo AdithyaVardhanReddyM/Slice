@@ -8,8 +8,16 @@ const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
 
 // Published pages and their tracker never touch Clerk: they are anonymous and
 // served on brand subdomains. /render is the agent's export surface (Playwright).
-// slice.js pings from merchant sites, also anonymous.
-const isPublic = createRouteMatcher(["/p(.*)", "/api/pages/track", "/api/pages/form", "/render(.*)", "/api/widget/ping"]);
+// slice.js pings from merchant sites, also anonymous, and so does WooCommerce
+// posting a merchant's newly approved catalog key.
+const isPublic = createRouteMatcher([
+  "/p(.*)",
+  "/api/pages/track",
+  "/api/pages/form",
+  "/render(.*)",
+  "/api/widget/ping",
+  "/api/concierge/catalog/woocommerce/callback",
+]);
 
 // Host that published pages live under: {brandSlug}.{PAGES_HOST}/{pageSlug}.
 // The port is ignored when comparing (pages.localhost:3000 → pages.localhost).
