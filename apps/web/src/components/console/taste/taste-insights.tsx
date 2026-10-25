@@ -68,7 +68,7 @@ function GroupCard({ group }: { group: InsightGroup }) {
     ],
     ["Into", group.into.map((e) => e.name).join(", ")],
     ["Comes for", listOf(group.comesFor)],
-  ];
+  ].filter(([, value]) => value !== "") as [string, ReactNode][];
   return (
     <article className="flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06]">
       <div className="grid h-28 grid-cols-3 gap-px overflow-hidden bg-neutral-100">
@@ -276,12 +276,15 @@ function Idea({ idea, base }: { idea: InsightIdea; base: string }) {
         <span className="mt-1 block text-[13px] leading-snug text-muted-foreground">
           {request ? (
             <>
-              Asked for by {idea.groups.join(" and ")} shoppers. Nothing in your
-              catalog fits.
+              {idea.groups.length
+                ? `Asked for by ${idea.groups.join(" and ")} shoppers.`
+                : "Shoppers asked for it."}{" "}
+              Nothing in your catalog fits.
             </>
           ) : idea.group && idea.asks ? (
             <>
-              {idea.group} shoppers ask for these in {idea.asks} chats. You
+              {idea.group} shoppers ask for these in {idea.asks}{" "}
+              {idea.asks === 1 ? "chat" : "chats"}. You
               have {idea.stock} in this style.
             </>
           ) : (
@@ -393,17 +396,19 @@ export function TasteInsights({
   widget,
   data,
   geo,
+  sample,
 }: {
   widget: Pick<Widget, "id" | "name" | "accent" | "logo">;
   data: TasteInsightsData;
   geo: TasteMapGeometry;
+  sample: boolean;
 }) {
   const base = `/dashboard/concierge/${widget.id}`;
   return (
     <ConsolePage>
       <TasteHeader
         widget={widget}
-        meta={`${fmt.int(data.shoppers)} shoppers since ${fmt.date(data.since)}`}
+        meta={`${sample ? "Sample data, " : ""}${fmt.int(data.shoppers)} ${data.shoppers === 1 ? "shopper" : "shoppers"} since ${fmt.date(data.since)}`}
       />
       <div className="mt-10 space-y-5">
         <Shoppers data={data} />

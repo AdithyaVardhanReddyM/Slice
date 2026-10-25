@@ -446,11 +446,34 @@ export default defineSchema({
         trace: v.optional(v.array(spanValidator)),
       }),
     ),
+    /**
+     * What the shopper did around the chat, reported by slice.js: opened the
+     * concierge, opened one of its picks, added one of its picks to the cart.
+     */
+    events: v.optional(
+      v.array(
+        v.object({
+          type: v.union(v.literal("open"), v.literal("click"), v.literal("cart")),
+          /** The pick, for click and cart. */
+          productId: v.optional(v.string()),
+          at: v.number(),
+        }),
+      ),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_session", ["sessionId"])
-    .index("by_store", ["storeKey"]),
+    .index("by_store", ["storeKey"])
+    .index("by_store_updated", ["storeKey", "updatedAt"]),
+
+  /** Shopper sessions that loaded slice.js on an allowed site, per widget key and UTC day. */
+  widgetVisits: defineTable({
+    widgetKey: v.string(),
+    /** "2026-10-25". */
+    day: v.string(),
+    visitors: v.number(),
+  }).index("by_widget_day", ["widgetKey", "day"]),
 
   /* Pages service ----------------------------------------------------------
      Independent of the concierge tables: a Pages client is a brand, not a

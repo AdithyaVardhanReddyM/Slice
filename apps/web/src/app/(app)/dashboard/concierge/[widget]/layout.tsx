@@ -5,8 +5,10 @@ import { Topbar } from "@/components/console/topbar";
 import { insetClass } from "@/components/console/shell-ui";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { conversationsFor } from "@/lib/mock/conversations";
-import { widgets } from "@/lib/mock/widgets";
+import { getWidget, widgets } from "@/lib/mock/widgets";
+import { liveCount } from "@/lib/concierge/live";
 import { removedWidgetIds } from "@/lib/concierge/removed-server";
+import { showsSample } from "@/lib/concierge/sample";
 
 export function generateStaticParams() {
   return widgets.map((s) => ({ widget: s.id }));
@@ -27,6 +29,26 @@ async function DeletedGuard({
   return null;
 }
 
+/** The sidebar's conversation count follows the sample switch. */
+async function Sidebar({
+  params,
+}: {
+  params: LayoutProps<"/dashboard/concierge/[widget]">["params"];
+}) {
+  const { widget: id } = await params;
+  const storeKey = getWidget(id)?.storeKey;
+  if ((await showsSample()) || !storeKey)
+    return <WidgetSidebar conversationCounts={conversationCounts} />;
+  return (
+    <WidgetSidebar
+      conversationCounts={{
+        ...conversationCounts,
+        [id]: await liveCount(storeKey),
+      }}
+    />
+  );
+}
+
 export default function WidgetLayout({
   children,
   params,
@@ -36,7 +58,9 @@ export default function WidgetLayout({
       <Suspense>
         <DeletedGuard params={params} />
       </Suspense>
-      <WidgetSidebar conversationCounts={conversationCounts} />
+      <Suspense fallback={<WidgetSidebar conversationCounts={{}} />}>
+        <Sidebar params={params} />
+      </Suspense>
       <SidebarInset className={insetClass}>
         <Topbar />
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>

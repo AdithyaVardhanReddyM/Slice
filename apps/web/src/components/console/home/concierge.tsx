@@ -515,12 +515,15 @@ export function RecentConversations({
   delay,
   className,
   href,
+  now,
 }: {
   recent: HomeConversation[];
   delay?: number;
   className?: string;
   /** Where "View all" goes; omitted on the home, which spans widgets. */
   href?: string;
+  /** The clock "ago" is measured from; the sample world's unless set. */
+  now?: number;
 }) {
   return (
     <Tile delay={delay} className={cn("flex flex-col", className)}>
@@ -575,11 +578,16 @@ export function RecentConversations({
                 {c.carted ? fmt.money(c.carted) : "—"}
               </span>
               <span className="text-right text-xs text-muted-foreground">
-                {fmt.ago(c.startedAt)}
+                {fmt.ago(c.startedAt, now)}
               </span>
             </Link>
           </li>
         ))}
+        {recent.length === 0 && (
+          <li className="px-3 py-8 text-center text-sm text-muted-foreground">
+            No conversations yet. They show up here as shoppers chat.
+          </li>
+        )}
       </ul>
     </Tile>
   );

@@ -2,6 +2,10 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ConversationList } from "@/components/console/conversations/conversation-list";
 import { summarize } from "@/components/console/conversations/data";
+import { LiveRefresh } from "@/components/console/live-refresh";
+import { liveData } from "@/lib/concierge/live";
+import { liveSummaries } from "@/lib/concierge/live-model";
+import { showsSample } from "@/lib/concierge/sample";
 import { conversationsFor } from "@/lib/mock/conversations";
 import { getWidget } from "@/lib/mock/widgets";
 
@@ -32,9 +36,28 @@ async function List({
   const { widget: widgetId } = await params;
   const widget = getWidget(widgetId);
   if (!widget) notFound();
-  const items = conversationsFor(widget.id).map(summarize);
-
+  if ((await showsSample()) || !widget.storeKey) {
+    const items = conversationsFor(widget.id).map(summarize);
+    return (
+      <ConversationList
+        widgetId={widget.id}
+        items={items}
+        total={items.length}
+        sample
+      />
+    );
+  }
+  const items = liveSummaries(await liveData(widget.storeKey));
   return (
-    <ConversationList widgetId={widget.id} items={items} total={items.length} />
+    <>
+      <LiveRefresh storeKey={widget.storeKey} />
+      <ConversationList
+        widgetId={widget.id}
+        items={items}
+        total={items.length}
+        now={Date.now()}
+        sample={false}
+      />
+    </>
   );
 }

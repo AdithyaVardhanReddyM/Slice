@@ -24,10 +24,15 @@ const matches: Record<Filter, (o: Outcome) => boolean> = {
 export function ConversationList({
   widgetId,
   items,
+  now,
+  sample,
 }: {
   widgetId: string;
   items: ConversationSummary[];
   total: number;
+  /** The clock "ago" is measured from; the sample world's unless set. */
+  now?: number;
+  sample: boolean;
 }) {
   const { id: activeId } = useParams<{ id?: string }>();
   const [filter, setFilter] = useState<Filter>("all");
@@ -50,7 +55,14 @@ export function ConversationList({
     <div className="flex h-full w-[340px] shrink-0 flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.05] shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)]">
       <div className="space-y-3 border-b p-4">
         <div className="flex items-baseline justify-between">
-          <h1 className="text-base font-semibold">Conversations</h1>
+          <h1 className="flex items-center gap-2 text-base font-semibold">
+            Conversations
+            {sample && (
+              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
+                Sample
+              </span>
+            )}
+          </h1>
           <span className="text-sm text-muted-foreground tabular-nums">
             {visible.length}
           </span>
@@ -87,11 +99,12 @@ export function ConversationList({
               <div className="flex items-baseline justify-between gap-2 text-sm">
                 <span className="truncate font-medium">{c.intent}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  {fmt.ago(c.startedAt)}
+                  {fmt.ago(c.startedAt, now)}
                 </span>
               </div>
               <p className="truncate text-xs text-muted-foreground">
-                {c.city}, {c.region}
+                {[c.city, c.region].filter(Boolean).join(", ") ||
+                  "No taste profile"}
               </p>
               <div className="flex items-center justify-between gap-2">
                 <OutcomeBadge outcome={c.outcome} />
@@ -114,7 +127,9 @@ export function ConversationList({
         ))}
         {visible.length === 0 && (
           <li className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No conversations match.
+            {items.length
+              ? "No conversations match."
+              : "No conversations yet. They show up here as shoppers chat."}
           </li>
         )}
       </ul>

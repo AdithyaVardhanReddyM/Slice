@@ -11,6 +11,10 @@ import {
   TasteInsights,
 } from "@/components/console/taste/taste-insights";
 import { tasteMapGeometry } from "@/components/console/taste/map-geometry";
+import { LiveRefresh } from "@/components/console/live-refresh";
+import { liveData } from "@/lib/concierge/live";
+import { liveTaste } from "@/lib/concierge/live-model";
+import { showsSample } from "@/lib/concierge/sample";
 import { tasteInsights } from "@/lib/mock/taste-insights";
 import { getWidget } from "@/lib/mock/widgets";
 
@@ -35,16 +39,25 @@ async function TasteContent({
   const widget = getWidget(widgetId);
   if (!widget) notFound();
 
-  const data = tasteInsights(widget);
+  const sample = (await showsSample()) || !widget.storeKey;
+  const live = sample ? null : await liveData(widget.storeKey!, true);
+  const data = sample ? tasteInsights(widget) : liveTaste(live, Date.now());
+  const refresh = !sample && <LiveRefresh storeKey={widget.storeKey!} />;
   if (!data) {
+    const chatted = !!live?.conversations.length;
     return (
       <ConsolePage>
+        {refresh}
         <TasteHeader widget={widget} meta={widget.domain} />
         <Tile className="mt-10">
           <EmptyState
             className="border-0 py-20"
-            title="No shoppers yet"
-            body="Once shoppers talk to the concierge, you'll see who they are, the styles they want and what to stock next."
+            title={chatted ? "No taste profiles yet" : "No shoppers yet"}
+            body={
+              chatted
+                ? "Shoppers have chatted, but none has answered the taste questions yet. Once they do, you'll see who they are, the styles they want and what to stock next."
+                : "Once shoppers talk to the concierge, you'll see who they are, the styles they want and what to stock next."
+            }
             action={
               <Link
                 href={`/dashboard/concierge/${widget.id}/${widget.status === "setup" ? "setup" : "install"}`}
@@ -65,5 +78,10 @@ async function TasteContent({
     data.places,
     data.groups.map((g) => g.label),
   );
-  return <TasteInsights widget={widget} data={data} geo={geo} />;
+  return (
+    <>
+      {refresh}
+      <TasteInsights widget={widget} data={data} geo={geo} sample={sample} />
+    </>
+  );
 }

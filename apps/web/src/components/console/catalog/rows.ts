@@ -82,7 +82,10 @@ export function catalogRows(
  * Catalog share per style axis value. A product tagged with two styles counts
  * half toward each, so shares sum to 100% and compare 1:1 with shopper demand.
  */
-export function styleCoverage(catalog: Catalog): StyleCoverage[] {
+export function styleCoverage(catalog: {
+  store: { styles: { id: string; label: string; description: string }[] };
+  products: { attributes: { style: string[] } }[];
+}): StyleCoverage[] {
   const n = catalog.products.length || 1;
   return catalog.store.styles
     .map((s) => {

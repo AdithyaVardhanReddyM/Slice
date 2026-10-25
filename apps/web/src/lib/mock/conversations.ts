@@ -1,7 +1,8 @@
 import type { Product } from "@slice/demo-catalogs";
 import { catalogs, product, styleLabel } from "./catalog";
 import { personas, type Persona, type Scenario } from "./personas";
-import { NOW, entityId, rng, slug } from "./random";
+import { NOW, entityId, hash, rng, slug } from "./random";
+import { stories, type Story } from "./stories";
 import type {
   Candidate,
   Conversation,
@@ -387,11 +388,13 @@ function generate(
   store: StoreKey,
   count: number,
   seed: number,
+  /** Leaves this much room at the top of the list for the widget's stories. */
+  before = 0,
 ) {
   const r = rng(seed);
   const pool = personas.filter((p) => p.store === store);
   const out: Conversation[] = [];
-  let clock = NOW - r.int(2, 9) * 60_000;
+  let clock = NOW - r.int(2, 9) * 60_000 - before;
 
   for (let i = 0; i < count; i++) {
     const persona = pool[i < pool.length ? i : weighted(r.next(), pool.length)];
@@ -560,9 +563,140 @@ function generate(
   return out;
 }
 
+/** A hand-written conversation (stories.ts) in the same shape as the generated ones. */
+function story(s: Story): Conversation {
+  const persona = personas.find((p) => p.id === s.persona)!;
+  const profile = buildProfile(persona);
+  const r = rng(hash(s.id));
+  const t0 = NOW - s.minutesAgo * 60_000;
+  const at = (sec: number) => iso(t0 + sec * 1000);
+  const opened = new Set(
+    s.turns.flatMap((t) => (t.kind === "opened" || t.kind === "carted" ? [t.product] : [])),
+  );
+  const carted = new Set(
+    s.turns.flatMap((t) => (t.kind === "carted" ? [t.product] : [])),
+  );
+  const flagged = new Set<string>();
+  const messages: Message[] = [
+    {
+      id: `${s.id}_m0`,
+      role: "system",
+      at: at(0),
+      text: `Opened the concierge on ${s.entryPage}`,
+    },
+    {
+      id: `${s.id}_m1`,
+      role: "concierge",
+      at: at(1),
+      text: `Hi! I'm the ${STORE_NAME[s.store]} concierge. A few quick picks so I know your taste, or skip them and just ask.`,
+    },
+  ];
+  const traces: TurnTrace[] = [];
+  let sec = 1;
+  s.turns.forEach((t, i) => {
+    sec += t.after;
+    const id = `${s.id}_s${i}`;
+    if (t.kind === "taste")
+      messages.push({
+        id,
+        role: "system",
+        at: at(sec),
+        event: "taste",
+        text: `Answered ${profile.answers.length} taste questions: ${profile.answers
+          .map((a) => a.choice)
+          .join(", ")}`,
+      });
+    else if (t.kind === "shopper")
+      messages.push({ id, role: "shopper", at: at(sec), text: t.text });
+    else if (t.kind === "opened" || t.kind === "carted")
+      messages.push({
+        id,
+        role: "system",
+        at: at(sec),
+        event: t.kind,
+        text:
+          t.kind === "carted"
+            ? `Added ${product(t.product).name} to their cart`
+            : `Opened ${product(t.product).name}`,
+      });
+    else if (t.kind === "end")
+      messages.push({ id: `${s.id}_m9`, role: "system", at: at(sec), text: t.text });
+    else {
+      const scenario: Scenario = {
+        intent: t.ask?.intent ?? s.intent,
+        opener: "",
+        reply: t.text,
+        category:
+          t.ask?.category ?? [...new Set(t.picks.map((x) => product(x).subcategory))],
+        budget: t.ask?.budget,
+        constraints: t.ask?.constraints ?? [],
+        picks: t.picks,
+        alsoRan: [],
+        outcomes: [s.outcome],
+      };
+      // Opened and carted flags sit on the first showing of each product.
+      const recs = buildRecs(t.picks, persona, scenario, profile, s.outcome, false).map(
+        (rec) => {
+          if (flagged.has(rec.productId)) return rec;
+          flagged.add(rec.productId);
+          return {
+            ...rec,
+            clicked: opened.has(rec.productId),
+            addedToCart: carted.has(rec.productId),
+          };
+        },
+      );
+      let traceId: string | undefined;
+      if (t.ask && recs.length) {
+        const trace = buildTrace(`${id}_t`, id, persona, scenario, profile, recs, !traces.length, r);
+        traces.push(trace);
+        traceId = trace.id;
+      }
+      messages.push({
+        id,
+        role: "concierge",
+        at: at(sec),
+        text: t.text,
+        recs: recs.length ? recs : undefined,
+        traceId,
+      });
+    }
+  });
+
+  return {
+    id: s.id,
+    widgetId: s.widgetId,
+    storeKey: s.store,
+    shopper: {
+      anonId: `shp_${entityId(s.id).slice(0, 8).toLowerCase()}`,
+      city: s.city[0],
+      region: s.city[1],
+      device: s.device,
+      entryPage: s.entryPage,
+      referrer: s.referrer,
+      returning: false,
+    },
+    startedAt: iso(t0),
+    durationSec: sec,
+    outcome: s.outcome,
+    intent: s.intent,
+    persona: persona.label,
+    profile,
+    messages,
+    traces,
+  };
+}
+
+/** Each widget's stories come first, as its most recent conversations. */
+const storiesFor = (widgetId: string) =>
+  stories.filter((s) => s.widgetId === widgetId).map(story);
+const STORY_ROOM = 16 * 60_000;
+
 export const conversations: Conversation[] = [
-  ...generate("marlow", "marlow", 64, 7),
-  ...generate("fold", "fold", 30, 19),
+  ...storiesFor("marlow"),
+  ...generate("marlow", "marlow", 64, 7, STORY_ROOM),
+  ...storiesFor("fold"),
+  ...generate("fold", "fold", 30, 19, STORY_ROOM),
 ];
 
 export function conversationsFor(widgetId: string) {

@@ -16,6 +16,7 @@ const isPublic = createRouteMatcher([
   "/api/pages/form",
   "/render(.*)",
   "/api/widget/ping",
+  "/api/widget/event",
   "/api/concierge/catalog/woocommerce/callback",
 ]);
 

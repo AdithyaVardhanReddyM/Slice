@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { ConversationView } from "@/components/console/conversations/conversation-view";
 import { conversationDetail } from "@/components/console/conversations/data";
 import { Skeleton } from "@/components/console/primitives";
+import { liveConversation } from "@/lib/concierge/live";
+import { liveDetail } from "@/lib/concierge/live-model";
+import { showsSample } from "@/lib/concierge/sample";
 import { conversations, getConversation } from "@/lib/mock/conversations";
 import { getWidget } from "@/lib/mock/widgets";
 
@@ -35,11 +38,15 @@ export default function ConversationPage({
 async function Conversation({ params }: { params: Params }) {
   const { widget: widgetId, id } = await params;
   const widget = getWidget(widgetId);
-  const conversation = getConversation(id);
-  if (!widget || !conversation || conversation.widgetId !== widget.id)
-    notFound();
-
-  return <ConversationView detail={conversationDetail(conversation)} />;
+  if (!widget) notFound();
+  if ((await showsSample()) || !widget.storeKey) {
+    const conversation = getConversation(id);
+    if (!conversation || conversation.widgetId !== widget.id) notFound();
+    return <ConversationView detail={conversationDetail(conversation)} />;
+  }
+  const found = await liveConversation(widget.storeKey, decodeURIComponent(id));
+  if (!found) notFound();
+  return <ConversationView detail={liveDetail(found)} />;
 }
 
 function ConversationSkeleton() {

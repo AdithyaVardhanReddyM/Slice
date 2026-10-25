@@ -52,8 +52,9 @@ export const fmt = {
       year: "numeric",
       timeZone: "UTC",
     }),
-  ago: (iso: string) => {
-    const s = Math.max(0, Math.round((NOW - new Date(iso).getTime()) / 1000));
+  /** `now` is the sample world's clock unless a real one is passed. */
+  ago: (iso: string, now = NOW) => {
+    const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
     if (s < 60) return "just now";
     if (s < 3600) return `${Math.floor(s / 60)}m ago`;
     if (s < 86_400) return `${Math.floor(s / 3600)}h ago`;

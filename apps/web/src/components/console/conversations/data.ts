@@ -41,7 +41,8 @@ export interface PickView {
   price: number;
   image: string | null;
   status: "carted" | "opened" | null;
-  match: number;
+  /** Taste fit, 0 to 1; null when the concierge showed it without a ranking. */
+  match: number | null;
   /** Why the concierge chose it, in the merchant's words. */
   why: { label: string; value: string }[];
 }
@@ -55,6 +56,14 @@ export type LineView =
       text: string;
       picks: PickView[];
     }
+  | {
+      kind: "event";
+      id: string;
+      at: string;
+      /** Built a taste profile, opened a pick, or put one in the cart. */
+      event: "taste" | "opened" | "carted";
+      text: string;
+    }
   | { kind: "end"; id: string; at: string; text: string };
 
 export interface ConversationDetail {
@@ -64,7 +73,7 @@ export interface ConversationDetail {
   /** Price of the picks the shopper put in their cart. */
   carted: number;
   city: string;
-  device: string;
+  device?: string;
   startedAt: string;
   taste: {
     group: string;
@@ -96,12 +105,21 @@ export function conversationDetail(c: Conversation): ConversationDetail {
   const lines: LineView[] = c.messages.flatMap((m): LineView[] => {
     if (m.role === "shopper")
       return [{ kind: "shopper", id: m.id, at: m.at, text: m.text }];
-    if (m.role === "system")
-      // Only how it ended; the opening and the questionnaire live in the shopper card.
+    if (m.role === "system") {
+      if (m.event)
+        return [
+          { kind: "event", id: m.id, at: m.at, event: m.event, text: m.text },
+        ];
+      // Otherwise only how it ended; the opening lives in the shopper card.
       return m.id.endsWith("_m9")
         ? [{ kind: "end", id: m.id, at: m.at, text: m.text }]
         : [];
-    if (!m.recs) return []; // The greeting every chat opens with.
+    }
+    if (!m.recs)
+      // The greeting every chat opens with stays out; answers without picks stay in.
+      return m.id.endsWith("_m1")
+        ? []
+        : [{ kind: "concierge", id: m.id, at: m.at, text: m.text, picks: [] }];
     const intent = intentFor(m.id);
     return [
       {

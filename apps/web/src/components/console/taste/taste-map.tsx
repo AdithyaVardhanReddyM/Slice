@@ -7,7 +7,8 @@ import type { InsightPlace } from "@/lib/mock/taste-insights";
 import { Tile, TileHeader } from "@/components/console/home/ui";
 import type { TasteMapGeometry } from "./map-geometry";
 
-const keyOf = (p: InsightPlace) => `${p.city}, ${p.region}`;
+/** Matches map-geometry's city keys: "Brooklyn, NY", or "London" with no region. */
+const keyOf = (p: InsightPlace) => [p.city, p.region].filter(Boolean).join(", ");
 
 /** Orange 100 → 400 → 700, for t from 0 to 1. */
 const STOPS = [
@@ -114,7 +115,7 @@ export function TasteMap({
               viewBox={`0 0 ${geo.width} ${geo.height}`}
               className="block h-auto w-full"
               role="img"
-              aria-label={`Heatmap of ${group ?? "all"} shoppers across the US`}
+              aria-label={`Heatmap of ${group ?? "all"} shoppers across ${geo.scope === "us" ? "the US" : "the world"}`}
             >
               <defs>
                 <clipPath id={clip}>

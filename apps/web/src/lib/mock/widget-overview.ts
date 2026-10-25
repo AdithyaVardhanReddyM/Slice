@@ -56,6 +56,8 @@ export interface WidgetOverviewData {
   /** Share of conversations where nothing in the catalog fit. */
   noMatch: number;
   recent: HomeConversation[];
+  /** The clock "ago" is measured from; the sample world's unless set. */
+  now?: number;
 }
 
 export function widgetOverview(widget: Widget): WidgetOverviewData {

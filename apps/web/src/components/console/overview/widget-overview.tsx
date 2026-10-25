@@ -23,6 +23,7 @@ import {
 } from "@/components/console/home/ui";
 import { ConsolePage } from "@/components/console/shell-ui";
 import { StatusText, WidgetGlyph } from "@/components/console/sidebar";
+import { SampleSwitch } from "./sample-switch";
 
 function TileLink({ href, children }: { href: string; children: string }) {
   return (
@@ -99,6 +100,11 @@ function ProductsCard({
             </span>
           </li>
         ))}
+        {data.products.length === 0 && (
+          <li className="py-8 text-center text-sm text-muted-foreground">
+            No picks shown yet.
+          </li>
+        )}
       </ul>
     </Tile>
   );
@@ -118,7 +124,7 @@ function ShoppersCard({
     <Tile delay={300} className={cn("flex flex-col", className)}>
       <TileHeader
         title="Who's shopping"
-        hint={`Your biggest taste groups, from ${data.sample} shoppers`}
+        hint={`Your biggest taste groups, from ${data.sample} ${data.sample === 1 ? "shopper" : "shoppers"}`}
         actions={<TileLink href={`${base}/taste`}>Taste insights</TileLink>}
       />
       <ol className="flex-1 space-y-5 px-6 pt-5 pb-6">
@@ -143,6 +149,12 @@ function ShoppersCard({
             </span>
           </li>
         ))}
+        {data.groups.length === 0 && (
+          <li className="py-6 text-center text-sm text-muted-foreground">
+            No taste profiles yet. Shoppers who answer the taste questions
+            show up here.
+          </li>
+        )}
       </ol>
     </Tile>
   );
@@ -191,7 +203,9 @@ function GapsCard({
         ))}
         {data.gaps.length === 0 && (
           <li className="py-6 text-center text-sm text-muted-foreground">
-            Every request found a match.
+            {data.recent.length
+              ? "Every request found a match."
+              : "Nothing asked yet."}
           </li>
         )}
       </ul>
@@ -210,7 +224,14 @@ function GapsCard({
  * A widget's Overview: only what the widget itself sees. The journey ends at
  * the cart because checkout runs in the merchant's systems.
  */
-export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
+export function WidgetOverview({
+  data,
+  sample,
+}: {
+  data: WidgetOverviewData;
+  /** Whether this is the sample; the switch in the header flips it. */
+  sample: boolean;
+}) {
   const [range, setRange] = useState<OverviewRange>(30);
   const r = data.ranges[range];
   const t = r.totals.all;
@@ -238,19 +259,22 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
           </h1>
           <p className="mt-2.5 text-[15px] text-muted-foreground">
             How the concierge did for shoppers on {data.widget.domain} in the
-            last {range} days.
+            last {range} days{sample && ", shown with sample data"}.
           </p>
         </div>
-        <PillTabs
-          label="Date range"
-          value={range}
-          onChange={setRange}
-          options={[
-            { value: 7, label: "7 days" },
-            { value: 14, label: "14 days" },
-            { value: 30, label: "30 days" },
-          ]}
-        />
+        <div className="flex flex-wrap items-center gap-5">
+          <SampleSwitch on={sample} />
+          <PillTabs
+            label="Date range"
+            value={range}
+            onChange={setRange}
+            options={[
+              { value: 7, label: "7 days" },
+              { value: 14, label: "14 days" },
+              { value: 30, label: "30 days" },
+            ]}
+          />
+        </div>
       </header>
 
       <div className="mt-10 grid gap-5 lg:grid-cols-12">
@@ -311,6 +335,7 @@ export function WidgetOverview({ data }: { data: WidgetOverviewData }) {
           delay={360}
           className="lg:col-span-12"
           href={`${base}/conversations`}
+          now={data.now}
         />
       </div>
     </ConsolePage>

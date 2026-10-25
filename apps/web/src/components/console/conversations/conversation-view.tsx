@@ -9,6 +9,7 @@ import {
   MousePointerClick,
   PackageSearch,
   ShoppingBag,
+  UserStar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/lib/format";
@@ -39,7 +40,8 @@ export function ConversationView({ detail: d }: { detail: ConversationDetail }) 
             {d.title}
           </h2>
           <p className="mt-0.5 truncate text-sm text-muted-foreground">
-            Shopper in {d.city} on {d.device}, {fmt.date(d.startedAt)} at{" "}
+            Shopper{d.city && ` in ${d.city}`}
+            {d.device && ` on ${d.device}`}, {fmt.date(d.startedAt)} at{" "}
             {fmt.time(d.startedAt)}
           </p>
         </div>
@@ -141,19 +143,21 @@ function ShopperCard({ detail: d }: { detail: ConversationDetail }) {
             </span>
           </Row>
         )}
-        <Row label="Picked">
-          <span className="flex flex-wrap gap-1.5">
-            {t.picked.map((p) => (
-              <span
-                key={p.choice}
-                title={p.question}
-                className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-neutral-800 ring-1 ring-black/[0.08]"
-              >
-                {p.choice}
-              </span>
-            ))}
-          </span>
-        </Row>
+        {t.picked.length > 0 && (
+          <Row label="Picked">
+            <span className="flex flex-wrap gap-1.5">
+              {t.picked.map((p) => (
+                <span
+                  key={p.choice}
+                  title={p.question}
+                  className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-neutral-800 ring-1 ring-black/[0.08]"
+                >
+                  {p.choice}
+                </span>
+              ))}
+            </span>
+          </Row>
+        )}
         {t.mentioned.length > 0 && (
           <Row label="Mentioned">
             <span className="text-neutral-900">{t.mentioned.join(", ")}</span>
@@ -190,6 +194,12 @@ const END: Partial<
   no_match: { icon: PackageSearch, className: "bg-amber-50 text-amber-800" },
 };
 
+const EVENT_ICON = {
+  taste: UserStar,
+  opened: MousePointerClick,
+  carted: ShoppingBag,
+} as const;
+
 function Line({ line, outcome }: { line: LineView; outcome: Outcome }) {
   if (line.kind === "shopper")
     return (
@@ -202,6 +212,29 @@ function Line({ line, outcome }: { line: LineView; outcome: Outcome }) {
         </p>
       </div>
     );
+
+  if (line.kind === "event") {
+    const Icon = EVENT_ICON[line.event];
+    return (
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "flex size-7 shrink-0 items-center justify-center rounded-full",
+            line.event === "carted"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-neutral-100 text-neutral-600",
+          )}
+        >
+          <Icon className="size-3.5" />
+        </span>
+        <div className="min-w-0 pt-1">
+          <p title={fmt.time(line.at)} className="text-sm text-neutral-700">
+            {line.text}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (line.kind === "end") {
     const end = END[outcome];
@@ -291,9 +324,11 @@ function PickCard({ pick: p }: { pick: PickView }) {
                 <p className="text-sm font-medium text-neutral-950">
                   Why this pick
                 </p>
-                <span className="num text-xs text-muted-foreground">
-                  {Math.round(p.match * 100)}% match
-                </span>
+                {p.match !== null && (
+                  <span className="num text-xs text-muted-foreground">
+                    {Math.round(p.match * 100)}% match
+                  </span>
+                )}
               </div>
               <dl className="space-y-2">
                 {p.why.map((w) => (

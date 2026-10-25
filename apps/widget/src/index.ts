@@ -158,6 +158,27 @@ function boot() {
     set(storage.session, sessionId, sessionStorage);
   }
 
+  // Where Slice lives: the dev server while developing, otherwise wherever
+  // this script was served from (the app serves /slice.js beside the concierge).
+  const appUrl = import.meta.env.DEV
+    ? (import.meta.env.VITE_SLICE_APP_URL ?? "http://localhost:3000")
+    : new URL(script!.src, location.href).origin;
+
+  // What the merchant's console counts: the concierge opened, one of its picks
+  // opened, a pick added to the cart. Beacons survive the navigation a pick
+  // click starts; text/plain keeps them free of CORS preflights.
+  const report = (type: "open" | "click" | "cart", id?: unknown) => {
+    if (type !== "open" && (typeof id !== "string" || !id)) return;
+    const url = `${appUrl}/api/widget/event`;
+    const body = JSON.stringify({ key, sessionId, type, ...(type !== "open" ? { id } : {}) });
+    try {
+      if (navigator.sendBeacon?.(url, body)) return;
+    } catch {
+      /* fall back to fetch */
+    }
+    fetch(url, { method: "POST", body, keepalive: true }).catch(() => {});
+  };
+
   // --- browsing signals: product views (with dwell), picks opened, add to cart ---
   const readSignals = (): Signal[] => {
     try {
@@ -198,14 +219,10 @@ function boot() {
   window.addEventListener("slice:track", (ev: Event) => {
     const d = (ev as CustomEvent).detail ?? {};
     if (d.type === "cart" || d.type === "view" || d.type === "click") track(d.type, d.id);
+    // Only once the shopper has used the concierge this visit; Slice keeps cart adds of its own picks.
+    if (d.type === "cart" && get(storage.transcript, sessionStorage)) report("cart", d.id);
   });
   (window as unknown as { slice: { track: typeof track } }).slice = { track };
-
-  // Where Slice lives: the dev server while developing, otherwise wherever
-  // this script was served from (the app serves /slice.js beside the concierge).
-  const appUrl = import.meta.env.DEV
-    ? (import.meta.env.VITE_SLICE_APP_URL ?? "http://localhost:3000")
-    : new URL(script!.src, location.href).origin;
 
   const mount = () => {
     const host = document.createElement("div");
@@ -260,6 +277,7 @@ function boot() {
       if (!panel.src) panel.src = `${appUrl}/embed/concierge?key=${encodeURIComponent(key)}`;
     };
     const setOpen = (open: boolean) => {
+      if (open && panel.hidden) report("open");
       if (open) load();
       panel.hidden = !open;
       launcher.setAttribute("aria-expanded", String(open));
@@ -290,6 +308,7 @@ function boot() {
           break;
         case "slice:navigate":
           track("click", msg.productId);
+          report("click", msg.productId);
           if (typeof msg.url === "string") location.href = msg.url;
           break;
         case "slice:close":

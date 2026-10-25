@@ -191,6 +191,8 @@ export interface Message {
   role: "shopper" | "concierge" | "system";
   at: string;
   text: string;
+  /** A system message for something the shopper did mid-chat. */
+  event?: "taste" | "opened" | "carted";
   recs?: Recommendation[];
   traceId?: string;
 }

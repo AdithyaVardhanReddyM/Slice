@@ -68,6 +68,16 @@ export const ping = mutation({
       });
     else if (now - seen.lastSeenAt > REFRESH_MS || seen.allowed !== allowed)
       await ctx.db.patch(seen._id, { allowed, page, version, lastSeenAt: now });
+    // slice.js pings once per shopper session, so each allowed ping is a visitor.
+    if (allowed) {
+      const day = new Date(now).toISOString().slice(0, 10);
+      const visits = await ctx.db
+        .query("widgetVisits")
+        .withIndex("by_widget_day", (q) => q.eq("widgetKey", key).eq("day", day))
+        .unique();
+      if (visits) await ctx.db.patch(visits._id, { visitors: visits.visitors + 1 });
+      else await ctx.db.insert("widgetVisits", { widgetKey: key, day, visitors: 1 });
+    }
     // A paused concierge stays hidden everywhere; the ping still counts as an install.
     return { allowed: allowed && !widget?.paused };
   },

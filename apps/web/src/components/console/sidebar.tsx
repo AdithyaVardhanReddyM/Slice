@@ -83,7 +83,8 @@ export function WidgetSidebar({
           href: `${base}/conversations`,
           label: "Conversations",
           icon: MessagesSquare,
-          count: conversationCounts[widget.id] ?? 0,
+          // Unset while the count loads.
+          count: conversationCounts[widget.id],
         },
         { href: `${base}/taste`, label: "Taste insights", icon: UserStar },
       ],
