@@ -14,6 +14,7 @@ struct LocalTools {
         switch name {
         case "frontmost_app": return .success(await frontmostApp())
         case "open_url": return openURL(args?["url"]?.string)
+        case "open_app": return AppTools.openApp(text("name"))
         case "calendar_events":
             let days: Int = if case .number(let n)? = args?["days"] { Int(n) } else { 7 }
             return await CalendarTool.events(days: days, search: text("search"))

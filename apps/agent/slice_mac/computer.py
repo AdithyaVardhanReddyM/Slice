@@ -22,6 +22,7 @@ import asyncio
 import base64
 import os
 from typing import Any
+from urllib.parse import quote
 
 from google import genai
 from google.adk.tools import ToolContext
@@ -219,6 +220,71 @@ async def operate_computer(job: str, tool_context: ToolContext) -> dict[str, Any
     conn, task = for_worker(tool_context)
     await report(conn, task, "mac", "Working on your screen", job[:80])
     return {"outcome": await operate(conn, task, job)}
+
+
+# Where a title is searched on each streaming site; the operator takes it from the results.
+_WATCH_SEARCH = {
+    "netflix": "https://www.netflix.com/search?q={q}",
+    "youtube": "https://www.youtube.com/results?search_query={q}",
+    "prime video": "https://www.primevideo.com/search/ref=atv_nb_sr?phrase={q}",
+    "disney+": "https://www.disneyplus.com/search?q={q}",
+    "hulu": "https://www.hulu.com/search?q={q}",
+    "max": "https://play.max.com/search?q={q}",
+    "apple tv": "https://tv.apple.com/search?term={q}",
+}
+_SERVICE_NAMES = {
+    "disney": "disney+", "disney plus": "disney+", "amazon": "prime video", "amazon prime": "prime video",
+    "prime": "prime video", "hbo": "max", "hbo max": "max", "appletv": "apple tv", "apple tv+": "apple tv",
+    "apple tv plus": "apple tv",
+}
+
+
+_MUSIC = {"spotify", "apple music", "music"}
+
+
+async def play_on(service: str, title: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Play a film, show, video, artist, album or playlist for the user and leave it playing: the
+    service's search opens on the title (a streaming site in the browser, or the Spotify or Music
+    app), then the operator opens the match and presses Play. When the user asked for something
+    they'd like, choose the title with `recommend` first (steered by what's on their screen or
+    what they named), then call this with the exact title.
+
+    Args:
+        service: netflix, youtube, prime video, disney+, hulu, max, apple tv, spotify or music
+            (spotify when it's installed, else Apple Music).
+        title: The exact title to play ("El Camino", "Fred again..").
+    """
+    conn, task = for_worker(tool_context)
+    key = service.strip().lower().replace("_", " ")
+    key = _SERVICE_NAMES.get(key, key)
+    if key in _MUSIC:
+        opened = await conn.bridge.call("music_open", {"query": title}, timeout=20)
+        if opened.get("error"):
+            return {"error": opened["error"]}
+        name = str(opened.get("opened") or "Spotify")
+        await report(conn, task, "mac", f"Opening {title} in {name}", None)
+        await asyncio.sleep(3)
+        job = (
+            f"The {name} app is open on its search results for \"{title}\". Play the top result that matches "
+            f"{title} (an artist's or album's own page has a Play button; press it) so music starts playing. "
+            f"If {name} isn't signed in, or {title} isn't there, stop and say so."
+        )
+        return {"outcome": await operate(conn, task, job), "next": "Tell the user what's playing and why it fits, in one sentence."}
+    search = _WATCH_SEARCH.get(key)
+    if search is None:
+        return {"error": f"No search page known for {service}; use operate_computer with the site's address instead."}
+    name = key.title() if key != "youtube" else "YouTube"
+    await report(conn, task, "mac", f"Opening {title} on {name}", None)
+    opened = await conn.bridge.call("open_url", {"url": search.format(q=quote(title))}, timeout=20)
+    if opened.get("error"):
+        return {"error": opened["error"]}
+    await asyncio.sleep(3)  # let the results load before the operator's first look
+    job = (
+        f"The browser is open on {name}'s search results for \"{title}\". Open {title} (the result that matches it, "
+        f"not a trailer or a clip) and press Play so it starts playing in full screen. If {name} asks which profile "
+        f"to use, pick the first one. If it asks to sign in, or {title} isn't on {name}, stop and say so."
+    )
+    return {"outcome": await operate(conn, task, job), "next": "Tell the user what's playing and why it fits, in one sentence."}
 
 
 async def shop_for(item: str, tool_context: ToolContext, store_url: str = "", options: str = "", needed_by: str = "",

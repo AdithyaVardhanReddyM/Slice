@@ -35,7 +35,7 @@ from google.genai import types
 
 from . import accounts, learning, lens, mac_tools, plans, playbooks, taste
 from .connection import Connection, for_worker, register_worker, report
-from .computer import operate_computer, shop_for
+from .computer import operate_computer, play_on, shop_for
 from .tasks import Task
 
 WORKER_MODEL = os.environ.get("MAC_WORKER_MODEL", "gemini-3.8-flash")
@@ -75,8 +75,16 @@ How to work:
   the task asks for it; offer it in your answer instead.
 - Tools that send, book, post or change something ask the user themselves;
   don't ask again first.
+- Doing it, not just suggesting it. "Open Netflix and play something I'd
+  like", "put on a film", "play me some music": choose one title with
+  `recommend` (steer by what's on their screen or what they named; "other
+  than this" means not what's in front of them), then play_on with the
+  service and that exact title, and say what's playing and why it fits.
+  "Take me there", "directions to": open_directions. "Open Spotify":
+  open_app. The job isn't done until the thing is playing or open.
 - For a website or app with no tool (Resy, OpenTable, a shop), use
-  operate_computer with one precise job that includes every detail.
+  operate_computer with one precise job that includes every detail
+  (open_app first when the app isn't open).
 - An app isn't connected? Call connect_app, then carry on.
 - When you recommend things, show them with show_cards (tools that say they
   show a card already did). Card text is plain words with commas; never
@@ -242,7 +250,7 @@ worker_agent = Agent(
     instruction=_instruction,
     tools=[
         ask_user, show_cards, show_note, *playbooks.TOOLS, *taste.TOOLS, *plans.TOOLS, *lens.WORKER_TOOLS, *mac_tools.TOOLS,
-        *accounts.TOOLS, *learning.WORKER_TOOLS, operate_computer, shop_for,
+        *accounts.TOOLS, *learning.WORKER_TOOLS, operate_computer, play_on, shop_for,
     ],
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel(THINKING.upper())),

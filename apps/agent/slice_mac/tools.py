@@ -30,9 +30,11 @@ async def look_at_frontmost_app(tool_context: ToolContext) -> dict[str, Any]:
 
 async def quick_picks(kind: str, tool_context: ToolContext, also_like: str = "", near: str = "", genre: str = "") -> dict[str, Any]:
     """Instant picks from Qloo for the user's taste, for a quick "what should I watch / listen to /
-    where should I eat". The picks show as a card in the island (picture, why, play or directions),
-    so say only the first pick and why in one sentence, and offer more. Never recommend anything
-    that didn't come from here or from a task.
+    where should I eat" when the user only wants a suggestion. If they asked you to open, play, put
+    on, book or buy it ("open Netflix and play something I'd like"), use start_task instead: it
+    picks and then does it. The picks show as a card in the island (picture, why, play or
+    directions), so say only the first pick and why in one sentence, and offer more. Never
+    recommend anything that didn't come from here or from a task.
 
     Args:
         kind: artist, album, movie, tv_show, book, podcast, video_game, place or brand.
@@ -49,7 +51,9 @@ async def quick_picks(kind: str, tool_context: ToolContext, also_like: str = "",
         pick.pop("id", None)
         pick.pop("image", None)
     if result.get("picks"):
-        result["note"] = "The card with all three is in the island."
+        names = ", ".join(p.get("name", "") for p in result["picks"] if p.get("name"))
+        result["note"] = (f"The card with all three is in the island. If the user then says play it, put it on, open it, "
+                          f"take me there or book it, start_task with the pick's name ({names}).")
     return result
 
 
@@ -109,11 +113,12 @@ async def _explain_picks(conn: Connection, card: dict[str, Any], kind: str, ids:
 
 
 async def start_task(goal: str, title: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Hand real work to a background task: anything with several steps, the user's accounts or
-    data (calendar, reminders, notes, email, Slack, Notion, Drive, Docs, Sheets, Maps, contacts,
-    messages), planning, gifting, trips, comparing tastes, writing something, or doing things on
-    the screen. Before calling, say one
-    short line ("On it"). The answer comes back later; until then, don't guess at the result.
+    """Hand real work to a background task: doing something on the Mac for the user (open Netflix
+    and play something they'd like, put on music, book a table, buy a gift, look something up),
+    anything with several steps, the user's accounts or data (calendar, reminders, notes, email,
+    Slack, Notion, Drive, Docs, Sheets, Maps, contacts, messages), planning, gifting, trips,
+    comparing tastes, or writing something. Before calling, say one short line ("On it"). The
+    answer comes back later; until then, don't guess at the result.
 
     Args:
         goal: Everything the worker needs, in the user's words plus context from the conversation

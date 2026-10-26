@@ -22,6 +22,27 @@ enum AppTools {
         return .success(["playing": false])
     }
 
+    /// Opens an app by name (or brings it forward), the way `open -a` does: no Automation prompt.
+    static func openApp(_ name: String) -> Result<JSONValue, LocalTools.Failure> {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return .failure(.init(message: "Which app?")) }
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        process.arguments = ["-a", name]
+        let errors = Pipe()
+        process.standardError = errors
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            return .failure(.init(message: "Couldn't open \(name): \(error.localizedDescription)"))
+        }
+        guard process.terminationStatus == 0 else {
+            return .failure(.init(message: "There's no app called \(name) on this Mac."))
+        }
+        return .success(["opened": .string(name)])
+    }
+
     /// Opens a search in Spotify when it's installed, Apple Music otherwise.
     static func openInMusic(_ query: String) -> Result<JSONValue, LocalTools.Failure> {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query

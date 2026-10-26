@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 from typing import Any
+from urllib.parse import quote
 
 from google import genai
 from google.adk.tools import ToolContext
@@ -254,8 +255,34 @@ async def open_link(url: str, tool_context: ToolContext) -> dict[str, Any]:
     return await _mac(tool_context, "open_url", {"url": url}, label="Opened a link")
 
 
+async def open_app(name: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Open (or bring to the front) an app on the Mac by name: Spotify, Safari, Notes, Slack,
+    Messages, Music, Maps, Photos… Use it before operate_computer when the job is in an app that
+    isn't open yet.
+
+    Args:
+        name: The app's name as it appears in the Applications folder ("Spotify").
+    """
+    return await _mac(tool_context, "open_app", {"name": name}, label=f"Opened {name}")
+
+
+async def open_directions(destination: str, tool_context: ToolContext, mode: str = "walking") -> dict[str, Any]:
+    """Open directions to a place in Apple Maps, from where the user is now, ready to start.
+    Use it for "take me there", "how do I get to", "directions to" (after picking the place
+    with `recommend` or find_on_map).
+
+    Args:
+        destination: The place's name and area, or its address ("Lilia, Williamsburg, Brooklyn").
+        mode: walking, driving or transit.
+    """
+    flag = {"walking": "w", "driving": "d", "transit": "r"}.get(mode.strip().lower(), "w")
+    url = f"https://maps.apple.com/?daddr={quote(destination)}&dirflg={flag}"
+    return await _mac(tool_context, "open_url", {"url": url}, label=f"Opened directions to {destination}")
+
+
 TOOLS = [
     what_is_in_front, look_at_screen, calendar_events, add_calendar_event,
     reminders, add_reminder, complete_reminder, find_notes, read_note, add_note, find_contact,
     find_on_map, travel_time, now_playing, open_in_music, send_imessage, send_file_imessage, draft_email_in_mail, open_link,
+    open_app, open_directions,
 ]
