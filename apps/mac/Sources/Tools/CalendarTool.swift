@@ -7,7 +7,7 @@ enum CalendarTool {
 
     static func events(days: Int, search: String) async -> Result<JSONValue, LocalTools.Failure> {
         guard await access() else {
-            return .failure(.init(message: "Slice isn't allowed to read Calendar. Allow it in Slice Settings > Permissions."))
+            return .failure(.init(message: "Slice isn't allowed to read Calendar. Allow it in Slice Settings > Integrations."))
         }
         let start = Calendar.current.startOfDay(for: Date())
         let end = Calendar.current.date(byAdding: .day, value: max(1, min(days, 60)) + 1, to: start) ?? start
@@ -37,7 +37,7 @@ enum CalendarTool {
 
     static func add(_ args: JSONValue?) async -> Result<JSONValue, LocalTools.Failure> {
         guard await access() else {
-            return .failure(.init(message: "Slice isn't allowed to use Calendar. Allow it in Slice Settings > Permissions."))
+            return .failure(.init(message: "Slice isn't allowed to use Calendar. Allow it in Slice Settings > Integrations."))
         }
         guard let start = LocalDate.parse(args?["start"]?.string), let end = LocalDate.parse(args?["end"]?.string) else {
             return .failure(.init(message: "start and end must be dates like 2026-10-23T20:00."))

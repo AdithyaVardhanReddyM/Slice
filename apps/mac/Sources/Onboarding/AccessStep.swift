@@ -1,26 +1,34 @@
 import Combine
 import SwiftUI
 
-/// Every permission Slice uses, each with what it unlocks and its own Allow.
+/// The permissions Slice asks for: the two it needs to hear you, then the ones that let it help
+/// on screen. Location comes with home, and Calendar and Contacts with the apps at the end.
 struct AccessStep: View {
     @State private var statuses: [Permissions.Kind: Permissions.Status] = [:]
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            StepHeader(icon: "shield", title: "Let Slice help",
+        VStack(alignment: .leading, spacing: 20) {
+            StepHeader(title: "Let Slice help",
                        subtitle: "Allow what it needs. macOS asks once for each, and you can change them any time in Settings.") {
                 EmptyView()
             }
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-                ForEach(Permissions.Kind.allCases) { kind in
-                    PermissionCard(kind: kind, status: statuses[kind] ?? .notYet)
+            group("To hear you") {
+                HStack(spacing: 14) {
+                    ForEach([Permissions.Kind.microphone, .accessibility]) { card($0) }
                 }
             }
+            group("To help with what's on your screen") {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach([Permissions.Kind.screenRecording, .automation, .fullDiskAccess]) { card($0, stacked: true) }
+                }
+                // All three as tall as the tallest.
+                .fixedSize(horizontal: false, vertical: true)
+            }
             Spacer(minLength: 0)
-            HStack(spacing: 8) {
-                Image(systemName: "lock.fill").font(.system(size: 11))
-                Text("Slice only looks or acts when you ask, and checks with you before it sends, books or buys anything.")
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Your calendar, contacts and accounts come last, with the apps you connect.", systemImage: "calendar")
+                Label("Slice only looks or acts when you ask, and checks with you before it sends, books or buys anything.", systemImage: "lock.fill")
             }
             .font(.system(size: 12))
             .foregroundStyle(Sky.ink3)
@@ -31,47 +39,78 @@ struct AccessStep: View {
         .onReceive(tick) { _ in refresh() }
     }
 
+    private func group<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(Sky.ink2)
+            content()
+        }
+    }
+
+    private func card(_ kind: Permissions.Kind, stacked: Bool = false) -> some View {
+        PermissionCard(kind: kind, status: statuses[kind] ?? .notYet, stacked: stacked)
+    }
+
     private func refresh() {
-        for kind in Permissions.Kind.allCases {
+        for kind in Permissions.listed {
             let now = Permissions.status(kind)
             if statuses[kind] != now { withAnimation(.snappy) { statuses[kind] = now } }
         }
     }
 }
 
-/// One permission: its glossy icon, what it's for, and Allow (or a green "On").
+/// One permission: its glossy icon, what it's for, and Allow (or a green tick). `stacked` puts
+/// the words under the icon, for three across.
 struct PermissionCard: View {
     let kind: Permissions.Kind
     let status: Permissions.Status
     var compact = false
+    var stacked = false
 
     var body: some View {
-        HStack(spacing: 13) {
-            IconTile(icon: kind.icon, size: compact ? 40 : 50)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(kind.title).font(.system(size: 14, weight: .semibold))
-                    switch kind.need {
-                    case .needed: tag("Needed", Sky.accent, Sky.accentSoft)
-                    case .optional: tag("Optional", Sky.ink2, Sky.fill)
-                    case .recommended: EmptyView()
+        Group {
+            if stacked {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top) {
+                        IconTile(icon: kind.icon, size: 44)
+                        Spacer(minLength: 6)
+                        action
                     }
+                    words
                 }
-                Text(kind.reason)
-                    .font(.system(size: 12))
-                    .foregroundStyle(Sky.ink2)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            } else {
+                HStack(spacing: 13) {
+                    IconTile(icon: kind.icon, size: compact ? 40 : 50)
+                    words
+                    Spacer(minLength: 6)
+                    action
+                }
+                .frame(maxWidth: .infinity, minHeight: compact ? 66 : 84, alignment: .leading)
             }
-            Spacer(minLength: 6)
-            action
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: compact ? 66 : 84, alignment: .leading)
+        .padding(.vertical, stacked ? 14 : 12)
         .skyCard(radius: 18, shadow: status != .granted)
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
             .strokeBorder(status == .granted ? Sky.good.opacity(0.35) : .clear, lineWidth: 1))
+    }
+
+    private var words: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 6) {
+                Text(kind.title).font(.system(size: 14, weight: .semibold))
+                switch kind.need {
+                case .needed: tag("Needed", Sky.accent, Sky.accentSoft)
+                case .optional: tag("Optional", Sky.ink2, Sky.fill)
+                case .recommended: EmptyView()
+                }
+            }
+            Text(kind.reason)
+                .font(.system(size: 12))
+                .foregroundStyle(Sky.ink2)
+                .lineLimit(stacked ? 3 : 2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     @ViewBuilder

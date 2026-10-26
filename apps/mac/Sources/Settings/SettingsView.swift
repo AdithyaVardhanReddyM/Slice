@@ -300,7 +300,7 @@ private struct GeneralSettings: View {
             .onChange(of: home.place) { saveHome() }
             SettingsCard(icon: "shield", title: "Permissions", subtitle: "What Slice can use on this Mac. Change any of them here.") {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                    ForEach(Permissions.Kind.allCases) { kind in
+                    ForEach(Permissions.listed) { kind in
                         PermissionCard(kind: kind, status: statuses[kind] ?? .notYet, compact: true)
                     }
                 }
@@ -357,7 +357,7 @@ private struct GeneralSettings: View {
     }
 
     private func refresh() {
-        for kind in Permissions.Kind.allCases {
+        for kind in Permissions.listed {
             let now = Permissions.status(kind)
             if statuses[kind] != now { statuses[kind] = now }
         }

@@ -1,16 +1,15 @@
 import AppKit
 import ApplicationServices
 import AVFoundation
-import Contacts
 import CoreLocation
 import CoreServices
-import EventKit
 
 /// The macOS permissions the agent uses: two it can't work without, the rest for what they unlock.
+/// Calendar and Contacts are apps in Settings > Integrations (IntegrationsModel), like Reminders.
 @MainActor
 enum Permissions {
     enum Kind: CaseIterable, Identifiable {
-        case microphone, accessibility, screenRecording, location, calendar, contacts, automation, fullDiskAccess
+        case microphone, accessibility, screenRecording, location, automation, fullDiskAccess
 
         var id: Self { self }
 
@@ -20,8 +19,6 @@ enum Permissions {
             case .accessibility: "Accessibility"
             case .screenRecording: "Screen Recording"
             case .location: "Location"
-            case .calendar: "Calendar"
-            case .contacts: "Contacts"
             case .automation: "Your apps"
             case .fullDiskAccess: "Full Disk Access"
             }
@@ -33,8 +30,6 @@ enum Permissions {
             case .accessibility: "For the talk keys, and to click and type in other apps for you."
             case .screenRecording: "To see what's on screen when you ask about it, and to work on it."
             case .location: "So places and plans start from where you are."
-            case .calendar: "To plan around what's already on your calendar."
-            case .contacts: "To find the people you mention, and their birthdays."
             case .automation: "To play music, send the messages you approve and read the page you're on."
             case .fullDiskAccess: "To read your Podcasts library, so the shows you follow count."
             }
@@ -47,8 +42,6 @@ enum Permissions {
             case .accessibility: "cursor"
             case .screenRecording: "screen"
             case .location: "pin"
-            case .calendar: "calendar"
-            case .contacts: "contacts"
             case .automation: "apps"
             case .fullDiskAccess: "folder"
             }
@@ -71,8 +64,6 @@ enum Permissions {
             case .accessibility: "Privacy_Accessibility"
             case .screenRecording: "Privacy_ScreenCapture"
             case .location: "Privacy_LocationServices"
-            case .calendar: "Privacy_Calendars"
-            case .contacts: "Privacy_Contacts"
             case .automation: "Privacy_Automation"
             case .fullDiskAccess: "Privacy_AllFiles"
             }
@@ -81,6 +72,10 @@ enum Permissions {
         /// Turned on in System Settings by hand, not with a prompt.
         var isSwitchInSettings: Bool { self == .fullDiskAccess }
     }
+
+    /// What onboarding and Settings list. Location is asked for with home (HomePicker), when the
+    /// user picks "where I am".
+    static let listed: [Kind] = [.microphone, .accessibility, .screenRecording, .automation, .fullDiskAccess]
 
     enum Status: Equatable {
         case granted, notYet, denied
@@ -105,18 +100,6 @@ enum Permissions {
             case .notDetermined: return .notYet
             case .denied, .restricted: return .denied
             default: return .granted
-            }
-        case .calendar:
-            switch EKEventStore.authorizationStatus(for: .event) {
-            case .fullAccess: return .granted
-            case .notDetermined: return .notYet
-            default: return .denied
-            }
-        case .contacts:
-            switch CNContactStore.authorizationStatus(for: .contacts) {
-            case .authorized: return .granted
-            case .notDetermined: return .notYet
-            default: return .denied
             }
         case .automation:
             return automationStatus
@@ -151,10 +134,6 @@ enum Permissions {
             } else {
                 openSettings(kind)
             }
-        case .calendar:
-            Task { if !(await CalendarTool.access()) { openSettings(kind) } }
-        case .contacts:
-            Task { if !(await ContactsTool.access()) { openSettings(kind) } }
         case .automation:
             askToAutomate()
         case .fullDiskAccess:

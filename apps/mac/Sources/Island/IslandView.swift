@@ -260,7 +260,29 @@ private struct Conversation: View {
 
     private var turns: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(agent.turns) { TurnRow(turn: $0) }
+            cards(after: nil)
+            ForEach(Array(agent.turns.enumerated()), id: \.element.id) { index, turn in
+                TurnRow(turn: turn)
+                if endsExchange(index) { cards(after: exchange(index)) }
+            }
+        }
+    }
+
+    /// The user turn that the turn at `index` belongs to.
+    private func exchange(_ index: Int) -> UUID? {
+        agent.turns[...index].last { $0.role == .user }?.id
+    }
+
+    /// The last turn before the user speaks again: an exchange's cards go under its whole reply.
+    private func endsExchange(_ index: Int) -> Bool {
+        index == agent.turns.count - 1 || agent.turns[index + 1].role == .user
+    }
+
+    @ViewBuilder
+    private func cards(after turn: UUID?) -> some View {
+        ForEach(agent.attachments.filter { $0.after == turn }) { attachment in
+            PicksCard(picks: attachment.picks, agent: agent)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
         }
     }
 
@@ -276,11 +298,13 @@ private struct Conversation: View {
                             .padding(.top, 4)
                     }
                     let lastUser = agent.turns.lastIndex { $0.role == .user }
+                    cards(after: nil)
                     ForEach(Array(agent.turns.enumerated()), id: \.element.id) { index, turn in
                         TurnRow(turn: turn)
                         if index == lastUser {
                             ForEach(agent.activities) { ActivityRow(activity: $0) }
                         }
+                        if endsExchange(index) { cards(after: exchange(index)) }
                     }
                     if let error = agent.lastError {
                         Text(error)
@@ -293,6 +317,9 @@ private struct Conversation: View {
             .scrollIndicators(.never)
             .onChange(of: agent.turns.last?.text) { proxy.scrollTo("end", anchor: .bottom) }
             .onChange(of: agent.activities.count) { proxy.scrollTo("end", anchor: .bottom) }
+            .onChange(of: agent.attachments.count) {
+                withAnimation(.snappy) { proxy.scrollTo("end", anchor: .bottom) }
+            }
         }
     }
 }

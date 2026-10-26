@@ -3,7 +3,7 @@ import Foundation
 /// A JSON frame from the brain (apps/agent/slice_mac/routes.py). Audio arrives as binary frames instead.
 struct BrainEvent: Decodable, Sendable {
     enum Kind: String, Decodable, Sendable {
-        case ready, transcript, activity, interrupted, error, task, profile, nudge
+        case ready, transcript, activity, interrupted, error, task, profile, nudge, picks
         case toolCall = "tool_call"
         case feedbackAck = "feedback_ack"
         case turnComplete = "turn_complete"
@@ -38,6 +38,8 @@ struct BrainEvent: Decodable, Sendable {
     let profile: JSONValue?
     // nudge
     let nudge: Nudge?
+    // picks: the talker's quick picks, as a card under its answer
+    let picks: Picks?
     // ready, error
     let model: String?
     let message: String?
@@ -47,7 +49,7 @@ struct BrainEvent: Decodable, Sendable {
     let ok: Bool?
 
     enum CodingKeys: String, CodingKey {
-        case type, role, text, partial, id, name, args, kind, label, detail, active, task, profile, nudge, model, message
+        case type, role, text, partial, id, name, args, kind, label, detail, active, task, profile, nudge, picks, model, message
         case title, verdict, ok
         case taskId = "task_id"
     }
@@ -320,4 +322,55 @@ struct Nudge: Decodable, Sendable, Equatable, Identifiable {
         action = try? c.decodeIfPresent(String.self, forKey: .action)
         learn = try? c.decodeIfPresent(Learn.self, forKey: .learn)
     }
+}
+
+/// The talker's quick picks (slice_mac/tools.py `show_picks`): the first drawn large, the rest
+/// under it. The same card comes again with `because` filled in once Qloo says why each fits.
+struct Picks: Decodable, Sendable, Equatable, Identifiable {
+    struct Item: Decodable, Sendable, Equatable, Identifiable {
+        let name: String
+        let kind: String?
+        let image: String?
+        let year: Int?
+        let description: String?
+        let neighborhood: String?
+        let address: String?
+        let priceLevel: Int?
+        let lat: Double?
+        let lon: Double?
+        let url: String?
+        /// The loves that make it fit, strongest first.
+        let because: [String]?
+        var id: String { name }
+
+        enum CodingKeys: String, CodingKey {
+            case name, kind, image, year, description, neighborhood, address, lat, lon, url, because
+            case priceLevel = "price_level"
+        }
+
+        /// Qloo's fields vary by kind; one odd value shouldn't lose the card.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            name = try c.decode(String.self, forKey: .name)
+            kind = try? c.decodeIfPresent(String.self, forKey: .kind)
+            image = try? c.decodeIfPresent(String.self, forKey: .image)
+            year = (try? c.decodeIfPresent(Int.self, forKey: .year)) ?? (try? c.decodeIfPresent(String.self, forKey: .year)).flatMap { $0.flatMap(Int.init) }
+            description = try? c.decodeIfPresent(String.self, forKey: .description)
+            neighborhood = try? c.decodeIfPresent(String.self, forKey: .neighborhood)
+            address = try? c.decodeIfPresent(String.self, forKey: .address)
+            priceLevel = try? c.decodeIfPresent(Int.self, forKey: .priceLevel)
+            lat = try? c.decodeIfPresent(Double.self, forKey: .lat)
+            lon = try? c.decodeIfPresent(Double.self, forKey: .lon)
+            url = try? c.decodeIfPresent(String.self, forKey: .url)
+            because = try? c.decodeIfPresent([String].self, forKey: .because)
+        }
+    }
+
+    let id: String
+    let kind: String
+    let genre: String?
+    let title: String
+    /// "yours" (Qloo, for the user's taste) or "popular" (taste is off).
+    let taste: String?
+    let items: [Item]
 }

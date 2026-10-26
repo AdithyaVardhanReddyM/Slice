@@ -9,6 +9,8 @@ struct OnboardingView: View {
     @Bindable var model: OnboardingModel
     let close: () -> Void
     @Environment(\.renderingForPreview) private var rendering
+    /// The node clicked on the reveal's graph.
+    @State private var revealPick: String?
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -36,6 +38,7 @@ struct OnboardingView: View {
                     case .access: AccessStep()
                     case .talk: TalkStep(agent: model.agent)
                     case .reveal: reveal
+                    case .connect: ConnectStep()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -53,7 +56,7 @@ struct OnboardingView: View {
 
     private var mood: SkyMood {
         switch model.step {
-        case .welcome, .access: .sky
+        case .welcome, .access, .connect: .sky
         case .home, .talk, .questions: .mint
         case .music, .reveal: .blush
         case .screen, .everyday: .lilac
@@ -139,12 +142,13 @@ struct OnboardingView: View {
         case .talk:
             Button("See my taste") { model.next() }.buttonStyle(PrimaryButton())
         case .reveal:
+            Button("Continue") { model.next() }.buttonStyle(PrimaryButton())
+        case .connect:
             Button("Start using Slice") {
                 model.finish()
                 close()
             }
             .buttonStyle(PrimaryButton())
-            .disabled(model.building)
         default:
             let skipping = model.isPicking && model.picks(on: model.step).isEmpty
             Button(skipping ? "Skip" : "Continue") { model.next() }.buttonStyle(PrimaryButton())
@@ -370,7 +374,7 @@ struct OnboardingView: View {
             }
             HStack(alignment: .top, spacing: 16) {
                 ZStack {
-                    GraphCanvas(layout: model.graph, selection: .constant(nil), interactive: !rendering, showLegend: false)
+                    GraphCanvas(layout: model.graph, selection: $revealPick, interactive: !rendering, showLegend: false)
                     if model.building {
                         VStack(spacing: 10) {
                             ProgressView()
@@ -381,7 +385,11 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                 .skyCard(radius: 22)
-                if !model.nextUp.isEmpty {
+                if let id = revealPick, let node = model.graph.node(id) {
+                    RevealDetail(node: node, layout: model.graph, summary: profile["summary"]?.string) { revealPick = nil }
+                        .frame(width: 250)
+                        .transition(.opacity)
+                } else if !model.nextUp.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Next for you").font(.system(size: 13, weight: .semibold)).foregroundStyle(Sky.ink2)
                         ForEach(model.nextUp.prefix(3)) { pick in
@@ -401,31 +409,129 @@ struct OnboardingView: View {
                             .skyCard(radius: 15, shadow: false)
                         }
                         Spacer(minLength: 0)
-                        Text("Slice keeps learning from what you play, watch and say. See it all in Settings > You.")
+                        Text("Click anything in your graph to see what ties it in. Slice keeps learning from what you play, watch and say.")
                             .font(.system(size: 11.5)).foregroundStyle(Sky.ink3).fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(width: 250)
                 }
             }
             .padding(.horizontal, 40)
+            .animation(.snappy(duration: 0.2), value: revealPick)
         }
         .padding(.top, 8)
         .padding(.bottom, 4)
+#if DEBUG
+        // -revealPick <name>: start with that node clicked (for -snapshotWindows).
+        .task(id: model.graph.nodes.count) {
+            if let name = UserDefaults.standard.string(forKey: "revealPick") {
+                revealPick = model.graph.nodes.first { $0.label.lowercased() == name.lowercased() }?.id
+            }
+        }
+#endif
+    }
+}
+
+/// A node clicked on the reveal: its picture and name, and what ties it to the rest of the taste.
+private struct RevealDetail: View {
+    let node: GraphNode
+    let layout: GraphLayout
+    let summary: String?
+    let close: () -> Void
+
+    var body: some View {
+        let around = layout.neighbours[node.id, default: []].compactMap(layout.node)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 11) {
+                picture
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(node.label).font(.system(size: 15, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+                    if let kind = TasteSpace.kindName(node) {
+                        Text(kind).font(.system(size: 11.5)).foregroundStyle(Sky.ink2)
+                    }
+                }
+                Spacer(minLength: 0)
+                Button(action: close) {
+                    Image(systemName: "xmark").font(.system(size: 10.5, weight: .bold)).foregroundStyle(Sky.ink2)
+                        .frame(width: 24, height: 24).background(Circle().fill(Sky.fill))
+                }
+                .buttonStyle(.plain)
+                .help("Close")
+            }
+            switch node.style {
+            case .you:
+                if let summary { Text(summary).font(.system(size: 12.5)).foregroundStyle(Sky.ink2).fixedSize(horizontal: false, vertical: true) }
+                section("What you love", around.filter { $0.style == .love })
+            case .tag:
+                let loves = around.filter { $0.style == .love }
+                Text("\(loves.count) of your loves share it, so Slice looks for it in what it picks.")
+                    .font(.system(size: 12.5)).foregroundStyle(Sky.ink2).fixedSize(horizontal: false, vertical: true)
+                section("Shared by", loves)
+            default:
+                let threads = around.filter { $0.style == .tag }
+                if let line = node.raw["description"]?.string ?? node.detail {
+                    Text(line).font(.system(size: 12.5)).foregroundStyle(Sky.ink2).lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                }
+                if !threads.isEmpty {
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text("What it shares with your other loves").font(.system(size: 12, weight: .semibold)).foregroundStyle(Sky.ink2)
+                        FlowLayout(spacing: 5) {
+                            ForEach(threads) { thread in
+                                Text(thread.label.lowercased())
+                                    .font(.system(size: 11.5, weight: .medium).italic())
+                                    .padding(.horizontal, 9)
+                                    .frame(height: 24)
+                                    .background(Capsule().fill(Sky.fill))
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .skyCard(radius: 18)
+    }
+
+    @ViewBuilder private var picture: some View {
+        if node.style == .you {
+            Avatar(seed: node.label, size: 46, border: 0)
+        } else if node.image != nil {
+            RemoteImage(url: node.image)
+                .frame(width: 46, height: 46)
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        }
+    }
+
+    /// A few loves as small rows: picture and name.
+    private func section(_ title: String, _ nodes: [GraphNode]) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text(title).font(.system(size: 12, weight: .semibold)).foregroundStyle(Sky.ink2)
+            ForEach(nodes.prefix(5)) { love in
+                HStack(spacing: 9) {
+                    RemoteImage(url: love.image)
+                        .frame(width: 28, height: 28)
+                        .clipShape(Circle())
+                    Text(love.label).font(.system(size: 12.5, weight: .medium)).lineLimit(1)
+                }
+            }
+        }
     }
 }
 
 // MARK: Pieces
 
-/// A working step's heading: a glossy tile, the title and a line under it, and anything on the right.
+/// A working step's heading: a glossy tile (if it has one), the title and a line under it, and
+/// anything on the right.
 struct StepHeader<Trailing: View>: View {
-    let icon: String
+    var icon: String?
     let title: String
     let subtitle: String
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            IconTile(icon: icon, size: 58, floating: true)
+            if let icon { IconTile(icon: icon, size: 58, floating: true) }
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.system(size: 26, weight: .bold)).tracking(-0.5)
                 Text(subtitle).font(.system(size: 14)).foregroundStyle(Sky.ink2).lineLimit(2)

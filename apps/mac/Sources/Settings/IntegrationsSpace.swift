@@ -1,10 +1,12 @@
 import AppKit
 import Combine
+import Contacts
+import EventKit
 import SwiftUI
 
 /// Settings > Integrations: the apps Slice reads and acts in (the brain's catalog, accounts.py).
-/// Cloud apps sign in through Composio (/mac/accounts routes); Reminders and Notes are on this
-/// Mac and only need macOS's permission. Laid out like polly-ai's Integrations page: search,
+/// Cloud apps sign in through Composio (/mac/accounts routes); Calendar, Contacts, Reminders and
+/// Notes are on this Mac and only need macOS's permission. Laid out like polly-ai's Integrations page: search,
 /// filter pills, a card per app grouped by what it's for, and a side panel for one app.
 struct IntegrationsSpace: View {
     @State private var model = IntegrationsModel()
@@ -160,7 +162,7 @@ struct IntegrationApp: Identifiable, Equatable {
     enum Status: Equatable {
         // Cloud apps (Composio)
         case connected, expired, available
-        // Reminders and Notes (macOS permission)
+        // Calendar, Contacts, Reminders and Notes (macOS permission)
         case allowed, notAsked, denied
     }
 
@@ -188,7 +190,14 @@ struct IntegrationApp: Identifiable, Equatable {
     /// The app it lives in on this Mac; its real icon is the logo.
     var macApp: String? { onMac ? "/System/Applications/\(name).app" : nil }
     /// Its System Settings > Privacy & Security pane.
-    var privacyAnchor: String { slug == "reminders" ? "Privacy_Reminders" : "Privacy_Automation" }
+    var privacyAnchor: String {
+        switch slug {
+        case "reminders": "Privacy_Reminders"
+        case "calendar": "Privacy_Calendars"
+        case "contacts": "Privacy_Contacts"
+        default: "Privacy_Automation"
+        }
+    }
 }
 
 struct IntegrationGroup: Identifiable, Equatable {
@@ -269,10 +278,21 @@ final class IntegrationsModel {
         for app in apps where app.status == .connected { pending[app.slug] = nil }
     }
 
-    /// Reminders from EventKit; Notes from Apple Events, off the main thread (asking can block).
+    /// Calendar and Reminders from EventKit, Contacts from its store; Notes from Apple Events, off
+    /// the main thread (asking can block).
     func refreshMac() async {
         let reminders: IntegrationApp.Status = switch RemindersTool.status {
         case .fullAccess: .allowed
+        case .notDetermined: .notAsked
+        default: .denied
+        }
+        let calendar: IntegrationApp.Status = switch EKEventStore.authorizationStatus(for: .event) {
+        case .fullAccess: .allowed
+        case .notDetermined: .notAsked
+        default: .denied
+        }
+        let contacts: IntegrationApp.Status = switch CNContactStore.authorizationStatus(for: .contacts) {
+        case .authorized: .allowed
         case .notDetermined: .notAsked
         default: .denied
         }
@@ -281,7 +301,7 @@ final class IntegrationsModel {
         case .denied: .denied
         case .notAsked: .notAsked
         }
-        for (slug, status) in [("reminders", reminders), ("notes", notes)] {
+        for (slug, status) in [("calendar", calendar), ("contacts", contacts), ("reminders", reminders), ("notes", notes)] {
             if let i = apps.firstIndex(where: { $0.slug == slug }), apps[i].status != status { apps[i].status = status }
         }
     }
@@ -315,6 +335,8 @@ final class IntegrationsModel {
         }
         switch app.slug {
         case "reminders": if !(await RemindersTool.access()) { openPrivacy(app) }
+        case "calendar": if !(await CalendarTool.access()) { openPrivacy(app) }
+        case "contacts": if !(await ContactsTool.access()) { openPrivacy(app) }
         case "notes": if await NotesTool.requestAccess() == .denied { openPrivacy(app) }
         default: break
         }
@@ -350,7 +372,7 @@ final class IntegrationsModel {
 
 // MARK: Pieces
 
-/// The app's mark on a small raised tile; Reminders and Notes show their real macOS icons.
+/// The app's mark on a small raised tile; the apps on this Mac show their real macOS icons.
 struct AppLogo: View {
     let app: IntegrationApp
     var size: CGFloat = 34
@@ -543,7 +565,7 @@ private struct IntegrationCard: View {
     }
 }
 
-private struct ConnectPill: ButtonStyle {
+struct ConnectPill: ButtonStyle {
     enum Look { case quiet, hot, live, waiting }
     let look: Look
     @Environment(\.isEnabled) private var enabled

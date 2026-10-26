@@ -1,5 +1,6 @@
 """The user's apps: Gmail, Google Calendar, Drive, Docs, Sheets, Maps, Slack and Notion through
-Composio, and Reminders and Notes on the Mac itself (their tools are in mac_tools.py).
+Composio, and Calendar, Contacts, Reminders and Notes on the Mac itself (their tools are in
+mac_tools.py).
 
 Composio holds the OAuth with its own approved apps, so Slice needs no Google,
 Slack or Notion developer app, and never sees a token: every call goes through
@@ -44,7 +45,7 @@ class App:
     can: tuple[tuple[str, bool], ...]
     # Something to try saying, shown in Settings.
     say: str = ""
-    # Reminders and Notes live on the Mac: the Mac app knows whether Slice may use them.
+    # Calendar, Contacts, Reminders and Notes live on the Mac: the Mac app knows whether Slice may use them.
     on_mac: bool = False
 
 
@@ -54,6 +55,8 @@ CATALOG: tuple[App, ...] = (
     App("googlecalendar", "Google Calendar", "plans", "Your events, free time and invites",
         (("Reads your events to plan around them", False), ("Finds the free time in your day", False),
          ("Adds events and invites people", True)), "Am I free on Saturday afternoon?"),
+    App("calendar", "Calendar", "plans", "Every calendar on this Mac",
+        (("Reads your events to plan around them", False), ("Adds an event", True)), "What's on this weekend?", on_mac=True),
     App("reminders", "Reminders", "plans", "Your to-dos and lists on this Mac",
         (("Reads what's on your lists", False), ("Adds a reminder, with a time if you give one", True),
          ("Ticks off what you've done", True)), "Remind me to book the table at five", on_mac=True),
@@ -66,6 +69,9 @@ CATALOG: tuple[App, ...] = (
          ("Sends an email", True)), "When does my Lisbon flight land?"),
     App("slack", "Slack", "messages", "Channels, threads and messages",
         (("Searches your messages", False), ("Posts a message", True)), "What did Sam say about the weekend?"),
+    App("contacts", "Contacts", "messages", "The people you know, and their birthdays",
+        (("Finds the people you mention", False), ("Reads birthdays and addresses for plans and gifts", False)),
+        "When is Maya's birthday?", on_mac=True),
     App("notes", "Notes", "files", "Your notes on this Mac",
         (("Finds and reads your notes", False), ("Writes a new note", True)), "Put the packing list in my notes", on_mac=True),
     App("notion", "Notion", "files", "Pages and databases",
@@ -174,7 +180,7 @@ async def status(user_id: str) -> dict[str, bool]:
 
 async def catalog(user_id: str) -> dict[str, Any]:
     """Settings > Integrations: every app, its group, what Slice does with it and whether it's connected.
-    The Mac fills in Reminders and Notes from its own permissions."""
+    The Mac fills in Calendar, Contacts, Reminders and Notes from its own permissions."""
     out: dict[str, Any] = {"configured": configured(), "key": KEY,
                            "groups": [{"id": g, "label": label} for g, label in GROUPS]}
     found: dict[str, dict[str, Any]] = {}

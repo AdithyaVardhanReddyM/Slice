@@ -37,11 +37,21 @@ final class AgentSession {
         let detail: String?
     }
 
+    /// A card that belongs to one exchange (the talker's quick picks), drawn under its reply.
+    struct Attachment: Identifiable {
+        var id: String { picks.id }
+        /// The user's turn it answers (nil when it came before anything was said).
+        let after: UUID?
+        var picks: Picks
+    }
+
     private(set) var connection: Connection = .offline
     private(set) var phase: Phase = .idle
     private(set) var turns: [Turn] = []
     /// What the agent did for the current request (tool calls, Qloo lookups).
     private(set) var activities: [Activity] = []
+    /// Cards that answer a turn of the conversation, oldest first.
+    private(set) var attachments: [Attachment] = []
     /// Mic loudness 0…1 while listening, for the waveform.
     private(set) var micLevel: Float = 0
     private(set) var lastError: String?
@@ -75,6 +85,7 @@ final class AgentSession {
     private let tools = LocalTools()
     private var watchers: Watchers?
     private var nudgeTimer: Task<Void, Never>?
+    private var presentTimer: Task<Void, Never>?
 
     private enum Talk { case off, pending, streaming }
     private var talk: Talk = .off
@@ -273,14 +284,23 @@ final class AgentSession {
         let views = tasks.flatMap(\.views)
         var urls = tasks.flatMap(\.cards).compactMap(\.image) + views.flatMap { $0.cards ?? [] }.compactMap(\.image)
         urls += [views.compactMap(\.why).first?.thing.image, nudge?.why?.thing.image].compactMap { $0 }
+        urls += attachments.flatMap(\.picks.items).compactMap(\.image)
         // People's faces (Avatar asks for 2.5 times the size it draws at).
         urls += views.compactMap(\.name).map { Avatar.url($0, pixels: 110) }
         for url in urls { _ = await ImageCache.load(url) }
         await MapShots.prepare(views)
     }
 
-    /// One task per rich card, for `-sampleViews person|gifts|timeline|map|note|why|file`.
+    /// One task per rich card, for `-sampleViews person|gifts|timeline|map|note|why|file`, or a
+    /// conversation with a quick picks card (`picks`, `picks-music`, `picks-book`, `picks-place`).
     func loadSampleView(_ type: String) {
+        if let sample = SampleViews.picks[type], let data = sample.card.data(using: .utf8),
+           let picks = try? JSONDecoder().decode(Picks.self, from: data) {
+            turns = [Turn(role: .user, text: sample.ask, done: true), Turn(role: .agent, text: sample.say, done: true)]
+            activities = [Activity(kind: "qloo", label: "\(picks.title) for your taste", detail: "3 from Qloo")]
+            attachments = [Attachment(after: turns[0].id, picks: picks)]
+            return
+        }
         guard let data = SampleViews.json[type]?.data(using: .utf8),
               let view = try? JSONDecoder().decode(TaskView.self, from: data) else { return }
         let say = type == "gifts" ? "Four ideas for Maya, from Polaroid to a Nick Drake record. Want me to put one in your cart?" : nil
@@ -312,6 +332,7 @@ final class AgentSession {
         stopEverything()
         turns = []
         activities = []
+        attachments = []
         lastError = nil
         tasks.removeAll { $0.isOver }
         brain.send(["type": "reset"])
@@ -353,9 +374,10 @@ final class AgentSession {
         }
     }
 
-    /// The pointer opened the island: keep the nudge up while it's read.
+    /// The pointer opened the island: keep the nudge (or a new card) up while it's read.
     func holdNudge() {
         nudgeTimer?.cancel()
+        presentTimer?.cancel()
     }
 
     /// The island closed: a nudge the user has seen is done.
@@ -409,6 +431,7 @@ final class AgentSession {
         stopEverything()
         turns = []
         activities = []
+        attachments = []
         brain.send(["type": "settings", "taste": .bool(on)])
     }
 
@@ -458,6 +481,9 @@ final class AgentSession {
         case .nudge:
             guard let nudge = event.nudge else { return }
             show(nudge)
+        case .picks:
+            guard let picks = event.picks else { return }
+            attach(picks)
         case .feedbackAck:
             guard let title = event.title else { return }
             if event.ok == true {
@@ -486,6 +512,24 @@ final class AgentSession {
             if phase == .thinking { phase = .idle }
         case .ready, .unknown:
             break
+        }
+    }
+
+    /// A card for the current exchange: open the island on it (like a why card), for a while
+    /// unless the pointer holds it. The same card again (with its reasons) replaces it in place.
+    private func attach(_ picks: Picks) {
+        if let i = attachments.firstIndex(where: { $0.id == picks.id }) {
+            attachments[i].picks = picks
+            return
+        }
+        attachments.append(Attachment(after: turns.last { $0.role == .user }?.id, picks: picks))
+        attachments = Array(attachments.suffix(8))
+        presenting = true
+        presentTimer?.cancel()
+        presentTimer = Task {
+            try? await Task.sleep(for: .seconds(30))
+            guard !Task.isCancelled, nudge == nil || !(nudge?.show ?? false) else { return }
+            presenting = false
         }
     }
 

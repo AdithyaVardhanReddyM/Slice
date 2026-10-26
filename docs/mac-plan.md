@@ -63,11 +63,14 @@ customer-service departments, not one assistant doing hard work.
    prints each worker step with timings.
 2. App: `pnpm --filter @slice/mac app` (XcodeGen, `xcodebuild` Debug, relaunch).
    `pnpm --filter @slice/mac xcode` opens the project in Xcode instead.
-3. First launch opens Settings. General: allow Microphone and Accessibility
-   (both required), plus Screen Recording (the operator, look_at_screen),
-   Calendar and Contacts. Taste: add a few things you love and build the
-   profile. Integrations: connect Gmail, Slack, … (Composio sign-in; the brain needs
-   COMPOSIO_MAC_API_KEY in apps/agent/.env) and allow Reminders and Notes.
+3. First launch opens onboarding (taste, permissions, then apps to connect).
+   Permissions are Microphone and Accessibility (both required), Screen
+   Recording (the operator, look_at_screen), Your apps (Apple Events) and Full
+   Disk Access (Podcasts); location is asked for only when home is set to
+   "where I am". Integrations: connect Gmail, Slack, … (Composio sign-in; the
+   brain needs COMPOSIO_MAC_API_KEY in apps/agent/.env) and allow Calendar,
+   Contacts, Reminders and Notes (macOS permissions, shown as apps since
+   2026-10-26).
 4. Hover the notch to open the island and type, or hold **fn + control**
    anywhere, talk, and let go.
 
@@ -75,7 +78,10 @@ Debug launch arguments (`open …/Slice.app --args …`):
 `-islandPreview open|captioned|compact|nudge` pins a mode with a sample
 conversation; `-sampleTasks YES` adds two sample task cards;
 `-sampleViews person|gifts|timeline|map|note|file|why|pill` adds one rich
-card (`Agent/SampleViews.swift`, real Qloo answers);
+card (`Agent/SampleViews.swift`, real Qloo answers), and
+`-sampleViews picks|picks-music|picks-book|picks-place` a conversation with a
+quick picks card; `-revealPick <name>` starts the onboarding reveal with that
+node clicked (for `-snapshotWindows`);
 `-renderIsland <dir>` writes each mode as a PNG plus `cards.png` (the cards
 alone) and quits, with no screen access needed (it fetches the pictures and
 maps first, and lays scroll views out flat, since ImageRenderer can't draw
@@ -422,6 +428,7 @@ Brain → Mac:
 | `{"type":"tool_call","id","name","args"}` | Run a Mac tool (below) |
 | `{"type":"activity","kind","label","detail","task_id"}` | One line per tool call; with a `task_id` it belongs to that task's card |
 | `{"type":"task","task":{id,title,status,steps,question,confirm,say,cards,views,error}}` | A task changed (statuses above). `cards` have an optional `tag`; `views` are rich cards by `type`: `person`, `gifts`, `timeline`, `map`, `note`, `file`, `why` |
+| `{"type":"picks","picks":{id,kind,genre,title,taste,items[{name,kind,image,year,description,neighborhood,address,price_level,lat,lon,url,because}]}}` | The talker's quick picks as a white card under its reply (`Island/PicksCard.swift`); it opens the island for 30 s unless hovered. The same `id` comes again about a second later with `because` (the loves that drive each pick most: `qloo.score` explainability, `taste.standouts`) |
 | `{"type":"nudge","nudge":{id,kind,title,line,show,why,prompt,action,learn}}` | Something to bring up: `show` false is a pill under the notch (a "very you" moment, a birthday, or `kind` "learn" with `learn {id,name,kind,image}`: "Add it to your taste?"), `show` true opens the island on a why card the user asked for |
 | `{"type":"feedback_ack","title","verdict","ok","name","message"}` | A card's thumbs was saved (or why not) |
 | `{"type":"profile","profile"}` | The brain updated the taste profile; the Mac saves it |

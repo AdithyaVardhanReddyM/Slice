@@ -4,7 +4,7 @@ import SwiftUI
 /// The first-run window: Slice gets to know the user before it picks anything. Welcome, home
 /// (on a map), three picking steps (music, film and TV, brands and books) whose tiles follow
 /// the picks so far (slice_mac/onboarding.py), six quick questions that become plain facts,
-/// the permissions, a first try at talking, and the taste it read.
+/// the permissions, a first try at talking, the taste it read, and the apps to connect.
 @MainActor
 final class OnboardingWindow {
     static let shared = OnboardingWindow()
@@ -113,7 +113,7 @@ struct Question: Identifiable {
 @Observable
 final class OnboardingModel {
     enum Step: Int, CaseIterable {
-        case welcome, home, music, screen, everyday, questions, access, talk, reveal
+        case welcome, home, music, screen, everyday, questions, access, talk, reveal, connect
     }
 
     let agent: AgentSession

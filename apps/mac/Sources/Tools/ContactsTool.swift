@@ -7,7 +7,7 @@ enum ContactsTool {
 
     static func search(_ query: String) async -> Result<JSONValue, LocalTools.Failure> {
         guard await access() else {
-            return .failure(.init(message: "Slice isn't allowed to read Contacts. Allow it in Slice Settings > Permissions."))
+            return .failure(.init(message: "Slice isn't allowed to read Contacts. Allow it in Slice Settings > Integrations."))
         }
         let keys: [CNKeyDescriptor] = [
             CNContactGivenNameKey, CNContactFamilyNameKey, CNContactOrganizationNameKey,

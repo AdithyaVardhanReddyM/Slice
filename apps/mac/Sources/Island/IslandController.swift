@@ -228,6 +228,7 @@ extension IslandController {
         let cards = VStack(spacing: 8) {
             if let nudge = model.agent.nudge { NudgeCard(nudge: nudge, agent: model.agent) }
             TasksArea(agent: model.agent)
+            ForEach(model.agent.attachments) { PicksCard(picks: $0.picks, agent: self.model.agent) }
         }
         .padding(16)
         .frame(width: IslandModel.openWidth)

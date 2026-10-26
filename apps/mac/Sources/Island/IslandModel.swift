@@ -11,7 +11,7 @@ import Observation
 ///   you", a birthday); hovering it opens the island on the full card.
 /// - open: the full panel (tasks, conversation, a text field) while hovered, whenever
 ///   a task needs an answer or a yes (its buttons must be clickable), and while
-///   showing a card the user asked for (a why card).
+///   showing a card the user asked for (a why card, quick picks).
 @MainActor
 @Observable
 final class IslandModel {
@@ -78,7 +78,7 @@ final class IslandModel {
         case .compact: return CGSize(width: withEars, height: barHeight)
         case .captioned, .nudge: return CGSize(width: max(withEars, Self.captionWidth), height: barHeight + 56)
         case .open:
-            let height = hasCards ? Self.openHeightWithCards : agent.tasks.isEmpty ? Self.openHeight : Self.openHeightWithTasks
+            let height = hasCards || hasPicks ? Self.openHeightWithCards : agent.tasks.isEmpty ? Self.openHeight : Self.openHeightWithTasks
             return CGSize(width: max(withEars + 80, Self.openWidth), height: height)
         }
     }
@@ -86,5 +86,11 @@ final class IslandModel {
     /// A nudge or a task with a rich card or picks is on show, so the open island grows.
     var hasCards: Bool {
         agent.nudge != nil || agent.tasks.prefix(2).contains { !$0.views.isEmpty || !$0.cards.isEmpty }
+    }
+
+    /// The latest exchange has a picks card under it (it sits in the conversation, not above it).
+    var hasPicks: Bool {
+        let last = agent.turns.last { $0.role == .user }?.id
+        return agent.attachments.contains { $0.after == last }
     }
 }

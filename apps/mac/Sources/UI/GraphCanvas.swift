@@ -398,20 +398,27 @@ struct GraphCanvas: View {
                 .allowsHitTesting(false)
                 ForEach(layout.nodes.filter { !hidden.contains($0.id) }) { node in
                     if let p = layout.positions[node.id] {
+                        // Hover, clicks and drags belong to the node itself, so they go on before
+                        // `.position`: after it, the view is the whole canvas, and the last node
+                        // drawn took every hover and click anywhere on the graph.
                         GraphNodeView(node: node, selected: selection == node.id, dimmed: lit.map { !$0.contains(node.id) } ?? false)
-                            .scaleEffect(nodeScale)
-                            .position(x: origin.x + p.x * scale, y: origin.y + p.y * scale)
-                            .onTapGesture { if interactive { selection = node.id } }
+                            .contentShape(node.isCapsule ? AnyShape(Capsule()) : AnyShape(Circle()))
                             .onHover { inside in
+                                guard interactive else { return }
                                 if inside { hover = node.id } else if hover == node.id { hover = nil }
                             }
+                            .onTapGesture { if interactive { selection = selection == node.id ? nil : node.id } }
                             .gesture(nodeDrag(node, origin: origin, scale: scale), including: interactive ? .all : .none)
                             .help(node.detail ?? node.label)
+                            .scaleEffect(nodeScale)
+                            .position(x: origin.x + p.x * scale, y: origin.y + p.y * scale)
                     }
                 }
             }
             .coordinateSpace(name: "graph")
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            // A node that a filter hides can't report the pointer leaving it.
+            .onChange(of: hidden) { if let hover, hidden.contains(hover) { self.hover = nil } }
             .simultaneousGesture(MagnifyGesture()
                 .onChanged { value in
                     guard interactive else { return }
