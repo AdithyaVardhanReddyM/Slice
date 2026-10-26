@@ -49,4 +49,24 @@ enum ScreenTool {
             return .failure(.init(message: "Screen capture failed: \(error.localizedDescription)"))
         }
     }
+
+    #if DEBUG
+    /// Only Slice's own windows on the main display, over a plain backdrop: for checking the
+    /// overlays (-previewOperator) without capturing anything else on the screen.
+    static func ownWindows(backdrop: CGColor) async -> Data? {
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true),
+              let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }),
+              let me = content.applications.first(where: { $0.processID == ProcessInfo.processInfo.processIdentifier })
+        else { return nil }
+        let config = SCStreamConfiguration()
+        config.width = display.width
+        config.height = display.height
+        config.backgroundColor = backdrop
+        config.showsCursor = false
+        guard let image = try? await SCScreenshotManager.captureImage(
+            contentFilter: SCContentFilter(display: display, including: [me], exceptingWindows: []), configuration: config)
+        else { return nil }
+        return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
+    }
+    #endif
 }

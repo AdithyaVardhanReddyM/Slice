@@ -81,7 +81,9 @@ conversation; `-sampleTasks YES` adds two sample task cards;
 card (`Agent/SampleViews.swift`, real Qloo answers), and
 `-sampleViews picks|picks-music|picks-book|picks-place` a conversation with a
 quick picks card; `-revealPick <name>` starts the onboarding reveal with that
-node clicked (for `-snapshotWindows`);
+node clicked (for `-snapshotWindows`); `-previewOperator <dir>` shows the
+operator overlay mid-task and captures only Slice's own windows over a light and
+a dark backdrop;
 `-renderIsland <dir>` writes each mode as a PNG plus `cards.png` (the cards
 alone) and quits, with no screen access needed (it fetches the pictures and
 maps first, and lays scroll views out flat, since ImageRenderer can't draw
@@ -333,7 +335,14 @@ icon tiles, black pill buttons, chips, page dots, fields, key caps, DiceBear "Dy
 - **The island** stays black (it meets the notch) and is always dark (`IslandPanel` uses darkAqua):
   solid black under the notch, dark frosted glass below (`IslandShell`, a behind-window blur, so
   the desktop tints its edges), grey cards with a lighter header strip (`IslandCard`), a blue pill
-  for the main action, white type tags (`IslandTag`), no glows on the map, lens or cursor.
+  for the main action, white type tags (`IslandTag`), no glows on the map or lens.
+- **While Slice uses the Mac** (`AgentCursor`, 2026-10-26, built on Cortana's actor layer in
+  ~/Desktop/cortana `app/src/renderer/overlay.js`): the one glow the user asked for. Light flows
+  round the screen's edge (a turning conic gradient, blue, lilac, orchid and sky, under a mask
+  that falls off like light, (1 - t)^2.4, all Core Animation); Slice's own cursor (gradient arrow
+  with a "Slice" tag) glides to each target 0.3 s before the real click and squeezes on press,
+  with a ring where it lands; a bottom pill says the step and "esc to stop" (a key monitor that
+  ignores Slice's own synthetic keys, marked with `eventSourceUserData`, and cancels the task).
 
 Check UI without screen access: `-renderSettings <dir>` (add `-appearance dark` for dark) and
 `-snapshotWindows <dir>`, both with `-renderProfile <taste.json>`.
@@ -479,8 +488,8 @@ Gemini ends it (about ten minutes of audio).
   when a task needs you or a why card was asked for), `IslandView`,
   `TaskViews` (task cards, buttons, picks), `RichViews` (person, gifts,
   timeline and taste map with Apple Maps snapshots, note, file, why, nudge),
-  `LensOverlay` (badges over the screen) and `AgentCursor` (screen glow and
-  click marks while the operator works).
+  `LensOverlay` (badges over the screen) and `AgentCursor` (edge glow, Slice's
+  cursor, ripples and the esc pill while the operator works).
 - `apps/mac/Sources/Agent/`: `AgentSession` (conversation, tasks, profile,
   nudges, push-to-talk, playback), `LocalTools` (tool router), `TasteStore`,
   `Watchers` (what's playing or open, birthdays, weekly jobs),

@@ -4,7 +4,8 @@ import Carbon.HIToolbox
 
 /// The operator's hands: Gemini computer-use actions (desktop environment) as real
 /// mouse and keyboard events. Coordinates arrive on a 0-999 grid over the last
-/// screenshot's display (ScreenTool.lastFrame). Needs Accessibility.
+/// screenshot's display (ScreenTool.lastFrame). Slice's own cursor (AgentCursor) glides to
+/// each target first and the real input follows it. Needs Accessibility.
 @MainActor
 enum ComputerTool {
     static func run(_ args: JSONValue?) async -> Result<JSONValue, LocalTools.Failure> {
@@ -19,24 +20,31 @@ enum ComputerTool {
         case "click", "double_click", "triple_click", "right_click", "middle_click":
             let count = action == "double_click" ? 2 : action == "triple_click" ? 3 : 1
             let button: CGMouseButton = action == "right_click" ? .right : action == "middle_click" ? .center : .left
-            AgentCursor.shared.show(at: at, label: intent)
+            await AgentCursor.shared.glide(to: at, label: intent)
+            AgentCursor.shared.press(at: at, right: button == .right)
             click(at, button: button, count: count)
         case "move":
-            AgentCursor.shared.show(at: at, label: intent)
+            await AgentCursor.shared.glide(to: at, label: intent)
             mouse(.mouseMoved, at)
         case "mouse_down":
+            await AgentCursor.shared.glide(to: at, label: intent)
+            AgentCursor.shared.press(at: at)
             mouse(.leftMouseDown, at)
         case "mouse_up":
+            AgentCursor.shared.move(to: at)
             mouse(.leftMouseUp, at)
         case "drag_and_drop":
-            drag(from: point(args, "start_x", "start_y"), to: point(args, "end_x", "end_y"))
+            await drag(from: point(args, "start_x", "start_y"), to: point(args, "end_x", "end_y"), label: intent)
         case "type":
-            type(args?["text"]?.string ?? "")
+            let text = args?["text"]?.string ?? ""
+            AgentCursor.shared.say(intent.isEmpty ? "Typing \u{201C}\(text.prefix(40))\u{201D}" : intent)
+            type(text)
             if args?["press_enter"] == .bool(true) { press(UInt16(kVK_Return)) }
         case "press_key", "key_down", "key_up":
             guard let name = args?["key"]?.string, let code = keyCode(name) else {
                 return .failure(.init(message: "Unknown key \(args?["key"]?.string ?? "")."))
             }
+            AgentCursor.shared.say(intent)
             switch action {
             case "key_down": key(code, down: true)
             case "key_up": key(code, down: false)
@@ -44,10 +52,11 @@ enum ComputerTool {
             }
         case "hotkey":
             let keys = (args?["keys"]?.array ?? []).compactMap(\.string)
+            AgentCursor.shared.say(intent)
             guard !hotkey(keys) else { break }
             return .failure(.init(message: "Couldn't press \(keys.joined(separator: "+"))."))
         case "scroll":
-            AgentCursor.shared.show(at: at, label: intent)
+            await AgentCursor.shared.glide(to: at, label: intent)
             let amount: Double = if case .number(let n)? = args?["magnitude_in_pixels"] { n } else { 300 }
             scroll(at, direction: args?["direction"]?.string ?? "down", pixels: Int32(amount))
         default:
@@ -72,6 +81,12 @@ enum ComputerTool {
     private static func mouse(_ type: CGEventType, _ at: CGPoint, button: CGMouseButton = .left, clickState: Int64 = 1) {
         let event = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: at, mouseButton: button)
         event?.setIntegerValueField(.mouseEventClickState, value: clickState)
+        post(event)
+    }
+
+    /// Every event Slice makes carries its mark, so AgentCursor's esc-to-stop knows its own keys.
+    private static func post(_ event: CGEvent?) {
+        event?.setIntegerValueField(.eventSourceUserData, value: AgentCursor.eventMark)
         event?.post(tap: .cghidEventTap)
     }
 
@@ -88,16 +103,22 @@ enum ComputerTool {
         }
     }
 
-    private static func drag(from: CGPoint, to: CGPoint) {
-        AgentCursor.shared.show(at: from, label: "")
+    /// A drag over about half a second, with Slice's cursor carrying it, so it reads as a hand moving.
+    private static func drag(from: CGPoint, to: CGPoint, label: String) async {
+        await AgentCursor.shared.glide(to: from, label: label)
+        AgentCursor.shared.press(at: from)
         mouse(.mouseMoved, from)
         mouse(.leftMouseDown, from)
-        for step in 1...12 {
-            let t = CGFloat(step) / 12
-            mouse(.leftMouseDragged, CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t))
+        for step in 1...20 {
+            let t = CGFloat(step) / 20
+            let eased = 1 - pow(1 - t, 3)
+            let at = CGPoint(x: from.x + (to.x - from.x) * eased, y: from.y + (to.y - from.y) * eased)
+            AgentCursor.shared.move(to: at)
+            mouse(.leftMouseDragged, at)
+            try? await Task.sleep(for: .milliseconds(24))
         }
         mouse(.leftMouseUp, to)
-        AgentCursor.shared.show(at: to, label: "")
+        AgentCursor.shared.press(at: to)
     }
 
     private static func scroll(_ at: CGPoint, direction: String, pixels: Int32) {
@@ -108,8 +129,7 @@ enum ComputerTool {
         case "right": (0, -pixels)
         default: (-pixels, 0)
         }
-        CGEvent(scrollWheelEvent2Source: source, units: .pixel, wheelCount: 2, wheel1: dy, wheel2: dx, wheel3: 0)?
-            .post(tap: .cghidEventTap)
+        post(CGEvent(scrollWheelEvent2Source: source, units: .pixel, wheelCount: 2, wheel1: dy, wheel2: dx, wheel3: 0))
     }
 
     // MARK: Keyboard
@@ -117,7 +137,7 @@ enum ComputerTool {
     private static func key(_ code: UInt16, down: Bool, flags: CGEventFlags = []) {
         let event = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down)
         event?.flags = flags
-        event?.post(tap: .cghidEventTap)
+        post(event)
     }
 
     private static func press(_ code: UInt16, flags: CGEventFlags = []) {
@@ -136,7 +156,7 @@ enum ComputerTool {
                 for down in [true, false] {
                     let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down)
                     event?.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: chunk)
-                    event?.post(tap: .cghidEventTap)
+                    post(event)
                 }
             }
         }

@@ -63,6 +63,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let question = defaults.string(forKey: "ask") {
             agent.ask(question, whenOnline: true)
         }
+        //   -previewOperator /some/dir                the operator overlay (glow, cursor, pill) as PNGs, then quit
+        if let dir = defaults.string(forKey: "previewOperator") {
+            Task { @MainActor in
+                await AgentCursor.shared.preview(to: URL(fileURLWithPath: dir))
+                NSApp.terminate(nil)
+            }
+        }
         #endif
 
         #if DEBUG

@@ -477,7 +477,11 @@ final class AgentSession {
             self.profile = profile
             TasteStore.save(profile)
         case .operatorStatus:
-            AgentCursor.shared.setOperating(event.active ?? false)
+            let id = event.taskId
+            AgentCursor.shared.setOperating(event.active ?? false) { [weak self] in
+                // esc on the overlay: stop the task that has the Mac.
+                if let id { self?.brain.send(["type": "task_cancel", "id": .string(id)]) }
+            }
         case .nudge:
             guard let nudge = event.nudge else { return }
             show(nudge)
