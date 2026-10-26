@@ -409,6 +409,8 @@ private struct AppearanceOption: View {
                     .padding(.top, 6)
                 }
                 .frame(width: 140, height: 92)
+                // The sky strip is a plain rectangle: without this its square corners show past the border.
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(selected ? Sky.accent : Sky.line, lineWidth: selected ? 2.5 : 1))
                 .shadow(color: Sky.shadow, radius: 8, y: 4)

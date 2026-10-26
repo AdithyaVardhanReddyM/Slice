@@ -16,7 +16,7 @@ struct GraphNode: Identifiable, Equatable {
     var image: String?
     var weight: Double = 1
     var detail: String?
-    /// The filter chip it belongs to: music, screen, books, brands, places.
+    /// The filter group it belongs to: music, screen, books, brands, places.
     var group: String?
     /// The node as the brain (or the profile) gave it, for the inspector.
     var raw: JSONValue = .null
@@ -26,20 +26,20 @@ struct GraphNode: Identifiable, Equatable {
     /// Half the node's size, for spacing and hit areas.
     var radius: CGFloat {
         switch style {
-        case .you: 36
-        case .love: 25 + 8 * CGFloat(min(max(weight - 1, -0.5), 0.5))
-        case .person: 25
+        case .you: 34
+        case .love: 27 + 8 * CGFloat(min(max(weight - 1, -0.5), 0.5))
+        case .person: 26
         case .pick: 22
         case .theirLove: 16
         case .dislike: 16
         case .hub: 24
-        case .tag: min(CGFloat(label.count) * 3.4 + 10, 90)
+        case .tag: min(CGFloat(label.count) * 3.6 + 10, 90)
         case .fact: min(CGFloat(label.count) * 3.3 + 12, 92)
         }
     }
 
-    /// How far its label reaches below a round node.
-    var labelDrop: CGFloat { isCapsule ? 0 : 26 }
+    /// How far its name and caption reach below a round node.
+    var labelDrop: CGFloat { isCapsule ? 0 : 32 }
 }
 
 struct GraphEdge: Hashable {
@@ -352,9 +352,9 @@ final class GraphLayout {
 
 // MARK: The canvas
 
-/// Draws a GraphLayout on a soft dotted field that follows the theme: drag a
-/// node to move it, drag the field to pan, pinch or use the buttons to zoom, hover to light up
-/// what a node is tied to, click to select it.
+/// Draws a GraphLayout on a plain white field: drag a node to move it, drag the field (or
+/// scroll) to pan, pinch, hold ⌘ and scroll, or use the buttons to zoom, hover to light up what a
+/// node is tied to and read a little about it, click to select it.
 struct GraphCanvas: View {
     let layout: GraphLayout
     @Binding var selection: String?
@@ -363,6 +363,8 @@ struct GraphCanvas: View {
     var showLegend = true
     /// Fixed zoom (rendering, onboarding); nil fits the graph to the view.
     var fixedScale: CGFloat?
+    /// Lit from outside, like a row in the panel beside the graph under the pointer.
+    var emphasized: String?
 
     @State private var pan: CGSize = .zero
     @State private var panStart: CGSize?
@@ -375,11 +377,11 @@ struct GraphCanvas: View {
             let scale = fixedScale ?? fitScale(geo.size) * zoom
             let mid = fitCenter()
             let origin = CGPoint(x: geo.size.width / 2 + pan.width - mid.x * scale, y: geo.size.height / 2 + pan.height - mid.y * scale)
-            let focus = hover ?? selection
+            let focus = hover ?? emphasized ?? selection
             let lit: Set<String>? = focus.map { layout.neighbours[$0, default: []].union([$0]) }
             let nodeScale = min(1.1, max(0.62, scale))
             ZStack {
-                GraphField()
+                GraphPalette.field
                     .contentShape(Rectangle())
                     .gesture(panGesture, including: interactive ? .all : .none)
                     .onTapGesture { if interactive { selection = nil } }
@@ -391,8 +393,8 @@ struct GraphCanvas: View {
                         path.addLine(to: CGPoint(x: origin.x + pb.x * scale, y: origin.y + pb.y * scale))
                         let look = EdgeLook(e.style)
                         let on = focus != nil && (e.a == focus || e.b == focus)
-                        let color = on ? Sky.ink.opacity(0.9) : look.color.opacity(lit == nil ? look.opacity : look.opacity * 0.35)
-                        ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: on ? 1.4 : look.width, lineCap: .round, dash: look.dash))
+                        let color = on ? Sky.ink.opacity(0.85) : look.color.opacity(lit == nil ? look.opacity : look.opacity * 0.3)
+                        ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: on ? 1.5 : look.width, lineCap: .round, dash: look.dash))
                     }
                 }
                 .allowsHitTesting(false)
@@ -401,7 +403,8 @@ struct GraphCanvas: View {
                         // Hover, clicks and drags belong to the node itself, so they go on before
                         // `.position`: after it, the view is the whole canvas, and the last node
                         // drawn took every hover and click anywhere on the graph.
-                        GraphNodeView(node: node, selected: selection == node.id, dimmed: lit.map { !$0.contains(node.id) } ?? false)
+                        GraphNodeView(node: node, selected: selection == node.id, hovering: hover == node.id,
+                                      dimmed: lit.map { !$0.contains(node.id) } ?? false)
                             .contentShape(node.isCapsule ? AnyShape(Capsule()) : AnyShape(Circle()))
                             .onHover { inside in
                                 guard interactive else { return }
@@ -409,13 +412,32 @@ struct GraphCanvas: View {
                             }
                             .onTapGesture { if interactive { selection = selection == node.id ? nil : node.id } }
                             .gesture(nodeDrag(node, origin: origin, scale: scale), including: interactive ? .all : .none)
-                            .help(node.detail ?? node.label)
                             .scaleEffect(nodeScale)
                             .position(x: origin.x + p.x * scale, y: origin.y + p.y * scale)
                     }
                 }
+                // What the node under the pointer is, without clicking.
+                if interactive, let id = hover, let node = layout.node(id), node.style != .you, let p = layout.positions[id] {
+                    let x = origin.x + p.x * scale, y = origin.y + p.y * scale
+                    let above = y - node.radius * nodeScale - HoverCard.height - 8 > 8
+                    HoverCard(node: node, layout: layout)
+                        .frame(height: HoverCard.height, alignment: above ? .bottom : .top)
+                        .position(x: min(max(x, 136), geo.size.width - 136),
+                                  y: above ? y - node.radius * nodeScale - 10 - HoverCard.height / 2
+                                           : y + (node.radius + node.labelDrop) * nodeScale + 10 + HoverCard.height / 2)
+                        .allowsHitTesting(false)
+                        .transition(.opacity.combined(with: .offset(y: above ? 4 : -4)))
+                }
             }
+            .animation(.easeOut(duration: 0.16), value: hover)
             .coordinateSpace(name: "graph")
+            .background {
+                if interactive {
+                    ScrollWheelCatcher { event, point in
+                        scroll(event, at: point, size: geo.size, mid: mid)
+                    }
+                }
+            }
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             // A node that a filter hides can't report the pointer leaving it.
             .onChange(of: hidden) { if let hover, hidden.contains(hover) { self.hover = nil } }
@@ -428,18 +450,23 @@ struct GraphCanvas: View {
                 .onEnded { _ in zoomStart = nil })
             .overlay(alignment: .bottomTrailing) {
                 if interactive {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 0) {
                         CanvasButton(symbol: "minus", help: "Zoom out") { withAnimation(.snappy) { zoom = max(0.4, zoom / 1.25) } }
+                        Rectangle().fill(Sky.line).frame(width: 1, height: 16)
                         CanvasButton(symbol: "plus", help: "Zoom in") { withAnimation(.snappy) { zoom = min(3, zoom * 1.25) } }
-                        CanvasButton(symbol: "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left", help: "Fit") {
+                        Rectangle().fill(Sky.line).frame(width: 1, height: 16)
+                        CanvasButton(symbol: "arrow.down.left.and.arrow.up.right", help: "Fit everything") {
                             withAnimation(.snappy) { zoom = 1; pan = .zero }
                         }
                     }
-                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Sky.card))
+                    .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Sky.line))
+                    .shadow(color: Sky.shadow.opacity(0.6), radius: 6, y: 2)
+                    .padding(12)
                 }
             }
             .overlay(alignment: .bottomLeading) {
-                if showLegend { GraphLegend(nodes: layout.nodes).padding(12) }
+                if showLegend { GraphLegend(nodes: layout.nodes).padding(.horizontal, 16).padding(.bottom, 14) }
             }
         }
     }
@@ -452,7 +479,7 @@ struct GraphCanvas: View {
     private func fitScale(_ size: CGSize) -> CGFloat {
         let box = layout.bounds
         guard box.width > 1, box.height > 1 else { return 1 }
-        return min(1.2, max(0.45, min((size.width - 80) / (box.width + 60), (size.height - 70) / (box.height + 60))))
+        return min(1.2, max(0.45, min((size.width - 80) / (box.width + 60), (size.height - 90) / (box.height + 60))))
     }
 
     private var panGesture: some Gesture {
@@ -471,6 +498,73 @@ struct GraphCanvas: View {
             }
             .onEnded { _ in layout.endDrag() }
     }
+
+    /// Two fingers pan; a mouse wheel, or ⌘ and two fingers, zooms round the pointer.
+    private func scroll(_ event: NSEvent, at point: CGPoint, size: CGSize, mid: CGPoint) {
+        let precise = event.hasPreciseScrollingDeltas
+        if event.modifierFlags.contains(.command) || !precise {
+            let before = fitScale(size) * zoom
+            let factor = 1 + event.scrollingDeltaY * (precise ? 0.006 : 0.08)
+            let next = min(3, max(0.4, zoom * factor))
+            let after = fitScale(size) * next
+            // Keep whatever is under the pointer where it is.
+            let centre = CGPoint(x: size.width / 2, y: size.height / 2)
+            let world = CGPoint(x: (point.x - centre.x - pan.width + mid.x * before) / before,
+                                y: (point.y - centre.y - pan.height + mid.y * before) / before)
+            pan = CGSize(width: point.x - centre.x + mid.x * after - world.x * after,
+                         height: point.y - centre.y + mid.y * after - world.y * after)
+            zoom = next
+        } else {
+            pan.width += event.scrollingDeltaX
+            pan.height += event.scrollingDeltaY
+        }
+    }
+}
+
+/// Hands scroll-wheel events over the canvas to SwiftUI (which has no scroll gesture of its own).
+/// It never takes clicks, so the graph's own gestures keep working over it.
+private struct ScrollWheelCatcher: NSViewRepresentable {
+    let onScroll: (NSEvent, CGPoint) -> Void
+
+    func makeNSView(context: Context) -> Catcher {
+        let view = Catcher()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ view: Catcher, context: Context) {
+        view.onScroll = onScroll
+    }
+
+    static func dismantleNSView(_ view: Catcher, coordinator: ()) {
+        view.stop()
+    }
+
+    final class Catcher: NSView {
+        var onScroll: ((NSEvent, CGPoint) -> Void)?
+        private var monitor: Any?
+
+        override var isFlipped: Bool { true }
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            stop()
+            guard window != nil else { return }
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                guard let self, event.window === self.window else { return event }
+                let point = self.convert(event.locationInWindow, from: nil)
+                guard self.bounds.contains(point) else { return event }
+                self.onScroll?(event, point)
+                return nil
+            }
+        }
+
+        func stop() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+        }
+    }
 }
 
 private struct EdgeLook {
@@ -479,32 +573,27 @@ private struct EdgeLook {
     let width: CGFloat
     let dash: [CGFloat]
 
-    /// Thin ink lines, like a drawn diagram: solid for what's known, dashed for what's only suggested.
+    /// Thin ink lines: solid for what's known, dashed for what's only suggested.
     init(_ style: String) {
         switch style {
-        case "loves": (color, opacity, width, dash) = (Sky.ink, 0.55, 1, [])
-        case "carries": (color, opacity, width, dash) = (Sky.ink, 0.16, 1, [])
-        case "knows": (color, opacity, width, dash) = (Sky.ink, 0.5, 1, [])
-        case "their": (color, opacity, width, dash) = (Sky.ink, 0.22, 1, [])
-        case "shares": (color, opacity, width, dash) = (Sky.ink, 0.3, 1, [])
-        case "common": (color, opacity, width, dash) = (Sky.ink, 0.22, 1, [3, 4])
-        case "because": (color, opacity, width, dash) = (Sky.ink, 0.45, 1, [4, 4])
-        case "not": (color, opacity, width, dash) = (Sky.bad, 0.45, 1, [3, 3])
-        case "hub": (color, opacity, width, dash) = (Sky.ink, 0.5, 1, [])
-        case "leaf": (color, opacity, width, dash) = (Sky.ink, 0.25, 1, [])
-        default: (color, opacity, width, dash) = (Sky.ink, 0.2, 1, [])
+        case "loves": (color, opacity, width, dash) = (Sky.ink, 0.32, 1, [])
+        case "carries": (color, opacity, width, dash) = (Sky.ink, 0.1, 1, [])
+        case "knows": (color, opacity, width, dash) = (Sky.ink, 0.32, 1, [])
+        case "their": (color, opacity, width, dash) = (Sky.ink, 0.18, 1, [])
+        case "shares": (color, opacity, width, dash) = (Sky.ink, 0.22, 1, [])
+        case "common": (color, opacity, width, dash) = (Sky.ink, 0.18, 1, [3, 4])
+        case "because": (color, opacity, width, dash) = (Sky.ink, 0.3, 1, [4, 4])
+        case "not": (color, opacity, width, dash) = (Sky.bad, 0.4, 1, [3, 3])
+        case "hub": (color, opacity, width, dash) = (Sky.ink, 0.32, 1, [])
+        case "leaf": (color, opacity, width, dash) = (Sky.ink, 0.2, 1, [])
+        default: (color, opacity, width, dash) = (Sky.ink, 0.18, 1, [])
         }
     }
 }
 
 enum GraphPalette {
-    static let field = Sky.dynamic(0xF8F8F6, 0x10131A)
-    static let no = Sky.bad
-    static let music = Sky.accent
-    static let screen = Sky.lilac
-    static let books = Sky.dynamic(0x10A7A0, 0x2DD4BF)
-    static let brands = Sky.dynamic(0xE0559A, 0xF472B6)
-    static let places = Sky.dynamic(0x1FAE73, 0x4ADE80)
+    /// The graph sits straight on its white card.
+    static let field = Sky.card
 
     /// The filter group of a Qloo kind.
     static func group(_ kind: String?) -> String? {
@@ -518,32 +607,15 @@ enum GraphPalette {
         }
     }
 
-    static func color(group: String?) -> Color {
-        group == nil ? Sky.ink3 : Sky.ink
-    }
-
-    /// The small black badge on a node ("ARTIST", "FILM").
-    static func badge(_ node: GraphNode) -> String? {
+    /// The small line under a node's name: what it is.
+    static func caption(_ node: GraphNode) -> (text: String, color: Color)? {
         switch node.style {
-        case .you: "YOU"
-        case .person: (node.kind?.isEmpty == false ? node.kind! : "person").uppercased()
-        case .pick: "NEXT"
-        case .dislike: "NOT FOR YOU"
-        case .love:
-            switch node.kind {
-            case "artist": "ARTIST"
-            case "album": "ALBUM"
-            case "movie": "FILM"
-            case "tv_show": "SHOW"
-            case "book": "BOOK"
-            case "author": "AUTHOR"
-            case "podcast": "PODCAST"
-            case "brand": "BRAND"
-            case "place": "PLACE"
-            case "destination": "TRIP"
-            case "video_game", "videogame": "GAME"
-            default: nil
-            }
+        case .you: ("You", Sky.ink3)
+        case .person: ((node.kind?.isEmpty == false ? node.kind! : "Someone you plan for").capitalizedFirst, Sky.ink3)
+        case .pick: ("Next for you", Sky.accent)
+        case .dislike: ("Not for you", Sky.bad)
+        case .theirLove: (node.raw["owner"]?.string.map { "\($0) loves" } ?? "Their love", Sky.ink3)
+        case .love: node.kind.map { (TasteSpace.kindWord($0), Sky.ink3) }
         default: nil
         }
     }
@@ -553,16 +625,10 @@ enum GraphPalette {
     ]
 }
 
-/// The plain field the graph is drawn on.
-private struct GraphField: View {
-    var body: some View {
-        GraphPalette.field
-    }
-}
-
 struct GraphNodeView: View {
     let node: GraphNode
     var selected = false
+    var hovering = false
     var dimmed = false
 
     var body: some View {
@@ -572,25 +638,18 @@ struct GraphNodeView: View {
             case .fact: fact
             default:
                 round
-                    .overlay(alignment: .topLeading) {
-                        if let badge = GraphPalette.badge(node), node.style != .theirLove {
-                            Badge(text: badge, alarm: node.style == .dislike)
-                                .fixedSize()
-                                .offset(x: -node.radius * 0.45, y: node.radius * 0.02)
-                                .allowsHitTesting(false)
-                        }
-                    }
                     .overlay(alignment: .top) {
-                        NamePill(text: node.label, quiet: node.style == .theirLove || node.style == .dislike || node.style == .pick,
-                                 dashed: node.style == .pick, selected: selected)
+                        NodeLabel(name: node.label, caption: GraphPalette.caption(node), selected: selected || hovering)
                             .fixedSize()
-                            .offset(y: node.radius * 2 + 5)
+                            .offset(y: node.radius * 2 + 6)
                             .allowsHitTesting(false)
                     }
             }
         }
-        .opacity(dimmed ? 0.25 : 1)
+        .scaleEffect(hovering && !node.isCapsule ? 1.06 : 1)
+        .opacity(dimmed ? 0.22 : 1)
         .animation(.easeOut(duration: 0.15), value: dimmed)
+        .animation(.spring(duration: 0.25, bounce: 0.3), value: hovering)
     }
 
     @ViewBuilder private var round: some View {
@@ -607,54 +666,47 @@ struct GraphNodeView: View {
                     RemoteImage(url: node.image)
                         .saturation(node.style == .dislike ? 0 : 1)
                 } else {
-                    Circle().fill(Sky.card)
+                    Circle().fill(Sky.fill)
                     Text(Self.initials(node.label)).font(.system(size: size * 0.3, weight: .semibold)).foregroundStyle(Sky.ink2)
                 }
             }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
-        .overlay {
-            if node.style == .pick {
-                Circle().strokeBorder(Sky.ink.opacity(0.7), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3])).padding(-3)
-            } else if node.style == .hub {
-                Circle().strokeBorder(Sky.ink.opacity(0.75), lineWidth: 1)
-            } else {
-                Circle().strokeBorder(Sky.line, lineWidth: 1)
-            }
-        }
+        .overlay(Circle().strokeBorder(Sky.ink.opacity(0.1), lineWidth: 1))
         .overlay {
             if selected {
-                Circle().strokeBorder(Sky.ink, lineWidth: 2).padding(-4)
+                Circle().strokeBorder(Sky.ink, lineWidth: 2).padding(-5)
+            } else if node.style == .pick {
+                Circle().strokeBorder(Sky.accent, lineWidth: 1.5).padding(-4)
             }
         }
-        .opacity(node.style == .dislike ? 0.75 : 1)
+        .shadow(color: Sky.shadow.opacity(hovering ? 1 : 0), radius: 10, y: 4)
+        .opacity(node.style == .dislike ? 0.7 : 1)
     }
 
-    /// A thread of the taste: small italic capitals, like a label on a drawn line.
+    /// A thread of the taste: one quiet italic word, like a note on a drawn line.
     private var thread: some View {
-        Text(node.label.uppercased())
-            .font(.system(size: 9.5, weight: selected ? .bold : .medium).italic())
-            .tracking(0.5)
-            .foregroundStyle(selected ? Sky.ink : Sky.ink2)
+        Text(node.label)
+            .font(.system(size: 11.5, weight: selected || hovering ? .semibold : .medium).italic())
+            .foregroundStyle(selected || hovering ? Sky.ink : Sky.ink2)
             .lineLimit(1)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2)
-            .background(GraphPalette.field)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(GraphPalette.field))
             .fixedSize()
     }
 
-    /// Something remembered: a plain outlined pill.
+    /// Something remembered: plain words on the field.
     private var fact: some View {
         Text(node.label)
             .font(.system(size: 11.5, weight: .medium))
-            .foregroundStyle(Sky.ink)
+            .foregroundStyle(selected ? Sky.ink : Sky.ink2)
             .lineLimit(1)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
             .frame(maxWidth: 200)
-            .background(Capsule().fill(Sky.card))
-            .overlay(Capsule().strokeBorder(selected ? Sky.ink : Sky.ink.opacity(0.35), lineWidth: selected ? 1.5 : 1))
+            .background(Capsule().fill(GraphPalette.field))
             .fixedSize()
     }
 
@@ -664,41 +716,81 @@ struct GraphNodeView: View {
     }
 }
 
-/// The small black tag on a node: what it is.
-private struct Badge: View {
-    let text: String
-    var alarm = false
-
-    var body: some View {
-        Text(text)
-            .font(.system(size: 8, weight: .bold).italic())
-            .tracking(0.4)
-            .foregroundStyle(alarm ? Color.white : Sky.onPrimary)
-            .padding(.horizontal, 5)
-            .padding(.vertical, 2.5)
-            .background(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(alarm ? Sky.bad : Sky.primary))
-    }
-}
-
-/// A node's name under it: capitals in an outlined pill.
-private struct NamePill: View {
-    let text: String
-    var quiet = false
-    var dashed = false
+/// A node's name under it, with what it is in small type beneath.
+private struct NodeLabel: View {
+    let name: String
+    let caption: (text: String, color: Color)?
     var selected = false
 
     var body: some View {
-        Text(text.uppercased())
-            .font(.system(size: 9, weight: .semibold))
-            .tracking(0.3)
-            .foregroundStyle(quiet ? Sky.ink2 : Sky.ink)
-            .lineLimit(1)
-            .frame(maxWidth: 118)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3.5)
-            .background(Capsule().fill(GraphPalette.field))
-            .overlay(Capsule().strokeBorder(Sky.ink.opacity(selected ? 1 : (quiet ? 0.35 : 0.7)),
-                                            style: StrokeStyle(lineWidth: selected ? 1.5 : 1, dash: dashed ? [3, 2] : [])))
+        VStack(spacing: 1) {
+            Text(name)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Sky.ink)
+                .lineLimit(1)
+                .frame(maxWidth: 112)
+            if let caption {
+                Text(caption.text)
+                    .font(.system(size: 9.5, weight: .medium))
+                    .foregroundStyle(caption.color)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 4)
+        .padding(.vertical, 2)
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(GraphPalette.field.opacity(0.9)))
+    }
+}
+
+/// A little about the node under the pointer: its picture, its name and what ties it in.
+private struct HoverCard: View {
+    static let height: CGFloat = 70
+    let node: GraphNode
+    let layout: GraphLayout
+
+    var body: some View {
+        HStack(spacing: 10) {
+            if node.style == .person {
+                Avatar(seed: node.label, size: 40, border: 0)
+            } else if node.image != nil {
+                RemoteImage(url: node.image)
+                    .saturation(node.style == .dislike ? 0 : 1)
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(node.label).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(Sky.ink).lineLimit(1)
+                Text(line).font(.system(size: 11)).foregroundStyle(Sky.ink2).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 11)
+        .padding(.vertical, 9)
+        .frame(width: 256)
+        .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(Sky.card))
+        .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Sky.line))
+        .shadow(color: Sky.shadow, radius: 14, y: 6)
+    }
+
+    private var line: String {
+        let around = layout.neighbours[node.id, default: []].compactMap(layout.node)
+        switch node.style {
+        case .love:
+            let threads = around.filter { $0.style == .tag }.map(\.label)
+            let kind = node.kind.map(TasteSpace.kindWord) ?? "Something you love"
+            return threads.isEmpty ? kind : "\(kind). " + threads.prefix(4).joined(separator: ", ")
+        case .pick:
+            let because = node.raw["because"]?.array.compactMap(\.string) ?? []
+            return because.isEmpty ? "Suggested from what you love" : "Because you love " + because.joined(separator: " and ")
+        case .tag:
+            let loves = around.filter { $0.style == .love }.map(\.label)
+            return loves.isEmpty ? (node.detail ?? "") : "In " + loves.prefix(4).joined(separator: ", ") + (loves.count > 4 ? " and \(loves.count - 4) more" : "")
+        case .person:
+            let loves = around.filter { $0.style == .theirLove || $0.style == .love }.map(\.label)
+            return loves.isEmpty ? (node.detail?.capitalizedFirst ?? "Someone you plan for") : "Loves " + loves.prefix(3).joined(separator: ", ")
+        case .dislike: return "Not for you: never picked, and flagged on screen."
+        default: return node.detail ?? ""
+        }
     }
 }
 
@@ -706,28 +798,24 @@ private struct GraphLegend: View {
     let nodes: [GraphNode]
 
     var body: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 5) {
-                Rectangle().fill(Sky.ink.opacity(0.6)).frame(width: 16, height: 1)
-                Text("Loves")
+        HStack(spacing: 14) {
+            HStack(spacing: 6) {
+                Rectangle().fill(Sky.ink.opacity(0.5)).frame(width: 14, height: 1)
+                Text("What you love")
             }
-            HStack(spacing: 5) {
-                Text("ITALIC").font(.system(size: 8.5, weight: .medium).italic())
-                Text("Threads you share")
+            HStack(spacing: 6) {
+                Text("Italic").font(.system(size: 10.5, weight: .medium).italic())
+                Text("threads they share")
             }
             if nodes.contains(where: { $0.style == .pick }) {
-                HStack(spacing: 5) {
-                    Rectangle().stroke(Sky.ink.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [3, 2])).frame(width: 16, height: 1)
+                HStack(spacing: 6) {
+                    Rectangle().stroke(Sky.ink.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 2])).frame(width: 14, height: 1)
                     Text("Next for you")
                 }
             }
         }
         .font(.system(size: 10.5, weight: .medium))
-        .foregroundStyle(Sky.ink2)
-        .padding(.horizontal, 11)
-        .padding(.vertical, 6)
-        .background(Capsule().fill(Sky.card))
-        .overlay(Capsule().strokeBorder(Sky.line))
+        .foregroundStyle(Sky.ink3)
     }
 }
 
@@ -735,17 +823,18 @@ private struct CanvasButton: View {
     let symbol: String
     let help: String
     let action: () -> Void
+    @State private var hovering = false
 
     var body: some View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Sky.ink2)
-                .frame(width: 26, height: 24)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Sky.card))
-                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Sky.line))
+                .foregroundStyle(hovering ? Sky.ink : Sky.ink2)
+                .frame(width: 30, height: 28)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { hovering = $0 }
         .help(help)
     }
 }

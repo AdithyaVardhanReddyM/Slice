@@ -19,29 +19,48 @@ enum YouPanel: String, CaseIterable, Identifiable {
 
 typealias ProfileEdit = (_ op: String, _ fields: [String: JSONValue], _ label: String) -> Void
 
-/// Three pills, one per tab.
+/// The panel's tabs: plain words with a bar under the one that's open, which slides across.
 struct PanelPicker: View {
     @Binding var panel: YouPanel
+    @Namespace private var bar
 
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 20) {
             ForEach(YouPanel.allCases) { tab in
-                Button { withAnimation(.snappy(duration: 0.2)) { panel = tab } } label: {
-                    Text(tab.title)
-                        .font(.system(size: 12, weight: panel == tab ? .semibold : .medium))
-                        .foregroundStyle(panel == tab ? Sky.ink : Sky.ink2)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 28)
-                        .background(Capsule().fill(panel == tab ? Sky.card : .clear))
-                        .overlay(Capsule().strokeBorder(panel == tab ? Sky.line : .clear))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                PanelTab(title: tab.title, on: panel == tab, bar: bar) { panel = tab }
             }
+            Spacer(minLength: 0)
         }
-        .padding(3)
-        .background(Capsule().fill(Sky.fill))
+        .padding(.horizontal, 18)
+        .overlay(alignment: .bottom) { Rectangle().fill(Sky.line).frame(height: 1) }
+        .animation(.snappy(duration: 0.22, extraBounce: 0), value: panel)
+    }
+}
+
+private struct PanelTab: View {
+    let title: String
+    let on: Bool
+    let bar: Namespace.ID
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 13, weight: on ? .semibold : .medium))
+                .foregroundStyle(on ? Sky.ink : (hovering ? Sky.ink2 : Sky.ink3))
+                .lineLimit(1)
+                .padding(.vertical, 13)
+                .overlay(alignment: .bottom) {
+                    if on {
+                        Rectangle().fill(Sky.ink).frame(height: 2)
+                            .matchedGeometryEffect(id: "bar", in: bar)
+                    }
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
     }
 }
 
@@ -234,7 +253,6 @@ private struct FactRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Circle().fill(Sky.ink).frame(width: 5, height: 5).padding(.top, 6)
             VStack(alignment: .leading, spacing: 2) {
                 Text(text).font(.system(size: 13)).fixedSize(horizontal: false, vertical: true)
                 if let source { Text(source).font(.system(size: 11)).foregroundStyle(Sky.ink3) }
