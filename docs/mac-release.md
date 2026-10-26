@@ -67,7 +67,7 @@ cd apps/agent
 - turns on the Cloud Run, Cloud Build, Artifact Registry, Secret Manager and Vertex AI APIs,
 - creates the image repository `slice` in `us-central1`,
 - creates the service account `slice-brain` and gives it the Vertex AI User role (the brain reaches Gemini with that account, so no key file is deployed),
-- creates the secrets in Secret Manager from `apps/agent/.env`: `slice-qloo-proxy-secret` and `slice-composio-api-key`, plus `slice-ticketmaster-api-key` if the key is in `.env`. It makes `slice-mac-client-token` as a new random token, and lets the service account read each one.
+- creates the secrets in Secret Manager from `apps/agent/.env`: `slice-qloo-proxy-secret` and `slice-mac-composio-api-key` (from `COMPOSIO_MAC_API_KEY`), plus `slice-ticketmaster-api-key` if the key is in `.env`. It makes `slice-mac-client-token` as a new random token, and lets the service account read each one.
 
 If a value is missing from `.env`, setup stops and tells you the one command to create that secret yourself. Setup never prints a secret.
 
@@ -77,7 +77,7 @@ The deploy asks once more, uploads `apps/agent` to Cloud Build (never `.env`; th
 - A request timeout of 3600 seconds, the most Cloud Run allows. A Live conversation lasts about ten minutes and the app opens a new one by itself, but the WebSocket between the app and the brain is cut at the timeout, so expect one reconnect an hour. The app already reconnects with backoff.
 - Session affinity on, minimum 1 instance (no cold start when a judge opens the app), maximum 4, 2 CPU, 2 GiB, 40 concurrent connections per instance.
 - `--allow-unauthenticated`, because Cloud Run's own login would fight with the app's bearer token. The token is the lock. If your organisation blocks public Cloud Run services, the deploy fails at this step and you will need an exception.
-- Secrets passed as `MAC_CLIENT_TOKEN`, `QLOO_PROXY_SECRET`, `COMPOSIO_API_KEY` (and `TICKETMASTER_API_KEY`). `CONVEX_URL` and `CONVEX_SITE_URL` are read from your environment or `.env` and passed as plain variables, since they are addresses.
+- Secrets passed as `MAC_CLIENT_TOKEN`, `QLOO_PROXY_SECRET`, `COMPOSIO_MAC_API_KEY` (and `TICKETMASTER_API_KEY`). `CONVEX_URL` and `CONVEX_SITE_URL` are read from your environment or `.env` and passed as plain variables, since they are addresses.
 
 At the end it checks the service and prints the address:
 

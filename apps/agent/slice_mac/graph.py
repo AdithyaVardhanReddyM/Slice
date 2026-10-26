@@ -1,4 +1,4 @@
-"""The taste graph for Settings > Taste: the user's loves, the threads that tie them
+"""The taste graph for Settings > You: the user's loves, the threads that tie them
 together, the people they've saved, and where their taste goes next.
 
 Nodes: "you"; each love ("love", with its picture and kind); the Qloo tags two or more

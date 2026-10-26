@@ -1,8 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// One thing on a graph canvas: the taste graph (Settings > Taste) or the memory graph
-/// (Settings > Memory).
+/// One thing on a graph canvas: the taste graph (Settings > You, and the onboarding reveal).
 struct GraphNode: Identifiable, Equatable {
     enum Style: String {
         case you, love, tag, person, pick, dislike, hub, fact
@@ -27,19 +26,20 @@ struct GraphNode: Identifiable, Equatable {
     /// Half the node's size, for spacing and hit areas.
     var radius: CGFloat {
         switch style {
-        case .you: 34
-        case .love: 20 + 8 * CGFloat(min(max(weight - 1, -0.5), 0.5))
-        case .person: 22
-        case .pick: 19
-        case .theirLove: 15
-        case .dislike: 14
-        case .hub: 25
-        case .tag, .fact: min(CGFloat(label.count) * 3.3 + 12, 92)
+        case .you: 36
+        case .love: 25 + 8 * CGFloat(min(max(weight - 1, -0.5), 0.5))
+        case .person: 25
+        case .pick: 22
+        case .theirLove: 16
+        case .dislike: 16
+        case .hub: 24
+        case .tag: min(CGFloat(label.count) * 3.4 + 10, 90)
+        case .fact: min(CGFloat(label.count) * 3.3 + 12, 92)
         }
     }
 
     /// How far its label reaches below a round node.
-    var labelDrop: CGFloat { isCapsule ? 0 : 20 }
+    var labelDrop: CGFloat { isCapsule ? 0 : 26 }
 }
 
 struct GraphEdge: Hashable {
@@ -147,7 +147,7 @@ final class GraphLayout {
 
     /// How much room a node takes along its ring: its circle or capsule, or its label if wider.
     private static func span(_ n: GraphNode) -> CGFloat {
-        n.isCapsule ? n.radius * 2 + 14 : max(n.radius * 2, 84) + 8
+        n.isCapsule ? n.radius * 2 + 18 : max(n.radius * 2, 116) + 14
     }
 
     /// How far from the middle each kind sits: far enough out that everything on a ring fits
@@ -157,10 +157,10 @@ final class GraphLayout {
             let around = nodes.filter { styles.contains($0.style) }.reduce(0) { $0 + span($1) }
             return max(atLeast, around / (2 * .pi) * 1.08)
         }
-        let love = fit([.love], atLeast: 120)
-        let tag = fit([.tag], atLeast: love + 105)
-        let pick = fit([.pick, .dislike], atLeast: tag + 70)
-        let person = fit([.person], atLeast: pick + 62)
+        let love = fit([.love], atLeast: 165)
+        let tag = fit([.tag], atLeast: love + 120)
+        let pick = fit([.pick, .dislike], atLeast: tag + 95)
+        let person = fit([.person], atLeast: pick + 85)
         return [.love: love, .tag: tag, .pick: pick, .dislike: pick, .person: person, .theirLove: person + 80, .hub: love, .fact: tag]
     }
 
@@ -257,7 +257,7 @@ final class GraphLayout {
     /// How far a node reaches towards a neighbour in direction (dx, dy): half its width side to
     /// side, half its height (with the label under a round node) above and below.
     private static func reach(_ n: GraphNode, _ dx: CGFloat, _ dy: CGFloat, _ d: CGFloat) -> CGFloat {
-        let (w, h): (CGFloat, CGFloat) = n.isCapsule ? (n.radius, 13) : (max(n.radius, 42), n.radius + n.labelDrop / 2 + 4)
+        let (w, h): (CGFloat, CGFloat) = n.isCapsule ? (n.radius + 4, 11) : (max(n.radius, 60), n.radius + n.labelDrop / 2 + 12)
         return abs(dx) / d * w + abs(dy) / d * h
     }
 
@@ -352,7 +352,7 @@ final class GraphLayout {
 
 // MARK: The canvas
 
-/// Draws a GraphLayout on a dark field (the island's black, so loves and tags glow): drag a
+/// Draws a GraphLayout on a soft dotted field that follows the theme: drag a
 /// node to move it, drag the field to pan, pinch or use the buttons to zoom, hover to light up
 /// what a node is tied to, click to select it.
 struct GraphCanvas: View {
@@ -377,7 +377,7 @@ struct GraphCanvas: View {
             let origin = CGPoint(x: geo.size.width / 2 + pan.width - mid.x * scale, y: geo.size.height / 2 + pan.height - mid.y * scale)
             let focus = hover ?? selection
             let lit: Set<String>? = focus.map { layout.neighbours[$0, default: []].union([$0]) }
-            let nodeScale = min(1.1, max(0.72, scale))
+            let nodeScale = min(1.1, max(0.62, scale))
             ZStack {
                 GraphField()
                     .contentShape(Rectangle())
@@ -391,8 +391,8 @@ struct GraphCanvas: View {
                         path.addLine(to: CGPoint(x: origin.x + pb.x * scale, y: origin.y + pb.y * scale))
                         let look = EdgeLook(e.style)
                         let on = focus != nil && (e.a == focus || e.b == focus)
-                        let color = on ? Brand.yellow.opacity(0.85) : look.color.opacity(lit == nil ? look.opacity : look.opacity * 0.3)
-                        ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: on ? 1.6 : look.width, lineCap: .round, dash: look.dash))
+                        let color = on ? Sky.ink.opacity(0.9) : look.color.opacity(lit == nil ? look.opacity : look.opacity * 0.35)
+                        ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: on ? 1.4 : look.width, lineCap: .round, dash: look.dash))
                     }
                 }
                 .allowsHitTesting(false)
@@ -472,27 +472,32 @@ private struct EdgeLook {
     let width: CGFloat
     let dash: [CGFloat]
 
+    /// Thin ink lines, like a drawn diagram: solid for what's known, dashed for what's only suggested.
     init(_ style: String) {
         switch style {
-        case "loves": (color, opacity, width, dash) = (.white, 0.22, 1.2, [])
-        case "carries": (color, opacity, width, dash) = (Brand.sand, 0.28, 1, [])
-        case "knows": (color, opacity, width, dash) = (.white, 0.2, 1, [4, 4])
-        case "their": (color, opacity, width, dash) = (.white, 0.16, 1, [])
-        case "shares": (color, opacity, width, dash) = (Brand.orange, 0.5, 1.3, [])
-        case "common": (color, opacity, width, dash) = (Brand.orange, 0.3, 1, [2, 4])
-        case "because": (color, opacity, width, dash) = (Brand.yellow, 0.4, 1, [3, 4])
-        case "not": (color, opacity, width, dash) = (GraphPalette.no, 0.35, 1, [2, 3])
-        case "hub": (color, opacity, width, dash) = (.white, 0.24, 1.2, [])
-        case "leaf": (color, opacity, width, dash) = (Brand.sand, 0.26, 1, [])
-        default: (color, opacity, width, dash) = (.white, 0.18, 1, [])
+        case "loves": (color, opacity, width, dash) = (Sky.ink, 0.55, 1, [])
+        case "carries": (color, opacity, width, dash) = (Sky.ink, 0.16, 1, [])
+        case "knows": (color, opacity, width, dash) = (Sky.ink, 0.5, 1, [])
+        case "their": (color, opacity, width, dash) = (Sky.ink, 0.22, 1, [])
+        case "shares": (color, opacity, width, dash) = (Sky.ink, 0.3, 1, [])
+        case "common": (color, opacity, width, dash) = (Sky.ink, 0.22, 1, [3, 4])
+        case "because": (color, opacity, width, dash) = (Sky.ink, 0.45, 1, [4, 4])
+        case "not": (color, opacity, width, dash) = (Sky.bad, 0.45, 1, [3, 3])
+        case "hub": (color, opacity, width, dash) = (Sky.ink, 0.5, 1, [])
+        case "leaf": (color, opacity, width, dash) = (Sky.ink, 0.25, 1, [])
+        default: (color, opacity, width, dash) = (Sky.ink, 0.2, 1, [])
         }
     }
 }
 
 enum GraphPalette {
-    static let field = Color(red: 0.055, green: 0.055, blue: 0.06)
-    static let no = Color(red: 1, green: 0.42, blue: 0.36)
-    static let places = Color(red: 0.62, green: 0.86, blue: 0.78)
+    static let field = Sky.dynamic(0xF8F8F6, 0x10131A)
+    static let no = Sky.bad
+    static let music = Sky.accent
+    static let screen = Sky.lilac
+    static let books = Sky.dynamic(0x10A7A0, 0x2DD4BF)
+    static let brands = Sky.dynamic(0xE0559A, 0xF472B6)
+    static let places = Sky.dynamic(0x1FAE73, 0x4ADE80)
 
     /// The filter group of a Qloo kind.
     static func group(_ kind: String?) -> String? {
@@ -507,13 +512,32 @@ enum GraphPalette {
     }
 
     static func color(group: String?) -> Color {
-        switch group {
-        case "music": Brand.yellow
-        case "screen": Brand.orange
-        case "books": Brand.sand
-        case "brands": Brand.amber
-        case "places": places
-        default: .white.opacity(0.7)
+        group == nil ? Sky.ink3 : Sky.ink
+    }
+
+    /// The small black badge on a node ("ARTIST", "FILM").
+    static func badge(_ node: GraphNode) -> String? {
+        switch node.style {
+        case .you: "YOU"
+        case .person: (node.kind?.isEmpty == false ? node.kind! : "person").uppercased()
+        case .pick: "NEXT"
+        case .dislike: "NOT FOR YOU"
+        case .love:
+            switch node.kind {
+            case "artist": "ARTIST"
+            case "album": "ALBUM"
+            case "movie": "FILM"
+            case "tv_show": "SHOW"
+            case "book": "BOOK"
+            case "author": "AUTHOR"
+            case "podcast": "PODCAST"
+            case "brand": "BRAND"
+            case "place": "PLACE"
+            case "destination": "TRIP"
+            case "video_game", "videogame": "GAME"
+            default: nil
+            }
+        default: nil
         }
     }
 
@@ -522,24 +546,10 @@ enum GraphPalette {
     ]
 }
 
-/// The dark field with a faint dot grid.
+/// The plain field the graph is drawn on.
 private struct GraphField: View {
     var body: some View {
-        Canvas { ctx, size in
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(GraphPalette.field))
-            let step: CGFloat = 22
-            var dots = Path()
-            var y: CGFloat = step / 2
-            while y < size.height {
-                var x: CGFloat = step / 2
-                while x < size.width {
-                    dots.addEllipse(in: CGRect(x: x - 0.7, y: y - 0.7, width: 1.4, height: 1.4))
-                    x += step
-                }
-                y += step
-            }
-            ctx.fill(dots, with: .color(.white.opacity(0.07)))
-        }
+        GraphPalette.field
     }
 }
 
@@ -550,61 +560,48 @@ struct GraphNodeView: View {
 
     var body: some View {
         Group {
-            if node.isCapsule {
-                capsule
-            } else {
+            switch node.style {
+            case .tag: thread
+            case .fact: fact
+            default:
                 round
+                    .overlay(alignment: .topLeading) {
+                        if let badge = GraphPalette.badge(node), node.style != .theirLove {
+                            Badge(text: badge, alarm: node.style == .dislike)
+                                .fixedSize()
+                                .offset(x: -node.radius * 0.45, y: node.radius * 0.02)
+                                .allowsHitTesting(false)
+                        }
+                    }
                     .overlay(alignment: .top) {
-                        Text(node.label)
-                            .font(.system(size: node.style == .you ? 12.5 : 10.5, weight: node.style == .you || node.style == .person ? .semibold : .medium))
-                            .foregroundStyle(.white.opacity(node.style == .theirLove || node.style == .dislike ? 0.6 : 0.92))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .frame(width: 88)
-                            .shadow(color: .black, radius: 3)
-                            .offset(y: node.radius * 2 + 4)
+                        NamePill(text: node.label, quiet: node.style == .theirLove || node.style == .dislike || node.style == .pick,
+                                 dashed: node.style == .pick, selected: selected)
+                            .fixedSize()
+                            .offset(y: node.radius * 2 + 5)
                             .allowsHitTesting(false)
                     }
             }
         }
-        .opacity(dimmed ? 0.28 : 1)
+        .opacity(dimmed ? 0.25 : 1)
         .animation(.easeOut(duration: 0.15), value: dimmed)
-    }
-
-    private var ring: Color {
-        switch node.style {
-        case .you: Brand.yellow
-        case .dislike: GraphPalette.no
-        case .person: .white.opacity(0.7)
-        case .hub: Brand.sand
-        default: GraphPalette.color(group: node.group)
-        }
     }
 
     @ViewBuilder private var round: some View {
         let size = node.radius * 2
         ZStack {
             switch node.style {
-            case .you:
-                Circle().fill(Brand.squeeze)
-                if let initial = node.label.first, node.label != "You" {
-                    Text(String(initial)).font(.system(size: 26, weight: .bold)).foregroundStyle(.black.opacity(0.8))
-                } else {
-                    SliceMark(height: 20).colorMultiply(.black)
-                }
-            case .person:
-                Circle().fill(.white.opacity(0.12))
-                Text(Self.initials(node.label)).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+            case .you, .person:
+                Avatar(seed: node.label, size: size, border: 0)
             case .hub:
-                Circle().fill(.white.opacity(0.1))
-                Image(systemName: node.kind ?? "circle").font(.system(size: 17, weight: .semibold)).foregroundStyle(Brand.sand)
+                Circle().fill(Sky.card)
+                Image(systemName: node.kind ?? "circle").font(.system(size: 16, weight: .medium)).foregroundStyle(Sky.ink)
             default:
                 if node.image != nil {
                     RemoteImage(url: node.image)
                         .saturation(node.style == .dislike ? 0 : 1)
                 } else {
-                    Circle().fill(.white.opacity(0.1))
-                    Text(Self.initials(node.label)).font(.system(size: size * 0.32, weight: .semibold)).foregroundStyle(.white.opacity(0.8))
+                    Circle().fill(Sky.card)
+                    Text(Self.initials(node.label)).font(.system(size: size * 0.3, weight: .semibold)).foregroundStyle(Sky.ink2)
                 }
             }
         }
@@ -612,31 +609,45 @@ struct GraphNodeView: View {
         .clipShape(Circle())
         .overlay {
             if node.style == .pick {
-                Circle().strokeBorder(Brand.yellow, style: StrokeStyle(lineWidth: 1.5, dash: [3, 3]))
-            } else if node.style != .you {
-                Circle().strokeBorder(ring.opacity(node.style == .theirLove ? 0.5 : 0.95), lineWidth: node.style == .love ? 2 : 1.5)
+                Circle().strokeBorder(Sky.ink.opacity(0.7), style: StrokeStyle(lineWidth: 1.2, dash: [3, 3])).padding(-3)
+            } else if node.style == .hub {
+                Circle().strokeBorder(Sky.ink.opacity(0.75), lineWidth: 1)
+            } else {
+                Circle().strokeBorder(Sky.line, lineWidth: 1)
             }
         }
         .overlay {
             if selected {
-                Circle().strokeBorder(.white, lineWidth: 2).padding(-4)
+                Circle().strokeBorder(Sky.ink, lineWidth: 2).padding(-4)
             }
         }
-        .opacity(node.style == .pick ? 0.92 : (node.style == .dislike ? 0.7 : 1))
-        .shadow(color: node.style == .you ? Brand.orange.opacity(0.55) : .clear, radius: 18)
+        .opacity(node.style == .dislike ? 0.75 : 1)
     }
 
-    private var capsule: some View {
-        let isTag = node.style == .tag
-        return Text(node.label)
-            .font(.system(size: isTag ? 11 : 11.5, weight: .medium))
-            .foregroundStyle(isTag ? Brand.sand : .white.opacity(0.9))
+    /// A thread of the taste: small italic capitals, like a label on a drawn line.
+    private var thread: some View {
+        Text(node.label.uppercased())
+            .font(.system(size: 9.5, weight: selected ? .bold : .medium).italic())
+            .tracking(0.5)
+            .foregroundStyle(selected ? Sky.ink : Sky.ink2)
             .lineLimit(1)
-            .padding(.horizontal, 9)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(GraphPalette.field)
+            .fixedSize()
+    }
+
+    /// Something remembered: a plain outlined pill.
+    private var fact: some View {
+        Text(node.label)
+            .font(.system(size: 11.5, weight: .medium))
+            .foregroundStyle(Sky.ink)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .frame(maxWidth: 190)
-            .background(Capsule().fill(isTag ? Brand.sand.opacity(0.1) : .white.opacity(0.08)))
-            .overlay(Capsule().strokeBorder(selected ? .white : (isTag ? Brand.sand.opacity(0.35) : .white.opacity(0.18)), lineWidth: selected ? 1.5 : 1))
+            .frame(maxWidth: 200)
+            .background(Capsule().fill(Sky.card))
+            .overlay(Capsule().strokeBorder(selected ? Sky.ink : Sky.ink.opacity(0.35), lineWidth: selected ? 1.5 : 1))
             .fixedSize()
     }
 
@@ -646,31 +657,70 @@ struct GraphNodeView: View {
     }
 }
 
+/// The small black tag on a node: what it is.
+private struct Badge: View {
+    let text: String
+    var alarm = false
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 8, weight: .bold).italic())
+            .tracking(0.4)
+            .foregroundStyle(alarm ? Color.white : Sky.onPrimary)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2.5)
+            .background(RoundedRectangle(cornerRadius: 3, style: .continuous).fill(alarm ? Sky.bad : Sky.primary))
+    }
+}
+
+/// A node's name under it: capitals in an outlined pill.
+private struct NamePill: View {
+    let text: String
+    var quiet = false
+    var dashed = false
+    var selected = false
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.system(size: 9, weight: .semibold))
+            .tracking(0.3)
+            .foregroundStyle(quiet ? Sky.ink2 : Sky.ink)
+            .lineLimit(1)
+            .frame(maxWidth: 118)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3.5)
+            .background(Capsule().fill(GraphPalette.field))
+            .overlay(Capsule().strokeBorder(Sky.ink.opacity(selected ? 1 : (quiet ? 0.35 : 0.7)),
+                                            style: StrokeStyle(lineWidth: selected ? 1.5 : 1, dash: dashed ? [3, 2] : [])))
+    }
+}
+
 private struct GraphLegend: View {
     let nodes: [GraphNode]
 
     var body: some View {
-        let present = Set(nodes.compactMap(\.group))
-        let hasPicks = nodes.contains { $0.style == .pick }
-        HStack(spacing: 10) {
-            ForEach(GraphPalette.groups.filter { present.contains($0.id) }, id: \.id) { g in
-                HStack(spacing: 4) {
-                    Circle().fill(GraphPalette.color(group: g.id)).frame(width: 7, height: 7)
-                    Text(g.name)
-                }
+        HStack(spacing: 12) {
+            HStack(spacing: 5) {
+                Rectangle().fill(Sky.ink.opacity(0.6)).frame(width: 16, height: 1)
+                Text("Loves")
             }
-            if hasPicks {
-                HStack(spacing: 4) {
-                    Circle().strokeBorder(Brand.yellow, style: StrokeStyle(lineWidth: 1.2, dash: [2, 2])).frame(width: 8, height: 8)
+            HStack(spacing: 5) {
+                Text("ITALIC").font(.system(size: 8.5, weight: .medium).italic())
+                Text("Threads you share")
+            }
+            if nodes.contains(where: { $0.style == .pick }) {
+                HStack(spacing: 5) {
+                    Rectangle().stroke(Sky.ink.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [3, 2])).frame(width: 16, height: 1)
                     Text("Next for you")
                 }
             }
         }
         .font(.system(size: 10.5, weight: .medium))
-        .foregroundStyle(.white.opacity(0.6))
-        .padding(.horizontal, 10)
+        .foregroundStyle(Sky.ink2)
+        .padding(.horizontal, 11)
         .padding(.vertical, 6)
-        .background(Capsule().fill(.black.opacity(0.55)))
+        .background(Capsule().fill(Sky.card))
+        .overlay(Capsule().strokeBorder(Sky.line))
     }
 }
 
@@ -683,9 +733,10 @@ private struct CanvasButton: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(Sky.ink2)
                 .frame(width: 26, height: 24)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(.white.opacity(0.1)))
+                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Sky.card))
+                .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(Sky.line))
         }
         .buttonStyle(.plain)
         .help(help)

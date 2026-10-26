@@ -18,6 +18,12 @@ struct LocalTools {
             let days: Int = if case .number(let n)? = args?["days"] { Int(n) } else { 7 }
             return await CalendarTool.events(days: days, search: text("search"))
         case "calendar_add": return await CalendarTool.add(args)
+        case "reminders_list": return await RemindersTool.list(args)
+        case "reminders_add": return await RemindersTool.add(args)
+        case "reminders_complete": return await RemindersTool.complete(text("title"))
+        case "notes_search": return await NotesTool.search(text("query"))
+        case "notes_read": return await NotesTool.read(text("note"))
+        case "notes_add": return await NotesTool.add(title: text("title"), body: text("body"))
         case "contacts_search": return await ContactsTool.search(text("query"))
         case "maps_search": return await MapsTool.search(query: text("query"), near: text("near"))
         case "maps_eta": return await MapsTool.eta(from: text("from"), to: text("to"), mode: text("mode"))

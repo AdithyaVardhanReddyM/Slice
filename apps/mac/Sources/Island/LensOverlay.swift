@@ -124,8 +124,7 @@ private struct LensBadge: View {
         ZStack(alignment: .topLeading) {
             if badge.top {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Brand.squeeze, lineWidth: 3)
-                    .shadow(color: Brand.orange.opacity(0.5), radius: 8)
+                    .strokeBorder(IslandStyle.accent, lineWidth: 2.5)
                     .frame(width: badge.rect.width, height: badge.rect.height)
             }
             pill
@@ -143,11 +142,11 @@ private struct LensBadge: View {
                         .font(.system(size: 10, weight: .heavy))
                         .foregroundStyle(.black)
                         .frame(width: 16, height: 16)
-                        .background(Circle().fill(Brand.yellow))
+                        .background(Circle().fill(.white))
                 }
                 Image(systemName: "heart.fill")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(badge.top ? Brand.yellow : .white.opacity(0.7))
+                    .foregroundStyle(badge.top ? IslandStyle.accent : .white.opacity(0.7))
                 Text(badge.label)
                     .font(.system(size: badge.top ? 13 : 11.5, weight: .bold))
                     .foregroundStyle(.white.opacity(badge.top ? 1 : 0.8))

@@ -26,8 +26,8 @@ customer-service departments, not one assistant doing hard work.
           ▼
        WORKER   gemini-3.8-flash, low thinking, one ADK session per task   worker.py
           │  taste.py     recommend, compare_tastes, taste_map, remember_person, …
-          │  mac_tools.py calendar, contacts, maps, music, messages, mail, screen
-          │  accounts.py  Gmail, Google Calendar, Slack, Notion, Drive, Ticketmaster, … (Composio)
+          │  mac_tools.py calendar, reminders, notes, contacts, maps, music, messages, mail, screen
+          │  accounts.py  Gmail, Google Calendar, Drive, Docs, Sheets, Maps, Slack, Notion, Ticketmaster (Composio)
           ▼
        OPERATOR gemini-3.8-flash + computer_use (desktop)              computer.py
           │  screenshot → action → screenshot … asks before anything irreversible
@@ -66,7 +66,8 @@ customer-service departments, not one assistant doing hard work.
 3. First launch opens Settings. General: allow Microphone and Accessibility
    (both required), plus Screen Recording (the operator, look_at_screen),
    Calendar and Contacts. Taste: add a few things you love and build the
-   profile. Accounts: connect Gmail, Slack, … (Composio sign-in).
+   profile. Integrations: connect Gmail, Slack, … (Composio sign-in; the brain needs
+   COMPOSIO_MAC_API_KEY in apps/agent/.env) and allow Reminders and Notes.
 4. Hover the notch to open the island and type, or hold **fn + control**
    anywhere, talk, and let go.
 
@@ -130,10 +131,11 @@ Requirements: Xcode 27, `brew install xcodegen`. The `.xcodeproj` and
   only when the names are equal or one starts with the other; descriptions
   are kept as notes.
 - **Integrations, three layers:** on the Mac with no sign-in (Calendar,
-  Contacts, Apple Maps, Music and Spotify, Messages, Mail, the screen);
-  cloud accounts through Composio's own approved apps (Gmail, Google
-  Calendar, Slack, Notion, Drive, Ticketmaster, Outlook, WhatsApp, YouTube,
-  Discord), each Mac its own Composio user `mac-user:<id>`; and anything
+  Reminders, Notes, Contacts, Apple Maps, Music and Spotify, Messages, Mail,
+  the screen); cloud accounts through Composio's own approved apps (Gmail,
+  Google Calendar, Drive, Docs, Sheets, Maps, Slack, Notion, Ticketmaster),
+  each Mac its own Composio user `mac-user:<id>` in the Mac app's own
+  Composio project (`COMPOSIO_MAC_API_KEY`); and anything
   without an integration through the operator. X was left out (its API is
   pay per use since Feb 2026 and needs our own developer app). Spotify's
   Web API also needs our own app; playback uses the desktop app.
@@ -293,6 +295,42 @@ How Slice gets to know someone, remembers it, and keeps learning:
 - **Rendering for checks**: `-renderSettings <dir> [-renderProfile taste.json]`
   writes the taste graph, an inspector, memory and every onboarding step as
   PNGs (needs the brain for the graph and tiles; text fields draw as blocks).
+
+## The look (2026-10-26)
+
+Light by default, dark if picked in Settings > General (`Theme`, `NSApp.appearance`); the
+island stays black to match the notch. Everything else is drawn with `UI/Sky.swift` (colour
+tokens, each with a light and a dark value) and `UI/SkyViews.swift` (gradient skies, glossy
+icon tiles, black pill buttons, chips, page dots, fields, key caps, DiceBear "Dylan" avatars).
+
+- **Icons and logo:** glossy 3D renders (Higgsfield, GPT Image 2.5, transparent, every icon made
+  with the microphone as its style reference) in `Assets.xcassets/Glossy`. The mark is a puffy
+  glass version of the two slabs; the app icon puts it on a light glass tile. No glows, no
+  gradient avatar circles.
+- **Onboarding** (`Onboarding/`): a borderless rounded window (`SkyWindow`), nine steps:
+  welcome, home, three picking steps (with From my Music, Podcasts and Books), the six
+  questions one at a time as icon cards, every permission (`System/Permissions.swift`: microphone,
+  accessibility, screen recording, location, calendar, contacts, the apps Slice drives, Full Disk
+  Access for the Podcasts library), try talking, and the taste it read.
+- **Home** is picked with the current location (CoreLocation, named by Apple Maps) or a search,
+  and shown on a close-up dotted globe (`UI/GlobeView.swift`, land dots from Natural Earth via
+  world-atlas, ISC). The exact point is saved as `profile.home` and the brain's `point_of`
+  uses it for the user's city, instead of Qloo's locality search (which put "Tokyo" in the sea).
+- **Graphs** (taste, memory) read like a drawn knowledge graph: round photos, small black badges,
+  names in outlined pills, thin ink lines, threads as small italic words; the taste graph keeps
+  the 8 strongest threads and 4 next picks.
+- **Settings**: a sidebar with the user's face and home, General as cards (look, talking, home,
+  permissions, taste switches, brain), Accounts as a grid of app tiles. Taste and memory are one
+  page, **You** (`TasteSpace` + `YouPanels`): the taste graph with people on its edge, and a panel
+  with Taste (how to read it, suggestions waiting, what's adding up, not for you), Facts and
+  people (facts, a card per person, weekly jobs) and Changes (the journal with undo).
+- **The island** stays black (it meets the notch) and is always dark (`IslandPanel` uses darkAqua):
+  solid black under the notch, dark frosted glass below (`IslandShell`, a behind-window blur, so
+  the desktop tints its edges), grey cards with a lighter header strip (`IslandCard`), a blue pill
+  for the main action, white type tags (`IslandTag`), no glows on the map, lens or cursor.
+
+Check UI without screen access: `-renderSettings <dir>` (add `-appearance dark` for dark) and
+`-snapshotWindows <dir>`, both with `-renderProfile <taste.json>`.
 
 ## Measured (2026-10-26, combined tools)
 
@@ -463,3 +501,42 @@ Gemini ends it (about ten minutes of audio).
   shop.
 - Distribution: scripts are ready (docs/mac-release.md) but need a Developer
   ID certificate, a notarytool profile and a Cloud Run deploy.
+
+## Integrations (Settings > Integrations, 2026-10-26)
+
+One page for every app Slice reads and acts in, laid out like polly-ai's
+Integrations page: a search field, a built-in "Taste by Qloo" row, filter
+pills (All apps, Connected, then three groups), a card per app grouped into
+Plans and places, Mail and messages, Notes and files, and a side panel per
+app (connection state, connect or disconnect, what Slice can do with the
+asks-first actions marked, something to try saying).
+
+- **Catalog:** `slice_mac/accounts.py` CATALOG (GET /mac/accounts). Eleven
+  apps: Google Calendar, Reminders, Google Maps, Ticketmaster, Gmail, Slack,
+  Notes, Notion, Google Drive, Google Docs, Google Sheets. Outlook, WhatsApp,
+  YouTube and Discord were dropped (WhatsApp through Composio is the Business
+  API, not a person's account).
+- **Cloud apps** sign in on Composio's hosted page (POST /mac/accounts/connect),
+  which sends the browser to GET /mac/accounts/connected; the page polls every
+  2.5 s for up to 5 minutes. POST /mac/accounts/disconnect deletes every
+  account of the app, unfinished sign-ins included. All nine toolkits have
+  Composio-managed OAuth (checked 2026-10-26), so no Google, Slack or Notion
+  developer app is needed. Key: `COMPOSIO_MAC_API_KEY` in apps/agent/.env,
+  read on every call (no restart); hosted, the Secret Manager secret
+  `slice-mac-composio-api-key`. It needs write access to sessions, tool
+  execution, connected accounts and auth configs.
+- **Reminders and Notes** are on the Mac: `Tools/RemindersTool.swift`
+  (EventKit, NSRemindersFullAccessUsageDescription) and `Tools/NotesTool.swift`
+  (AppleScript, its own Automation check for com.apple.Notes). Their cards show
+  macOS's answer (Allow, Allowed, Turn on) instead of a sign-in.
+- **Worker tools:** accounts.py adds google_calendar_free_time,
+  google_calendar_add, google_maps_places, google_maps_route, notion_read_page,
+  docs_find/read/create and sheets_find/read/add_rows/create; mac_tools.py adds
+  reminders, add_reminder, complete_reminder, find_notes, read_note, add_note.
+  Everything that writes asks first.
+- **Checks:** `-snapshotWindows <dir> -brainURL ws://127.0.0.1:<port>/mac/live
+  -integrationsOpen <slug>` draws the page with one app's panel open.
+  Verified 2026-10-26 against a brain using the Pages Composio key: catalog,
+  a sign-in link for each of the nine apps, NotConnected for Maps, Sheets and
+  Docs, disconnect clean-up. Not tried: a real sign-in, or any tool on a
+  connected account (response shapes for Maps and Sheets are read defensively).

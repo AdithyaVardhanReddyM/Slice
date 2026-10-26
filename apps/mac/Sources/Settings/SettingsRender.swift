@@ -15,10 +15,12 @@ enum SettingsRender {
             agent.useProfileForRender(profile)
         }
         let graph = (try? await BrainHTTP.post("profile/graph", body: ["profile": agent.profile])) ?? .null
-        let (nodes, edges) = TasteSpace.parse(graph)
+        let (nodes, edges) = TasteSpace.trim(TasteSpace.parse(graph))
         let model = OnboardingModel(agent: agent)
         await model.prepareForRender()
-        for url in Set(nodes.compactMap(\.image) + model.renderImages + memoryImages(agent.profile)) { _ = await ImageCache.load(url) }
+        let faces = nodes.filter { $0.style == .you || $0.style == .person }.map { Avatar.url($0.label, pixels: Int($0.radius * 5)) }
+            + [Avatar.url(agent.profile["name"]?.string ?? "")]
+        for url in Set(nodes.compactMap(\.image) + model.renderImages + memoryImages(agent.profile) + faces) { _ = await ImageCache.load(url) }
 
         func taste(_ selection: String?) -> TasteSpace {
             let layout = GraphLayout()
@@ -33,12 +35,10 @@ enum SettingsRender {
         if let pick = nodes.first(where: { $0.style == .pick }) {
             render(taste(pick.id), size: detail, to: dir.appendingPathComponent("taste-pick.png"))
         }
-        let memory = GraphLayout()
-        let (mNodes, mEdges) = MemorySpace.graph(agent.profile)
-        memory.update(nodes: mNodes, edges: mEdges, animate: false)
-        render(MemorySpace(agent: agent, layout: memory), size: detail, to: dir.appendingPathComponent("memory.png"))
-        if let person = mNodes.first(where: { $0.style == .person }) {
-            render(MemorySpace(agent: agent, layout: memory, selection: person.id), size: detail, to: dir.appendingPathComponent("memory-person.png"))
+        for panel in [YouPanel.facts, .changes] {
+            let layout = GraphLayout()
+            layout.update(nodes: nodes, edges: edges, animate: false)
+            render(TasteSpace(agent: agent, layout: layout, panel: panel), size: detail, to: dir.appendingPathComponent("you-\(panel.rawValue).png"))
         }
         for step in OnboardingModel.Step.allCases {
             model.step = step
@@ -86,15 +86,20 @@ enum SettingsRender {
     }
 
     static func render<V: View>(_ view: V, size: CGSize, to url: URL) {
+        let dark = Theme.current == .dark
         let content = view
             .frame(width: size.width, height: size.height)
             .background(Color(nsColor: .windowBackgroundColor))
             .environment(\.renderingForPreview, true)
-        let renderer = ImageRenderer(content: content)
-        renderer.scale = 2
-        if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
-           let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
-            try? png.write(to: url)
+            .environment(\.colorScheme, dark ? .dark : .light)
+        // Dynamic colours resolve against the drawing appearance, which ImageRenderer doesn't set.
+        NSAppearance(named: dark ? .darkAqua : .aqua)?.performAsCurrentDrawingAppearance {
+            let renderer = ImageRenderer(content: content)
+            renderer.scale = 2
+            if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+               let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                try? png.write(to: url)
+            }
         }
     }
 }

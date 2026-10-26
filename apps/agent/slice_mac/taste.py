@@ -140,7 +140,7 @@ def summary_for_talker(profile: dict[str, Any], taste_off: bool = False) -> str:
                 "their taste; answers are the popular picks anyone would get, and you say so.")
     called = f"Call them {profile['name']}. " if profile.get("name") else ""
     if not profile.get("seeds"):
-        return called + "No taste profile yet. If it comes up, suggest they add a few things they love in Settings > Taste."
+        return called + "No taste profile yet. If it comes up, suggest they add a few things they love in Settings > You."
     loves = ", ".join(s["name"] for s in memory.signal_seeds(profile)[:8])
     # The summary speaks to the user ("You love…"), since they read it in Settings.
     summary = f'Their taste, as Slice described it to them: "{profile["summary"]}" ' if profile.get("summary") else ""
@@ -223,9 +223,12 @@ async def signals_for(conn: Connection, also_like: str = "", for_person: str = "
 async def point_of(conn: Connection, place: str) -> dict[str, float] | None:
     """A neighbourhood, city, venue or street address to a point: a locality Qloo knows by that
     exact name first (fast, cached), then Apple Maps on the Mac (venues, addresses), then any
-    Qloo locality match."""
+    Qloo locality match. Home is the point picked on the map in onboarding (profile["home"])."""
     if not place.strip():
         return None
+    home = conn.profile.get("home") or {}
+    if home.get("lat") is not None and _key(place) in {_key(home.get("name") or ""), _key(conn.city or "")}:
+        return {"lat": float(home["lat"]), "lon": float(home["lon"])}
     if not re.search(r"\d", place):
         found = await qloo.locate(place, strict=True)
         if found:
@@ -390,7 +393,7 @@ async def explain(conn: Connection, thing: str, kind: str = "", for_person: str 
     hit = hits[0]
     sig = await signals_for(conn, "", for_person)
     if not sig.ids:
-        return {"error": "No taste profile yet: add a few loves in Settings > Taste."}
+        return {"error": "No taste profile yet: add a few loves in Settings > You."}
     k = hit.get("kind") or kind
     own = hit["id"] in sig.ids
 

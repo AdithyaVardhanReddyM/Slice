@@ -256,6 +256,8 @@ final class IslandPanel: NSPanel {
         becomesKeyOnlyIfNeeded = true
         hidesOnDeactivate = false
         isMovable = false
+        // Always dark, whatever the app's theme: it has to match the notch.
+        appearance = NSAppearance(named: .darkAqua)
     }
 
     override var canBecomeKey: Bool { true }

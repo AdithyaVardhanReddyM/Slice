@@ -7,6 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let talkKeys = TalkKeyMonitor()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Light unless the user picked dark in Settings > General (the island stays black).
+        Theme.apply()
         island = IslandController(agent: agent)
 
         talkKeys.onPress = { [agent] in agent.startTalking() }

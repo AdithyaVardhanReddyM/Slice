@@ -273,6 +273,8 @@ final class AgentSession {
         let views = tasks.flatMap(\.views)
         var urls = tasks.flatMap(\.cards).compactMap(\.image) + views.flatMap { $0.cards ?? [] }.compactMap(\.image)
         urls += [views.compactMap(\.why).first?.thing.image, nudge?.why?.thing.image].compactMap { $0 }
+        // People's faces (Avatar asks for 2.5 times the size it draws at).
+        urls += views.compactMap(\.name).map { Avatar.url($0, pixels: 110) }
         for url in urls { _ = await ImageCache.load(url) }
         await MapShots.prepare(views)
     }

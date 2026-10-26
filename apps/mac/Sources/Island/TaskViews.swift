@@ -27,13 +27,13 @@ struct TaskCardView: View {
     @State private var reply = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        IslandCard(highlighted: task.needsYou) {
             HStack(spacing: 8) {
                 statusIcon
                     .frame(width: 18, height: 16)
                 Text(task.title)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(IslandStyle.text)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 if task.isOver {
@@ -42,17 +42,11 @@ struct TaskCardView: View {
                     Button("Stop") { agent.cancel(task) }
                         .buttonStyle(.plain)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(IslandStyle.text3)
                 }
             }
+        } content: {
             content
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(task.needsYou ? 0.1 : 0.06)))
-        .overlay {
-            if task.needsYou {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Brand.orange.opacity(0.7), lineWidth: 1)
-            }
         }
     }
 
@@ -63,11 +57,11 @@ struct TaskCardView: View {
             Bars(level: { t in 0.18 + 0.12 * sin(t * 4) }, spread: 1.2)
                 .scaleEffect(0.8)
         case "needs_input", "needs_confirmation":
-            Image(systemName: "hand.raised.fill").font(.system(size: 12)).foregroundStyle(Brand.orange)
+            Image(systemName: "hand.raised.fill").font(.system(size: 12)).foregroundStyle(IslandStyle.accent)
         case "done":
-            Image(systemName: "checkmark.circle.fill").font(.system(size: 13)).foregroundStyle(Brand.yellow)
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 13)).foregroundStyle(IslandStyle.good)
         case "failed":
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 12)).foregroundStyle(Brand.orange)
+            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 12)).foregroundStyle(IslandStyle.bad)
         default:
             Image(systemName: "xmark.circle").font(.system(size: 13)).foregroundStyle(.white.opacity(0.4))
         }
@@ -80,7 +74,7 @@ struct TaskCardView: View {
         ForEach(shown) { view in
             TaskViewCard(view: view, agent: agent, taskTitle: task.title)
                 .padding(10)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.05)))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(IslandStyle.raised.opacity(0.6)))
                 .transition(.opacity)
         }
     }
@@ -141,7 +135,7 @@ struct TaskCardView: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.white.opacity(0.08)))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(IslandStyle.raised))
             }
         case "done":
             if let say = task.say {
@@ -186,13 +180,7 @@ struct CardTile: View {
                     RemoteImage(url: card.image)
                         .frame(width: 132, height: 78)
                     if let tag = card.tag {
-                        Text(tag)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(.black)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(Brand.yellow))
-                            .padding(6)
+                        IslandTag(text: tag).padding(6)
                     }
                 }
                 .frame(width: 132, height: 78)
@@ -236,7 +224,7 @@ private struct Thumbs: View {
                 .foregroundStyle(up ? Color.black : Color.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(Capsule().fill(up ? AnyShapeStyle(Brand.yellow) : AnyShapeStyle(Color.black.opacity(0.7))))
+                .background(Capsule().fill(up ? AnyShapeStyle(Color.white) : AnyShapeStyle(Color.black.opacity(0.7))))
         } else if hovering {
             HStack(spacing: 3) {
                 thumb("hand.thumbsup.fill", "up", help: "I love this: add it to my taste")
@@ -263,11 +251,11 @@ struct IslandButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(primary ? Color.black : Color.white.opacity(0.85))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Capsule().fill(primary ? AnyShapeStyle(Brand.yellow) : AnyShapeStyle(Color.white.opacity(0.12))))
+            .font(.system(size: 12.5, weight: .semibold))
+            .foregroundStyle(primary ? Color.white : IslandStyle.text)
+            .padding(.horizontal, 14)
+            .frame(height: 30)
+            .background(Capsule().fill(primary ? IslandStyle.accent : IslandStyle.raised))
             .opacity(configuration.isPressed ? 0.75 : 1)
     }
 }

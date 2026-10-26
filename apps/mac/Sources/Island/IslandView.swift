@@ -9,9 +9,9 @@ struct IslandView: View {
         let width = size.width + 2 * IslandModel.shoulder
 
         ZStack(alignment: .top) {
-            NotchShape(shoulder: IslandModel.shoulder, bottomRadius: Self.radius(mode))
-                .fill(Color.black)
-                .shadow(color: .black.opacity(mode == .open ? 0.4 : 0), radius: 20, y: 10)
+            IslandShell(shape: NotchShape(shoulder: IslandModel.shoulder, bottomRadius: Self.radius(mode)), height: size.height,
+                        solidTop: max(model.notch.height, 26) + 2, glass: mode != .closed && mode != .compact, rendering: model.rendering)
+                .shadow(color: .black.opacity(mode == .open ? 0.35 : 0), radius: 18, y: 10)
 
             content(mode)
                 .padding(.horizontal, IslandModel.shoulder)
@@ -77,7 +77,7 @@ struct NudgePill: View {
         HStack(spacing: 8) {
             Image(systemName: Self.symbol(nudge.kind))
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Brand.yellow)
+                .foregroundStyle(IslandStyle.accent)
             Text(nudge.kind == "why" ? "\(nudge.title): \(nudge.line)" : nudge.title)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.white.opacity(0.92))
@@ -117,7 +117,7 @@ private struct Caption: View {
     var body: some View {
         Text(text)
             .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(isError ? Brand.orange : .white.opacity(0.92))
+            .foregroundStyle(isError ? IslandStyle.bad : IslandStyle.text)
             .lineLimit(2)
             .truncationMode(.head)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -142,7 +142,7 @@ struct StatusGlyph: View {
             Bars(level: { t in 0.18 + 0.12 * sin(t * 4) }, spread: 1.2)
         case .idle:
             Circle()
-                .fill(agent.connection == .online ? Brand.yellow : Color.white.opacity(0.3))
+                .fill(agent.connection == .online ? IslandStyle.good : Color.white.opacity(0.3))
                 .frame(width: 6, height: 6)
         }
     }
@@ -161,7 +161,7 @@ struct Bars: View {
                     let wobble = 0.55 + 0.45 * sin(t * 7 + Double(i) * spread)
                     let h = max(0.15, min(1, level(t + Double(i) * 0.08) * wobble * 1.6))
                     Capsule()
-                        .fill(Brand.squeeze)
+                        .fill(IslandStyle.accent)
                         .frame(width: 2.5, height: 4 + 12 * h)
                 }
             }
@@ -240,9 +240,9 @@ private struct OpenIsland: View {
             .font(.system(size: 11))
             .foregroundStyle(.white.opacity(0.45))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white.opacity(0.08)))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(IslandStyle.card))
     }
 }
 
@@ -285,7 +285,7 @@ private struct Conversation: View {
                     if let error = agent.lastError {
                         Text(error)
                             .font(.system(size: 12))
-                            .foregroundStyle(Brand.orange)
+                            .foregroundStyle(IslandStyle.bad)
                     }
                     Color.clear.frame(height: 1).id("end")
                 }
@@ -310,7 +310,7 @@ private struct TurnRow: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.12)))
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(IslandStyle.raised))
             }
         case .agent:
             Text(turn.text)
@@ -329,7 +329,7 @@ private struct ActivityRow: View {
         HStack(spacing: 8) {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(activity.kind == "qloo" ? Brand.yellow : .white.opacity(0.6))
+                .foregroundStyle(activity.kind == "qloo" ? IslandStyle.accent : .white.opacity(0.6))
                 .frame(width: 16)
             Text(activity.label)
                 .foregroundStyle(.white.opacity(0.8))
@@ -378,6 +378,6 @@ private struct KeyCap: View {
             .foregroundStyle(.white.opacity(0.75))
             .padding(.horizontal, 5)
             .frame(minWidth: 18, minHeight: 16)
-            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(.white.opacity(0.3), lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.white.opacity(0.12)))
     }
 }

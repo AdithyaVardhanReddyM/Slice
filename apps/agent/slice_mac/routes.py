@@ -11,8 +11,10 @@ POST /mac/profile/edit           {profile, op, ...} -> {profile}: love, forget, 
 POST /mac/profile/graph          {profile, fresh?} -> the taste graph (graph.py)
 GET  /mac/onboarding/starters?step=music|screen|everyday   opening tiles
 POST /mac/onboarding/more        {step, picked: [ids], exclude: [ids]} -> tiles that fit the picks
-GET  /mac/accounts?user=         which cloud accounts are connected
+GET  /mac/accounts?user=         Settings > Integrations: every app, its group and state (accounts.py)
 POST /mac/accounts/connect       {user, app} -> {url} to sign in
+GET  /mac/accounts/connected     where the sign-in page sends the browser when it's done
+POST /mac/accounts/disconnect    {user, app} -> the catalog, without that app's accounts
 
 The WebSocket carries JSON text frames both ways plus binary audio (PCM16 mono,
 16 kHz up while the talk keys are held, 24 kHz down). Message types are listed
@@ -29,6 +31,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 from google.adk.agents.live_request_queue import LiveRequestQueue
 from google.adk.events import Event
 from google.adk.runners import Runner
@@ -108,6 +111,7 @@ class EditProfile(BaseModel):
     text: str = ""
     about: str = ""
     city: str = ""
+    home: dict[str, Any] | None = None
     name: str = ""
     source: str = "settings"
 
@@ -138,6 +142,11 @@ async def edit_profile(body: EditProfile) -> dict[str, Any]:
         await memory.undo(profile, body.id)
     elif op == "city":
         profile["city"] = body.city.strip()
+        # The map point from Settings, or none: a typed name alone can't keep the old point.
+        if body.home and body.home.get("lat") is not None:
+            profile["home"] = body.home
+        else:
+            profile.pop("home", None)
         memory.journal(profile, "fact", f"You live in {profile['city']}")
     elif op == "forget_routine":
         profile["routines"] = [r for r in profile.get("routines") or [] if r.get("id") != body.id]
@@ -182,10 +191,7 @@ async def onboarding_more(body: More) -> dict[str, Any]:
 
 @router.get("/accounts", dependencies=[Depends(_require_token)])
 async def account_status(user: str) -> dict[str, Any]:
-    try:
-        return {"apps": accounts.APPS, "connected": await accounts.status(user)}
-    except Exception as err:
-        return {"apps": accounts.APPS, "connected": {}, "error": str(err)[:300]}
+    return await accounts.catalog(user)
 
 
 class Connect(BaseModel):
@@ -194,11 +200,46 @@ class Connect(BaseModel):
 
 
 @router.post("/accounts/connect", dependencies=[Depends(_require_token)])
-async def account_connect(body: Connect) -> dict[str, Any]:
+async def account_connect(body: Connect, request: Request) -> dict[str, Any]:
+    # Hosted, the brain sits behind Cloud Run's proxy: the browser came in over https.
+    scheme = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
     try:
-        return {"url": await accounts.connect_link(body.user, body.app)}
+        return {"url": await accounts.connect_link(body.user, body.app, f"{scheme}://{host}/mac/accounts/connected")}
     except Exception as err:
-        raise HTTPException(status_code=400, detail=str(err)[:300]) from err
+        raise HTTPException(status_code=400, detail=accounts.explain(err)) from err
+
+
+@router.post("/accounts/disconnect", dependencies=[Depends(_require_token)])
+async def account_disconnect(body: Connect) -> dict[str, Any]:
+    try:
+        await accounts.disconnect(body.user, body.app)
+    except Exception as err:
+        raise HTTPException(status_code=400, detail=accounts.explain(err)) from err
+    return await accounts.catalog(body.user)
+
+
+_CONNECTED_PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Connected to Slice</title>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #F3F6FB; color: #0D1220;
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+  main { max-width: 380px; padding: 36px 32px; border-radius: 22px; background: #fff; text-align: center;
+         border: 1px solid rgba(13, 18, 32, .08); box-shadow: 0 5px 14px rgba(16, 24, 40, .07); }
+  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.4px; }
+  p { margin: 0; color: #5D6679; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0A0D14; color: #F1F4FA; } main { background: #131823; border-color: rgba(255, 255, 255, .09); }
+    p { color: #A3ACBE; }
+  }
+</style></head><body><main><h1>You're connected</h1>
+<p>You can close this tab and go back to Slice. It will show the app as connected in a moment.</p></main></body></html>"""
+
+
+@router.get("/accounts/connected", response_class=HTMLResponse)
+async def account_connected() -> str:
+    """The page the browser lands on after a sign-in. No token: it shows nothing about the user."""
+    return _CONNECTED_PAGE
 
 
 def _now(timezone: str | None) -> str:

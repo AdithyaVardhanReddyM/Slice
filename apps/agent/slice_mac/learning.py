@@ -7,7 +7,7 @@
   on a card (`feedback` frames).
 - Quiet signals add up in memory.observe; when one clears the bar, an "Add it to
   your taste?" pill drops from the notch (at most one every 20 minutes; the rest
-  wait in Settings > Memory). The answer comes back as `learn_answer`.
+  wait in Settings > You). The answer comes back as `learn_answer`.
 - After the loves change, the taste is re-read a few seconds later (taste.reread)
   and the Mac gets the new profile; the journal says what changed and why.
 """
@@ -88,7 +88,7 @@ async def observe(conn: Connection, entity: dict[str, Any] | None, event: str) -
 async def offer(conn: Connection, suggestion: dict[str, Any]) -> None:
     now = time.monotonic()
     if now - conn.last_learn_nudge < LEARN_NUDGE_EVERY_S:
-        return  # It waits in Settings > Memory.
+        return  # It waits in Settings > You.
     conn.last_learn_nudge = now
     await conn.bridge.send_json({"type": "nudge", "nudge": {
         "id": f"learn-{suggestion['id']}", "kind": "learn", "title": f"Add {suggestion['name']} to your taste?",

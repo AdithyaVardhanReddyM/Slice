@@ -65,10 +65,10 @@ private struct CursorOverlay: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if model.operating {
+                // A crisp edge round the screen while Slice works on it (no glow).
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Brand.squeeze, lineWidth: 4)
-                    .blur(radius: 6)
-                    .opacity(0.8)
+                    .strokeBorder(IslandStyle.accent, lineWidth: 3)
+                    .opacity(0.9)
                     .transition(.opacity)
             }
             if let point = model.point {
@@ -92,14 +92,14 @@ private struct ClickMark: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Brand.orange, lineWidth: 2)
+                .stroke(IslandStyle.accent, lineWidth: 2)
                 .frame(width: 44, height: 44)
                 .scaleEffect(ripple ? 1.6 : 0.6)
                 .opacity(ripple ? 0 : 1)
             Circle()
-                .fill(Brand.orange)
+                .fill(IslandStyle.accent)
                 .frame(width: 12, height: 12)
-                .shadow(color: Brand.orange.opacity(0.6), radius: 6)
+                .overlay(Circle().strokeBorder(.white, lineWidth: 2))
             if !label.isEmpty {
                 Text(label)
                     .font(.system(size: 12, weight: .medium))

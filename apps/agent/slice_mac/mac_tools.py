@@ -93,6 +93,73 @@ async def add_calendar_event(title: str, start: str, end: str, tool_context: Too
     return await _mac(tool_context, "calendar_add", {"title": title, "start": start, "end": end, "location": location, "notes": notes}, label=f"Added {title} to your calendar")
 
 
+async def reminders(tool_context: ToolContext, list_name: str = "", include_done: bool = False) -> dict[str, Any]:
+    """What's on the user's Reminders lists (the Mac's Reminders app, iCloud lists included).
+
+    Args:
+        list_name: Only this list ("Groceries"); every list when empty.
+        include_done: Also the ones already ticked off in the last two weeks.
+    """
+    return await _mac(tool_context, "reminders_list", {"list": list_name, "done": include_done}, label="Checked your reminders")
+
+
+async def add_reminder(title: str, tool_context: ToolContext, due: str = "", notes: str = "", list_name: str = "") -> dict[str, Any]:
+    """Add a reminder to the Mac's Reminders (asks the user first).
+
+    Args:
+        title: What to remember ("Pick up the cake").
+        due: Optional local time to be reminded, ISO 8601 ("2026-10-29T17:00"), or a date ("2026-10-29").
+        notes: Optional notes.
+        list_name: Optional list to put it on; the default list otherwise.
+    """
+    when = f"{due}" + (f", on {list_name}" if list_name else "")
+    if not await _confirm(tool_context, f"Add “{title}” to your reminders?", when.strip(", ")):
+        return {"cancelled": True}
+    return await _mac(tool_context, "reminders_add", {"title": title, "due": due, "notes": notes, "list": list_name},
+                      label=f"Added {title} to Reminders")
+
+
+async def complete_reminder(title: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Tick off a reminder by its title (asks the user first).
+
+    Args:
+        title: The reminder's title, or enough of it to find it.
+    """
+    if not await _confirm(tool_context, f"Tick off “{title}”?"):
+        return {"cancelled": True}
+    return await _mac(tool_context, "reminders_complete", {"title": title}, label=f"Ticked off {title}")
+
+
+async def find_notes(query: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Search the Mac's Notes by title and text; gives each note's id, title, folder and a snippet.
+
+    Args:
+        query: Words in the note ("packing list", "Sam's address").
+    """
+    return await _mac(tool_context, "notes_search", {"query": query}, label=f'Searched your notes for "{query}"', timeout=30)
+
+
+async def read_note(note: str, tool_context: ToolContext) -> dict[str, Any]:
+    """The full text of one note in the Mac's Notes.
+
+    Args:
+        note: Its id from find_notes, or its exact title.
+    """
+    return await _mac(tool_context, "notes_read", {"note": note}, label="Read a note", timeout=30)
+
+
+async def add_note(title: str, body: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Write a new note in the Mac's Notes (a plan, a list, an idea; asks the user first).
+
+    Args:
+        title: The note's title.
+        body: Its text; one item per line for a list.
+    """
+    if not await _confirm(tool_context, f"Write the note “{title}”?", body[:600]):
+        return {"cancelled": True}
+    return await _mac(tool_context, "notes_add", {"title": title, "body": body}, label=f"Wrote {title} in Notes", timeout=30)
+
+
 async def find_contact(name: str, tool_context: ToolContext) -> dict[str, Any]:
     """Look someone up in the Mac's Contacts (phone numbers, emails, address, birthday).
 
@@ -188,6 +255,7 @@ async def open_link(url: str, tool_context: ToolContext) -> dict[str, Any]:
 
 
 TOOLS = [
-    what_is_in_front, look_at_screen, calendar_events, add_calendar_event, find_contact,
+    what_is_in_front, look_at_screen, calendar_events, add_calendar_event,
+    reminders, add_reminder, complete_reminder, find_notes, read_note, add_note, find_contact,
     find_on_map, travel_time, now_playing, open_in_music, send_imessage, send_file_imessage, draft_email_in_mail, open_link,
 ]

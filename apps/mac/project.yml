@@ -59,7 +59,11 @@ targets:
         NSMicrophoneUsageDescription: Slice listens while you hold fn and control, so you can talk to it.
         NSAppleEventsUsageDescription: Slice reads the page you're on, sends messages you approve, and checks what's playing.
         NSCalendarsFullAccessUsageDescription: Slice reads your plans so it can work around them, and adds events you approve.
+        NSRemindersFullAccessUsageDescription: Slice reads your lists and adds the reminders you approve.
+        NSRemindersUsageDescription: Slice reads your lists and adds the reminders you approve.
         NSContactsUsageDescription: Slice looks up the people you mention, to message or plan with them.
+        NSLocationUsageDescription: Slice starts places and plans from where you are.
+        NSLocationWhenInUseUsageDescription: Slice starts places and plans from where you are.
         NSAppTransportSecurity:
           # The brain runs on localhost (ws://) while developing.
           NSAllowsLocalNetworking: true

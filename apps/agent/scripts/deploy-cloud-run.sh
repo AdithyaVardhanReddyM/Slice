@@ -13,7 +13,7 @@
 #   project            GCP_PROJECT, else GOOGLE_CLOUD_PROJECT in apps/agent/.env, else `gcloud config`
 #   CONVEX_URL, CONVEX_SITE_URL     the environment, else apps/agent/.env (they are addresses, not secrets)
 #   secrets            Secret Manager: slice-mac-client-token, slice-qloo-proxy-secret,
-#                      slice-composio-api-key, and (optional) slice-ticketmaster-api-key.
+#                      slice-mac-composio-api-key, and (optional) slice-ticketmaster-api-key.
 #                      `setup` fills them from apps/agent/.env and makes the client token.
 #
 # Settings you may override in the environment:
@@ -75,7 +75,8 @@ IMAGE_REPO="$REGION-docker.pkg.dev/$PROJECT/$REPO"
 SECRETS=(
   "slice-mac-client-token:MAC_CLIENT_TOKEN:required"
   "slice-qloo-proxy-secret:QLOO_PROXY_SECRET:required"
-  "slice-composio-api-key:COMPOSIO_API_KEY:required"
+  # The Mac app's own Composio project (slice_mac/accounts.py), not the Pages one.
+  "slice-mac-composio-api-key:COMPOSIO_MAC_API_KEY:required"
   "slice-ticketmaster-api-key:TICKETMASTER_API_KEY:optional"
 )
 

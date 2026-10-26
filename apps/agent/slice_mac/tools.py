@@ -48,8 +48,9 @@ async def quick_picks(kind: str, tool_context: ToolContext, also_like: str = "",
 
 async def start_task(goal: str, title: str, tool_context: ToolContext) -> dict[str, Any]:
     """Hand real work to a background task: anything with several steps, the user's accounts or
-    data (calendar, email, Slack, Notion, Drive, contacts, messages), planning, gifting, trips,
-    comparing tastes, writing something, or doing things on the screen. Before calling, say one
+    data (calendar, reminders, notes, email, Slack, Notion, Drive, Docs, Sheets, Maps, contacts,
+    messages), planning, gifting, trips, comparing tastes, writing something, or doing things on
+    the screen. Before calling, say one
     short line ("On it"). The answer comes back later; until then, don't guess at the result.
 
     Args:

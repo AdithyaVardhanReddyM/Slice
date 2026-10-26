@@ -1,9 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// Settings > Your taste: the taste graph (slice_mac/graph.py), an inspector for whatever is
-/// clicked, filters, and the ways to add to it. Every change goes through the brain
-/// (TasteStore.edit), so it lands in the journal and the taste is re-read.
+/// Settings > You: the taste graph (slice_mac/graph.py) with the people on its edge, a panel for
+/// whatever is clicked or for what Slice knows (YouPanels: taste, facts and people, changes),
+/// filters, and the ways to add to it. Every change goes through the brain (TasteStore.edit), so it
+/// lands in the journal and the taste is re-read.
 struct TasteSpace: View {
     let agent: AgentSession
 
@@ -20,14 +21,16 @@ struct TasteSpace: View {
     @State private var results: [JSONValue] = []
     @State private var showResults = false
     @State private var city = ""
+    @State private var panel: YouPanel
     @Environment(\.renderingForPreview) private var rendering
 
     private var profile: JSONValue { agent.profile }
 
-    init(agent: AgentSession, layout: GraphLayout = GraphLayout(), selection: String? = nil) {
+    init(agent: AgentSession, layout: GraphLayout = GraphLayout(), selection: String? = nil, panel: YouPanel = .taste) {
         self.agent = agent
         _layout = State(initialValue: layout)
         _selection = State(initialValue: selection)
+        _panel = State(initialValue: panel)
     }
 
     var body: some View {
@@ -36,26 +39,37 @@ struct TasteSpace: View {
             filters
             HStack(alignment: .top, spacing: 12) {
                 ZStack(alignment: .topTrailing) {
-                    GraphCanvas(layout: layout, selection: $selection, hidden: hidden, interactive: !rendering)
-                    if layout.nodes.count <= 1 { emptyState }
+                    // With nothing loved yet the graph is only you, so the empty state stands in for it.
+                    if layout.nodes.count <= 1 {
+                        GraphPalette.field
+                        emptyState
+                    } else {
+                        GraphCanvas(layout: layout, selection: $selection, hidden: hidden, interactive: !rendering)
+                    }
                     if loading {
                         HStack(spacing: 6) {
                             ProgressView().controlSize(.small)
-                            Text("Reading your taste").font(.caption).foregroundStyle(.white.opacity(0.7))
+                            Text("Reading your taste").font(.system(size: 12, weight: .medium)).foregroundStyle(Sky.ink2)
                         }
-                        .padding(8)
-                        .background(Capsule().fill(.black.opacity(0.6)))
-                        .padding(10)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(Capsule().fill(Sky.card))
+                        .overlay(Capsule().strokeBorder(Sky.line))
+                        .padding(12)
                     }
                 }
                 .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .skyCard(radius: 20)
                 inspector
-                    .frame(width: 272)
+                    .frame(width: 340)
                     .frame(maxHeight: .infinity, alignment: .top)
             }
             addBar
         }
-        .padding(18)
+        .padding(.horizontal, 28)
+        .padding(.top, 22)
+        .padding(.bottom, 22)
         .onAppear {
             city = profile["city"]?.string ?? ""
             if !rendering { load(fresh: false) }
@@ -69,47 +83,60 @@ struct TasteSpace: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Your taste").font(.system(size: 22, weight: .bold))
+                Text("You").font(.system(size: 28, weight: .bold)).tracking(-0.6)
                 Text(profile["summary"]?.string ?? "Add a few things you love and Slice will read your taste from them.")
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Sky.ink2)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
-                let words = (profile["tags"]?.array ?? []).compactMap { $0["name"]?.string }.prefix(8)
+                let words = (profile["tags"]?.array ?? []).compactMap { $0["name"]?.string }.prefix(6)
                 if !words.isEmpty {
                     HStack(spacing: 6) {
-                        Text("Reads as").font(.caption).foregroundStyle(.secondary)
+                        Text("Reads as").font(.system(size: 12, weight: .medium)).foregroundStyle(Sky.ink3)
                         ForEach(Array(words), id: \.self) { word in
                             Text(word)
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Brand.orange.opacity(0.14)))
-                                .foregroundStyle(Color.primary.opacity(0.85))
+                                .font(.system(size: 12, weight: .semibold))
+                                .padding(.horizontal, 10)
+                                .frame(height: 24)
+                                .background(Capsule().fill(Sky.accentSoft))
+                                .foregroundStyle(Sky.accent)
+                                .fixedSize()
                         }
                     }
                 }
             }
             Spacer()
             HStack(spacing: 8) {
-                Menu("Try a taste") {
+                Menu {
                     ForEach(Self.presets, id: \.name) { preset in
                         Button(preset.name) { tryPreset(preset) }
                     }
+                } label: {
+                    Label("Try a taste", systemImage: "arrow.left.arrow.right")
                 }
+                .menuStyle(.button)
+                .buttonStyle(SecondaryButton())
+                .menuIndicator(.hidden)
                 .fixedSize()
                 .help("Swap in a ready-made taste, to see how every answer changes")
                 Button {
                     load(fresh: true)
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    Image(systemName: "arrow.clockwise").font(.system(size: 12, weight: .semibold))
                 }
+                .buttonStyle(SecondaryButton())
                 .help("Read the graph again")
                 .disabled(loading)
             }
         }
     }
 
-    private var filters: some View {
+    @ViewBuilder private var filters: some View {
+        // Nothing to filter until there's more than you on the graph.
+        if layout.nodes.count > 1 { filterChips }
+    }
+
+    private var filterChips: some View {
         HStack(spacing: 6) {
             let present = Set(layout.nodes.compactMap(\.group))
             ForEach(GraphPalette.groups.filter { present.contains($0.id) }, id: \.id) { group in
@@ -117,16 +144,16 @@ struct TasteSpace: View {
                     if hiddenGroups.contains(group.id) { hiddenGroups.remove(group.id) } else { hiddenGroups.insert(group.id) }
                 }
             }
-            Divider().frame(height: 16).padding(.horizontal, 4)
-            FilterChip(title: "People", color: .white, on: showPeople) { showPeople.toggle() }
-            FilterChip(title: "Next for you", color: Brand.yellow, on: showNext) { showNext.toggle() }
+            if !present.isEmpty { Divider().frame(height: 16).padding(.horizontal, 4) }
+            FilterChip(title: "People", color: Sky.ink2, on: showPeople) { showPeople.toggle() }
+            FilterChip(title: "Next for you", color: Sky.accent, on: showNext) { showNext.toggle() }
             Spacer()
             if let busy {
                 ProgressView().controlSize(.small)
-                Text(busy).font(.callout).foregroundStyle(.secondary)
+                Text(busy).font(.system(size: 12.5)).foregroundStyle(Sky.ink2)
             }
             if let problem {
-                Text(problem).font(.callout).foregroundStyle(.red).lineLimit(1)
+                Text(problem).font(.system(size: 12.5)).foregroundStyle(Sky.bad).lineLimit(1)
             }
         }
     }
@@ -156,17 +183,18 @@ struct TasteSpace: View {
 
     private var emptyState: some View {
         VStack(spacing: 10) {
+            Avatar(seed: profile["name"]?.string ?? TasteStore.userID, size: 72, border: 0)
+                .padding(.bottom, 6)
             Text("Your taste graph starts here")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Sky.ink)
             Text("Add a few films, artists, books or places you love below, or set Slice up from the start.")
-                .font(.system(size: 12))
-                .foregroundStyle(.white.opacity(0.6))
+                .font(.system(size: 13))
+                .foregroundStyle(Sky.ink2)
                 .multilineTextAlignment(.center)
-                .frame(width: 280)
+                .frame(width: 300)
             Button("Set up my taste") { OnboardingWindow.shared.show(agent: agent) }
-                .buttonStyle(.borderedProminent)
-                .tint(Brand.orange)
+                .buttonStyle(PrimaryButton())
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -175,20 +203,32 @@ struct TasteSpace: View {
 
     @ViewBuilder private var inspector: some View {
         let node = selection.flatMap(layout.node)
+        let change: ProfileEdit = { op, fields, label in edit(op, fields, label: label) }
         let content = VStack(alignment: .leading, spacing: 12) {
             if let node {
                 details(node)
             } else {
-                overview
+                switch panel {
+                case .taste:
+                    overview
+                    Divider().overlay(Sky.line)
+                    LearningNotes(profile: profile, edit: change)
+                case .facts: FactsAndPeople(profile: profile, edit: change)
+                case .changes: ChangesList(profile: profile, edit: change)
+                }
             }
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        Group {
-            if rendering { content } else { ScrollView { content } }
+        VStack(spacing: 0) {
+            if node == nil {
+                PanelPicker(panel: $panel)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+            }
+            if rendering { content.frame(maxHeight: .infinity, alignment: .top).clipped() } else { ScrollView { content }.scrollIndicators(.never) }
         }
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.primary.opacity(0.04)))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.primary.opacity(0.08)))
+        .skyCard(radius: 20)
     }
 
     private var overview: some View {
@@ -196,14 +236,15 @@ struct TasteSpace: View {
         let people = layout.nodes.filter { $0.style == .person }
         let threads = layout.nodes.filter { $0.style == .tag }
         return VStack(alignment: .leading, spacing: 12) {
-            Text("How to read it").font(.headline)
-            InspectorLine(symbol: "circle.fill", color: Brand.orange, text: "You're in the middle, with what you love around you. Bigger means it steers your picks more.")
-            InspectorLine(symbol: "capsule.fill", color: Brand.sand, text: "The words between them are what Qloo finds they share: the threads of your taste.")
-            InspectorLine(symbol: "circle.dashed", color: Brand.yellow, text: "Dashed circles are what Slice would suggest next, tied to the loves behind them.")
-            InspectorLine(symbol: "person.2.fill", color: .secondary, text: "People you've saved sit on the outside, linked to what you share.")
+            Text("How to read it").font(.system(size: 15, weight: .semibold))
+            InspectorLine(symbol: "person.crop.circle", color: Sky.ink, text: "You're in the middle, with what you love around you. Bigger means it steers your picks more.")
+            InspectorLine(symbol: "textformat", color: Sky.ink, text: "The small italic words are what Qloo finds your loves share: the threads of your taste.")
+            InspectorLine(symbol: "circle.dashed", color: Sky.ink, text: "Dashed circles are what Slice would suggest next, tied to the loves behind them.")
+            InspectorLine(symbol: "person.2", color: Sky.ink, text: "People you've saved sit on the outside, linked to what you share.")
             Text("Drag anything to move it. Click to see more and change it.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 12.5))
+                .foregroundStyle(Sky.ink2)
+                .fixedSize(horizontal: false, vertical: true)
             Divider()
             HStack(spacing: 18) {
                 Stat(number: loves.count, label: loves.count == 1 ? "love" : "loves")
@@ -211,17 +252,19 @@ struct TasteSpace: View {
                 Stat(number: people.count, label: people.count == 1 ? "person" : "people")
             }
             Divider()
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Home").font(.subheadline.weight(.semibold))
-                TextField("Williamsburg, Brooklyn", text: $city)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit {
-                        let place = city.trimmingCharacters(in: .whitespaces)
-                        if !place.isEmpty, place != profile["city"]?.string {
-                            edit("city", ["city": .string(place)], label: "Saving your home")
-                        }
-                    }
-                Text("Places and plans start around here.").font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Image(systemName: "house.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Sky.accent)
+                    .frame(width: 30, height: 30)
+                    .background(Circle().fill(Sky.accentSoft))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(city.isEmpty ? "No home yet" : city).font(.system(size: 13.5, weight: .semibold))
+                    Text("Places and plans start here").font(.system(size: 11.5)).foregroundStyle(Sky.ink2)
+                }
+                Spacer(minLength: 4)
+                Button("Change") { NotificationCenter.default.post(name: SettingsView.selectTab, object: SettingsView.Tab.general) }
+                    .buttonStyle(InlineAction(size: 12.5))
             }
         }
     }
@@ -255,7 +298,7 @@ struct TasteSpace: View {
                 Label(line, systemImage: "clock").font(.callout).foregroundStyle(.secondary)
             }
             if raw["steers"]?.bool == true {
-                Label("Steers your picks", systemImage: "arrow.triangle.branch").font(.callout).foregroundStyle(Brand.orange)
+                Label("Steers your picks", systemImage: "arrow.triangle.branch").font(.callout).foregroundStyle(Sky.accent)
             } else {
                 Label("Not steering right now: only your 20 strongest loves do", systemImage: "pause.circle").font(.callout).foregroundStyle(.secondary)
             }
@@ -270,7 +313,7 @@ struct TasteSpace: View {
                     Label("Not for me anymore", systemImage: "hand.thumbsdown")
                 }
             }
-            .buttonStyle(.link)
+            .buttonStyle(InlineAction())
         case .tag:
             Text(node.detail ?? "").font(.callout).fixedSize(horizontal: false, vertical: true)
             Text("Qloo finds this in several of the things you love, so Slice leans on it when it picks for you.")
@@ -278,17 +321,18 @@ struct TasteSpace: View {
             Button { ask("Recommend me something \(node.label.lowercased()) I haven't seen or heard.") } label: {
                 Label("Ask Slice for more like this", systemImage: "text.bubble")
             }
-            .buttonStyle(.link)
+            .buttonStyle(InlineAction())
         case .pick:
             if let because = raw["because"]?.array.compactMap(\.string), !because.isEmpty {
                 Label("Because you love \(because.joined(separator: " and "))", systemImage: "arrow.triangle.branch")
-                    .font(.callout).foregroundStyle(Brand.orange)
+                    .font(.callout).foregroundStyle(Sky.accent)
             }
             if let detail = node.detail { Text(detail).font(.callout).fixedSize(horizontal: false, vertical: true) }
             HStack {
                 Button("Add to my taste") { edit("love", ["items": [entity(node)]], label: "Adding \(node.label)") }
-                    .buttonStyle(.borderedProminent).tint(Brand.orange)
+                    .buttonStyle(PrimaryButton(arrow: false, compact: true))
                 Button("Not for me") { edit("dislike", ["items": [entity(node)]], label: "Saving") }
+                    .buttonStyle(SecondaryButton(compact: true))
             }
         case .person:
             if let detail = node.detail { Text(detail.capitalizedFirst).font(.callout) }
@@ -305,14 +349,16 @@ struct TasteSpace: View {
             Button { edit("forget_person", ["name": .string(node.label)], label: "Forgetting \(node.label)") } label: {
                 Label("Forget \(node.label)", systemImage: "person.crop.circle.badge.minus")
             }
-            .buttonStyle(.link)
+            .buttonStyle(InlineAction(color: Sky.bad))
         case .theirLove:
             Text("One of \(raw["owner"]?.string ?? "their") loves.").font(.callout).foregroundStyle(.secondary)
             if let detail = node.detail { Text(detail).font(.callout).fixedSize(horizontal: false, vertical: true) }
             Button("I love it too") { edit("love", ["items": [entity(node)]], label: "Adding \(node.label)") }
+                .buttonStyle(PrimaryButton(arrow: false, compact: true))
         case .dislike:
             Text("Not for you: Slice won't pick it, and flags it on screen.").font(.callout).foregroundStyle(.secondary)
             Button("Take it back") { edit("undislike", ["id": raw["entity"] ?? .string(node.id)], label: "Saving") }
+                .buttonStyle(SecondaryButton(compact: true))
         case .hub, .fact:
             EmptyView()
         }
@@ -327,10 +373,11 @@ struct TasteSpace: View {
                     ForEach(tags) { tag in
                         Button(tag.label) { selection = tag.id }
                             .buttonStyle(.plain)
-                            .font(.caption.weight(.medium))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(Brand.sand.opacity(0.25)))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Sky.lilac)
+                            .padding(.horizontal, 9)
+                            .frame(height: 24)
+                            .background(Capsule().fill(Sky.lilac.opacity(0.13)))
                     }
                 }
             }
@@ -340,15 +387,14 @@ struct TasteSpace: View {
     // MARK: Adding
 
     private var addBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "plus.circle.fill").foregroundStyle(Brand.orange)
-            TextField("Add something you love: a film, artist, book, place or brand", text: $query)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit(search)
+        HStack(spacing: 10) {
+            SkyField(placeholder: "Add something you love: a film, artist, book, place or brand", text: $query, symbol: "plus.circle.fill", onSubmit: search)
                 .popover(isPresented: $showResults, arrowEdge: .top) { resultsList }
             Button("Search", action: search)
+                .buttonStyle(SecondaryButton(symbol: "magnifyingglass"))
                 .disabled(query.trimmingCharacters(in: .whitespaces).isEmpty)
-            Button("Add from Music", action: importMusic)
+            Button("From my Music", action: importMusic)
+                .buttonStyle(SecondaryButton(symbol: "music.note"))
                 .help("Your most played artists in the Music app")
         }
     }
@@ -376,6 +422,7 @@ struct TasteSpace: View {
                                                        "kind": hit["kind"] ?? .null, "image": hit["image"] ?? .null])
                         edit("love", ["items": [item]], label: "Adding \(hit["name"]?.string ?? "it")")
                     }
+                    .buttonStyle(PrimaryButton(arrow: false, compact: true))
                 }
             }
         }
@@ -490,8 +537,31 @@ struct TasteSpace: View {
     }
 
     private func apply(_ graph: JSONValue, animate: Bool) {
-        let (nodes, edges) = Self.parse(graph)
+        let (nodes, edges) = Self.trim(Self.parse(graph))
         layout.update(nodes: nodes, edges: edges, animate: animate && !rendering)
+    }
+
+    /// A readable picture: the threads most of the loves share (8) and the first few next picks (4).
+    /// Everything else stays in the profile and still steers the picks.
+    static func trim(_ graph: ([GraphNode], [GraphEdge]), threads: Int = 8, picks: Int = 4) -> ([GraphNode], [GraphEdge]) {
+        let (nodes, edges) = graph
+        let loves = Set(nodes.filter { $0.style == .love }.map(\.id))
+        var degree: [String: Int] = [:]
+        for e in edges {
+            if loves.contains(e.a) { degree[e.b, default: 0] += 1 }
+            if loves.contains(e.b) { degree[e.a, default: 0] += 1 }
+        }
+        let keptThreads = Set(nodes.filter { $0.style == .tag }.sorted { (degree[$0.id] ?? 0) > (degree[$1.id] ?? 0) }.prefix(threads).map(\.id))
+        let keptPicks = Set(nodes.filter { $0.style == .pick }.prefix(picks).map(\.id))
+        let kept = nodes.filter { n in
+            switch n.style {
+            case .tag: keptThreads.contains(n.id)
+            case .pick: keptPicks.contains(n.id)
+            default: true
+            }
+        }
+        let ids = Set(kept.map(\.id))
+        return (kept, edges.filter { ids.contains($0.a) && ids.contains($0.b) })
     }
 
     /// The brain's graph (graph.py) as canvas nodes and edges.
@@ -567,16 +637,17 @@ struct FilterChip: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 5) {
-                Circle().fill(color).frame(width: 7, height: 7).opacity(on ? 1 : 0.35)
+            HStack(spacing: 6) {
+                Circle().fill(color).frame(width: 8, height: 8).opacity(on ? 1 : 0.35)
                 Text(title)
             }
-            .font(.callout.weight(.medium))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(on ? Color.primary.opacity(0.09) : .clear))
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(on ? 0.12 : 0.18), style: StrokeStyle(lineWidth: 1, dash: on ? [] : [3, 2])))
-            .foregroundStyle(on ? Color.primary : Color.secondary)
+            .font(.system(size: 12.5, weight: .semibold))
+            .padding(.horizontal, 12)
+            .frame(height: 30)
+            .background(Capsule().fill(on ? Sky.card : .clear))
+            .overlay(Capsule().strokeBorder(on ? Sky.line : Sky.ink3.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: on ? [] : [3, 2])))
+            .shadow(color: on ? Sky.shadow.opacity(0.6) : .clear, radius: 6, y: 2)
+            .foregroundStyle(on ? Sky.ink : Sky.ink3)
         }
         .buttonStyle(.plain)
     }
@@ -601,8 +672,8 @@ struct Stat: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(number)").font(.system(size: 20, weight: .bold))
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text("\(number)").font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(Sky.ink)
+            Text(label).font(.system(size: 11.5)).foregroundStyle(Sky.ink2)
         }
     }
 }

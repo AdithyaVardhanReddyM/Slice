@@ -31,11 +31,7 @@ private struct PersonCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(String((view.name ?? "?").prefix(1)))
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.black)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Brand.squeeze))
+            Avatar(seed: view.name ?? "Slice", size: 44, border: 0)
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 6) {
                     Text(view.name ?? "")
@@ -55,7 +51,7 @@ private struct PersonCard: View {
                 if view.stepFree == true {
                     Label("Step-free places only", systemImage: "figure.roll")
                         .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(Brand.yellow)
+                        .foregroundStyle(IslandStyle.accent)
                 }
                 if let reads = view.readsAs, !reads.isEmpty {
                     Text("Reads as \(reads.prefix(3).map { $0.lowercased() }.joined(separator: ", "))")
@@ -88,7 +84,7 @@ struct Chips: View {
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Capsule().fill(.white.opacity(0.1)))
+                    .background(Capsule().fill(IslandStyle.raised))
             }
         }
     }
@@ -169,12 +165,7 @@ private struct GiftTile: View {
                             .foregroundStyle(.white)
                             .lineLimit(1)
                         if let tag = card.tag {
-                            Text(tag)
-                                .font(.system(size: 9.5, weight: .bold))
-                                .foregroundStyle(.black)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1.5)
-                                .background(Capsule().fill(Brand.yellow))
+                            IslandTag(text: tag)
                         }
                     }
                     if let subtitle = card.subtitle {
@@ -277,7 +268,7 @@ private struct StopRow: View {
                     .font(.system(size: 9.5, weight: .heavy))
                     .foregroundStyle(.black)
                     .frame(width: 17, height: 17)
-                    .background(Circle().fill(Brand.yellow))
+                    .background(Circle().fill(.white))
                 if !last {
                     Rectangle().fill(.white.opacity(0.18)).frame(width: 1.5).frame(maxHeight: .infinity)
                 }
@@ -385,7 +376,7 @@ struct MapSnapshot: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(.white.opacity(0.06))
+            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(IslandStyle.raised)
             if let shot = shot ?? MapShots.cached(pins, size: size) {
                 Image(nsImage: shot.image).resizable()
                 ForEach(Array(pins.enumerated()), id: \.offset) { index, pin in
@@ -407,18 +398,15 @@ struct MapSnapshot: View {
                 .font(.system(size: 10, weight: .heavy))
                 .foregroundStyle(.black)
                 .frame(width: 18, height: 18)
-                .background(Circle().fill(Brand.yellow))
-                .overlay(Circle().strokeBorder(.black.opacity(0.6), lineWidth: 1))
+                .background(Circle().fill(.white))
         } else {
+            // A dot sized by how strong the taste is there, and the area's name as a small tag.
             ZStack {
                 Circle()
-                    .fill(RadialGradient(colors: [Brand.orange.opacity(0.75), Brand.orange.opacity(0)], center: .center, startRadius: 2, endRadius: 30))
-                    .frame(width: 60 * (0.6 + 0.4 * (pin.weight ?? 1)), height: 60 * (0.6 + 0.4 * (pin.weight ?? 1)))
-                Text(pin.name ?? "")
-                    .font(.system(size: 10.5, weight: .bold))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black, radius: 2)
-                    .fixedSize()
+                    .fill(IslandStyle.accent)
+                    .frame(width: 6 + 6 * (pin.weight ?? 1), height: 6 + 6 * (pin.weight ?? 1))
+                IslandTag(text: pin.name ?? "")
+                    .offset(y: -15)
             }
         }
     }
@@ -452,6 +440,7 @@ enum MapShots {
                                                                            longitude: (lons.max()! + lons.min()!) / 2), span: span)
         options.size = size
         options.appearance = NSAppearance(named: .darkAqua)
+        options.mapType = .mutedStandard
         options.pointOfInterestFilter = .excludingAll
         guard let snapshot = try? await MKMapSnapshotter(options: options).start() else { return nil }
         // AppKit snapshots count y up from the bottom; SwiftUI counts down from the top.
@@ -521,7 +510,7 @@ private struct FileCard: View {
         HStack(spacing: 10) {
             Image(systemName: "doc.richtext")
                 .font(.system(size: 22))
-                .foregroundStyle(Brand.yellow)
+                .foregroundStyle(IslandStyle.accent)
             VStack(alignment: .leading, spacing: 2) {
                 Text(view.title ?? "File")
                     .font(.system(size: 13, weight: .semibold))
@@ -565,7 +554,7 @@ struct WhyCard: View {
                     if let match = why.match {
                         Label("\(match)% match for \(who)", systemImage: "heart.fill")
                             .font(.system(size: 11.5, weight: .semibold))
-                            .foregroundStyle(Brand.yellow)
+                            .foregroundStyle(IslandStyle.accent)
                     }
                 }
                 Spacer(minLength: 0)
@@ -600,7 +589,7 @@ struct WhyCard: View {
                             }
                             .padding(.horizontal, 9)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(.white.opacity(0.08)))
+                            .background(Capsule().fill(IslandStyle.raised))
                         }
                     }
                 }
@@ -625,9 +614,9 @@ private struct PlayButton: View {
         } label: {
             Image(systemName: "play.fill")
                 .font(.system(size: small ? 8 : 11, weight: .bold))
-                .foregroundStyle(.black)
+                .foregroundStyle(.white)
                 .frame(width: small ? 16 : 26, height: small ? 16 : 26)
-                .background(Circle().fill(Brand.yellow))
+                .background(Circle().fill(IslandStyle.accent))
         }
         .buttonStyle(.plain)
         .help("Play \(name)")
@@ -644,7 +633,7 @@ struct NudgeCard: View {
             HStack(spacing: 8) {
                 Image(systemName: NudgePill.symbol(nudge.kind))
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Brand.yellow)
+                    .foregroundStyle(IslandStyle.accent)
                 Text(nudge.kind == "why" ? (nudge.show ? "Why it fits" : "Very you") : nudge.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
@@ -664,7 +653,7 @@ struct NudgeCard: View {
                             .font(.system(size: 13))
                             .foregroundStyle(.white.opacity(0.9))
                             .fixedSize(horizontal: false, vertical: true)
-                        Text("Slice will pick with it from now on. You can take it back in Settings > Memory.")
+                        Text("Slice will pick with it from now on. You can take it back in Settings > You.")
                             .font(.system(size: 11))
                             .foregroundStyle(.white.opacity(0.5))
                             .fixedSize(horizontal: false, vertical: true)
@@ -694,8 +683,7 @@ struct NudgeCard: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.08)))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Brand.yellow.opacity(0.35), lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(IslandStyle.card))
     }
 }
 
@@ -705,13 +693,19 @@ struct NudgeCard: View {
 /// and draws nothing in ImageRenderer; -renderIsland prefetches these instead).
 struct RemoteImage: View {
     let url: String?
+    /// Show the whole picture (a logo) instead of filling the frame.
+    var fit = false
     @State private var image: NSImage?
 
     var body: some View {
         ZStack {
-            Rectangle().fill(.white.opacity(0.08))
+            if !fit { Rectangle().fill(Color.primary.opacity(0.07)) }
             if let image = image ?? url.flatMap(ImageCache.cached) {
-                Image(nsImage: image).resizable().scaledToFill()
+                if fit {
+                    Image(nsImage: image).resizable().interpolation(.high).scaledToFit()
+                } else {
+                    Image(nsImage: image).resizable().scaledToFill()
+                }
             } else {
                 SliceMark(height: 12).opacity(0.5)
             }
