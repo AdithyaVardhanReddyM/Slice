@@ -323,8 +323,12 @@ private struct GeneralSettings: View {
                             Text("Run the setup from the start: picks, questions and permissions.").font(.system(size: 12)).foregroundStyle(Sky.ink2)
                         }
                         Spacer()
-                        Button("Start setup") { OnboardingWindow.shared.show(agent: agent) }
-                            .buttonStyle(SecondaryButton(symbol: "arrow.counterclockwise", compact: true))
+                        Button("Start setup") {
+                            // From the start, as it says: not where an earlier setup was left.
+                            TasteStore.clearOnboarding()
+                            OnboardingWindow.shared.show(agent: agent)
+                        }
+                        .buttonStyle(SecondaryButton(symbol: "arrow.counterclockwise", compact: true))
                     }
                     .padding(.vertical, 12)
                 }

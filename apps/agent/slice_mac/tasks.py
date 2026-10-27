@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import time
 import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
@@ -38,6 +39,10 @@ ENDED = {DONE, FAILED, CANCELLED}
 
 # How long a talker call waits before telling the user the task is still going.
 TALKER_WAIT_S = 240.0
+# A running task says what it's doing after this long in silence, then at this interval.
+PROGRESS_FIRST_S = 22.0
+PROGRESS_EVERY_S = 50.0
+PROGRESS_MAX = 3
 
 
 @dataclass
@@ -57,7 +62,14 @@ class Task:
     worker_session_id: str | None = None
     # Started by the Mac on a schedule (a weekly job): the island shows it, the voice stays quiet.
     quiet: bool = False
+    # When the current question or yes-or-no was raised (monotonic): an answer the user gave
+    # before it can't be theirs (tools.continue_task).
+    asked_at: float = 0.0
+    # The operator is on the screen (computer.py): the glow and the cursor show what's happening,
+    # so the talker doesn't narrate every click.
+    on_screen: bool = False
     _reply: asyncio.Future[Any] | None = None
+    _progress: asyncio.Task[None] | None = None
     # The worker can call two asking tools at once (send it AND repeat weekly); they take turns.
     _asking: asyncio.Lock = field(default_factory=asyncio.Lock)
     _changed: asyncio.Event = field(default_factory=asyncio.Event)
@@ -168,6 +180,7 @@ class TaskManager:
         async with task._asking:
             task.question = question
             task._reply = asyncio.get_running_loop().create_future()
+            task.asked_at = time.monotonic()
             self._set(task, NEEDS_INPUT)
             try:
                 return str(await task._reply)
@@ -181,6 +194,7 @@ class TaskManager:
         async with task._asking:
             task.confirm = {"title": title, "detail": detail}
             task._reply = asyncio.get_running_loop().create_future()
+            task.asked_at = time.monotonic()
             self._set(task, NEEDS_CONFIRMATION)
             try:
                 approved = bool(await task._reply)
@@ -203,8 +217,8 @@ class TaskManager:
         """Add a rich card ({"type": "person" | "timeline" | "map" | "note", ...}); a newer one of
         the same type and key replaces the old one."""
         same = lambda v: v.get("type") == view.get("type") and v.get("key") == view.get("key")  # noqa: E731
-        # Eight: a week-long trip is a map plus seven day timelines.
-        task.views = [v for v in task.views if not same(v)][-7:] + [view]
+        # Ten: a week-long trip is a map, up to eight day timelines and the written plan.
+        task.views = [v for v in task.views if not same(v)][-9:] + [view]
         self._emit(task)
 
     # --- internals ----------------------------------------------------------
@@ -214,6 +228,8 @@ class TaskManager:
 
         self._set(task, RUNNING)
         task._run = asyncio.create_task(self._run(task, run_worker, message))
+        if not task.quiet:
+            task._progress = asyncio.create_task(self._keep_posted(task))
 
     async def _run(self, task: Task, run_worker: Any, message: str) -> None:
         try:
@@ -227,6 +243,24 @@ class TaskManager:
             print(f"mac: task {task.id} failed: {type(err).__name__}: {err}", flush=True)
             task.error = f"{type(err).__name__}: {err}"[:300]
             self._set(task, FAILED)
+        finally:
+            if task._progress and not task._progress.done():
+                task._progress.cancel()
+
+    async def _keep_posted(self, task: Task) -> None:
+        """A long task shouldn't leave the user in silence: after a while, and then now and then,
+        the talker gets the latest step to say in a few words (the card shows it too)."""
+        await asyncio.sleep(PROGRESS_FIRST_S)
+        said = 0
+        while task.status == RUNNING and said < PROGRESS_MAX:
+            if self.conn.notify_talker and task.steps and not task.on_screen:
+                said += 1
+                self.conn.notify_talker(
+                    f"[Background task \"{task.title}\" is still working; its latest step: {task.steps[-1]}. "
+                    "Tell the user in one short sentence what it's doing right now, nothing more: don't guess the result, "
+                    "and never say anything is confirmed, booked or done.]"
+                )
+            await asyncio.sleep(PROGRESS_EVERY_S)
 
     def _set(self, task: Task, status: str) -> None:
         was = task.status

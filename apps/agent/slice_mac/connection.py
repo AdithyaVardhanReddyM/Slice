@@ -37,6 +37,8 @@ class Connection:
     noticed: set[str] = field(default_factory=set)
     # Settings > General > "Use my taste" off: answers come from generic.py, not Qloo.
     taste_off: bool = False
+    # When the user last spoke or typed (monotonic), so a yes to a task is theirs, not the talker's.
+    last_input_at: float = 0.0
     # Learning (learning.py): names already looked up, the last "add to your taste?" pill,
     # and the pending re-read of the taste after the loves changed.
     seen: dict[str, dict[str, Any] | None] = field(default_factory=dict)

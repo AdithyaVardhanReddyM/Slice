@@ -16,6 +16,7 @@ from google.genai import types
 
 from . import learning, lens, qloo, taste
 from .connection import Connection, for_talker, report
+from .tasks import NEEDS_CONFIRMATION
 
 
 async def look_at_frontmost_app(tool_context: ToolContext) -> dict[str, Any]:
@@ -113,17 +114,20 @@ async def _explain_picks(conn: Connection, card: dict[str, Any], kind: str, ids:
 
 
 async def start_task(goal: str, title: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Hand real work to a background task: doing something on the Mac for the user (open Netflix
+    """Hand NEW work to a background task: doing something on the Mac for the user (open Netflix
     and play something they'd like, put on music, book a table, buy a gift, look something up),
     anything with several steps, the user's accounts or data (calendar, reminders, notes, email,
     Slack, Notion, Drive, Docs, Sheets, Maps, contacts, messages), planning, gifting, trips,
     comparing tastes, or writing something. Before calling, say one short line ("On it"). The
-    answer comes back later; until then, don't guess at the result.
+    answer comes back later; until then, don't guess at the result. Anything about a task that
+    already ran ("put it in a doc", "add it to my calendar", "book it", "make it 9pm") is a
+    follow-up: continue_task with that task's id, never a new task.
 
     Args:
         goal: Everything the worker needs, in the user's words plus context from the conversation
-            ("Plan dinner with Sam on Friday: find a place we'd both love near Williamsburg, and
-            book it for 8pm if I say yes").
+            ("Plan my Paris trip, 12 to 19 November, just me, staying at Hôtel National des Arts et
+            Métiers in the Marais"; "Plan dinner with Sam on Friday: find a place we'd both love
+            near Williamsburg, and book it for 8pm if I say yes").
         title: Three to five words for the task's card ("Friday dinner with Sam").
     """
     conn = for_talker(tool_context)
@@ -134,7 +138,9 @@ async def start_task(goal: str, title: str, tool_context: ToolContext) -> dict[s
 
 async def continue_task(task_id: str, tool_context: ToolContext, reply: str = "", approved: bool | None = None) -> dict[str, Any]:
     """Pass the user's answer to a task that asked a question or wants a yes or no, or give a
-    finished task a follow-up ("make it 9pm instead").
+    finished task a follow-up in the same breath of work ("put it in a doc", "put the days in my
+    calendar", "book the dinner", "make it 9pm instead"): the task remembers everything it planned,
+    a new task would not. Only pass `approved` after the user has actually answered.
 
     Args:
         task_id: The task's id from start_task.
@@ -146,6 +152,10 @@ async def continue_task(task_id: str, tool_context: ToolContext, reply: str = ""
     task = conn.tasks.find(task_id)
     if task is None:
         return {"error": f"No task {task_id}."}
+    if approved is not None and task.status == NEEDS_CONFIRMATION and conn.last_input_at < task.asked_at:
+        # The user hasn't spoken since the question came up: this yes would be the talker's own.
+        return {"task_id": task.id, "status": task.status, "confirm": (task.confirm or {}).get("title"),
+                "note": "The user hasn't answered this yet. Read it to them and wait for their yes or no; don't decide for them."}
     if not conn.tasks.answer(task, reply, approved):
         if task.status in ("done", "failed") and reply:
             conn.tasks.follow_up(task, reply)

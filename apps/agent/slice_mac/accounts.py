@@ -173,6 +173,17 @@ async def states(user_id: str) -> dict[str, dict[str, Any]]:
     return await asyncio.to_thread(run)
 
 
+async def is_connected(user_id: str, app: str) -> bool:
+    """Whether one app has an active account, so a tool can choose a path before calling it."""
+    if not configured():
+        return False
+    try:
+        return bool((await status(user_id)).get(app))
+    except Exception as err:
+        print(f"mac: couldn't check whether {app} is connected: {err}", flush=True)
+        return False
+
+
 async def status(user_id: str) -> dict[str, bool]:
     found = await states(user_id)
     return {slug: found.get(slug, {}).get("state") == "connected" for slug in CLOUD}
@@ -367,7 +378,11 @@ async def find_trip_emails(tool_context: ToolContext, destination: str = "") -> 
     """
     words = "(flight OR booking OR reservation OR itinerary OR \"check-in\" OR hotel OR boarding)"
     query = f"{words} newer_than:90d" + (f" {destination}" if destination else "")
-    return await _run(tool_context, "GMAIL_FETCH_EMAILS", {"query": query, "max_results": 8}, f"Looked for trip emails{' about ' + destination if destination else ''}")
+    out = await _run(tool_context, "GMAIL_FETCH_EMAILS", {"query": query, "max_results": 8}, f"Looked for trip emails{' about ' + destination if destination else ''}")
+    if out.get("not_connected"):
+        # A sign-in mid-plan would stall everything: the user can just say when they're going.
+        out["next"] = "Gmail isn't connected. Don't connect it now: ask the user for the dates (and where they're staying) with ask_user."
+    return out
 
 
 async def gmail_draft(to: str, subject: str, body: str, tool_context: ToolContext) -> dict[str, Any]:
@@ -426,8 +441,9 @@ async def google_calendar_free_time(day: str, tool_context: ToolContext, from_ti
 
 async def google_calendar_add(title: str, start: str, end: str, tool_context: ToolContext, location: str = "",
                               description: str = "", invite: str = "") -> dict[str, Any]:
-    """Add an event to the user's Google Calendar, inviting people if asked (asks the user first).
-    For the Mac's own calendar use add_calendar_event.
+    """Add an event to the user's Google Calendar, only when they say Google Calendar or want to
+    invite someone (asks the user first). "Put it in my calendar" means the Mac's Calendar:
+    add_this_plan_to_calendar for a plan, add_calendar_event for one event.
 
     Args:
         title: Event title.

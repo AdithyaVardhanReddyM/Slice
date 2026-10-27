@@ -87,8 +87,11 @@ a dark backdrop;
 `-renderIsland <dir>` writes each mode as a PNG plus `cards.png` (the cards
 alone) and quits, with no screen access needed (it fetches the pictures and
 maps first, and lays scroll views out flat, since ImageRenderer can't draw
-either); `-renderLens <shot.jpg> <badges.json> <out.png>` draws the lens
-badges over a screenshot; `-ask "…"` types a question once the brain connects.
+either); `-renderLens <shot.png> <lens.json> <out.png>` draws the lens over a
+screenshot at 2x (the JSON is what `lens_show` gets, `{"badges", "summary"}`,
+plus `"menuBar"` in points, or `{"scanning": true}` for the sweep; give it the
+picture at point size, so a Retina capture halved); `-ask "…"` types a
+question once the brain connects.
 
 Requirements: Xcode 27, `brew install xcodegen`. The `.xcodeproj` and
 `Info.plist` are generated from `apps/mac/project.yml` and not committed.
@@ -158,13 +161,20 @@ Abbey. To show the answers come from Qloo, rebuild the profile from
 Settings > Taste > Try a taste > Country, Nashville and run a demo again
 (Big Thief: 96% for the indie taste, 85% for the country one).
 
-1. **Trip**: "Plan my Lisbon trip." The worker reads the flight and hotel
-   from Gmail (`find_trip_emails`; or the dates you give), maps where your
-   taste lives (`taste_map`: Chiado, Encarnação, Cais do Sodré), checks the
-   weather, plans each day as walkable stops from the hotel
-   (`plan_walkable_day`, one timeline card per day), ranks shows on those
-   dates (`shows_for_me`), and offers to book dinner (operator), fill the
-   calendar (`add_plan_to_calendar`, one yes for all) and message a friend.
+1. **Trip** (reworked 2026-10-27, see "The trip demo" below): "I'm planning
+   to go to Paris next month for a week. Plan my itinerary." The talker asks
+   the dates and who's going, then where you're staying, and hands it all to
+   one task. `plan_trip` maps where your taste lives (`taste_map`), checks
+   the weather (last year's for dates past the 16-day forecast), plans each
+   day as a walk of Qloo places that are open that day at that hour (one
+   timeline card per day, eight days at most), ranks shows on those dates,
+   and offers a doc or the calendar. "Put it in a doc" → `write_this_plan`:
+   "Paris, 12 to 19 November" in Google Docs when it's connected, else a
+   PDF in Documents/Slice, opened either way. "Put the days in my calendar"
+   → `add_this_plan_to_calendar`: one event per day, one yes for all. Then
+   it offers to book the dinner it picked (`book_this_dinner`, since 2026-10-27 `book_this_table`): the operator
+   goes to the restaurant's own site (TheFork as the fallback), picks the
+   date, time and party size and asks before the final confirm.
 2. **Someone else's week**: "My dad Ray is 74, lives in Lincoln Park, uses a
    walker, loves …". `remember_person` saves age, home and needs (a person
    card); `recommend(for_person="Ray")` uses his age band (Out of Africa,
@@ -190,8 +200,14 @@ Settings > Taste > Try a taste > Country, Nashville and run a demo again
 5. **Taste lens**: "Which of these would I love?" on Netflix, Spotify, a
    lineup poster or Amazon (ranked by brand); "Which is in my kind of area?"
    on Airbnb (how many of your city-wide top 100 places are a 10-minute walk
-   away: Chiado 38, Belém 4). Badges appear over the items, the best three
-   outlined with why; "play it" / "open the second one" clicks it
+   away: Chiado 38, Belém 4). While the screen is read a light sweeps down it
+   (`lens_scan`); then the screen dims a little except the best three, which
+   stay lit with a footer (rank, match, why, two of Qloo's words for it), the
+   rest get a ring chip with their match at the tile's corner, the user's own
+   loves a heart, and a bar at the foot of the screen says what was ranked and
+   what to say ("play the first one"). Redesigned 2026-10-27 after the first
+   recording: the old black pills on every tile read as noise and the best
+   picks didn't stand out. "play it" / "open the second one" clicks it
    (`tap_lens_item`). "Which of these would Maya love?" works too.
 6. **Why do I love this?**: `why_this` explains what's playing or the film,
    show or book page in front: match, the loved things it shares Qloo tags
@@ -347,6 +363,168 @@ icon tiles, black pill buttons, chips, page dots, fields, key caps, DiceBear "Dy
 Check UI without screen access: `-renderSettings <dir>` (add `-appearance dark` for dark) and
 `-snapshotWindows <dir>`, both with `-renderProfile <taste.json>`.
 
+## The trip demo (2026-10-27, tested end to end over /mac/live)
+
+Judged against the script the user wants to record (ask a few questions,
+a taste-led itinerary, "put it in a doc", the calendar and booking offers,
+a booking the operator stops short of). The first run against the real
+brain took 20 minutes and went wrong at every step; the fixes:
+
+- **Questions come from the talker**, not the worker: the talker asks the
+  dates and who's going, then where they stay (two turns at most, no budget
+  or pace questions), and starts the task with all of it. The worker never
+  guesses dates (`plan_trip` refuses without them; `find_trip_emails` says
+  "ask" when Gmail isn't connected instead of opening a sign-in). Before,
+  the worker invented 9 to 15 November for "next month".
+- **Follow-ups stay in the task.** "Put it in a doc" used to start a new
+  task that searched Notes, Reminders and the screen for an itinerary it had
+  never seen, then opened a Composio sign-in and waited 150 s. Now the
+  talker's `continue_task` carries follow-ups on a finished task (its
+  docstring and the talker prompt say so), and `playbooks._plan_for` keeps
+  each user's latest plan so even a new task finds it.
+- **The written plan** (`tripdoc.py`, `write_this_plan`): built from the
+  plan's data, never retyped by the model (the worker only writes the intro
+  and any tips it checked). Title "Paris, 12 to 19 November"; a day per
+  section with the weather; each stop with time, kind, neighbourhood, Qloo's
+  description, why it fits (Qloo's feel words for the place, leading with any
+  word it also uses for the user's taste, and that it's Qloo's top-ranked
+  place of that kind nearby), address, hours that day, price, "Book ahead",
+  signature dishes. Markdown for `GOOGLEDOCS_CREATE_DOCUMENT_MARKDOWN`
+  (no confirm: "put it in a doc" is the consent), HTML to PDF through the
+  shared headless Chromium when Docs isn't connected (saved in
+  Documents/Slice and opened; a file card in the island). Qloo's per-place
+  explainability is flat (every stop "because you love Breaking Bad"), so
+  loves aren't quoted for places.
+- **Places that fit** (`plans.fits`, `plans.open_at`): Qloo's genre filter
+  matches any tag, so lunch came back as hotels, a record shop as Fnac and a
+  bookshop as a shopping mall. `qloo._brief` now carries a place's primary
+  genre, rating, website, phone, hours by weekday and dishes; a stop must
+  mainly be its kind (never a hotel, mall, department store, chain, cruise
+  or bus), rated 3.9 or better when rated, and open when the plan arrives
+  (Qloo hours; a place that opens within half an hour counts). Lunch is
+  never before 12:15, dinner lands on a quarter hour. Three day shapes take
+  turns (museum and record shop, bookshop and café, park and record shop),
+  evenings rotate cocktail bar, wine bar, jazz or music bar (never a concert
+  hall without a show), and a stand-in kind isn't used twice in a day.
+- **Placing the hotel**: Qloo's locality search matched "Hôtel National des
+  Arts et Métiers" to a town on another continent, so `qloo.locate(strict)`
+  now needs the exact name, `taste.point_of` takes `near` and rejects any
+  point over 80 km from the city, and `plan_trip` retries the hotel's name
+  with the city when the full phrase doesn't geocode.
+- **Weather past the forecast**: Open-Meteo's archive gives the same day
+  last year, marked `typical`, so plans say "usually" and the doc says what
+  last year was like. Eight days are allowed (12 to 19 is eight), ten rich
+  cards per task.
+- **Calendar**: one event per day ("Paris: Thursday in Le Marais", first to
+  last stop, the stops and weather in the notes), not 45 stops; the Mac's
+  Calendar is the default (`google_calendar_add` only when asked by name).
+- **Booking** (`book_this_dinner`, now `book_this_table`): the dinner to book is the most bookable
+  one from day two on (own website, "Reservations" tag, mid price); the
+  operator job names the site, the date, time and party size, allows a
+  booking service, falls back to TheFork, never types contact or card
+  details, and must `ask_permission` at the confirm step; 28 steps at most.
+  Run 2 picked Le Calife, a Seine dinner cruise, and spent six minutes on
+  its site: cruises, boats and buses are no longer restaurant stops.
+- **Silence and chatter**: a task that's been running 22 s tells the talker
+  its latest step (then every 50 s, three times at most) so the user hears
+  "still mapping your days" rather than nothing; not while the operator is
+  on screen, where the glow and cursor show it (run 2's talker narrated
+  every scroll, and once said "confirming" when nothing was). The talker
+  can't answer a yes-or-no for the user: `continue_task(approved=…)` is
+  refused until the user has spoken since the question was raised
+  (`Connection.last_input_at`, `Task.asked_at`); run 1's talker approved
+  the doc and the 45 calendar events itself.
+- **Quota**: a worker step that answers takes 2 to 9 s; one stuck behind
+  the shared quota never answered before the 15 s timeout, so each was 17 to
+  19 s. `FallbackGemini` now hedges: after 7 s the next model is asked too
+  and the first answer wins (measured 7.5 s on a stalled call).
+
+Timings (fake Mac over /mac/live, real talker, worker and operator): run 2
+answered the dates in 10 s, planned eight days 40 s after the dates (the
+playbook itself 17 s), wrote and opened the PDF 21 s after "put it in a
+doc", added eight calendar events 11 s after "yes", and the whole script
+ran in 9 min 17 s against run 1's 20 min. Run 3 (after the booking fixes) is
+in the report at Library/Application Support/Claude/side-session-notes.
+
+## The dad's weekend demo (2026-10-27, tested end to end over /mac/live)
+
+Demo 2: "My dad Frank is 73 and lives in Lincoln Park in Chicago. He's fit,
+but he likes a proper table with a reservation, nothing too loud, no late
+nights, and short walks between things. He loves The Godfather, Bob Dylan and
+Columbo. His friend Walter is into Miles Davis and old westerns like The
+Searchers. Plan their weekend, the two of them together." Judged the same way
+as the trip demo (fake Mac `apps/agent/scripts/mac_dad_demo.py`, report and
+logs in `video/mac/dad/`). The first run took 12 minutes and went wrong at
+every step (two questions it had the answers to, a plan for Frank's taste
+alone, a typed-out text message with an invented dinner, six calendar events,
+the operator in Terminal, the talker answering the weekly offer itself, and
+nothing remembered after a reset). What changed:
+
+- **One playbook for the weekend** (`playbooks.plan_weekend_for`): saves both
+  men (person cards, at the same time; `taste.save_person` no longer awaits
+  between copying and saving the profile, so two saves can't overwrite each
+  other), blends their loves as one Qloo signal set (`taste.signals_for`
+  takes several saved people: the older one's age band, the first home, every
+  need either has, and which love is whose in `Signals.owner`), checks the
+  weather, compares the two tastes, and plans each day as a short route from
+  his home: a seated coffee at 10:30, something to see at 11:30, lunch at a
+  proper table at 12:45 (meals land on the quarter hour), a shop at 14:30, and
+  one early evening out on the Sunday (a jazz room when a love carries Qloo's
+  jazz tags, else live music) that starts when the room opens and ends before
+  the hour he likes to be home. Walks are 600 to 900 m; anything farther is a
+  short drive from home (2.5 km at most; 7 km for the music) and the stop says
+  so ("A 12-minute drive."). A film for the two of them, music for the drive
+  and a series for him come with whose love drives each ("For Frank's Bob
+  Dylan and Walter's The Searchers", from Qloo's explainability through
+  `taste.standouts`; the series scored against his loves alone).
+- **Needs become rules** (`taste.needs_of`, `plans.suits`, `plans.prefers`):
+  "a proper table with a reservation, nothing too loud, no late nights, short
+  walks" turn into seated, quiet, early and short_walks. `qloo._place_details`
+  now reads Qloo's noise_level, reservations, parking and "usually a wait"
+  tags (they were dropped as plumbing). A stop must not be loud, a lunch must
+  take reservations and not be a bar, counter, cafeteria or one-dollar-sign
+  place, a quiet taste skips rooms with DJ sets or dance music, and someone
+  with early hours only goes where Qloo knows the hours (a gallery that opens
+  by appointment is out). Among what fits, the first place in Qloo's order
+  that is also quiet, has parking when he drives and isn't the kids' museum
+  wins.
+- **New kinds**: `jazz_club` (Qloo's own genre) and `cinema` (a category) in
+  `qloo.PLACE_GENRES`, `plans.FITS`, `STAY_MIN`; the island maps them to
+  icons (`RichViews.symbol`, needs an app rebuild to show).
+- **The talker**: a rule for planning for someone else (never re-ask what
+  they said; "their weekend" is the coming Saturday and Sunday; at most one
+  question, lunch or an early dinner; don't start a task while they're still
+  describing him; don't file his details as the user's facts), follow-ups
+  include "send it to dad" and "every week", and a yes to its own offer is
+  passed on at once. Saved people are in its instructions
+  (`routes._new_session` state `people`), so after a reset "what does my dad
+  like?" and "plan dad's weekend" work; `taste._person` finds a person by
+  relation ("dad", "my mum").
+- **Offers one at a time** (worker prompt and the playbook's `next`): send
+  him the pages, the days in the calendar, book the table, do it every week;
+  each behind a yes, the next after the last.
+- **The pages** (`plans.make_printout`, `_printout_html`): a page per day,
+  36 pt title, 28 pt day headings, a bold time column, each stop as its name,
+  what it is (Qloo's description cut at a sentence), why it suits the two of
+  them (the needs it honours, then Qloo's feel words, leading with any word
+  Qloo also uses for what they love), the address, hours that day, "Table for
+  2 under Frank", the phone as (773) 666-5220; the film at home closes
+  Saturday; a last section for the music and the series; a lead line for
+  Frank and a footer naming who planned it. `send_this_plan` makes the PDF
+  without opening it, finds his number in Contacts (or takes `to`), and sends
+  it with a short plain message through Messages (one yes), or opens a Mail
+  draft for an email address.
+- **Calendar**: one event per day ("Frank and Walter: Saturday in Lincoln
+  Park", the stops in the notes), through the same `add_this_plan_to_calendar`.
+- **Booking**: `book_this_dinner` is now `book_this_table` and takes any
+  plan's table (the Saturday lunch, party of two, under Frank's name), with
+  OpenTable as the fallback outside France and the city in the search.
+- **Measured**: the playbook plans the weekend in 8 to 10 s of Qloo and
+  weather calls (two saves 1.8 s, weather, compare and media picks together,
+  two days in parallel); run 2 spoke the plan 40 s after the user's last
+  word, sent the pages 6 s after "yes", added the two events 1 s after the
+  confirm.
+
 ## Measured (2026-10-26, combined tools)
 
 Each long demo is now one worker tool (`slice_mac/playbooks.py`: `plan_trip`,
@@ -455,9 +633,10 @@ Mac tools (`tool_call` names, `apps/mac/Sources/Agent/LocalTools.swift`):
 `mail_draft {to, subject, body, attachment}`, `maps_geocode {places}`,
 `save_file {name, data, open}` (Documents/Slice), `screenshot` (JPEG, 1440
 wide, Slice's own windows left out, plus the browser `url`),
-`computer {action, x, y, …}` (Gemini's desktop actions), `lens_show {badges:
-[{box, label, detail, top}]}` (boxes 0-1000 over the last screenshot) and
-`lens_clear`.
+`computer {action, x, y, …}` (Gemini's desktop actions), `lens_scan` (the
+sweep while the screen is read), `lens_show {badges: [{box, label, detail,
+top, match, tags, own, disliked}], summary: {count, what, whose, hint | line}}`
+(boxes 0-1000 over the last screenshot) and `lens_clear`.
 
 HTTP routes beside it: `GET /mac/search?q=&kind=`, `POST /mac/profile/build
 {seeds, entities, city, base, facts, prefs, name, onboarding}`, `POST

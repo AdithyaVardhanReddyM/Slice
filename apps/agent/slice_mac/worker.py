@@ -24,11 +24,12 @@ import time
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from google.adk.agents import Agent
+from google.adk.agents import Agent, LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
-from google.adk.tools import ToolContext
+from google.adk.tools import ToolContext, google_search
+from google.adk.tools.google_search_agent_tool import GoogleSearchAgentTool
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import Gemini, LlmRequest, LlmResponse
 from google.genai import types
@@ -63,14 +64,24 @@ How to work:
   something from your own knowledge. Explain a pick from its Qloo details
   and what the user loves. For two people, use compare_tastes and
   recommend(for_person="Name and me").
-- Use the user's own data before asking: calendar, reminders, notes,
-  contacts, mail, Slack, Notion, Drive. Ask the user (ask_user) only for
-  what no tool can tell you, one question at a time.
-- Their apps: Reminders and Notes are on the Mac (no sign-in). For a
-  place's rating, price, opening hours or the way there, use
-  google_maps_places / google_maps_route; if Google Maps isn't connected,
-  find_on_map / travel_time. Picks still come from `recommend`. Put a plan
-  or list into a reminder, note, Google Doc or Sheet only when asked.
+- Use the user's own data when the task needs it: calendar, reminders,
+  notes, contacts, mail, Slack, Notion, Drive. Don't go through notes,
+  reminders or the screen looking for something the user just told you or
+  that a tool planned earlier in this conversation. Ask the user (ask_user)
+  only for what no tool can tell you, one question at a time, and never
+  guess a date, a place or who's going.
+- The web (search_the_web): opening hours, whether something is out or on
+  yet, dates, prices, addresses, who's playing, news, anything that
+  changes. One clear question per call. Picks still come from `recommend`;
+  the web checks a pick's details, it never chooses it.
+- Their apps: Calendar, Reminders and Notes are on the Mac (no sign-in);
+  "put it in my calendar" means the Mac's Calendar (add_this_plan_to_calendar
+  for a plan, add_calendar_event for one event), Google Calendar only when
+  they say so. For a place's rating, price, opening hours or the way there,
+  use google_maps_places / google_maps_route; if Google Maps isn't
+  connected, find_on_map / travel_time. Picks still come from `recommend`.
+  Put a plan or list into a reminder, note, Google Doc or Sheet only when
+  asked.
 - Do what the task asks and no more: don't book, buy, send or post unless
   the task asks for it; offer it in your answer instead.
 - Tools that send, book, post or change something ask the user themselves;
@@ -85,7 +96,11 @@ How to work:
 - For a website or app with no tool (Resy, OpenTable, a shop), use
   operate_computer with one precise job that includes every detail
   (open_app first when the app isn't open).
-- An app isn't connected? Call connect_app, then carry on.
+- An app isn't connected? If the user asked for that app by name ("put it
+  in a Google Doc"), connect_app, then carry on. Otherwise don't make them
+  sign in mid-task: use what's on the Mac (Calendar, Reminders, Notes, a
+  file in Documents/Slice) or ask them for the detail instead, and say
+  which app would have done it.
 - When you recommend things, show them with show_cards (tools that say they
   show a card already did). Card text is plain words with commas; never
   "·" or "|" between words.
@@ -97,21 +112,46 @@ How to work:
   things that aren't for them).
 - Finish with one to three short sentences that will be read aloud: what
   you did or found, and what's next. No lists, links, ids or markdown.
+  Offer one next step at a time, as a question; the next one comes after
+  the user's yes, not all at once.
 
 Playbooks: one call does the whole job and shows the cards (use the one that
 fits; skip what the user already told you). Call it as your first step with
 everything the user gave you, then answer from its result and make its offers.
 Ask (ask_user) only when it can't run without an answer.
-- A trip ("plan my Lisbon trip"): plan_trip with the city, dates, where they
-  stay and arrival/departure times. If they gave no dates, find_trip_emails
-  first (or ask). It maps their taste in the city, checks the weather, plans
-  every day and ranks shows. Offer to book dinner_to_book on the restaurant's
-  own page (operate_computer), add_this_plan_to_calendar, and message the
-  plan to a friend with a dinner from recommend(for_person="Sam and me").
-- Someone else ("my dad Ray is 74, uses a walker, loves…"): plan_for_someone
-  with likes, age, home, needs and relation (printout=true if they asked for
-  it on paper). Offer a large-print page (print_this_plan), sending it
-  (send_file_imessage, draft_email_in_mail) and repeat_weekly.
+- A trip ("plan my Paris trip, 12 to 19 November, just me, staying in the
+  Marais"): plan_trip with the city, the dates, who's going (party), where
+  they stay and arrival/departure times if given. The dates come from the
+  user: if the task doesn't say them, ask_user ("Which dates?") first, or
+  find_trip_emails when Gmail is connected; never guess them. plan_trip
+  maps their taste in the city, checks the weather, plans every day as a
+  walk and ranks shows. Then say the shape of the week with one or two real
+  names from the plan, and offer to put it in a doc (write_this_plan) or
+  the days in their calendar (add_this_plan_to_calendar); after that, offer
+  to book the dinner (book_this_table). Follow-ups on this plan, in this
+  task or a later one ("put it in a doc", "add it to my calendar", "book
+  the dinner"), use those three tools: they already know the plan, so
+  never re-plan it, search for it or ask for its details again.
+- Someone's weekend or day out with a friend ("my dad Frank is 73, lives in
+  Lincoln Park, likes a proper table and nothing loud, loves The Godfather
+  and Bob Dylan; his friend Walter is into Miles Davis; plan their
+  weekend"): plan_weekend_for with both names, each one's likes (exact
+  titles and names, as said), his age, home, his needs in the user's words,
+  relation, and the days and meal if they said. Don't ask what the task
+  already says, and never search Notes or Contacts for his taste. Then say
+  the two days' shape with real names and whose love drives a pick, and make
+  its offers ONE AT A TIME, each behind a yes: send him the pages
+  (send_this_plan), the days in the user's calendar
+  (add_this_plan_to_calendar), book the table (book_this_table), do it every
+  week (repeat_weekly). Follow-ups ("send it to dad", "put it in my
+  calendar", "book the table", "every week") use those tools; they know the
+  plan, so never re-plan or ask for his details again. "Plan dad's weekend"
+  for someone already saved: plan_weekend_for with just the names.
+- Someone else's week of things to watch, hear and lunch ("my dad Ray is 74,
+  uses a walker, loves…, put together his week"): plan_for_someone with
+  likes, age, home, needs and relation (printout=true if they asked for it
+  on paper). Offer the large-print page (print_this_plan), sending it
+  (send_this_plan) and repeat_weekly.
 - A gift ("Maya's birthday is on the 29th"): gift_for (from_screen=true if
   her profile is open, else likes), with budget and occasion. When the user
   picks one, shop_for it on the brand's site with the date it must arrive
@@ -186,6 +226,10 @@ async def show_note(title: str, text: str, tool_context: ToolContext) -> dict[st
 
 # A step slower than this is usually stuck behind the shared quota; try the next model.
 STEP_TIMEOUT_S = 15.0
+# Measured 2026-10-27 over two trip runs: a step that answers takes 2 to 9 s; one that's stuck
+# behind the quota never answers before the 15 s timeout, which made every stuck step 17 to 19 s.
+# So after HEDGE_S the next model is asked too, and the first answer wins.
+HEDGE_S = 7.0
 
 
 def _rate_limited(err: Exception) -> bool:
@@ -193,24 +237,53 @@ def _rate_limited(err: Exception) -> bool:
 
 
 class FallbackGemini(Gemini):
-    """Gemini that moves to the next model when one is rate-limited, instead of waiting."""
+    """Gemini that moves to the next model when one is rate-limited, instead of waiting: a model
+    that hasn't answered after HEDGE_S gets the next one started beside it (hedged), and a 429
+    moves on at once."""
 
     fallbacks: list[str] = []
 
     async def generate_content_async(self, llm_request: LlmRequest, stream: bool = False):  # type: ignore[override]
         models = [llm_request.model or self.model, *self.fallbacks]
-        for i, name in enumerate(models):
-            llm_request.model = name
-            try:
-                # Not streamed, so the whole answer arrives at once and can be timed out as one.
-                responses = await asyncio.wait_for(_collect(super().generate_content_async(llm_request, stream)), STEP_TIMEOUT_S)
-                for response in responses:
-                    yield response
-                return
-            except Exception as err:
-                if i == len(models) - 1 or not _rate_limited(err):
-                    raise
-                print(f"mac: {name} is rate-limited, trying {models[i + 1]}", flush=True)
+        running: dict[asyncio.Task[list[LlmResponse]], str] = {}
+        failed: Exception | None = None
+        started = time.monotonic()
+        try:
+            next_model = 0
+            while True:
+                if next_model < len(models) and (not running or time.monotonic() - started >= HEDGE_S * next_model):
+                    name = models[next_model]
+                    # A shallow copy: the two requests share their contents and tools (a deep copy
+                    # hits a thread lock inside the tool declarations) and differ only in the model.
+                    request = llm_request.model_copy(update={"model": name})
+                    if next_model:
+                        print(f"mac: {models[next_model - 1]} hasn't answered in {HEDGE_S:.0f}s, asking {name} too", flush=True)
+                    running[asyncio.create_task(_collect(super().generate_content_async(request, stream)))] = name
+                    next_model += 1
+                if not running:
+                    raise failed or TimeoutError("no model answered")
+                wait = HEDGE_S * next_model - (time.monotonic() - started) if next_model < len(models) else STEP_TIMEOUT_S
+                done, _ = await asyncio.wait(running, timeout=max(0.1, wait), return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    name = running.pop(task)
+                    try:
+                        responses = task.result()
+                    except Exception as err:
+                        failed = err
+                        if not _rate_limited(err):
+                            raise
+                        print(f"mac: {name} is rate-limited", flush=True)
+                        continue
+                    for response in responses:
+                        yield response
+                    return
+                if not done and not running and next_model >= len(models):
+                    raise failed or TimeoutError("no model answered")
+                if time.monotonic() - started > STEP_TIMEOUT_S + HEDGE_S * len(models):
+                    raise failed or TimeoutError("no model answered in time")
+        finally:
+            for task in running:
+                task.cancel()
 
 
 async def _collect(gen: Any) -> list[LlmResponse]:
@@ -237,20 +310,45 @@ def _after_model(callback_context: CallbackContext, llm_response: LlmResponse) -
         print(f"mac: worker model call {took:4.1f}s {tokens}", flush=True)
 
 
+_model = FallbackGemini(
+    model=WORKER_MODEL,
+    fallbacks=FALLBACKS,
+    retry_options=types.HttpRetryOptions(attempts=1),
+)
+
+# Google Search is a model built-in tool that can't share a request with function tools, so it
+# lives in a sub-agent the worker calls like any other tool (ADK's own workaround, with a name,
+# an answer style and a thinking level of ours).
+_searcher = LlmAgent(
+    name="search_the_web",
+    model=_model,
+    description=(
+        "Look something up on the web with Google Search: opening hours, whether a film, album or show "
+        "is out yet, dates, times, prices, addresses, news, anything current. Give one clear question "
+        "with the names and place in it."
+    ),
+    instruction="""\
+You answer one question with Google Search. Reply in two or three plain sentences with the facts
+you found (names, dates, times, prices, addresses) and say in words which site they came from.
+No lists, links or markdown. If the web doesn't settle it, say what you did find and what's unclear.
+""",
+    tools=[google_search],
+    generate_content_config=types.GenerateContentConfig(
+        thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel(THINKING.upper())),
+    ),
+)
+search_the_web = GoogleSearchAgentTool(_searcher)
+
 worker_agent = Agent(
     name="slice_worker",
-    model=FallbackGemini(
-        model=WORKER_MODEL,
-        fallbacks=FALLBACKS,
-        retry_options=types.HttpRetryOptions(attempts=1),
-    ),
+    model=_model,
     before_model_callback=_before_model,
     after_model_callback=_after_model,
     on_tool_error_callback=tool_failed,
     instruction=_instruction,
     tools=[
         ask_user, show_cards, show_note, *playbooks.TOOLS, *taste.TOOLS, *plans.TOOLS, *lens.WORKER_TOOLS, *mac_tools.TOOLS,
-        *accounts.TOOLS, *learning.WORKER_TOOLS, operate_computer, play_on, shop_for,
+        *accounts.TOOLS, *learning.WORKER_TOOLS, operate_computer, play_on, shop_for, search_the_web,
     ],
     generate_content_config=types.GenerateContentConfig(
         thinking_config=types.ThinkingConfig(thinking_level=types.ThinkingLevel(THINKING.upper())),
@@ -303,6 +401,8 @@ async def run_worker(conn: Connection, task: Task, message: str) -> str:
         if DEBUG:
             for call in event.get_function_calls():
                 print(f"mac: task {task.id} +{time.monotonic() - started:5.1f}s {call.name}({json.dumps(call.args, default=str)[:160]})", flush=True)
+            if event.grounding_metadata and event.grounding_metadata.web_search_queries:
+                print(f"mac: task {task.id} searched {event.grounding_metadata.web_search_queries}", flush=True)
         if event.is_final_response() and event.content and event.content.parts:
             final = "".join(p.text or "" for p in event.content.parts if not p.thought)
     return final.strip() or "Done."

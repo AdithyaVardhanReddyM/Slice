@@ -120,18 +120,54 @@ async def read_screen(conn: Connection, prompt: str) -> tuple[dict[str, Any], di
     return data, shot
 
 
+# Qloo tag words that say what a thing is rather than what it feels like; the lens shows feel.
+_FLAT_TAGS = {"tv show", "tv series", "movie", "film", "series", "drama", "comedy", "english", "usa", "united states",
+              "television", "streaming", "netflix", "original"}
+
+
+def _words(row: dict[str, Any], take: int = 2) -> list[str]:
+    """Two short words Qloo uses for the thing ("Political thriller", "Witty"), for a top badge."""
+    out: list[str] = []
+    for tag in (row.get("entity") or {}).get("tags") or []:
+        name = str(tag).strip()
+        if not name or name.lower() in _FLAT_TAGS or len(name) > 18 or name.lower() in {o.lower() for o in out}:
+            continue
+        out.append(name[:1].upper() + name[1:])
+        if len(out) == take:
+            break
+    return out
+
+
 def _badge(row: dict[str, Any], top: bool) -> dict[str, Any]:
-    return {"box": row["box_2d"], "label": row["label"], "detail": row.get("detail") if top else None, "top": top, "name": row["name"]}
+    out: dict[str, Any] = {"box": row["box_2d"], "label": row["label"], "detail": row.get("detail") if top else None,
+                           "top": top, "name": row["name"], "own": bool(row.get("own")) and not row.get("disliked"),
+                           "disliked": bool(row.get("disliked"))}
+    if isinstance(row.get("match"), int):
+        out["match"] = row["match"]
+    if top:
+        out["tags"] = _words(row)
+    return out
+
+
+async def _mac(conn: Connection, tool: str, args: dict[str, Any] | None = None, timeout: float = 4) -> dict[str, Any]:
+    """A call the lens can live without (an older Mac build may not know it)."""
+    try:
+        return await conn.bridge.call(tool, args or {}, timeout=timeout)
+    except Exception as err:
+        return {"error": str(err)}
 
 
 async def lens(conn: Connection, task: Any, question: str = "", for_person: str = "") -> dict[str, Any]:
     """Read the screen, rank what's on it for a taste, draw badges. Shared by the talker and the worker."""
     started = time.monotonic()
+    await _mac(conn, "lens_scan")  # a light sweeps the screen while it's read
     data, _ = await read_screen(conn, LIST_PROMPT.format(extra=f"The user asked: {question}" if question else ""))
     if data.get("error") and not data["items"]:
+        await _mac(conn, "lens_clear")
         return {"error": data["error"]}
     items = data["items"]
     if not items:
+        await _mac(conn, "lens_clear")
         return {"error": "I couldn't find anything to rank on this screen."}
     listings = [i for i in items if i.get("kind") == "listing" or (i.get("kind") == "place" and i.get("location"))]
     rows: list[dict[str, Any]] = []
@@ -139,6 +175,7 @@ async def lens(conn: Connection, task: Any, question: str = "", for_person: str 
         city = data.get("city") or conn.city or ""
         scored = await score_places(conn, [i.get("location") or i["name"] for i in listings], city, for_person)
         if scored.get("error"):
+            await _mac(conn, "lens_clear")
             return scored
         for item, place in zip(listings, scored["places"]):
             n = place.get("loved_nearby")
@@ -167,13 +204,17 @@ async def lens(conn: Connection, task: Any, question: str = "", for_person: str 
             rows.append({**r, "label": f"{r['match']}%", "detail": detail})
         kind_of_list = "titles"
     if not rows:
+        await _mac(conn, "lens_clear")
         return {"error": "Qloo doesn't know the things on this screen."}
     # The loves themselves badge last and never take a top spot.
     rows = [r for r in rows if not r.get("own")] + [r for r in rows if r.get("own")]
     conn.lens = rows
     conn.lens_for = for_person
     badges = [_badge(r, i < TOP_BADGES and not r.get("own")) for i, r in enumerate(rows)]
-    shown = await conn.bridge.call("lens_show", {"badges": badges}, timeout=8)
+    plays = any(r.get("kind") in ("movie", "tv_show", "artist", "album", "podcast") for r in rows[:TOP_BADGES])
+    summary = {"count": len(rows), "what": kind_of_list, "whose": whose(for_person or "you"),
+               "hint": "Say \u201cplay the first one\u201d" if plays else "Say \u201copen the first one\u201d"}
+    shown = await conn.bridge.call("lens_show", {"badges": badges, "summary": summary}, timeout=8)
     took = time.monotonic() - started
     await report(conn, task, "qloo", f"Ranked {len(rows)} {kind_of_list} on screen for {whose(for_person or 'you')} taste", f"{took:.1f} s")
     top = [{"rank": i + 1, "name": r["name"], "label": r["label"], "why": r.get("detail")}
@@ -377,7 +418,9 @@ async def learn_taste_from_screen(person: str, tool_context: ToolContext, relati
         return {"error": "I couldn't see anything they love on this page. Is their profile open?"}
     await report(conn, task, "mac", f"Read {person}'s {data.get('site') or 'page'}", f"{len(names)} favourites")
     await conn.bridge.call("lens_show", {"badges": [{"box": i["box_2d"], "label": "Saved", "top": False, "name": i["name"]}
-                                                    for i in data["items"][:12]]}, timeout=6)
+                                                    for i in data["items"][:12]],
+                                         "summary": {"line": f"{len(names)} of {person}'s favourites read off this page and saved.", "hint": None}},
+                           timeout=6)
     info = {"relation": relation, "birthday": birthday, "age": age or None, "home": home}
     out = await save_person(conn, task, person, names, info)
     out["read_from"] = data.get("site") or shot.get("url")

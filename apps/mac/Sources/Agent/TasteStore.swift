@@ -37,9 +37,41 @@ enum TasteStore {
         try? data.write(to: fileURL, options: .atomic)
     }
 
-    /// Onboarding is done, or the user already had a taste before it existed.
+    /// Onboarding reached its last step (OnboardingModel.markDone), or the taste was set up from
+    /// Settings instead. The brain builds the profile part-way through onboarding (before the
+    /// permissions), so loves alone don't count once an `onboarding` entry exists: its `done`
+    /// stays false until the end, and a relaunch in between comes back to the setup.
     static func isOnboarded(_ profile: JSONValue) -> Bool {
-        profile["onboarding"]?["done"]?.bool == true || !(profile["seeds"]?.array.isEmpty ?? true)
+        if let onboarding = profile["onboarding"], case .object = onboarding {
+            return onboarding["done"]?.bool == true
+        }
+        return !(profile["seeds"]?.array.isEmpty ?? true)
+    }
+
+    // MARK: A setup part-way through (onboarding.json)
+
+    private static var onboardingURL: URL { dir.appendingPathComponent("onboarding.json") }
+
+    /// Where a setup that was left part-way got to (macOS quits and reopens the app for Screen
+    /// Recording and Accessibility), so the next launch carries on from the same step.
+    static func loadOnboarding() -> OnboardingProgress? {
+        guard let data = try? Data(contentsOf: onboardingURL),
+              let saved = try? JSONDecoder().decode(OnboardingProgress.self, from: data) else { return nil }
+        // A reset Mac (taste.json gone and a new user id) starts over.
+        guard saved.user == userID else {
+            clearOnboarding()
+            return nil
+        }
+        return saved
+    }
+
+    static func saveOnboarding(_ progress: OnboardingProgress) {
+        guard let data = try? JSONEncoder().encode(progress) else { return }
+        try? data.write(to: onboardingURL, options: .atomic)
+    }
+
+    static func clearOnboarding() {
+        try? FileManager.default.removeItem(at: onboardingURL)
     }
 
     // MARK: The taste graph (slice_mac/graph.py), kept so Settings opens on it at once

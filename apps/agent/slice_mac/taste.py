@@ -73,7 +73,9 @@ async def build_profile(seed_names: list[str], city: str = "", base: dict[str, A
     if prefs:
         profile["prefs"] = {**(profile.get("prefs") or {}), **prefs}
     if onboarding:
-        profile["onboarding"] = {"done": True, "at": memory.now_iso()}
+        # Built on the way to the permissions step. The Mac sets done once the last step is passed
+        # (OnboardingModel.markDone), so a relaunch in between comes back to the setup.
+        profile["onboarding"] = {"done": False, "at": memory.now_iso()}
     if added:
         memory.journal(profile, "started" if onboarding else "added",
                        (f"Started your taste with {memory.names_of(added)}" if onboarding else f"Added {memory.names_of(added)}"),
@@ -170,13 +172,44 @@ def people_line(profile: dict[str, Any]) -> str:
 
 
 def _person(conn: Connection, name: str) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
-    """A saved person by name, forgiving case: (their name, loves, info)."""
+    """A saved person by name, forgiving case, or by who they are ("dad", "my mum"): (their name,
+    loves, info)."""
     people = conn.profile.get("people") or {}
     info = conn.profile.get("people_info") or {}
+    want = name.strip().lower()
     for saved in list(people) + list(info):
-        if saved.lower() == name.strip().lower():
+        if saved.lower() == want:
             return saved, people.get(saved, []), info.get(saved, {})
+    role = re.sub(r"^(my|our)\s+", "", want)
+    roles = {"dad": ("dad", "father", "papa", "pa"), "mum": ("mum", "mom", "mother", "ma"), "grandma": ("grandma", "gran", "nana", "grandmother"),
+             "grandpa": ("grandpa", "grandad", "granddad", "grandfather")}
+    same = next((group for group in roles.values() if role in group), (role,))
+    for saved, about in info.items():
+        relation = str(about.get("relation") or "").lower()
+        if relation and any(relation == r or relation.startswith(r + " ") or relation.endswith(" " + r) for r in same):
+            return saved, people.get(saved, []), about
     return name.strip().title(), [], {}
+
+
+# What someone's needs, in the user's words, turn on when places are picked for them.
+_NEED_WORDS = {
+    "step_free": ("walker", "wheelchair", "stairs", "mobility", "cane", "step-free", "step free", "stepfree"),
+    "quiet": ("quiet", "loud", "noisy", "noise", "hearing", "hear each other", "calm"),
+    "seated": ("seat", "table", "reservation", "booking", "booked", "sit down", "sit-down", "standing", "bar counter", "counter"),
+    "early": ("late night", "late nights", "early night", "home by", "not late", "no late", "early evening", "bed early"),
+    "short_walks": ("short walk", "short walks", "not far", "close together", "near each other", "much walking", "too much walking", "little walking"),
+    "parking": ("parking", "park the car", "drive", "drives", "driving", "his car", "her car", "by car"),
+}
+
+
+def needs_of(info: dict[str, Any]) -> dict[str, bool]:
+    """"Proper table with a reservation, nothing too loud, no late nights, short walks, he drives"
+    -> {"seated": True, "quiet": True, "early": True, "short_walks": True, "parking": True}."""
+    text = str(info.get("needs") or "").lower()
+    out = {flag: any(w in text for w in words) for flag, words in _NEED_WORDS.items()}
+    if info.get("step_free"):
+        out["step_free"] = True
+    return {k: v for k, v in out.items() if v}
 
 
 @dataclass
@@ -190,28 +223,42 @@ class Signals:
     home: str | None = None
     step_free: bool = False
     who: str = "you"
+    # Their needs as flags (needs_of), and whose love each signal is ("Frank", "Walter", "you").
+    needs: dict[str, bool] = field(default_factory=dict)
+    owner: dict[str, str] = field(default_factory=dict)
 
 
 async def signals_for(conn: Connection, also_like: str = "", for_person: str = "") -> Signals:
     sig = Signals()
     who = [w.strip() for w in for_person.replace("&", ",").replace(" and ", ",").split(",") if w.strip()]
     others = [w for w in who if w.lower() not in ("me", "us", "i", "myself", "you")]
+    oldest = 0
+    saved_names = []
     for name in others:
         saved, loves, info = _person(conn, name)
+        saved_names.append(saved)
         for p in loves:
             sig.ids.append(p["id"])
             sig.names[p["id"]] = p["name"]
-        if len(who) == 1:
-            sig.age = qloo.age_band(info.get("age"))
-            sig.home = info.get("home")
-            sig.step_free = bool(info.get("step_free"))
-            sig.who = saved
+            sig.owner[p["id"]] = saved
+        # For two people out together, the picks follow the older one's age band, the first home
+        # given, and every need either of them has.
+        if info.get("age") and int(info["age"]) > oldest:
+            oldest = int(info["age"])
+            sig.age = qloo.age_band(oldest)
+        sig.home = sig.home or info.get("home")
+        sig.step_free = sig.step_free or bool(info.get("step_free"))
+        for flag in needs_of(info):
+            sig.needs[flag] = True
+    if others and len(others) == len(who):
+        sig.who = " and ".join(saved_names)
     if not others or len(others) < len(who):
         for s in memory.signal_seeds(conn.profile):
             sig.ids.append(s["id"])
             sig.names[s["id"]] = s["name"]
+            sig.owner[s["id"]] = "you"
         if others:
-            sig.who = " and ".join(others + ["you"])
+            sig.who = " and ".join(saved_names + ["you"])
     if also_like:
         for hit in await qloo.resolve([n for n in also_like.split(",")]):
             sig.ids.append(hit["id"])
@@ -220,24 +267,33 @@ async def signals_for(conn: Connection, also_like: str = "", for_person: str = "
     return sig
 
 
-async def point_of(conn: Connection, place: str) -> dict[str, float] | None:
+async def point_of(conn: Connection, place: str, near: dict[str, float] | None = None) -> dict[str, float] | None:
     """A neighbourhood, city, venue or street address to a point: a locality Qloo knows by that
     exact name first (fast, cached), then Apple Maps on the Mac (venues, addresses), then any
-    Qloo locality match. Home is the point picked on the map in onboarding (profile["home"])."""
+    Qloo locality match. Home is the point picked on the map in onboarding (profile["home"]).
+    With `near` (the city's centre), an answer more than 80 km away is a wrong match and skipped."""
     if not place.strip():
         return None
+
+    def plausible(pt: dict[str, float] | None) -> dict[str, float] | None:
+        if pt is None or (near and qloo.km_between(pt, near) > 80):
+            return None
+        return pt
+
     home = conn.profile.get("home") or {}
     if home.get("lat") is not None and _key(place) in {_key(home.get("name") or ""), _key(conn.city or "")}:
         return {"lat": float(home["lat"]), "lon": float(home["lon"])}
     if not re.search(r"\d", place):
-        found = await qloo.locate(place, strict=True)
+        found = plausible(await qloo.locate(place, strict=True))
         if found:
             return found
     res = await conn.bridge.call("maps_geocode", {"places": [place]}, timeout=15)
     first = (res.get("points") or [None])[0]
     if isinstance(first, dict) and first.get("lat") is not None:
-        return {"lat": float(first["lat"]), "lon": float(first["lon"])}
-    return await qloo.locate(place)
+        found = plausible({"lat": float(first["lat"]), "lon": float(first["lon"])})
+        if found:
+            return found
+    return plausible(await qloo.locate(place))
 
 
 async def picks(conn: Connection, task: Any, kind: str, near: str = "", genre: str = "", also_like: str = "",
@@ -366,7 +422,7 @@ async def rank(conn: Connection, items: list[dict[str, Any]], kind: str = "", fo
         row = dict(item)
         found = scores.get(hit["id"]) if hit else None
         if hit:
-            row["entity"] = {k: v for k, v in hit.items() if k in ("name", "kind", "id", "image", "description")}
+            row["entity"] = {k: v for k, v in hit.items() if k in ("name", "kind", "id", "image", "description", "tags")}
         if hit and hit["id"] in disliked:
             row["match"] = None
             row["disliked"] = True
@@ -518,12 +574,17 @@ async def save_person(conn: Connection, task: Any, person: str, items: list[str]
     matched = {_key(h["name"]) for h in found}
     # Descriptions ("natural wine bars") aren't entities; keep them as words for the worker.
     notes = [x for x in items if not any(_key(x) in m or m in _key(x) for m in matched)]
+    name, old_loves, old_info = _person(conn, person)
+    existing = {p["id"]: p for p in old_loves}
+    for hit in found:
+        # A few of Qloo's tags for each love (Miles Davis: bebop, trumpet), so a plan can tell a jazz
+        # lover from a rock one without another call.
+        existing[hit["id"]] = {"id": hit["id"], "name": hit["name"], "kind": hit.get("kind"), "tags": (hit.get("tags") or [])[:6]}
+    reads_as = await qloo.common_tags(list(existing), take=4) if existing else []
+    # Two people saved at once (a weekend for dad and his friend) must not overwrite each other:
+    # the profile is copied and changed with no await in between.
     profile = dict(conn.profile)
     people = dict(profile.get("people") or {})
-    name, _, old_info = _person(conn, person)
-    existing = {p["id"]: p for p in people.get(name, [])}
-    for hit in found:
-        existing[hit["id"]] = {"id": hit["id"], "name": hit["name"], "kind": hit.get("kind")}
     people[name] = list(existing.values())
     profile["people"] = people
     if notes:
@@ -532,10 +593,10 @@ async def save_person(conn: Connection, task: Any, person: str, items: list[str]
     if about.get("needs") and "step_free" not in info:
         needs = about["needs"].lower()
         about["step_free"] = any(w in needs for w in ("walker", "wheelchair", "stairs", "mobility", "cane", "step"))
-    reads_as = await qloo.common_tags(list(existing), take=4) if existing else []
     if reads_as:
         about["reads_as"] = reads_as
     profile["people_info"] = {**(profile.get("people_info") or {}), name: about}
+    conn.profile = profile
     await save_profile(conn, profile)
     await report(conn, task, "qloo", f"Saved what {name} loves", ", ".join(h["name"] for h in found) or "nothing matched")
     if conn.tasks and task:

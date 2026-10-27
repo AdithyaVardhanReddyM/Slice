@@ -16,7 +16,8 @@ Fields owned here:
     "declined":  [entity ids]   suggestions the user turned down (never asked again)
     "journal":   [{"id", "at", "kind", "text", "about", "ref"}]   what changed and why, oldest first
     "prefs":     {"discovery": "new" | "mix" | "known", ...}   from onboarding
-    "onboarding": {"done": true, "at": ...}
+    "onboarding": {"done": true | false, "at": ...}   false while the setup is still part-way
+                 (the Mac sets done on its last step)
 
 The loop: saying "I love X" (or a thumbs up on a card) adds it at once; quieter
 signals (a track playing, a film page open, a lens badge tapped) add up as

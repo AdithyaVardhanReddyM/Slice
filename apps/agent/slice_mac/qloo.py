@@ -45,6 +45,74 @@ KINDS = {
 }
 
 # What a place recommendation can be narrowed to (ids from /v2/tags, checked 2026-10-20).
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+# Tag families that say how a place runs, not what it feels like (payments, parking, amenities).
+_PLUMBING = ("payments", "amenity", "accessibility", "service_option", "service_type", "parking", "room_type", "children",
+             "planning", "visit_intent", "time_of_day", "nearby_attraction", "view:", "dietary", "loyalty", "hotel_class")
+
+
+def _plumbing_tag(tag: dict[str, Any]) -> bool:
+    kind = str(tag.get("type") or tag.get("id") or "").lower()
+    name = str(tag.get("name") or "").lower()
+    return any(p in kind for p in _PLUMBING) or name in ("place", "destination", "routine visit")
+
+
+def _place_details(props: dict[str, Any], tags: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """What a plan or a document needs to know about a place beyond its name: what kind of place
+    Qloo says it mainly is (a hotel with a restaurant is still a hotel), its rating, its own
+    website (where a table is booked), phone, opening hours by weekday ("11:00 to 23:30", or
+    "closed"), signature dishes, whether it has shut for good, and what someone's needs turn on:
+    how loud it is (Qloo's noise_level tag: quiet, moderate, loud), whether it takes reservations,
+    the parking it has and whether there's usually a wait (its planning and parking tags, which the
+    brief's `tags` leave out as plumbing)."""
+    out: dict[str, Any] = {}
+    for tag in tags or []:
+        kind = str(tag.get("type") or tag.get("id") or "").lower()
+        tid = str(tag.get("id") or "").lower()
+        name = str(tag.get("name") or "")
+        if "noise_level" in kind and name:
+            out["noise"] = name.lower()
+        elif "reservations" in tid and "no_reservations" not in tid:
+            out["reservations"] = True
+            if "required" in tid:
+                out["reservations_required"] = True
+        elif "usually_a_wait" in tid:
+            out["wait"] = True
+        elif ":parking:" in kind and name and name.lower() != "parking":
+            out.setdefault("parking", []).append(name)
+    if props.get("live_music") is not None:
+        out["live_music"] = bool(props["live_music"])
+    primary = (props.get("primary_genre") or {}).get("id") or ""
+    if primary:
+        out["genre"] = primary.replace("urn:tag:genre:place:", "")
+    if props.get("business_rating"):
+        out["rating"] = round(float(props["business_rating"]), 1)
+    if props.get("website"):
+        out["url"] = str(props["website"])
+    if props.get("phone"):
+        out["phone"] = str(props["phone"])
+    if props.get("is_closed"):
+        out["closed"] = True
+    hours = props.get("hours") or {}
+    compact: dict[str, str] = {}
+    for day in WEEKDAYS:
+        spans = hours.get(day) or []
+        if not spans:
+            continue
+        if all(sp.get("closed") or not sp.get("opens") for sp in spans):
+            compact[day] = "closed"
+        else:
+            compact[day] = ", ".join(f"{sp['opens'][1:6]} to {(sp.get('closes') or '')[1:6]}".strip(" to") for sp in spans if sp.get("opens"))
+    # Hours that say closed every day are missing data, not a place that never opens.
+    if compact and any(v != "closed" for v in compact.values()):
+        out["hours"] = compact
+    dishes = [d.get("name") if isinstance(d, dict) else str(d) for d in props.get("specialty_dishes") or []]
+    dishes = [d for d in dishes if d]
+    if dishes:
+        out["specialties"] = dishes[:3]
+    return out
+
+
 PLACE_GENRES = {
     "restaurant": "urn:tag:genre:place:restaurant",
     "bar": "urn:tag:genre:place:restaurant:bar",
@@ -59,6 +127,10 @@ PLACE_GENRES = {
     "record_store": "urn:tag:genre:place:record_store",
     "hotel": "urn:tag:genre:place:hotel",
     "park": "urn:tag:genre:place:park",
+    # Checked 2026-10-27 (Chicago): a jazz club is its own genre; cinemas are a category, which
+    # filter.tags takes just the same.
+    "jazz_club": "urn:tag:genre:place:jazz_club",
+    "cinema": "urn:tag:category:place:movie_theater",
 }
 
 # Tag families that describe a person's cultural taste (see qloo-api-notes).
@@ -148,9 +220,11 @@ def _brief(entity: dict[str, Any]) -> dict[str, Any]:
     loc = entity.get("location") or {}
     if loc.get("lat") is not None:
         out["location"] = {"lat": loc.get("lat"), "lon": loc.get("lon")}
-    tags = [t.get("name") for t in entity.get("tags") or [] if t.get("name")]
+    tags = [t.get("name") for t in entity.get("tags") or [] if t.get("name") and not _plumbing_tag(t)]
     if tags:
-        out["tags"] = tags[:6]
+        out["tags"] = tags[:10 if out["kind"] == "place" else 6]
+    if out["kind"] == "place":
+        out.update(_place_details(props, entity.get("tags") or []))
     # Brands: where to buy, what they cost, what they sell (for gifts and shopping).
     if props.get("official_site"):
         out["url"] = props["official_site"]
@@ -227,13 +301,14 @@ async def resolve_each(queries: list[tuple[str, str]], concurrency: int = 3) -> 
 
 async def locate(place: str, strict: bool = False) -> dict[str, float] | None:
     """A neighbourhood or city to a point, via Qloo's locality search ("Williamsburg, Brooklyn").
-    strict: skip a locality whose name is only the start of the query, so a venue ("Brooklyn
-    Steel") isn't taken for the borough it starts with."""
+    strict: only a locality with exactly that name, so a venue ("Brooklyn Steel") isn't taken for
+    the borough it starts with, and a hotel's name isn't matched to some town on another
+    continent (Qloo's search did that for "Hôtel National des Arts et Métiers", 2026-10-27)."""
     body, _ = await _get("/search", {"query": place, "types": "urn:entity:locality"})
     want = _norm(place.split(",")[0])
     for hit in (body or {}).get("results") or []:
         name = _norm(hit.get("name") or "")
-        if strict and name != want and want.startswith(name + " "):
+        if strict and name != want:
             continue
         loc = hit.get("location") or {}
         props = hit.get("properties") or {}

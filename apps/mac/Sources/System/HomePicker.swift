@@ -8,7 +8,7 @@ import MapKit
 @MainActor
 @Observable
 final class HomePicker: NSObject {
-    struct Place: Equatable {
+    struct Place: Equatable, Codable {
         var name: String
         var detail: String
         var lat: Double

@@ -42,7 +42,8 @@ struct LocalTools {
         case "save_file": return FileTool.save(name: text("name"), base64: text("data"), open: args?["open"] == .bool(true))
         case "screenshot": return await ScreenTool.screenshot()
         case "computer": return await ComputerTool.run(args)
-        case "lens_show": return LensOverlay.shared.show(args?["badges"]?.array ?? [])
+        case "lens_scan": return LensOverlay.shared.scan()
+        case "lens_show": return LensOverlay.shared.show(args?["badges"]?.array ?? [], summary: args?["summary"])
         case "lens_clear":
             LensOverlay.shared.clear()
             return .success(["ok": true])

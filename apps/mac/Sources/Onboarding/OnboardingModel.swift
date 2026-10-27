@@ -15,7 +15,10 @@ final class OnboardingWindow {
         if window == nil {
             let model = OnboardingModel(agent: agent)
             self.model = model
-            let view = OnboardingView(model: model) { [weak self] in self?.close() }
+            let view = OnboardingView(model: model) { [weak self] in
+                self?.model?.closed()
+                self?.close()
+            }
             let window = SkyWindow(size: OnboardingView.size, content: view)
             window.center()
             self.window = window
@@ -32,7 +35,7 @@ final class OnboardingWindow {
 }
 
 /// One thing to pick (a Qloo entity with its picture).
-struct Tile: Identifiable, Equatable {
+struct Tile: Identifiable, Equatable, Codable {
     let id: String
     let name: String
     let kind: String?
@@ -52,6 +55,19 @@ struct Tile: Identifiable, Equatable {
         .object(["id": .string(id), "name": .string(name), "kind": kind.map(JSONValue.string) ?? .null,
                  "image": image.map(JSONValue.string) ?? .null])
     }
+}
+
+/// What an unfinished setup has so far, kept in Application Support/Slice/onboarding.json
+/// (TasteStore) so a relaunch in the middle carries on where it was.
+struct OnboardingProgress: Codable {
+    /// Whose it is (TasteStore.userID): a reset Mac gets a new id and starts over.
+    var user: String
+    var step: Int
+    var name: String
+    var home: HomePicker.Place?
+    var picked: [Tile]
+    var answers: [String: Set<String>]
+    var questionIndex: Int
 }
 
 struct Question: Identifiable {
@@ -138,12 +154,25 @@ final class OnboardingModel {
 
     @ObservationIgnored private var moreJob: Task<Void, Never>?
     @ObservationIgnored private var savedCity: String
+    /// Off while drawing for a check and once the setup is done, so nothing is kept to resume.
+    @ObservationIgnored private var keeping = true
+    @ObservationIgnored private var done = false
 
     init(agent: AgentSession) {
         self.agent = agent
         name = agent.profile["name"]?.string ?? ""
         savedCity = agent.profile["city"]?.string ?? ""
         home = HomePicker(place: HomePicker.saved(agent.profile))
+        // Left part-way last time (or macOS relaunched the app for a permission): same step, same picks.
+        if let saved = TasteStore.loadOnboarding() {
+            step = Step(rawValue: saved.step) ?? .welcome
+            if !saved.name.isEmpty { name = saved.name }
+            if let place = saved.home { home.place = place }
+            picked = saved.picked
+            answers = saved.answers
+            questionIndex = min(max(saved.questionIndex, 0), Question.all.count - 1)
+            resume()
+        }
     }
 
     static func stepName(_ step: Step) -> String {
@@ -175,6 +204,7 @@ final class OnboardingModel {
             picked.append(tile)
         }
         refreshMore()
+        persist()
     }
 
     // MARK: Moving between steps
@@ -202,6 +232,70 @@ final class OnboardingModel {
             loadStarters(to)
             refreshMore()
         }
+        persist()
+    }
+
+    // MARK: Carrying on after a quit
+
+    /// Picks up the saved step: tiles for a picking step, or the taste the brain read before.
+    private func resume() {
+        if isPicking {
+            loadStarters(step)
+            refreshMore()
+        } else if step.rawValue >= Step.access.rawValue {
+            restoreTaste()
+        }
+    }
+
+    /// The taste built on the way to the access step: from the graph kept on disk, else read
+    /// again (or built now, if the brain was away the first time).
+    private func restoreTaste() {
+        let profile = agent.profile
+        guard !(profile["seeds"]?.array.isEmpty ?? true) else {
+            build()
+            return
+        }
+        if let saved = TasteStore.loadGraph(), saved.key == TasteStore.graphKey(profile) {
+            showTaste(saved.graph)
+            return
+        }
+        building = true
+        Task {
+            defer { building = false }
+            do {
+                let graph = try await BrainHTTP.post("profile/graph", body: ["profile": profile])
+                TasteStore.saveGraph(graph, key: TasteStore.graphKey(profile))
+                showTaste(graph)
+            } catch {
+                problem = "Couldn't read your taste: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    /// Everything entered so far, so a quit (macOS asks for one after Screen Recording and
+    /// Accessibility are allowed) doesn't lose it. Called on every change, and when the app quits.
+    func persist() {
+        guard keeping else { return }
+        TasteStore.saveOnboarding(OnboardingProgress(
+            user: TasteStore.userID, step: step.rawValue, name: name.trimmingCharacters(in: .whitespaces),
+            home: home.place, picked: picked, answers: answers, questionIndex: questionIndex))
+    }
+
+    /// The setup is over: the profile says so (TasteStore.isOnboarded) and nothing is kept to resume.
+    func markDone() {
+        guard !done else { return }
+        done = true
+        keeping = false
+        TasteStore.clearOnboarding()
+        var fields = agent.profile.object
+        fields["onboarding"] = ["done": true, "at": .string(ISO8601DateFormatter().string(from: Date()))]
+        agent.setProfile(.object(fields))
+    }
+
+    /// The window was closed with its X. Once the taste has been shown that is the end of the
+    /// setup; before that, the next launch comes back to this step.
+    func closed() {
+        if step.rawValue >= Step.reveal.rawValue { markDone() } else { persist() }
     }
 
     /// The opening tiles for every picking step, fetched while the user reads the welcome.
@@ -321,6 +415,7 @@ final class OnboardingModel {
         }
         problem = added == 0 ? "Qloo didn't know those. Search for a few instead." : nil
         refreshMore()
+        persist()
     }
 
     private static func sameName(_ a: String, _ b: String) -> Bool {
@@ -350,6 +445,7 @@ final class OnboardingModel {
             chosen = chosen.contains(option.label) ? [] : [option.label]
         }
         answers[question.id] = chosen
+        persist()
         // One answer is enough for a single-choice question: move on by itself.
         if !question.multi, !chosen.isEmpty {
             let at = questionIndex
@@ -363,6 +459,7 @@ final class OnboardingModel {
     func nextQuestion() {
         if questionIndex < Question.all.count - 1 {
             withAnimation(.snappy) { questionIndex += 1 }
+            persist()
         } else {
             next()
         }
@@ -371,6 +468,7 @@ final class OnboardingModel {
     func previousQuestion() {
         if questionIndex > 0 {
             withAnimation(.snappy) { questionIndex -= 1 }
+            persist()
         } else {
             back()
         }
@@ -408,20 +506,25 @@ final class OnboardingModel {
                 agent.setProfile(built)
                 let graph = try await BrainHTTP.post("profile/graph", body: ["profile": built])
                 TasteStore.saveGraph(graph, key: TasteStore.graphKey(built))
-                let (nodes, edges) = TasteSpace.parse(graph)
-                // The reveal shows the loves and their strongest threads; people and dislikes wait for Settings.
-                let (keep, links) = TasteSpace.trim((nodes.filter { [.you, .love, .tag].contains($0.style) }, edges), threads: 6, picks: 0)
-                self.graph.update(nodes: keep, edges: links, animate: true)
-                nextUp = nodes.filter { $0.style == .pick }
+                showTaste(graph)
             } catch {
                 problem = "Couldn't read your taste: \(error.localizedDescription)"
             }
         }
     }
 
+    /// The reveal shows the loves and their strongest threads; people and dislikes wait for Settings.
+    private func showTaste(_ graph: JSONValue) {
+        let (nodes, edges) = TasteSpace.parse(graph)
+        let (keep, links) = TasteSpace.trim((nodes.filter { [.you, .love, .tag].contains($0.style) }, edges), threads: 6, picks: 0)
+        self.graph.update(nodes: keep, edges: links, animate: true)
+        nextUp = nodes.filter { $0.style == .pick }
+    }
+
     #if DEBUG
     /// -renderSettings: every step filled in, as if someone had picked a few things.
     func prepareForRender() async {
+        keeping = false
         if name.isEmpty { name = "Alex" }
         if home.place == nil {
             home.place = HomePicker.Place(name: "Williamsburg, Brooklyn", detail: "New York, United States", lat: 40.7142, lon: -73.9614)
@@ -456,6 +559,7 @@ final class OnboardingModel {
     #endif
 
     func finish() {
+        markDone()
         agent.show(Nudge(id: "welcome", kind: "learn", title: "Slice is ready",
                          line: "Hover the notch to type, or hold fn and control to talk."))
     }

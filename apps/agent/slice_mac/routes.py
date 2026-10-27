@@ -27,6 +27,7 @@ import asyncio
 import datetime as dt
 import json
 import os
+import time
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -317,7 +318,8 @@ async def _new_session(conn: Connection) -> Session:
     return await _sessions.create_session(
         app_name=APP_NAME,
         user_id=conn.user_id,
-        state={"profile_summary": taste.summary_for_talker(conn.profile, conn.taste_off), "now": _now(conn.timezone)},
+        state={"profile_summary": taste.summary_for_talker(conn.profile, conn.taste_off), "now": _now(conn.timezone),
+               "people": taste.people_line(conn.profile)},
     )
 
 
@@ -367,6 +369,8 @@ async def live(ws: WebSocket) -> None:
             kind = msg.get("type")
             if os.environ.get("MAC_DEBUG") and kind not in ("tool_result",):
                 print(f"mac: from the Mac: {kind}", flush=True)
+            if kind in ("text", "talk_start", "talk_end"):
+                conn.last_input_at = time.monotonic()
             if kind == "text" and (msg.get("text") or "").strip():
                 convo.ensure().send_content(types.Content(role="user", parts=[types.Part(text=msg["text"])]))
             elif kind == "talk_start":

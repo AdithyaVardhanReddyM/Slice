@@ -34,8 +34,10 @@ from .taste import Signals, point_of, rank, signals_for, whose
 
 # How long a stop usually takes, in minutes, for the timeline.
 STAY_MIN = {"coffee": 40, "cafe": 45, "bakery": 30, "record_store": 40, "bookstore": 40, "museum": 90, "park": 60,
-            "restaurant": 80, "bar": 75, "cocktail_bar": 75, "wine_bar": 75, "music_venue": 150, "hotel": 0}
-INDOOR = {"coffee", "cafe", "bakery", "record_store", "bookstore", "museum", "restaurant", "bar", "cocktail_bar", "wine_bar", "music_venue"}
+            "restaurant": 80, "bar": 75, "cocktail_bar": 75, "wine_bar": 75, "music_venue": 150, "hotel": 0,
+            "jazz_club": 120, "cinema": 150, "home": 0}
+INDOOR = {"coffee", "cafe", "bakery", "record_store", "bookstore", "museum", "restaurant", "bar", "cocktail_bar", "wine_bar", "music_venue",
+          "jazz_club", "cinema"}
 WALK_RADIUS_M = 900
 # "Places you'd love": a taste's top 100 in the area (two Qloo pages), counted within a 10-minute walk.
 NEAR_KM = 0.8
@@ -64,7 +66,9 @@ async def _weather(point: dict[str, float], day: dt.date) -> dict[str, Any]:
     days = data["daily"]["time"]
     key = day.isoformat()
     if key not in days:
-        return {"error": f"No forecast for {key} yet (16 days ahead at most)."}
+        # Beyond the 16-day forecast: what the same day was like last year (Open-Meteo's archive),
+        # marked `typical` so plans and documents say "usually", not "will be".
+        return await _typical(point, day)
     i = days.index(key)
     wet = [t[11:16] for t, p in zip(data["hourly"]["time"], data["hourly"]["precipitation_probability"])
            if t.startswith(key) and (p or 0) >= 50 and "08:00" <= t[11:16] <= "23:00"]
@@ -74,6 +78,30 @@ async def _weather(point: dict[str, float], day: dt.date) -> dict[str, Any]:
         "high_c": round(data["daily"]["temperature_2m_max"][i]), "low_c": round(data["daily"]["temperature_2m_min"][i]),
         "rain_chance": rain, "wet_hours": f"{wet[0]} to {wet[-1]}" if wet else None,
         "indoors": rain >= 50,
+    }
+
+
+async def _typical(point: dict[str, float], day: dt.date) -> dict[str, Any]:
+    try:
+        then = day.replace(year=day.year - 1)
+    except ValueError:  # 29 February
+        then = day.replace(year=day.year - 1, day=28)
+    res = await _client().get("https://archive-api.open-meteo.com/v1/archive", params={
+        "latitude": point["lat"], "longitude": point["lon"], "timezone": "auto",
+        "start_date": then.isoformat(), "end_date": then.isoformat(),
+        "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum",
+    })
+    res.raise_for_status()
+    daily = res.json().get("daily") or {}
+    if not daily.get("time"):
+        return {"error": f"No forecast for {day.isoformat()} yet (16 days ahead at most)."}
+    rain_mm = (daily.get("precipitation_sum") or [0])[0] or 0
+    rain = 70 if rain_mm >= 2 else 35 if rain_mm >= 0.3 else 10
+    return {
+        "date": day.isoformat(), "summary": WMO.get((daily.get("weather_code") or [None])[0], "mixed"),
+        "high_c": round(daily["temperature_2m_max"][0]), "low_c": round(daily["temperature_2m_min"][0]),
+        "rain_chance": rain, "wet_hours": None, "indoors": rain >= 50, "typical": True,
+        "note": "No forecast this far ahead; this is what the same day was like last year.",
     }
 
 
@@ -269,27 +297,39 @@ def _hhmm(text: str, default: str = "10:00") -> dt.time:
 
 async def walkable_stops(conn: Connection, sig: Signals, here: dict[str, float], kinds: list[str], clock: dt.datetime,
                          step_free: bool = False, used: set[str] | None = None, where: str = "",
-                         stand_ins: dict[str, str] | None = None) -> tuple[list[dict[str, Any]], dict[str, float], dt.datetime]:
+                         stand_ins: dict[str, str] | None = None, needs: dict[str, bool] | None = None,
+                         radii: tuple[int, ...] = (WALK_RADIUS_M, WALK_RADIUS_M * 2), drive_radius_m: int = 0,
+                         ) -> tuple[list[dict[str, Any]], dict[str, float], dt.datetime]:
     """Shared by plan_walkable_day and the playbooks: one Qloo place per kind, each near the last.
     `used` can be shared by days planned at the same time, so they don't pick the same places.
     Returns the stops, where the walk ends and the time after the last stop. A kind with nothing
     nearby becomes its stand-in (`stand_ins`, record_store -> bookstore) if one is given. With taste
-    off, the popular picks for `where` instead (generic.py), not chained by distance."""
+    off, the popular picks for `where` instead (generic.py), not chained by distance.
+    `needs` (see `needs_of`): a place must suit them (`suits`), and the first one that also has the
+    nice-to-haves (quiet, parking) wins over a higher-ranked one that doesn't. `radii` are how far
+    a walk may be; with `drive_radius_m`, a kind found nowhere on foot is looked for within a
+    drive instead and the stop says so."""
     used = used if used is not None else set()
     if conn.taste_off:
         return await _popular_stops(where or conn.city or "", kinds, clock, used), here, clock
     # What the user said isn't for them never comes back (memory.py).
     skip = sig.ids + memory.dislike_ids(conn.profile)
+    needs = needs or {}
     plan: list[dict[str, Any]] = []
     for kind in kinds:
         found: list[dict[str, Any]] = []
-        for option in [kind] + ([stand_ins[kind]] if stand_ins and kind in stand_ins else []):
+        drove = False
+        # A stand-in only when the day doesn't already have one of those (two bakeries read oddly).
+        for option in [kind] + ([stand_ins[kind]] if stand_ins and kind in stand_ins and stand_ins[kind] not in kinds else []):
             genre = option if option in qloo.PLACE_GENRES else None
-            for radius in (WALK_RADIUS_M, WALK_RADIUS_M * 2):
-                found = [p for p in await qloo.recommend("place", sig.ids, near=here, radius_m=radius, genre=genre, take=8,
+            for radius in list(radii) + ([drive_radius_m] if drive_radius_m and drive_radius_m > max(radii) else []):
+                arrive = clock + dt.timedelta(minutes=10)
+                found = [p for p in await qloo.recommend("place", sig.ids, near=here, radius_m=radius, genre=genre, take=15,
                                                          age=sig.age, accessible=step_free, exclude=skip)
-                         if p["id"] not in used and p.get("location")]
+                         if p["id"] not in used and p.get("location") and fits(p, option) and open_at(p, arrive, STAY_MIN.get(option, 60))
+                         and suits(p, option, needs)]
                 if found:
+                    drove = radius == drive_radius_m and radius > max(radii)
                     break
             if found:
                 kind = option
@@ -297,18 +337,179 @@ async def walkable_stops(conn: Connection, sig: Signals, here: dict[str, float],
         if not found:
             plan.append({"kind": kind, "title": f"No {kind.replace('_', ' ')} found nearby", "time": clock.strftime("%H:%M")})
             continue
-        pick = found[0]
+        pick = next((p for p in found if prefers(p, option, needs)), found[0])
         used.add(pick["id"])
         walk = qloo.walk_minutes(here, pick["location"])
+        drove = drove or (needs.get("short_walks", False) and walk > 12 and bool(drive_radius_m))
+        if drove:
+            walk = drive_minutes(here, pick["location"])
         clock += dt.timedelta(minutes=walk)
+        # A morning that runs quick doesn't make lunch at half eleven, and dinner is at a quarter
+        # hour ("7:45", not "7:44") since it's the one stop that gets booked.
+        if kind == "restaurant" and clock.time() < dt.time(12, 15) and clock.hour < 17:
+            clock = clock.replace(hour=12, minute=15)
+        elif kind == "restaurant" and clock.hour >= 17 and clock.minute % 15:
+            clock += dt.timedelta(minutes=15 - clock.minute % 15)
         plan.append({
             "kind": kind, "time": clock.strftime("%H:%M"), "title": pick["name"], "address": pick.get("address"),
-            "lat": pick["location"]["lat"], "lon": pick["location"]["lon"], "walk_min": walk, "image": pick.get("image"),
-            "note": (pick.get("description") or "")[:110], "id": pick["id"], "area": pick.get("neighborhood"),
+            "lat": pick["location"]["lat"], "lon": pick["location"]["lon"], "image": pick.get("image"),
+            "note": (f"A {walk}-minute drive. " if drove else "") + (pick.get("description") or "")[:110], "id": pick["id"], "area": pick.get("neighborhood"),
+            # For the written plan (tripdoc.py): the whole description and the practical details.
+            "about": pick.get("description"), "tags": pick.get("tags"), "price_level": pick.get("price_level"),
+            "url": pick.get("url"), "phone": pick.get("phone"), "hours": pick.get("hours"), "rating": pick.get("rating"),
+            "specialties": pick.get("specialties"), "genre": pick.get("genre"),
+            # What someone's needs turn on (qloo._place_details).
+            "noise": pick.get("noise"), "reservations": pick.get("reservations"), "reservations_required": pick.get("reservations_required"),
+            "parking": pick.get("parking"), "wait": pick.get("wait"),
+            **({"drive_min": walk} if drove else {"walk_min": walk}),
         })
         clock += dt.timedelta(minutes=STAY_MIN.get(kind, 60))
         here = pick["location"]
     return plan, here, clock
+
+
+# What Qloo must say a place mainly is for it to stand in for a kind of stop. Qloo's genre filter
+# matches any tag, so a hotel with a restaurant came back as lunch, a department store as a record
+# shop and a shopping mall as a bookshop (Paris, 2026-10-27); the primary genre tells them apart.
+FITS = {
+    "coffee": ("coffee_shop", "cafe", "coffee", "bakery", "tea", "brunch", "breakfast"),
+    "cafe": ("cafe", "coffee", "bakery", "tea", "brunch", "breakfast", "patisserie"),
+    "bakery": ("bakery", "patisserie", "pastry", "boulangerie", "cafe", "bread"),
+    "restaurant": ("restaurant", "bistro", "brasserie", "bouillon", "trattoria", "diner", "eatery", "steak", "pizza", "sushi", "noodle"),
+    "bar": ("bar", "pub", "lounge", "taproom", "brewery", "beer"),
+    "cocktail_bar": ("bar", "lounge", "cocktail", "speakeasy"),
+    "wine_bar": ("bar", "wine", "cave", "bistro"),
+    # Somewhere with music on most nights (a jazz club, a music bar), not a concert hall that's dark without a show.
+    "music_venue": ("jazz", "music_bar", "live_music_bar", "club", "cabaret", "bar", "lounge"),
+    "museum": ("museum", "gallery", "art", "exhibit", "cultural", "monument", "landmark", "attraction", "historic", "heritage", "palace", "foundation"),
+    "bookstore": ("book", "library", "comic"),
+    "record_store": ("record", "music_store", "vinyl"),
+    "park": ("park", "garden", "square", "promenade", "plaza", "cemetery", "canal", "river"),
+    "hotel": ("hotel", "hostel", "inn", "lodging"),
+    # A proper jazz room (Qloo's own genre), not a bar or restaurant with a jazz tag.
+    "jazz_club": ("jazz_club", "jazz"),
+    "cinema": ("movie_theater", "cinema", "film"),
+}
+# Global chains and shops that aren't a stop worth a line in a plan.
+CHAINS = ("starbucks", "nespresso", "mcdonald", "fnac", "pret a manger", "costa coffee", "five guys", "hard rock", "brioche dorée", "illy", "paris baguette",
+          "planet hollywood", "subway", "burger king", "kfc", "domino", "pizza hut", "paul ", "columbus café", "zara", "h&m",
+          "apple store", "sephora", "centre commercial", "shopping", "galeries lafayette", "printemps")
+# A lunch or dinner stop that Qloo files mainly under one of these isn't a meal.
+NOT_A_MEAL = ("bar", "pastry", "tea", "coffee", "bakery", "ice_cream", "dessert", "chocolate", "candy", "food_court", "fast_food")
+GOOD_RATING = 3.9
+
+
+def fits(pick: dict[str, Any], kind: str) -> bool:
+    """Whether a Qloo place can be this kind of stop: open for business, not a chain, well rated
+    when a rating exists, and mainly what the stop asks for (a hotel is never lunch)."""
+    if pick.get("closed"):
+        return False
+    name = (pick.get("name") or "").lower()
+    if any(c in name for c in CHAINS):
+        return False
+    rating = pick.get("rating")
+    if rating is not None and rating < GOOD_RATING:
+        return False
+    genre = (pick.get("genre") or "").lower()
+    if not genre:
+        return not (kind != "hotel" and (name.startswith(("hôtel", "hotel")) or " hotel" in name))
+    if kind != "hotel" and ("hotel" in genre or "shopping_mall" in genre or "department_store" in genre):
+        return False
+    if kind == "restaurant" and any(n in genre for n in NOT_A_MEAL):
+        return False
+    # A dinner cruise or a bus tour is an outing, not a table (Le Calife, Bustronome: Paris, 2026-10-27).
+    tags = " ".join(str(t).lower() for t in pick.get("tags") or [])
+    if kind in ("restaurant", "cafe", "coffee", "bakery") and any(w in name or w in genre or w in tags for w in ("cruise", "boat", "bus ", "tour", "péniche", "river")):
+        return False
+    if kind == "music_venue" and any(n in genre for n in ("live_music_venue", "concert_hall", "arena", "stadium", "theater", "theatre")):
+        return False
+    allowed = FITS.get(kind)
+    return not allowed or any(a in genre for a in allowed)
+
+
+# What a person's needs ask of a place ("proper table with a reservation, nothing too loud"), from
+# the needs they were saved with (taste.needs_of). Hard rules in `suits`, nice-to-haves in `prefers`.
+def suits(pick: dict[str, Any], kind: str, needs: dict[str, bool]) -> bool:
+    """Whether a place respects someone's needs: not loud when they want quiet; a restaurant that
+    takes reservations when they want a proper table; nothing that's mainly a bar or a counter."""
+    if not needs:
+        return True
+    genre = (pick.get("genre") or "").lower()
+    if needs.get("quiet") and (pick.get("noise") == "loud" or any(w in genre for w in ("night_club", "sports_bar", "karaoke"))):
+        return False
+    if needs.get("quiet"):
+        # A record shop with in-store DJ sets, a bar that's really a dance floor: not for someone who wants quiet.
+        words = ((pick.get("description") or "") + " " + " ".join(str(t) for t in pick.get("tags") or [])).lower()
+        if any(w in words for w in ("dj set", "dance music", "techno", "nightclub", "night club", "karaoke", "dance floor", "sports bar")):
+            return False
+    if needs.get("seated") and kind == "restaurant":
+        if any(w in genre for w in ("bar", "pub", "fast_food", "food_court", "takeout", "counter", "stand", "truck", "cafeteria")):
+            return False
+        words = (pick.get("description") or "").lower()
+        if any(w in words for w in ("cafeteria", "counter-serve", "counter serve", "order at the counter", "quick bites", "grab-and-go",
+                                    "fast-casual", "fast casual", "food hall", "takeout spot", "self-serve")):
+            return False
+        if pick.get("reservations") is None and pick.get("hours") is not None:
+            # Qloo knows the place well (it has hours) but lists no reservations: likely walk-in only.
+            return False
+    if needs.get("seated") and kind in ("bar", "cocktail_bar", "wine_bar", "music_venue") and "night_club" in genre:
+        return False
+    # Someone who keeps early hours is only sent where Qloo knows the hours (a gallery with none may
+    # open by appointment); parks and cinemas rarely list any.
+    if (needs.get("early") or needs.get("seated")) and not pick.get("hours") and kind not in ("park", "cinema", "home"):
+        return False
+    return True
+
+
+def prefers(pick: dict[str, Any], kind: str, needs: dict[str, bool]) -> bool:
+    """The nice-to-haves: quiet rather than moderate, parking when they drive, no usual wait when
+    they want a proper table. The first place in Qloo's order with all of them wins."""
+    if not needs:
+        return True
+    if needs.get("quiet") and pick.get("noise") not in (None, "quiet") and kind in ("restaurant", "cafe", "coffee", "bakery"):
+        return False
+    if needs.get("parking") and not pick.get("parking"):
+        return False
+    if needs.get("seated") and kind == "restaurant" and pick.get("wait") and not pick.get("reservations"):
+        return False
+    # A proper table is rarely a one-dollar-sign place.
+    if needs.get("seated") and kind == "restaurant" and (pick.get("price_level") or 2) < 2:
+        return False
+    # Two grown men don't need the kids' museum.
+    if kind in ("museum",) and any(w in (pick.get("description") or "").lower() for w in ("kid", "children", "playground", "family-friendly")):
+        return False
+    return True
+
+
+def drive_minutes(a: dict[str, float], b: dict[str, float]) -> int:
+    """A city drive: 22 km/h door to door, plus five minutes to park."""
+    return max(5, round(qloo.km_between(a, b) * 1.33 / 22 * 60) + 5)
+
+
+def open_at(pick: dict[str, Any], when: dt.datetime, stay_min: int = 60) -> bool:
+    """Whether a place is open when the plan arrives (Qloo hours by weekday); unknown hours pass.
+    A place that opens within half an hour of arriving counts, so a 09:30 coffee can open at 10."""
+    hours = pick.get("hours")
+    if not hours:
+        return True
+    today = hours.get(qloo.WEEKDAYS[when.weekday()])
+    if today is None:
+        return True
+    if today == "closed":
+        return False
+    arrive = when.hour * 60 + when.minute
+    for span in today.split(", "):
+        try:
+            opens, closes = span.split(" to ")
+            o = int(opens[:2]) * 60 + int(opens[3:5])
+            c = int(closes[:2]) * 60 + int(closes[3:5])
+        except ValueError:
+            return True
+        if c <= o:
+            c += 24 * 60  # closes after midnight
+        if o <= arrive + 30 and arrive + min(stay_min, 45) <= c:
+            return True
+    return False
 
 
 async def _popular_stops(where: str, kinds: list[str], clock: dt.datetime, used: set[str]) -> list[dict[str, Any]]:
@@ -354,7 +555,7 @@ def timeline_stops(stops: list[Any]) -> list[dict[str, Any]]:
     for s in stops:
         if not isinstance(s, dict) or not s.get("title"):
             continue
-        row = {k: v for k, v in s.items() if k in ("time", "title", "kind", "note", "address", "walk_min", "lat", "lon", "image", "with") and v is not None}
+        row = {k: v for k, v in s.items() if k in ("time", "title", "kind", "note", "address", "walk_min", "drive_min", "lat", "lon", "image", "with") and v is not None}
         if "walk_min" in row:
             try:
                 row["walk_min"] = round(float(row["walk_min"]))
@@ -436,45 +637,86 @@ async def add_plan_to_calendar(events_json: str, tool_context: ToolContext) -> d
 
 
 PRINT_CSS = """
-@page { size: Letter; margin: 0.6in; }
-body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #111; font-size: 21pt; line-height: 1.35; }
-h1 { font-size: 34pt; margin: 0 0 6pt; }
-.sub { font-size: 16pt; color: #555; margin-bottom: 18pt; }
-h2 { font-size: 24pt; margin: 20pt 0 6pt; border-top: 3pt solid #111; padding-top: 8pt; }
-ul { padding-left: 0; list-style: none; margin: 0; }
-li { margin: 0 0 10pt; }
-li b { display: block; }
-.foot { margin-top: 24pt; font-size: 12pt; color: #777; }
+@page { size: Letter; margin: 0.7in 0.75in 0.8in; }
+body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #141414; font-size: 19pt; line-height: 1.38; margin: 0; }
+header { margin-bottom: 14pt; }
+h1 { font-size: 36pt; line-height: 1.08; letter-spacing: -0.5pt; margin: 0 0 6pt; }
+.sub { font-size: 18pt; color: #555; margin: 0 0 4pt; }
+.lead { font-size: 18pt; margin: 10pt 0 0; }
+section { page-break-inside: avoid; }
+section.page { page-break-before: always; }
+h2 { font-size: 28pt; line-height: 1.1; letter-spacing: -0.3pt; margin: 6pt 0 2pt; }
+.when { font-size: 17pt; color: #555; margin: 0 0 12pt; }
+ol { list-style: none; padding: 0; margin: 0; }
+li { display: flex; gap: 16pt; padding: 11pt 0; border-top: 1.5pt solid #d9d9d9; page-break-inside: avoid; }
+li:first-child { border-top: 0; }
+.time { flex: 0 0 76pt; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 20pt; padding-top: 1pt; }
+.what { flex: 1; }
+.what b { display: block; font-size: 21pt; line-height: 1.2; margin-bottom: 3pt; }
+.what .kind { color: #555; font-weight: 400; }
+.what p { margin: 0 0 3pt; }
+.what p.where { color: #444; font-size: 17pt; }
+.simple li { display: block; }
+.simple b { display: block; font-size: 21pt; }
+footer { margin-top: 26pt; font-size: 14pt; color: #777; border-top: 1.5pt solid #d9d9d9; padding-top: 8pt; }
 """
 
 
-def _printout_html(title: str, subtitle: str, sections: list[dict[str, Any]]) -> str:
-    parts = [f"<h1>{html.escape(title)}</h1>"]
+def _printout_html(title: str, subtitle: str, sections: list[dict[str, Any]], lead: str = "", footer: str = "") -> str:
+    """Large print: a title, a line under it, then sections. A section is {"heading", "sub",
+    "items", "page": true} (page starts a new sheet). An item is {"time", "title", "kind",
+    "lines": [...]} for a stop with a time, or {"title", "detail"} for a plain line."""
+    e = html.escape
+    parts = [f"<header><h1>{e(title)}</h1>"]
     if subtitle:
-        parts.append(f"<div class='sub'>{html.escape(subtitle)}</div>")
-    for section in sections:
-        parts.append(f"<h2>{html.escape(str(section.get('heading') or ''))}</h2><ul>")
-        for item in section.get("items") or []:
-            if isinstance(item, dict):
-                head = html.escape(str(item.get("title") or ""))
-                body = html.escape(str(item.get("detail") or ""))
-                parts.append(f"<li><b>{head}</b>{body}</li>")
+        parts.append(f"<div class='sub'>{e(subtitle)}</div>")
+    if lead:
+        parts.append(f"<p class='lead'>{e(lead)}</p>")
+    parts.append("</header>")
+    for i, section in enumerate(sections):
+        cls = " class='page'" if section.get("page") and i else ""
+        parts.append(f"<section{cls}><h2>{e(str(section.get('heading') or ''))}</h2>")
+        if section.get("sub"):
+            parts.append(f"<p class='when'>{e(str(section['sub']))}</p>")
+        items = section.get("items") or []
+        timed = any(isinstance(it, dict) and it.get("time") for it in items)
+        parts.append("<ol>" if timed else "<ol class='simple'>")
+        for item in items:
+            if not isinstance(item, dict):
+                parts.append(f"<li>{e(str(item))}</li>")
+                continue
+            head = e(str(item.get("title") or ""))
+            if item.get("kind"):
+                head += f" <span class='kind'>({e(str(item['kind']))})</span>"
+            lines = [str(x) for x in (item.get("lines") or []) if x]
+            if item.get("detail"):
+                lines.append(str(item["detail"]))
+            body = "".join(f"<p{' class=' + chr(39) + 'where' + chr(39) if j == len(lines) - 1 and len(lines) > 1 else ''}>{e(line)}</p>" for j, line in enumerate(lines))
+            if item.get("time"):
+                parts.append(f"<li><span class='time'>{e(str(item['time']))}</span><div class='what'><b>{head}</b>{body}</div></li>")
             else:
-                parts.append(f"<li>{html.escape(str(item))}</li>")
-        parts.append("</ul>")
-    parts.append("<div class='foot'>Picked for your taste by Slice</div>")
-    return f"<!doctype html><html><head><meta charset='utf-8'><style>{PRINT_CSS}</style></head><body>{''.join(parts)}</body></html>"
+                parts.append(f"<li><b>{head}</b>{body}</li>")
+        parts.append("</ol></section>")
+    parts.append(f"<footer>{e(footer or 'Picked for your taste by Slice')}</footer>")
+    return f"<!doctype html><html><head><meta charset='utf-8'><title>{e(title)}</title><style>{PRINT_CSS}</style></head><body>{''.join(parts)}</body></html>"
 
 
-async def make_printout(title: str, sections_json: str, tool_context: ToolContext, subtitle: str = "") -> dict[str, Any]:
-    """A one-page, large-print PDF (big type, high contrast) for someone who'd rather read paper:
-    "Ray's week". Saved on the Mac in Documents/Slice and opened; send it with send_file_imessage
-    or draft_email_in_mail(attachment=path).
+async def make_printout(title: str, sections_json: str, tool_context: ToolContext, subtitle: str = "", lead: str = "",
+                        footer: str = "", open_it: bool = True) -> dict[str, Any]:
+    """A large-print PDF (big type, high contrast) for someone who'd rather read paper: "Ray's
+    week", "Frank and Walter's weekend" (a page per day). Saved on the Mac in Documents/Slice and
+    opened; send it with send_file_imessage or draft_email_in_mail(attachment=path). For a plan a
+    playbook made, print_this_plan or send_this_plan already know its sections.
 
     Args:
         title: "Ray's week".
-        sections_json: JSON list of {"heading": "Watch", "items": [{"title": "Out of Africa", "detail": "Tuesday, on Netflix"}]}.
-        subtitle: One line under the title ("October 26 to November 1").
+        sections_json: JSON list of {"heading": "Saturday 31 October", "sub": "Partly cloudy, 8 to 14°C", "page": true,
+            "items": [{"time": "12:45", "title": "Vinci", "kind": "lunch", "lines": ["Why it fits", "Address"]}]}; a plain
+            item is {"title": "Out of Africa", "detail": "Tuesday, on Netflix"}.
+        subtitle: One line under the title ("31 October and 1 November").
+        lead: A warm sentence or two under that, in plain words.
+        footer: The line at the foot of the last page.
+        open_it: Open it on the Mac once saved (false when it's only being sent).
     """
     conn, task = for_worker(tool_context)
     try:
@@ -485,18 +727,19 @@ async def make_printout(title: str, sections_json: str, tool_context: ToolContex
 
     page = await (await browser()).new_page()
     try:
-        await page.set_content(_printout_html(title, subtitle, sections), wait_until="load")
+        await page.set_content(_printout_html(title, subtitle, sections, lead, footer), wait_until="load")
         pdf = await page.pdf(format="Letter", print_background=True)
     finally:
         await page.close()
     name = re.sub(r"[^\w' -]+", "", title).strip() or "Slice plan"
-    saved = await conn.bridge.call("save_file", {"name": f"{name}.pdf", "data": base64.b64encode(pdf).decode(), "open": True}, timeout=20)
+    saved = await conn.bridge.call("save_file", {"name": f"{name}.pdf", "data": base64.b64encode(pdf).decode(), "open": open_it}, timeout=20)
     if saved.get("error"):
         return saved
-    await report(conn, task, "mac", f"Made “{title}”", "large print, one page")
+    pages = sum(1 for sec in sections if sec.get("page")) + 1
+    await report(conn, task, "mac", f"Made “{title}”", f"large print, {pages} page{'s' if pages > 1 else ''}")
     if conn.tasks:
         conn.tasks.show_view(task, {"type": "file", "key": "printout", "title": title, "path": saved.get("path"), "detail": "Large print, ready to send"})
-    return {"path": saved.get("path")}
+    return {"path": saved.get("path"), "pages": pages}
 
 
 WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]

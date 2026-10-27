@@ -91,9 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
-        // First run: get to know the user's taste (and ask for permissions on the way).
+        // First run: get to know the user's taste (and ask for permissions on the way). A setup
+        // left part-way (macOS quits and reopens the app for some permissions) carries on where it was.
         // Later, a permission that was turned off opens Settings to show what's missing.
-        if !TasteStore.isOnboarded(agent.profile) || UserDefaults.standard.bool(forKey: "onboarding") {
+        if !TasteStore.isOnboarded(agent.profile) || TasteStore.loadOnboarding() != nil
+            || UserDefaults.standard.bool(forKey: "onboarding") {
             OnboardingWindow.shared.show(agent: agent)
         } else if !Permissions.allGranted {
             SettingsWindow.shared.show(agent: agent)
@@ -102,5 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         talkKeys.stop()
+        // Mid-setup (macOS asked to quit and reopen for a permission): keep the step and the picks.
+        OnboardingWindow.shared.model?.persist()
     }
 }

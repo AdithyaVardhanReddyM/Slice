@@ -52,6 +52,8 @@ Rules:
 - Never solve a CAPTCHA, never type a password or card number. If a login,
   CAPTCHA or payment form blocks you, stop and say so.
 - Prefer opening a web address directly (cmd+L in the browser, type, enter).
+- Stay on the site: never open developer tools, browser settings or other
+  apps, and don't right-click.
 - When the job is done or you're blocked, answer in one or two plain
   sentences: what you did, and anything left for the user.
 """
@@ -87,17 +89,40 @@ async def _screenshot(conn: Connection) -> tuple[bytes, str, str] | None:
     return base64.b64decode(shot["image"]), shot.get("mime") or "image/jpeg", str(shot.get("url") or "")
 
 
+# An operator step that answers takes a few seconds; after this long the fallback is asked too
+# (the same hedge as worker.FallbackGemini: run 3's first booking step waited 28 s otherwise).
+HEDGE_S = 8.0
+
+
 async def _generate(contents: list[types.Content], config: types.GenerateContentConfig) -> types.GenerateContentResponse:
+    primary = asyncio.create_task(_client().aio.models.generate_content(model=OPERATOR_MODEL, contents=contents, config=config))
+    running = {primary: OPERATOR_MODEL}
+    failed: Exception | None = None
     try:
-        return await asyncio.wait_for(
-            _client().aio.models.generate_content(model=OPERATOR_MODEL, contents=contents, config=config), STEP_TIMEOUT_S
-        )
-    except Exception as err:
-        slow = isinstance(err, TimeoutError) or "RESOURCE_EXHAUSTED" in str(err)
-        if not slow or not OPERATOR_FALLBACK:
-            raise
-        print(f"mac: {OPERATOR_MODEL} {'timed out' if isinstance(err, TimeoutError) else 'is rate-limited'}, operator step on {OPERATOR_FALLBACK}", flush=True)
-        return await _client().aio.models.generate_content(model=OPERATOR_FALLBACK, contents=contents, config=config)
+        done, _ = await asyncio.wait(running, timeout=HEDGE_S)
+        if not done and OPERATOR_FALLBACK:
+            print(f"mac: {OPERATOR_MODEL} hasn't answered in {HEDGE_S:.0f}s, operator step on {OPERATOR_FALLBACK} too", flush=True)
+            running[asyncio.create_task(_client().aio.models.generate_content(model=OPERATOR_FALLBACK, contents=contents, config=config))] = OPERATOR_FALLBACK
+        deadline = asyncio.get_running_loop().time() + STEP_TIMEOUT_S
+        while running:
+            done, _ = await asyncio.wait(running, timeout=max(0.1, deadline - asyncio.get_running_loop().time()), return_when=asyncio.FIRST_COMPLETED)
+            if not done:
+                raise failed or TimeoutError("the computer-use model didn't answer in time")
+            for task in done:
+                name = running.pop(task)
+                try:
+                    return task.result()
+                except Exception as err:
+                    failed = err
+                    if "RESOURCE_EXHAUSTED" not in str(err):
+                        raise
+                    print(f"mac: {name} is rate-limited", flush=True)
+                    if name == OPERATOR_MODEL and OPERATOR_FALLBACK and OPERATOR_FALLBACK not in running.values():
+                        running[asyncio.create_task(_client().aio.models.generate_content(model=OPERATOR_FALLBACK, contents=contents, config=config))] = OPERATOR_FALLBACK
+        raise failed or TimeoutError("the computer-use model didn't answer")
+    finally:
+        for task in running:
+            task.cancel()
 
 
 def _prune(contents: list[types.Content]) -> None:
@@ -117,7 +142,7 @@ def _prune(contents: list[types.Content]) -> None:
                     fr.parts = None
 
 
-async def operate(conn: Connection, task: Task, job: str) -> str:
+async def operate(conn: Connection, task: Task, job: str, max_steps: int = MAX_STEPS) -> str:
     assert conn.tasks
     shot = await _screenshot(conn)
     if shot is None:
@@ -133,11 +158,12 @@ async def operate(conn: Connection, task: Task, job: str) -> str:
         types.Content(role="user", parts=[types.Part(text=job), types.Part.from_bytes(data=shot[0], mime_type=shot[1])])
     ]
     await conn.bridge.send_json({"type": "operator", "active": True, "task_id": task.id})
+    task.on_screen = True
     # The step the user last said yes on: Gemini's own safety check on the very next step
     # is about the same action, so it isn't asked twice.
     state = {"step": 0, "approved_at": -10}
     try:
-        for step in range(MAX_STEPS):
+        for step in range(max_steps):
             state["step"] = step
             res = await _generate(contents, config)
             reply = res.candidates[0].content if res.candidates else None
@@ -165,8 +191,9 @@ async def operate(conn: Connection, task: Task, job: str) -> str:
                 parts.append(types.Part(function_response=types.FunctionResponse(id=call.id, name=call.name, response=outcome, parts=image)))
             contents.append(types.Content(role="user", parts=parts))
             _prune(contents)
-        return f"I stopped after {MAX_STEPS} steps without finishing."
+        return f"I stopped after {max_steps} steps without finishing."
     finally:
+        task.on_screen = False
         await conn.bridge.send_json({"type": "operator", "active": False, "task_id": task.id})
 
 
