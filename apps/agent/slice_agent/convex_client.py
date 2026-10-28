@@ -2,9 +2,10 @@
 
 Catalog and taste reads use Convex's public query API (POST {CONVEX_URL}/api/query).
 Merchants' Pages and Email data answers only the brand's signed-in owner there,
-so `query` sends those reads (AGENT_READS) to /agent/read instead. Those, the
-writes and Qloo calls go through the HTTP routes in
-packages/backend/convex/http.ts, which check the shared QLOO_PROXY_SECRET.
+so `query` sends those reads (AGENT_READS) to /agent/read and `action` sends
+AGENT_ACTIONS to /agent/action instead. Those, the writes and Qloo calls go
+through the HTTP routes in packages/backend/convex/http.ts, which check the
+shared QLOO_PROXY_SECRET.
 """
 
 from __future__ import annotations
@@ -52,19 +53,35 @@ AGENT_READS = frozenset({
 })
 
 
+# The actions /agent/action runs as their internal twins (AGENT_ACTIONS in http.ts).
+AGENT_ACTIONS = frozenset({
+    "pagesBrands:qlooLookup",
+    "emailItems:rank",
+})
+
+
+async def _agent_route(route: str, kind: str, path: str, args: dict[str, Any] | None, timeout: float | None = None) -> tuple[bool, Any]:
+    """POST {path, args} to /agent/read or /agent/action. (False, None) when the
+    deployment predates the route (404), where the public function still answers."""
+    res = await client().post(
+        f"{_env('CONVEX_SITE_URL')}{route}",
+        json={"path": path, "args": args or {}},
+        headers={"Authorization": f"Bearer {_env('QLOO_PROXY_SECRET')}"},
+        **({"timeout": timeout} if timeout is not None else {}),
+    )
+    if res.status_code == 404:
+        return False, None
+    if res.status_code >= 400:
+        raise RuntimeError(f"Convex {kind} {path} failed: {res.status_code} {res.text[:300]}")
+    return True, res.json().get("value")
+
+
 async def query(path: str, args: dict[str, Any] | None = None) -> Any:
     """Run a Convex query, e.g. query("catalog:store", {"key": "fold"})."""
     if path in AGENT_READS:
-        res = await client().post(
-            f"{_env('CONVEX_SITE_URL')}/agent/read",
-            json={"path": path, "args": args or {}},
-            headers={"Authorization": f"Bearer {_env('QLOO_PROXY_SECRET')}"},
-        )
-        # 404 is a deployment from before /agent/read, where the public query still answers.
-        if res.status_code != 404:
-            if res.status_code >= 400:
-                raise RuntimeError(f"Convex query {path} failed: {res.status_code} {res.text[:300]}")
-            return res.json().get("value")
+        routed, value = await _agent_route("/agent/read", "query", path, args)
+        if routed:
+            return value
     res = await client().post(
         f"{_env('CONVEX_URL')}/api/query",
         json={"path": path, "args": args or {}, "format": "json"},
@@ -77,7 +94,11 @@ async def query(path: str, args: dict[str, Any] | None = None) -> Any:
 
 
 async def action(path: str, args: dict[str, Any] | None = None, timeout: float = 120.0) -> Any:
-    """Run a public Convex action, e.g. action("catalogTaste:vocabulary")."""
+    """Run a Convex action, e.g. action("catalogTaste:vocabulary")."""
+    if path in AGENT_ACTIONS:
+        routed, value = await _agent_route("/agent/action", "action", path, args, timeout)
+        if routed:
+            return value
     res = await client().post(
         f"{_env('CONVEX_URL')}/api/action",
         json={"path": path, "args": args or {}, "format": "json"},

@@ -201,7 +201,7 @@ export const run = internalAction({
     });
 
     // Reads the regulars' bookings now and schedules each person's profile.
-    const read = await ctx.runAction(api.emailLists.process, { id: regulars.id });
+    const read = await ctx.runAction(internal.emailLists.processInternal, { id: regulars.id });
     await ctx.scheduler.runAfter(15_000, internal.emailSeedCovers.step, { brandId, regularsId: regulars.id, dinersId: diners.id, stage: "regulars", attempt: 0, startedAt: t0 });
     return {
       brandId,
@@ -242,7 +242,7 @@ export const step = internalAction({
         return null;
       }
       console.log(`emailSeedCovers: regulars ${list.status} after ${Math.round((Date.now() - startedAt) / 1000)} s`);
-      await ctx.scheduler.runAfter(0, api.emailLists.process, { id: dinersId, k: 2 });
+      await ctx.scheduler.runAfter(0, internal.emailLists.processInternal, { id: dinersId, k: 2 });
       await ctx.scheduler.runAfter(30_000, internal.emailSeedCovers.step, { ...args, stage: "diners", attempt: 0 });
       return null;
     }

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Span } from "./qlooApi";
@@ -7,7 +7,7 @@ import { spanValidator } from "./schema";
 import { ageBucket, kmeans, lift, normalizeGender, splitTerms, type ClusterRow, type CsvMapping } from "./pagesCsv";
 import { MAX_LIST_PEOPLE } from "./pagesTypes";
 import { uniqueAudienceSlug } from "./pagesAudiences";
-import { owned, ownedBrand } from "./pagesBrands";
+import { editable, editableBrand, owned, ownedBrand, ownedBrandInAction } from "./pagesBrands";
 import { norm, resolveNames, safeRecord, slugify } from "./pagesUtil";
 
 // A customer CSV (or a CRM list pulled through Composio, in the same row shape)
@@ -66,6 +66,7 @@ export const create = mutation({
   returns: v.object({ id: v.id("pagesUploads"), audienceId: v.optional(v.id("pagesAudiences")) }),
   handler: async (ctx, { brandId, filename, columns, rows, mapping, mode, name, source }) => {
     if (rows.length > MAX_ROWS_PER_CALL) throw new Error(`Send at most ${MAX_ROWS_PER_CALL} rows per call; use appendRows for the rest`);
+    await editableBrand(ctx, brandId);
     const now = Date.now();
     const id = await ctx.db.insert("pagesUploads", {
       brandId,
@@ -109,8 +110,7 @@ export const appendRows = mutation({
   returns: v.object({ rowCount: v.number() }),
   handler: async (ctx, { uploadId, rows }) => {
     if (rows.length > MAX_ROWS_PER_CALL) throw new Error(`Send at most ${MAX_ROWS_PER_CALL} rows per call`);
-    const upload = await ctx.db.get(uploadId);
-    if (!upload) throw new Error("Unknown upload");
+    const upload = await editable(ctx, await ctx.db.get(uploadId), "upload");
     for (const row of rows) await ctx.db.insert("pagesMembers", memberFromRow(upload.brandId, uploadId, row, upload.mapping));
     const rowCount = upload.rowCount + rows.length;
     await ctx.db.patch(uploadId, { rowCount, updatedAt: Date.now() });
@@ -294,7 +294,7 @@ export const process = action({
   }),
   handler: async (ctx, { uploadId, k, seed = 7 }): Promise<{ clusters: number; resolved: number; unique: number; people?: Id<"pagesAudiences">[] }> => {
     const upload = await ctx.runQuery(internal.pagesUploads.getInternal, { id: uploadId });
-    if (!upload) throw new Error("Unknown upload");
+    if (!upload || !(await ownedBrandInAction(ctx, upload.brandId))) throw new Error("Unknown upload");
     const listId = upload.mode === "people" ? upload.audienceId : undefined;
     const trace: Span[] = [];
     const progress = async (value: number, label: string, status?: string) => {
@@ -356,7 +356,7 @@ export const process = action({
         /* 2. One audience per person, read one after another; the list's profile gathers theirs. */
         await ctx.runMutation(internal.pagesUploads.patch, { id: uploadId, patch: { spans: trace } });
         await ctx.runMutation(internal.pagesUploads.setProgress, { id: uploadId, value: 0.62, label: "Reading each person", status: "compiling" });
-        await ctx.runAction(api.pagesAudiences.compile, { id: listId });
+        await ctx.runAction(internal.pagesAudiences.compileInternal, { id: listId });
         const people = await ctx.runMutation(internal.pagesUploads.ensureLeads, { uploadId });
         await ctx.runMutation(internal.pagesUploads.patch, { id: uploadId, patch: { status: "ready", progress: { value: 1, label: "Ready" } } });
         return { clusters: 0, resolved: resolved.size, unique: names.length, people };
@@ -408,7 +408,7 @@ export const process = action({
       /* 3. One audience per cluster. */
       for (const c of clusters) {
         await progress(0.7 + 0.3 * (c.index / clusters.length), `Compiling ${c.name} (${c.size} members)`);
-        const { id: audienceId } = await ctx.runMutation(api.pagesAudiences.create, {
+        const { id: audienceId } = await ctx.runMutation(internal.pagesAudiences.createInternal, {
           brandId: upload.brandId,
           name: c.name,
           kind: "csv",
@@ -417,7 +417,7 @@ export const process = action({
         c.audienceId = audienceId;
         await ctx.runMutation(internal.pagesUploads.patch, { id: uploadId, patch: { clusters } });
         try {
-          await ctx.runAction(api.pagesAudiences.compile, { id: audienceId });
+          await ctx.runAction(internal.pagesAudiences.compileInternal, { id: audienceId });
         } catch (err) {
           console.warn(`compile ${c.name}: ${String(err)}`);
         }
@@ -469,8 +469,7 @@ export const createLead = mutation({
   args: { memberId: v.id("pagesMembers") },
   returns: v.object({ audienceId: v.id("pagesAudiences") }),
   handler: async (ctx, { memberId }) => {
-    const member = await ctx.db.get(memberId);
-    if (!member) throw new Error("Unknown member");
+    const member = await editable(ctx, await ctx.db.get(memberId), "member");
     return { audienceId: await insertLead(ctx, member) };
   },
 });

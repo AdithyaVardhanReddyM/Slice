@@ -3,10 +3,12 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   action,
+  internalAction,
   internalMutation,
   internalQuery,
   mutation,
   query,
+  type ActionCtx,
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
@@ -55,6 +57,28 @@ export async function ownedBrand(ctx: QueryCtx, id: Id<"pagesBrands">): Promise<
 /** A page, version, audience, upload or member when the signed-in merchant owns its brand, else null. */
 export async function owned<T extends { brandId: Id<"pagesBrands"> }>(ctx: QueryCtx, row: T | null): Promise<T | null> {
   return row && (await ownedBrand(ctx, row.brandId)) ? row : null;
+}
+
+/** The brand, for a console mutation: unknown brands and other merchants' throw the same "Unknown brand". */
+export async function editableBrand(ctx: QueryCtx, id: Id<"pagesBrands">): Promise<Doc<"pagesBrands">> {
+  const brand = await ownedBrand(ctx, id);
+  if (!brand) throw new Error("Unknown brand");
+  return brand;
+}
+
+/** A page, version, audience, upload or member, for a console mutation: throws "Unknown <what>" unless the signed-in merchant owns its brand. */
+export async function editable<T extends { brandId: Id<"pagesBrands"> }>(ctx: QueryCtx, row: T | null, what: string): Promise<T> {
+  const mine = await owned(ctx, row);
+  if (!mine) throw new Error(`Unknown ${what}`);
+  return mine;
+}
+
+/** `ownedBrand` for an action (no ctx.db): the brand when the signed-in merchant owns it, else null. */
+export async function ownedBrandInAction(ctx: ActionCtx, id: Id<"pagesBrands">): Promise<Doc<"pagesBrands"> | null> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return null;
+  const brand: Doc<"pagesBrands"> | null = await ctx.runQuery(internal.pagesBrands.getInternal, { id });
+  return brand && brand.owner === identity.subject ? brand : null;
 }
 
 /** What a published page may show of its brand. */
@@ -137,6 +161,7 @@ export const updateKit = mutation({
   args: { id: v.id("pagesBrands"), kit: v.any() },
   returns: v.null(),
   handler: async (ctx, { id, kit }) => {
+    await editableBrand(ctx, id);
     await ctx.db.patch(id, { kit, updatedAt: Date.now() });
     return null;
   },
@@ -146,6 +171,7 @@ export const updateBrief = mutation({
   args: { id: v.id("pagesBrands"), brief: v.any() },
   returns: v.null(),
   handler: async (ctx, { id, brief }) => {
+    await editableBrand(ctx, id);
     await ctx.db.patch(id, { brief, updatedAt: Date.now() });
     return null;
   },
@@ -156,8 +182,7 @@ export const markReady = mutation({
   args: { id: v.id("pagesBrands") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    const brand = await ctx.db.get(id);
-    if (!brand) return null;
+    const brand = await editableBrand(ctx, id);
     if (brand.status === "review" || brand.status === "extracting") {
       await ctx.db.patch(id, { status: "ready", progress: undefined, updatedAt: Date.now() });
     }
@@ -169,6 +194,7 @@ export const rename = mutation({
   args: { id: v.id("pagesBrands"), name: v.string() },
   returns: v.null(),
   handler: async (ctx, { id, name }) => {
+    await editableBrand(ctx, id);
     await ctx.db.patch(id, { name: name.trim(), nameFromSite: undefined, updatedAt: Date.now() });
     return null;
   },
@@ -294,11 +320,8 @@ export const remove = mutation({
   args: { id: v.id("pagesBrands") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    const brand = await ctx.db.get(id);
-    if (!brand) return null;
+    const brand = await editableBrand(ctx, id);
     if (brand.demo) throw new Error("Demo brands can't be deleted");
-    const identity = await ctx.auth.getUserIdentity();
-    if (brand.owner && brand.owner !== identity?.subject) throw new Error("Unknown brand");
     const pageIds = (await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", id)).collect()).map((p) => p._id);
     // Hide it immediately; the purge finishes in the background.
     await ctx.db.patch(id, { status: "deleting", updatedAt: Date.now() });
@@ -340,86 +363,102 @@ async function similarBrands(ctx: Parameters<typeof cachedQlooGet>[0], trace: Sp
   return out;
 }
 
+/** What Qloo knows about the brand, for its owner. The intake agent runs `qlooLookupInternal` over /agent/action. */
+export const qlooLookup = action({
+  args: { id: v.id("pagesBrands") },
+  returns: v.null(),
+  handler: async (ctx, { id }): Promise<null> => {
+    const brand = await ownedBrandInAction(ctx, id);
+    if (!brand) throw new Error("Unknown brand");
+    return lookUpBrand(ctx, brand);
+  },
+});
+
+export const qlooLookupInternal = internalAction({
+  args: { id: v.id("pagesBrands") },
+  returns: v.null(),
+  handler: async (ctx, { id }): Promise<null> => {
+    const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id });
+    if (!brand) throw new Error("Unknown brand");
+    return lookUpBrand(ctx, brand);
+  },
+});
+
 /**
  * What Qloo knows about the brand. Matched brands contribute their own tags
  * and demographics; unmatched brands (most small ones) borrow from up to five
  * related brands named in the brief, which become `proxies`.
  */
-export const qlooLookup = action({
-  args: { id: v.id("pagesBrands") },
-  returns: v.null(),
-  handler: async (ctx, { id }) => {
-    const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id });
-    if (!brand) throw new Error("Unknown brand");
-    const trace: Span[] = [];
-    const progress = (value: number, label: string) => ctx.runMutation(internal.pagesBrands.setProgress, { id, value, label });
-    await progress(0.9, "Asking Qloo about the brand");
+async function lookUpBrand(ctx: ActionCtx, brand: Doc<"pagesBrands">): Promise<null> {
+  const id = brand._id;
+  const trace: Span[] = [];
+  const progress = (value: number, label: string) => ctx.runMutation(internal.pagesBrands.setProgress, { id, value, label });
+  await progress(0.9, "Asking Qloo about the brand");
 
-    const brief = brand.brief as BrandBrief | undefined;
-    const hit = await soft(trace, `Resolve "${brand.name}"`, () => searchEntity(ctx, trace, brand.name, "brand", "brand"), null);
-    const matched = !!hit && nameMatches(brand.name, hit.name);
+  const brief = brand.brief as BrandBrief | undefined;
+  const hit = await soft(trace, `Resolve "${brand.name}"`, () => searchEntity(ctx, trace, brand.name, "brand", "brand"), null);
+  const matched = !!hit && nameMatches(brand.name, hit.name);
 
-    let tags: ProfileTag[] = [];
-    let proxies: { id: string; name: string; image?: string }[] = [];
-    let similar: { id: string; name: string; image?: string }[] = [];
-    let demographics: unknown = undefined;
-    let entityId: string | undefined;
-    let entityName: string | undefined;
+  let tags: ProfileTag[] = [];
+  let proxies: { id: string; name: string; image?: string }[] = [];
+  let similar: { id: string; name: string; image?: string }[] = [];
+  let demographics: unknown = undefined;
+  let entityId: string | undefined;
+  let entityName: string | undefined;
 
-    if (matched && hit) {
-      entityId = hit.id;
-      entityName = hit.name;
-      // The search hit carries the entity's own tags; keep the brand-domain ones.
-      const raw = await paced(trace, () => cachedQlooGet(ctx, "/search", { query: brand.name, types: ENTITY.brand }));
-      const first = (JSON.parse(raw.body) as { results?: Json[] }).results?.[0];
-      const own = ((first?.tags as Json[] | undefined) ?? [])
-        .filter((t) => BRAND_TAG_TYPES.test(String(t.type ?? t.tag_id ?? "")))
-        .map((t, i, all) => ({
-          id: String(t.tag_id),
-          name: String(t.name).trim(),
-          type: String(t.type ?? "urn:tag"),
-          affinity: Math.round((1 - 0.5 * (i / Math.max(1, all.length - 1))) * 1000) / 1000,
-        }));
-      tags = own;
-      trace.push({ kind: "slice", name: "Read the brand's own Qloo tags", ms: 0, result: `${own.length} brand-domain tags` });
-      await progress(0.93, "Reading who buys from brands like this");
-      similar = await soft(trace, "Brands with the same audience", () => similarBrands(ctx, trace, [hit.id], new Set([hit.id])), []);
-      demographics = await soft(trace, "Who else shares these signals", () => demographicInsights(ctx, trace, [hit.id]), null);
-    } else {
-      // Comparable brands (same customer, well known) anchor better than the
-      // suppliers and stockists a site happens to mention.
-      const names = [...(brief?.comparableBrands ?? []), ...(brief?.relatedBrands ?? [])]
-        .filter((n) => n && n.trim())
-        .filter((n, i, all) => all.findIndex((m) => m.toLowerCase() === n.toLowerCase()) === i)
-        .slice(0, 8);
-      if (names.length) {
-        await progress(0.92, `Looking up ${names.length} comparable brands`);
-        const found = await resolveNames(ctx, trace, names, "brand", "brand", { label: "Find comparable brands in Qloo" });
-        proxies = [...found.values()].map((e) => ({ id: e.id, name: e.name, image: e.image }));
-      }
-      if (proxies.length) {
-        const ids = proxies.map((p) => p.id);
-        await progress(0.94, "Reading the taste around those brands");
-        tags = (await soft(trace, "Tags for the related brands", () => tagInsightsByGroup(ctx, trace, ids, AESTHETIC_TAG_GROUPS), [])).map(toProfileTag);
-        similar = await soft(trace, "Brands with the same audience", () => similarBrands(ctx, trace, ids, new Set(ids)), []);
-        demographics = await soft(trace, "Who else shares these signals", () => demographicInsights(ctx, trace, ids), null);
-      } else {
-        trace.push({
-          kind: "slice",
-          name: "Qloo view of the brand",
-          ms: 0,
-          result: "Not a Qloo entity and no related brands in the brief; the default audience will be empty until one is added.",
-        });
-      }
+  if (matched && hit) {
+    entityId = hit.id;
+    entityName = hit.name;
+    // The search hit carries the entity's own tags; keep the brand-domain ones.
+    const raw = await paced(trace, () => cachedQlooGet(ctx, "/search", { query: brand.name, types: ENTITY.brand }));
+    const first = (JSON.parse(raw.body) as { results?: Json[] }).results?.[0];
+    const own = ((first?.tags as Json[] | undefined) ?? [])
+      .filter((t) => BRAND_TAG_TYPES.test(String(t.type ?? t.tag_id ?? "")))
+      .map((t, i, all) => ({
+        id: String(t.tag_id),
+        name: String(t.name).trim(),
+        type: String(t.type ?? "urn:tag"),
+        affinity: Math.round((1 - 0.5 * (i / Math.max(1, all.length - 1))) * 1000) / 1000,
+      }));
+    tags = own;
+    trace.push({ kind: "slice", name: "Read the brand's own Qloo tags", ms: 0, result: `${own.length} brand-domain tags` });
+    await progress(0.93, "Reading who buys from brands like this");
+    similar = await soft(trace, "Brands with the same audience", () => similarBrands(ctx, trace, [hit.id], new Set([hit.id])), []);
+    demographics = await soft(trace, "Who else shares these signals", () => demographicInsights(ctx, trace, [hit.id]), null);
+  } else {
+    // Comparable brands (same customer, well known) anchor better than the
+    // suppliers and stockists a site happens to mention.
+    const names = [...(brief?.comparableBrands ?? []), ...(brief?.relatedBrands ?? [])]
+      .filter((n) => n && n.trim())
+      .filter((n, i, all) => all.findIndex((m) => m.toLowerCase() === n.toLowerCase()) === i)
+      .slice(0, 8);
+    if (names.length) {
+      await progress(0.92, `Looking up ${names.length} comparable brands`);
+      const found = await resolveNames(ctx, trace, names, "brand", "brand", { label: "Find comparable brands in Qloo" });
+      proxies = [...found.values()].map((e) => ({ id: e.id, name: e.name, image: e.image }));
     }
-    await ctx.runMutation(internal.pagesBrands.patch, {
-      id,
-      patch: {
-        qloo: { entityId, entityName, matched, proxies, tags, similarBrands: similar, demographics: demographics ?? undefined },
-        progress: { value: 1, label: "Done" },
-        spans: trace,
-      },
-    });
-    return null;
-  },
-});
+    if (proxies.length) {
+      const ids = proxies.map((p) => p.id);
+      await progress(0.94, "Reading the taste around those brands");
+      tags = (await soft(trace, "Tags for the related brands", () => tagInsightsByGroup(ctx, trace, ids, AESTHETIC_TAG_GROUPS), [])).map(toProfileTag);
+      similar = await soft(trace, "Brands with the same audience", () => similarBrands(ctx, trace, ids, new Set(ids)), []);
+      demographics = await soft(trace, "Who else shares these signals", () => demographicInsights(ctx, trace, ids), null);
+    } else {
+      trace.push({
+        kind: "slice",
+        name: "Qloo view of the brand",
+        ms: 0,
+        result: "Not a Qloo entity and no related brands in the brief; the default audience will be empty until one is added.",
+      });
+    }
+  }
+  await ctx.runMutation(internal.pagesBrands.patch, {
+    id,
+    patch: {
+      qloo: { entityId, entityName, matched, proxies, tags, similarBrands: similar, demographics: demographics ?? undefined },
+      progress: { value: 1, label: "Done" },
+      spans: trace,
+    },
+  });
+  return null;
+}

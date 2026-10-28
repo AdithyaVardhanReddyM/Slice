@@ -12,7 +12,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { editableBrand, owned, ownedBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand, ownedBrandInAction } from "./emailBrands";
 import { locationOf, tasteTerms, type ContactLite } from "./emailContacts";
 import type { AudienceProfile } from "./emailTypes";
 import {
@@ -876,7 +876,7 @@ export const compile = action({
   returns: v.null(),
   handler: async (ctx, { id, all }): Promise<null> => {
     const audience: Doc<"emailAudiences"> | null = await ctx.runQuery(internal.emailAudiences.getInternal, { id });
-    if (!audience) throw new Error("Unknown audience");
+    if (!audience || !(await ownedBrandInAction(ctx, audience.brandId))) throw new Error("Unknown audience");
     if (audience.kind === "group") {
       await compileGroupAudience(ctx, id);
       return null;

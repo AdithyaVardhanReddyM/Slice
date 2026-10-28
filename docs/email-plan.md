@@ -388,6 +388,7 @@ account whose email is `PAGES_DEMO_OWNER_EMAIL` claims unowned masters.
 | Route | Body → reply |
 |---|---|
 | `POST /agent/read` | `{path, args}` → `{value}`: the agent's reads (`emailBrands:get`, `emailLists:get`, `emailAudiences:list`, `emailContacts:byAudience`, `emailCampaigns:getForAgent`, `emailCampaigns:renderFor`); console queries answer only the brand's owner |
+| `POST /agent/action` | `{path, args}` → `{value}`: `emailItems:rank` (and Pages' `pagesBrands:qlooLookup`) as their internal twins; the public actions answer only the brand's owner |
 | `POST /email/brand` | `{brandId, patch}` → `{ok}` (kit, about, footer, sender, name, setup, url) |
 | `POST /email/items` | `{brandId, items: EmailItem-like[]}` → `{ids}` (appends, skipping names the brand already has) |
 | `POST /email/doc` | `{campaignId, doc}` → `{version, doc, problems}` (validate, bump version, save) |

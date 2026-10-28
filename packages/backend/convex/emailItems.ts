@@ -1,9 +1,9 @@
-import { v } from "convex/values";
+import { v, type ObjectType } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, mutation, query, type ActionCtx, type MutationCtx } from "./_generated/server";
 import { tagKey } from "./catalog";
-import { editableBrand, ownedBrand } from "./emailBrands";
+import { editableBrand, ownedBrand, ownedBrandInAction } from "./emailBrands";
 import type { AudienceProfile, EmailItem } from "./emailTypes";
 import { interleave } from "./pagesAudiences";
 import { plausible } from "./pagesUploads";
@@ -280,37 +280,51 @@ async function hitTags(ctx: Parameters<typeof cachedQlooGet>[0], params: Record<
 export const resolve = action({
   args: { brandId: v.id("emailBrands") },
   returns: v.object({ resolved: v.number(), total: v.number(), trace: v.array(spanValidator) }),
-  handler: async (ctx, { brandId }): Promise<{ resolved: number; total: number; trace: Span[] }> => {
-    const items: Doc<"emailItems">[] = await ctx.runQuery(internal.emailItems.listInternal, { brandId });
-    const todo = items.filter((i) => !i.qloo && i.kind !== "offer");
-    const trace: Span[] = [];
-    const local: Span[] = [];
-    const updates: { id: Id<"emailItems">; qloo: NonNullable<Doc<"emailItems">["qloo"]> }[] = [];
-    for (const item of todo) {
-      const book = item.kind === "book";
-      try {
-        const hit = await paced(local, () => (book ? searchEntity(ctx, local, item.name, "book", "catalog") : searchEntityBest(ctx, local, item.name, "catalog")), 120);
-        // Book titles are loose ("The Overstory: A Novel"); other names must agree.
-        if (!hit || !(book ? plausible(item.name, hit.name) : norm(item.name) === norm(hit.name))) continue;
-        const tags = await hitTags(ctx, book ? { query: item.name, types: "urn:entity:book" } : { query: item.name }, hit.id);
-        updates.push({ id: item._id, qloo: { id: hit.id, name: hit.name, type: hit.type, tags } });
-      } catch (err) {
-        local.push({ kind: "qloo", name: `Resolve "${item.name}"`, ms: 0, result: `failed: ${String(err).slice(0, 80)}` });
-      }
-    }
-    if (updates.length) await ctx.runMutation(internal.emailItems.setQloo, { updates });
-    trace.push({
-      kind: "qloo",
-      name: "Find the catalog in Qloo",
-      path: "/search",
-      params: { query: `${todo.length} items` },
-      cache: local.some((s) => s.cache && s.cache !== "hit") ? "miss" : "hit",
-      ms: local.reduce((s, x) => s + x.ms, 0),
-      result: `${updates.length} of ${todo.length} matched`,
-    });
-    return { resolved: updates.length, total: todo.length, trace };
+  handler: async (ctx, { brandId }): Promise<Resolved> => {
+    if (!(await ownedBrandInAction(ctx, brandId))) throw new Error("Unknown brand");
+    return resolveItems(ctx, brandId);
   },
 });
+
+/** `resolve` for the seeds, which run without a signed-in merchant. */
+export const resolveInternal = internalAction({
+  args: { brandId: v.id("emailBrands") },
+  returns: v.object({ resolved: v.number(), total: v.number(), trace: v.array(spanValidator) }),
+  handler: async (ctx, { brandId }): Promise<Resolved> => resolveItems(ctx, brandId),
+});
+
+type Resolved = { resolved: number; total: number; trace: Span[] };
+
+async function resolveItems(ctx: ActionCtx, brandId: Id<"emailBrands">): Promise<Resolved> {
+  const items: Doc<"emailItems">[] = await ctx.runQuery(internal.emailItems.listInternal, { brandId });
+  const todo = items.filter((i) => !i.qloo && i.kind !== "offer");
+  const trace: Span[] = [];
+  const local: Span[] = [];
+  const updates: { id: Id<"emailItems">; qloo: NonNullable<Doc<"emailItems">["qloo"]> }[] = [];
+  for (const item of todo) {
+    const book = item.kind === "book";
+    try {
+      const hit = await paced(local, () => (book ? searchEntity(ctx, local, item.name, "book", "catalog") : searchEntityBest(ctx, local, item.name, "catalog")), 120);
+      // Book titles are loose ("The Overstory: A Novel"); other names must agree.
+      if (!hit || !(book ? plausible(item.name, hit.name) : norm(item.name) === norm(hit.name))) continue;
+      const tags = await hitTags(ctx, book ? { query: item.name, types: "urn:entity:book" } : { query: item.name }, hit.id);
+      updates.push({ id: item._id, qloo: { id: hit.id, name: hit.name, type: hit.type, tags } });
+    } catch (err) {
+      local.push({ kind: "qloo", name: `Resolve "${item.name}"`, ms: 0, result: `failed: ${String(err).slice(0, 80)}` });
+    }
+  }
+  if (updates.length) await ctx.runMutation(internal.emailItems.setQloo, { updates });
+  trace.push({
+    kind: "qloo",
+    name: "Find the catalog in Qloo",
+    path: "/search",
+    params: { query: `${todo.length} items` },
+    cache: local.some((s) => s.cache && s.cache !== "hit") ? "miss" : "hit",
+    ms: local.reduce((s, x) => s + x.ms, 0),
+    result: `${updates.length} of ${todo.length} matched`,
+  });
+  return { resolved: updates.length, total: todo.length, trace };
+}
 
 /* Taste ranking --------------------------------------------------------------------- */
 
@@ -326,6 +340,21 @@ export function andList(names: string[]): string {
 }
 
 type Ranked = { id: Id<"emailItems">; score: number; evidence: string };
+
+const rankArgs = {
+  brandId: v.id("emailBrands"),
+  audienceId: v.optional(v.id("emailAudiences")),
+  contactId: v.optional(v.id("emailContacts")),
+  profile: v.optional(v.any()),
+  take: v.optional(v.number()),
+  /** Item ids to leave out (already in the email). */
+  exclude: v.optional(v.array(v.string())),
+};
+
+const rankReturns = v.object({
+  items: v.array(v.object({ id: v.id("emailItems"), score: v.number(), evidence: v.string() })),
+  trace: v.array(spanValidator),
+});
 
 /** How much being like what someone bought counts against Qloo's affinity and tag overlap together. */
 const LIKENESS_WEIGHT = 0.6;
@@ -411,204 +440,208 @@ async function qlooRanks(
  * Stackhouse). What the person already listed is left out.
  */
 export const rank = action({
-  args: {
-    brandId: v.id("emailBrands"),
-    audienceId: v.optional(v.id("emailAudiences")),
-    contactId: v.optional(v.id("emailContacts")),
-    profile: v.optional(v.any()),
-    take: v.optional(v.number()),
-    /** Item ids to leave out (already in the email). */
-    exclude: v.optional(v.array(v.string())),
-  },
-  returns: v.object({
-    items: v.array(v.object({ id: v.id("emailItems"), score: v.number(), evidence: v.string() })),
-    trace: v.array(spanValidator),
-  }),
-  handler: async (ctx, { brandId, audienceId, contactId, profile: given, take = 6, exclude = [] }): Promise<{ items: Ranked[]; trace: Span[] }> => {
-    const trace: Span[] = [];
-    const items: Doc<"emailItems">[] = await ctx.runQuery(internal.emailItems.listInternal, { brandId });
-    if (!items.length) return { items: [], trace };
-
-    let profile = given as AudienceProfile | undefined;
-    // What they told us they love: never recommended back to them.
-    const listed: { id: string; name: string; type: string }[] = [];
-    const listedWords: string[] = [];
-    // Catalog items they bought or booked, and how many of them did (a group's members).
-    const bought = new Map<string, number>();
-    const tally = (ids: string[] | undefined) => {
-      for (const id of new Set(ids ?? [])) bought.set(id, (bought.get(id) ?? 0) + 1);
-    };
-    if (contactId) {
-      const contact: Doc<"emailContacts"> | null = await ctx.runQuery(internal.emailContacts.getInternal, { id: contactId });
-      if (!contact) throw new Error("Unknown contact");
-      listed.push(...contact.entities);
-      listedWords.push(...contact.interests);
-      tally(contact.boughtItemIds);
-      profile ??= (contact.profile as AudienceProfile | undefined) ?? {
-        entities: contact.entities.map((e) => ({ ...e, source: "csv", count: 1 })),
-        tags: [],
-        brands: [],
-        geo: [],
-        culture: { artists: [], films: [], places: [], books: [] },
-      };
-    } else if (audienceId) {
-      const audience: Doc<"emailAudiences"> | null = await ctx.runQuery(internal.emailAudiences.getInternal, { id: audienceId });
-      if (!audience) throw new Error("Unknown audience");
-      profile ??= audience.profile as AudienceProfile | undefined;
-      const members: { boughtItemIds?: string[] }[] = await ctx.runQuery(internal.emailContacts.byAudienceInternal, { audienceId });
-      for (const m of members) tally(m.boughtItemIds);
-    }
-    if (!profile) throw new Error("No taste profile to rank for yet");
-    if (!contactId) listed.push(...profile.entities.filter((e) => e.source === "csv" || e.source === "interest"));
-
-    const listedIds = new Set(listed.map((e) => e.id));
-    const listedNames = new Set([...listed.map((e) => norm(e.name)), ...listedWords.map(norm)]);
-    const skip = new Set(exclude);
-    const candidates = items.filter((i) => !skip.has(i._id) && !(i.qloo && listedIds.has(i.qloo.id)) && !listedNames.has(norm(i.name)));
-    const left = items.length - candidates.length - items.filter((i) => skip.has(i._id)).length;
-    if (left > 0) trace.push({ kind: "slice", name: "Leave out what they already love", ms: 0, result: `${left} item${left === 1 ? "" : "s"} they listed themselves` });
-
-    // Signals: their top entities, one kind after another so books don't drown out music.
-    // A catalog item goes by the shop's name for it ("Brat", not Qloo's "BRAT Restaurant").
-    const byQloo = new Map(items.filter((i) => i.qloo).map((i) => [i.qloo!.id, i]));
-    const byKind = new Map<string, { id: string; name: string }[]>();
-    const pool = profile.entities.length
-      ? [...profile.entities].sort((a, b) => (b.count ?? 1) - (a.count ?? 1))
-      : [...profile.culture.books, ...profile.culture.artists, ...profile.culture.films, ...profile.culture.places];
-    for (const e of pool) byKind.set(e.type, [...(byKind.get(e.type) ?? []), { id: e.id, name: byQloo.get(e.id)?.name ?? e.name }]);
-    const signals = interleave([...byKind.values()], 10);
-
-    /* Qloo: the catalog ranked for this taste, and for the brand's readers as a whole. Popular
-       titles rank near the top for everyone (books especially), so a pick is scored on how much
-       higher it ranks for this person than for the shop's readers overall. */
-    const qlooScore = await qlooRanks(ctx, trace, signals, candidates, "for this taste");
-    const readers: { id: string; name: string; type: string }[] = await ctx.runQuery(internal.emailItems.readerSignalsInternal, { brandId });
-    const readerKinds = new Map<string, { id: string; name: string }[]>();
-    for (const e of readers) readerKinds.set(e.type, [...(readerKinds.get(e.type) ?? []), { id: e.id, name: e.name }]);
-    const baselineSignals = interleave([...readerKinds.values()], 10);
-    const sameAsBaseline = baselineSignals.map((s) => s.id).join(",") === signals.map((s) => s.id).join(",");
-    const baseline = readers.length >= 3 && !sameAsBaseline ? await qlooRanks(ctx, trace, baselineSignals, candidates, "for the shop's readers overall") : new Map();
-    const lifted = (id: string) => {
-      const q = qlooScore.get(id);
-      if (!q) return undefined;
-      const base = baseline.get(id)?.score;
-      return base === undefined ? q.score : Math.max(0, Math.min(1, 0.75 * q.score - 0.5 * base + 0.4));
-    };
-
-    /* Tags: the item's words and Qloo tags against the profile's tags and the words they used themselves. */
-    const profileTags = new Map<string, { name: string; affinity: number }>();
-    for (const t of profile.tags) {
-      const k = tagKey(t.id);
-      const cur = profileTags.get(k);
-      if (!cur || cur.affinity < t.affinity) profileTags.set(k, { name: t.name.toLowerCase(), affinity: t.affinity });
-    }
-    // "poetry" in their favourites is a genre they named, the strongest kind of tag.
-    const entityNames = new Set(listed.map((e) => norm(e.name)));
-    for (const w of listedWords) if (!entityNames.has(norm(w))) profileTags.set(wordKey(w), { name: w.toLowerCase(), affinity: 1 });
-    // A tag most of the catalog carries ("Fiction", "Contemporary") says little about one item.
-    const itemKeys = new Map(items.map((i) => [i._id, new Set([...i.tags, ...(i.qloo?.tags ?? [])].map(wordKey))]));
-    const df = new Map<string, number>();
-    for (const keys of itemKeys.values()) for (const k of keys) df.set(k, (df.get(k) ?? 0) + 1);
-    const idf = (k: string) => Math.log((items.length + 1) / ((df.get(k) ?? 0) + 1)) / Math.log(items.length + 1);
-    const favouriteNames = [...new Set(listed.map((e) => e.name))].filter((n) => norm(n).length >= 4);
-
-    /* Like what they bought: the shop's own words for the items in their history (genre, cuisine,
-       collection, Qloo's genre and dish tags) against each candidate's, idf-weighted. Qloo's
-       affinity follows popularity and, for places, where people go; a profile's tags are
-       lifestyle words. Neither says "another crime novel" or "another small-plates room" as
-       plainly as the items they chose. Purchases come from the person, the group's members, or
-       the profile's own entities that are catalog items (a merged profile). */
-    for (const e of profile.entities) {
-      const item = byQloo.get(e.id);
-      if (item && (e.source === "csv" || e.source === "interest")) bought.set(item._id, Math.max(bought.get(item._id) ?? 0, e.count ?? 1));
-    }
-    const wordOf = new Map<string, string>();
-    for (const i of items) for (const t of [...i.tags, ...(i.qloo?.tags ?? [])]) if (!wordOf.has(wordKey(t))) wordOf.set(wordKey(t), t.toLowerCase());
-    // The merchant's words are the shop's own structure ("Small plates & natural wine", "Crime & suspense"); Qloo's are broader ("European").
-    const ownKeys = new Map(items.map((i) => [i._id as string, new Set(i.tags.map(wordKey))]));
-    const weight = (id: string, k: string) => idf(k) * (ownKeys.get(id)?.has(k) ? 1 : QLOO_TAG_WEIGHT);
-    const history = new Map<string, number>();
-    for (const [id, n] of bought) for (const k of itemKeys.get(id as Id<"emailItems">) ?? []) history.set(k, (history.get(k) ?? 0) + n * weight(id, k));
-    const historyNorm = Math.sqrt([...history.values()].reduce((s, x) => s + x * x, 0));
-    const likeness = new Map<string, { score: number; shared: string[]; like: string[] }>();
-    if (historyNorm > 0) {
-      for (const item of candidates) {
-        const keys = itemKeys.get(item._id) ?? new Set<string>();
-        let dot = 0;
-        let norm2 = 0;
-        const shared: [string, number][] = [];
-        for (const k of keys) {
-          const w = weight(item._id, k);
-          norm2 += w * w;
-          const h = history.get(k);
-          if (h) {
-            dot += w * h;
-            shared.push([k, w * h]);
-          }
-        }
-        const score = norm2 ? dot / (Math.sqrt(norm2) * historyNorm) : 0;
-        // The items in their history that share the most with this one, for the evidence.
-        const like = [...bought.keys()]
-          .map((id) => {
-            const theirs = itemKeys.get(id as Id<"emailItems">) ?? new Set<string>();
-            return { id, w: [...keys].filter((k) => theirs.has(k)).reduce((s, k) => s + weight(id, k), 0) };
-          })
-          .filter((x) => x.w > 0.6)
-          .sort((a, b) => b.w - a.w)
-          .slice(0, 2)
-          .map((x) => items.find((i) => i._id === x.id)?.name)
-          .filter((n): n is string => !!n);
-        likeness.set(item._id, { score, shared: shared.sort((a, b) => b[1] - a[1]).map(([k]) => wordOf.get(k) ?? k), like });
-      }
-      // Cosines are small and catalog-dependent: the closest item scores 1.
-      const best = Math.max(...[...likeness.values()].map((l) => l.score), 0);
-      if (best > 0) for (const l of likeness.values()) l.score /= best;
-      trace.push({
-        kind: "slice",
-        name: "Compare with what they bought",
-        ms: 0,
-        result: `${bought.size} catalog item${bought.size === 1 ? "" : "s"} in their history; closest: ${[...likeness.entries()]
-          .sort((a, b) => b[1].score - a[1].score)
-          .slice(0, 3)
-          .map(([id]) => items.find((i) => i._id === id)?.name)
-          .join(", ")}`,
-      });
-    }
-
-    const scored = candidates.map((item) => {
-      const q = item.qloo ? qlooScore.get(item.qloo.id) : undefined;
-      const qs = item.qloo ? lifted(item.qloo.id) : undefined;
-      const matched = new Map<string, number>();
-      for (const k of itemKeys.get(item._id) ?? []) {
-        const hit = profileTags.get(k);
-        if (hit && !matched.has(hit.name)) matched.set(hit.name, hit.affinity * idf(k));
-      }
-      const tagNames = [...matched.entries()].filter(([, w]) => w > 0.15).sort((a, b) => b[1] - a[1]).map(([n]) => n);
-      const tagScore = Math.min(1, [...matched.values()].reduce((s, x) => s + x, 0) / 1.2);
-      // A new book by an author they named is about the strongest signal there is.
-      const sub = norm(item.subtitle ?? "");
-      const maker = sub ? favouriteNames.find((n) => sub === norm(n) || sub.includes(norm(n))) : undefined;
-      const taste = qs !== undefined ? 0.6 * qs + 0.35 * tagScore : 0.6 * tagScore;
-      // With a history to compare against, being like what they chose counts as much as Qloo and tags together.
-      const like = likeness.get(item._id);
-      const score = (like ? LIKENESS_WEIGHT * like.score + (1 - LIKENESS_WEIGHT) * taste : taste) + (maker ? 0.35 : 0);
-      const reasons: string[] = [];
-      if (maker) reasons.push(`by ${maker}, one of their favourites`);
-      if (like && like.score > 0.45 && like.like.length) reasons.push(`like ${andList(like.like)} (${andList(like.shared.slice(0, 2))})`);
-      if (q?.because.length) reasons.push(`Qloo links it to their love of ${andList(q.because)}`);
-      else if (qs !== undefined && qs > 0.5) reasons.push("Qloo ranks it high for their taste");
-      if (tagNames.length) reasons.push(`fits their taste for ${andList(tagNames.slice(0, 3))}`);
-      const evidence = reasons.length ? reasons.join("; ").replace(/^./, (c) => c.toUpperCase()) : "No strong taste signal; from the catalog";
-      return { id: item._id, score: Math.round(Math.min(1, score) * 1000) / 1000, evidence, order: item.order };
-    });
-    scored.sort((a, b) => b.score - a.score || a.order - b.order);
-    const out = scored.slice(0, Math.max(1, Math.min(take, 24))).map(({ order: _o, ...r }) => r);
-    trace.push({
-      kind: "slice",
-      name: "Blend Qloo's ranking with tag overlap",
-      ms: 0,
-      result: out.slice(0, 4).map((r) => `${items.find((i) => i._id === r.id)?.name} ${Math.round(r.score * 100)}`).join(", ") || "nothing to rank",
-    });
-    return { items: out, trace };
+  args: rankArgs,
+  returns: rankReturns,
+  handler: async (ctx, args): Promise<{ items: Ranked[]; trace: Span[] }> => {
+    if (!(await ownedBrandInAction(ctx, args.brandId))) throw new Error("Unknown brand");
+    return rankItems(ctx, args);
   },
 });
+
+/** `rank` for the email agent, which has no user token (/agent/action in http.ts). */
+export const rankInternal = internalAction({
+  args: rankArgs,
+  returns: rankReturns,
+  handler: async (ctx, args): Promise<{ items: Ranked[]; trace: Span[] }> => rankItems(ctx, args),
+});
+
+async function rankItems(
+  ctx: ActionCtx,
+  { brandId, audienceId, contactId, profile: given, take = 6, exclude = [] }: ObjectType<typeof rankArgs>,
+): Promise<{ items: Ranked[]; trace: Span[] }> {
+  const trace: Span[] = [];
+  const items: Doc<"emailItems">[] = await ctx.runQuery(internal.emailItems.listInternal, { brandId });
+  if (!items.length) return { items: [], trace };
+
+  let profile = given as AudienceProfile | undefined;
+  // What they told us they love: never recommended back to them.
+  const listed: { id: string; name: string; type: string }[] = [];
+  const listedWords: string[] = [];
+  // Catalog items they bought or booked, and how many of them did (a group's members).
+  const bought = new Map<string, number>();
+  const tally = (ids: string[] | undefined) => {
+    for (const id of new Set(ids ?? [])) bought.set(id, (bought.get(id) ?? 0) + 1);
+  };
+  if (contactId) {
+    const contact: Doc<"emailContacts"> | null = await ctx.runQuery(internal.emailContacts.getInternal, { id: contactId });
+    if (!contact || contact.brandId !== brandId) throw new Error("Unknown contact");
+    listed.push(...contact.entities);
+    listedWords.push(...contact.interests);
+    tally(contact.boughtItemIds);
+    profile ??= (contact.profile as AudienceProfile | undefined) ?? {
+      entities: contact.entities.map((e) => ({ ...e, source: "csv", count: 1 })),
+      tags: [],
+      brands: [],
+      geo: [],
+      culture: { artists: [], films: [], places: [], books: [] },
+    };
+  } else if (audienceId) {
+    const audience: Doc<"emailAudiences"> | null = await ctx.runQuery(internal.emailAudiences.getInternal, { id: audienceId });
+    if (!audience || audience.brandId !== brandId) throw new Error("Unknown audience");
+    profile ??= audience.profile as AudienceProfile | undefined;
+    const members: { boughtItemIds?: string[] }[] = await ctx.runQuery(internal.emailContacts.byAudienceInternal, { audienceId });
+    for (const m of members) tally(m.boughtItemIds);
+  }
+  if (!profile) throw new Error("No taste profile to rank for yet");
+  if (!contactId) listed.push(...profile.entities.filter((e) => e.source === "csv" || e.source === "interest"));
+
+  const listedIds = new Set(listed.map((e) => e.id));
+  const listedNames = new Set([...listed.map((e) => norm(e.name)), ...listedWords.map(norm)]);
+  const skip = new Set(exclude);
+  const candidates = items.filter((i) => !skip.has(i._id) && !(i.qloo && listedIds.has(i.qloo.id)) && !listedNames.has(norm(i.name)));
+  const left = items.length - candidates.length - items.filter((i) => skip.has(i._id)).length;
+  if (left > 0) trace.push({ kind: "slice", name: "Leave out what they already love", ms: 0, result: `${left} item${left === 1 ? "" : "s"} they listed themselves` });
+
+  // Signals: their top entities, one kind after another so books don't drown out music.
+  // A catalog item goes by the shop's name for it ("Brat", not Qloo's "BRAT Restaurant").
+  const byQloo = new Map(items.filter((i) => i.qloo).map((i) => [i.qloo!.id, i]));
+  const byKind = new Map<string, { id: string; name: string }[]>();
+  const pool = profile.entities.length
+    ? [...profile.entities].sort((a, b) => (b.count ?? 1) - (a.count ?? 1))
+    : [...profile.culture.books, ...profile.culture.artists, ...profile.culture.films, ...profile.culture.places];
+  for (const e of pool) byKind.set(e.type, [...(byKind.get(e.type) ?? []), { id: e.id, name: byQloo.get(e.id)?.name ?? e.name }]);
+  const signals = interleave([...byKind.values()], 10);
+
+  /* Qloo: the catalog ranked for this taste, and for the brand's readers as a whole. Popular
+     titles rank near the top for everyone (books especially), so a pick is scored on how much
+     higher it ranks for this person than for the shop's readers overall. */
+  const qlooScore = await qlooRanks(ctx, trace, signals, candidates, "for this taste");
+  const readers: { id: string; name: string; type: string }[] = await ctx.runQuery(internal.emailItems.readerSignalsInternal, { brandId });
+  const readerKinds = new Map<string, { id: string; name: string }[]>();
+  for (const e of readers) readerKinds.set(e.type, [...(readerKinds.get(e.type) ?? []), { id: e.id, name: e.name }]);
+  const baselineSignals = interleave([...readerKinds.values()], 10);
+  const sameAsBaseline = baselineSignals.map((s) => s.id).join(",") === signals.map((s) => s.id).join(",");
+  const baseline = readers.length >= 3 && !sameAsBaseline ? await qlooRanks(ctx, trace, baselineSignals, candidates, "for the shop's readers overall") : new Map();
+  const lifted = (id: string) => {
+    const q = qlooScore.get(id);
+    if (!q) return undefined;
+    const base = baseline.get(id)?.score;
+    return base === undefined ? q.score : Math.max(0, Math.min(1, 0.75 * q.score - 0.5 * base + 0.4));
+  };
+
+  /* Tags: the item's words and Qloo tags against the profile's tags and the words they used themselves. */
+  const profileTags = new Map<string, { name: string; affinity: number }>();
+  for (const t of profile.tags) {
+    const k = tagKey(t.id);
+    const cur = profileTags.get(k);
+    if (!cur || cur.affinity < t.affinity) profileTags.set(k, { name: t.name.toLowerCase(), affinity: t.affinity });
+  }
+  // "poetry" in their favourites is a genre they named, the strongest kind of tag.
+  const entityNames = new Set(listed.map((e) => norm(e.name)));
+  for (const w of listedWords) if (!entityNames.has(norm(w))) profileTags.set(wordKey(w), { name: w.toLowerCase(), affinity: 1 });
+  // A tag most of the catalog carries ("Fiction", "Contemporary") says little about one item.
+  const itemKeys = new Map(items.map((i) => [i._id, new Set([...i.tags, ...(i.qloo?.tags ?? [])].map(wordKey))]));
+  const df = new Map<string, number>();
+  for (const keys of itemKeys.values()) for (const k of keys) df.set(k, (df.get(k) ?? 0) + 1);
+  const idf = (k: string) => Math.log((items.length + 1) / ((df.get(k) ?? 0) + 1)) / Math.log(items.length + 1);
+  const favouriteNames = [...new Set(listed.map((e) => e.name))].filter((n) => norm(n).length >= 4);
+
+  /* Like what they bought: the shop's own words for the items in their history (genre, cuisine,
+     collection, Qloo's genre and dish tags) against each candidate's, idf-weighted. Qloo's
+     affinity follows popularity and, for places, where people go; a profile's tags are
+     lifestyle words. Neither says "another crime novel" or "another small-plates room" as
+     plainly as the items they chose. Purchases come from the person, the group's members, or
+     the profile's own entities that are catalog items (a merged profile). */
+  for (const e of profile.entities) {
+    const item = byQloo.get(e.id);
+    if (item && (e.source === "csv" || e.source === "interest")) bought.set(item._id, Math.max(bought.get(item._id) ?? 0, e.count ?? 1));
+  }
+  const wordOf = new Map<string, string>();
+  for (const i of items) for (const t of [...i.tags, ...(i.qloo?.tags ?? [])]) if (!wordOf.has(wordKey(t))) wordOf.set(wordKey(t), t.toLowerCase());
+  // The merchant's words are the shop's own structure ("Small plates & natural wine", "Crime & suspense"); Qloo's are broader ("European").
+  const ownKeys = new Map(items.map((i) => [i._id as string, new Set(i.tags.map(wordKey))]));
+  const weight = (id: string, k: string) => idf(k) * (ownKeys.get(id)?.has(k) ? 1 : QLOO_TAG_WEIGHT);
+  const history = new Map<string, number>();
+  for (const [id, n] of bought) for (const k of itemKeys.get(id as Id<"emailItems">) ?? []) history.set(k, (history.get(k) ?? 0) + n * weight(id, k));
+  const historyNorm = Math.sqrt([...history.values()].reduce((s, x) => s + x * x, 0));
+  const likeness = new Map<string, { score: number; shared: string[]; like: string[] }>();
+  if (historyNorm > 0) {
+    for (const item of candidates) {
+      const keys = itemKeys.get(item._id) ?? new Set<string>();
+      let dot = 0;
+      let norm2 = 0;
+      const shared: [string, number][] = [];
+      for (const k of keys) {
+        const w = weight(item._id, k);
+        norm2 += w * w;
+        const h = history.get(k);
+        if (h) {
+          dot += w * h;
+          shared.push([k, w * h]);
+        }
+      }
+      const score = norm2 ? dot / (Math.sqrt(norm2) * historyNorm) : 0;
+      // The items in their history that share the most with this one, for the evidence.
+      const like = [...bought.keys()]
+        .map((id) => {
+          const theirs = itemKeys.get(id as Id<"emailItems">) ?? new Set<string>();
+          return { id, w: [...keys].filter((k) => theirs.has(k)).reduce((s, k) => s + weight(id, k), 0) };
+        })
+        .filter((x) => x.w > 0.6)
+        .sort((a, b) => b.w - a.w)
+        .slice(0, 2)
+        .map((x) => items.find((i) => i._id === x.id)?.name)
+        .filter((n): n is string => !!n);
+      likeness.set(item._id, { score, shared: shared.sort((a, b) => b[1] - a[1]).map(([k]) => wordOf.get(k) ?? k), like });
+    }
+    // Cosines are small and catalog-dependent: the closest item scores 1.
+    const best = Math.max(...[...likeness.values()].map((l) => l.score), 0);
+    if (best > 0) for (const l of likeness.values()) l.score /= best;
+    trace.push({
+      kind: "slice",
+      name: "Compare with what they bought",
+      ms: 0,
+      result: `${bought.size} catalog item${bought.size === 1 ? "" : "s"} in their history; closest: ${[...likeness.entries()]
+        .sort((a, b) => b[1].score - a[1].score)
+        .slice(0, 3)
+        .map(([id]) => items.find((i) => i._id === id)?.name)
+        .join(", ")}`,
+    });
+  }
+
+  const scored = candidates.map((item) => {
+    const q = item.qloo ? qlooScore.get(item.qloo.id) : undefined;
+    const qs = item.qloo ? lifted(item.qloo.id) : undefined;
+    const matched = new Map<string, number>();
+    for (const k of itemKeys.get(item._id) ?? []) {
+      const hit = profileTags.get(k);
+      if (hit && !matched.has(hit.name)) matched.set(hit.name, hit.affinity * idf(k));
+    }
+    const tagNames = [...matched.entries()].filter(([, w]) => w > 0.15).sort((a, b) => b[1] - a[1]).map(([n]) => n);
+    const tagScore = Math.min(1, [...matched.values()].reduce((s, x) => s + x, 0) / 1.2);
+    // A new book by an author they named is about the strongest signal there is.
+    const sub = norm(item.subtitle ?? "");
+    const maker = sub ? favouriteNames.find((n) => sub === norm(n) || sub.includes(norm(n))) : undefined;
+    const taste = qs !== undefined ? 0.6 * qs + 0.35 * tagScore : 0.6 * tagScore;
+    // With a history to compare against, being like what they chose counts as much as Qloo and tags together.
+    const like = likeness.get(item._id);
+    const score = (like ? LIKENESS_WEIGHT * like.score + (1 - LIKENESS_WEIGHT) * taste : taste) + (maker ? 0.35 : 0);
+    const reasons: string[] = [];
+    if (maker) reasons.push(`by ${maker}, one of their favourites`);
+    if (like && like.score > 0.45 && like.like.length) reasons.push(`like ${andList(like.like)} (${andList(like.shared.slice(0, 2))})`);
+    if (q?.because.length) reasons.push(`Qloo links it to their love of ${andList(q.because)}`);
+    else if (qs !== undefined && qs > 0.5) reasons.push("Qloo ranks it high for their taste");
+    if (tagNames.length) reasons.push(`fits their taste for ${andList(tagNames.slice(0, 3))}`);
+    const evidence = reasons.length ? reasons.join("; ").replace(/^./, (c) => c.toUpperCase()) : "No strong taste signal; from the catalog";
+    return { id: item._id, score: Math.round(Math.min(1, score) * 1000) / 1000, evidence, order: item.order };
+  });
+  scored.sort((a, b) => b.score - a.score || a.order - b.order);
+  const out = scored.slice(0, Math.max(1, Math.min(take, 24))).map(({ order: _o, ...r }) => r);
+  trace.push({
+    kind: "slice",
+    name: "Blend Qloo's ranking with tag overlap",
+    ms: 0,
+    result: out.slice(0, 4).map((r) => `${items.find((i) => i._id === r.id)?.name} ${Math.round(r.score * 100)}`).join(", ") || "nothing to rank",
+  });
+  return { items: out, trace };
+}
