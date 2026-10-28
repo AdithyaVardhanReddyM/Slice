@@ -33,3 +33,6 @@ coverage/
 __pycache__/
 *.pyc
 .adk/
+
+# Hackathon submission drafts (images are hosted on Tigris, not here)
+docs/submission/
