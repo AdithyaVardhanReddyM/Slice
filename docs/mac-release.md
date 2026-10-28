@@ -8,11 +8,13 @@ Written 2026-10-26. The goal is a download a judge can open on their own Mac wit
 
 Then one command builds the DMG.
 
+No Developer ID certificate? Skip steps 1 and 2 and read [Unnotarized build](#unnotarized-build) below: the same DMG, with the app signed with your Apple Development certificate, and judges open it once with Open Anyway.
+
 ## What was added
 
 | File | What it does |
 | --- | --- |
-| `apps/mac/scripts/release.sh` | Checks this Mac, archives the Release build, exports it Developer ID signed, notarizes and staples the app, builds the DMG, signs, notarizes and staples that, and prints where it is. Output goes to `apps/mac/build/release` (already gitignored). |
+| `apps/mac/scripts/release.sh` | Checks this Mac, archives the Release build, exports it Developer ID signed, notarizes and staples the app, builds the DMG, signs, notarizes and staples that, and prints where it is. With `--unnotarized` (`release:unnotarized`) it signs with Apple Development and skips notarization. Output goes to `apps/mac/build/release` (already gitignored). |
 | `apps/mac/project.yml` and `apps/mac/Sources/Agent/BrainSettings.swift` | The Info.plist keys `SliceBrainURL` and `SliceBrainToken`, filled from the `SLICE_BRAIN_URL` and `SLICE_BRAIN_TOKEN` build settings. A fresh install connects to that address. With them empty (every Debug build) the app uses `ws://127.0.0.1:8000/mac/live` as before. |
 | `apps/agent/mac_server.py` | A small server app that mounts only the `/mac/*` routes. The hosted brain runs this, not `server.py`. |
 | `apps/agent/Dockerfile`, `.dockerignore`, `.gcloudignore` | The brain's image: Python 3.13, dependencies from `uv.lock`, headless Chromium for the large-print PDF. |
@@ -135,6 +137,55 @@ You can also run these on the file: `spctl --assess --type open --context contex
 - Slice lives in the menu bar and the notch. Hold fn and control to talk, or hover over the notch to type.
 - Say yes to the permission prompts (Microphone first). Without Accessibility and Screen Recording it can talk but not look at or act on the screen.
 - If the brain does not connect and you did not bake the token in: Settings, Brain, Token, paste the token, Connect.
+
+## Unnotarized build
+
+Added 2026-10-28. This is the build judges get, because there is no Developer ID certificate. Steps 1 and 2 are not needed, step 3 (the brain) is.
+
+```sh
+SLICE_BRAIN_URL=wss://slice-brain-xxxxx-uc.a.run.app/mac/live \
+SLICE_BRAIN_TOKEN=$(gcloud secrets versions access latest --secret slice-mac-client-token --project cortana-505209) \
+  pnpm --filter @slice/mac release:unnotarized
+```
+
+Add `--check` (`./scripts/release.sh --unnotarized --check`) to check the Mac without building. The script archives the same Release build as the notarized path: universal, hardened runtime, secure timestamp, the brain address and token in Info.plist. It then:
+
+- takes Slice.app straight from the archive (signed with the Apple Development certificate for team 5Q3KU6MZ8A) instead of exporting it, and leaves out `get-task-allow`, which Xcode otherwise adds to anything signed with Apple Development,
+- checks the app with `codesign --verify --deep --strict` and checks it is universal,
+- builds the same DMG (Slice next to an Applications shortcut) and checks it with `hdiutil verify`,
+- skips notarytool, stapler and the Gatekeeper check (Gatekeeper rejects an unnotarized build by design).
+
+The DMG itself is left unsigned on purpose. Tested on this Mac: a downloaded (quarantined) DMG signed with Apple Development is refused as soon as it is opened ("Not Opened", with Done or Move to Trash), so judges would need Open Anyway twice. An unsigned DMG mounts straight away, and only the app inside, which is signed, needs Open Anyway.
+
+It takes about two minutes and writes `apps/mac/build/release/Slice-<version>.dmg`. Put it in the public bucket `gs://slice-for-mac` (project `cortana-505209`). The landing page's Download button links to `https://storage.googleapis.com/slice-for-mac/Slice.dmg`:
+
+```sh
+cd apps/mac/build/release
+gcloud storage cp Slice-0.1.0.dmg gs://slice-for-mac/Slice.dmg \
+  --content-type=application/x-apple-diskimage --cache-control=no-cache
+gcloud storage cp Slice-0.1.0.dmg gs://slice-for-mac/Slice-0.1.0.dmg \
+  --content-type=application/x-apple-diskimage --cache-control=no-cache
+```
+
+`no-cache` makes a new upload show up straight away instead of after the default hour of caching.
+
+### Opening it the first time (macOS 15 and later)
+
+macOS blocks the first open of an app that is not notarized. Since macOS 15, Control-click then Open no longer gets past this. The way through is System Settings:
+
+1. Download Slice.dmg, double-click it, and drag Slice onto the Applications shortcut.
+2. Open Slice from Applications. macOS says Slice was not opened because Apple could not verify it is free of malware. Click **Done**, not Move to Trash.
+3. Open **System Settings**, then **Privacy & Security**, and scroll down to the Security section. It says Slice was blocked to protect your Mac. Click **Open Anyway**. The button is only there for about an hour after step 2; if it is gone, do step 2 again.
+4. macOS asks once more and wants your Mac password (or Touch ID). Click **Open Anyway**.
+5. Slice opens, and from then on it opens like any other app. There is no Dock icon: it lives in the menu bar and the notch. Then the permission prompts and hold fn and control, as in [What to tell judges](#what-to-tell-judges).
+
+For judges who are happy in Terminal, after step 1 this one line does the same as steps 2 to 4:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Slice.app
+```
+
+Checked 2026-10-28, with the DMG downloaded from the public link by curl: it matches the build byte for byte; `hdiutil verify` passes; the app passes `codesign --verify --deep --strict`, is universal, has the hardened runtime, a timestamp and team 5Q3KU6MZ8A; Info.plist has the hosted `SliceBrainURL` and a `SliceBrainToken` equal to the Secret Manager token. Opened with a browser's quarantine flag, the DMG mounts with no prompt. The hosted brain answers `/mac/health`, and accepts the `/mac/live` WebSocket with the token and refuses it without one. Not checked: the Open Anyway steps on a second Mac (they follow Apple's documented flow), and a real voice conversation through the hosted brain.
 
 ## What was checked, and what was not
 

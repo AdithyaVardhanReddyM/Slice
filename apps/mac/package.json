@@ -8,6 +8,7 @@
     "app": "./scripts/run.sh",
     "app:build": "./scripts/run.sh --build",
     "release": "./scripts/release.sh",
-    "release:check": "./scripts/release.sh --check"
+    "release:check": "./scripts/release.sh --check",
+    "release:unnotarized": "./scripts/release.sh --unnotarized"
   }
 }
