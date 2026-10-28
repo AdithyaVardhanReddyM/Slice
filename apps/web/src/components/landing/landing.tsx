@@ -895,8 +895,8 @@ function MacSection() {
             Download for Mac
           </a>
           <p className="mt-4 max-w-[460px] text-sm leading-relaxed text-white/45">
-            For macOS 15 or later. The first time you open it, macOS stops it:
-            go to System Settings, Privacy &amp; Security, and press Open Anyway.
+            For macOS 15 or later, on Apple silicon and Intel. Drag Slice to
+            Applications and open it from there.
           </p>
         </div>
 

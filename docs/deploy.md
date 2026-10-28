@@ -24,7 +24,7 @@ Why Cloud Run and not Agent Engine: the agent is a FastAPI app with its own rout
 - **Web and stores:** push to `main`. Vercel builds each project from Git. The store projects skip the build when nothing they ship changed (`apps/stores/scripts/vercel-ignore.sh`).
 - **Agent:** `cd apps/agent && WEB_URL=https://slice-agents.vercel.app ./scripts/deploy-cloud-run.sh agent`
 - **Mac brain:** `cd apps/agent && ./scripts/deploy-cloud-run.sh`
-- **Mac app:** see `docs/mac-release.md` (unnotarized build, uploaded to the bucket above).
+- **Mac app:** see `docs/mac-release.md` (Developer ID signed and notarized, uploaded to the bucket above).
 - **Convex functions:** `cd packages/backend && npx convex dev --once` (production and local dev share the deployment).
 
 ## How the pieces trust each other
