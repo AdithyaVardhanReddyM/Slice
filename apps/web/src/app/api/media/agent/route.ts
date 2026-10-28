@@ -2,7 +2,8 @@
 import { proxyStream } from "../../pages/_lib/proxy";
 import { ownedBody, rebuilt } from "../_lib/guard";
 
-export const maxDuration = 800;
+// Vercel Hobby allows at most 300 s per request (Pro: 800).
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const r = await ownedBody(req);

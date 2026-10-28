@@ -20,6 +20,9 @@ import { LaptopFrame, PhoneFrame, TalkKeys } from "./devices";
 import { Showcase } from "./showcase";
 import "./landing.css";
 
+// Built and uploaded by apps/mac/scripts/release.sh (docs/mac-release.md).
+const MAC_DMG_URL = "https://storage.googleapis.com/slice-for-mac/Slice.dmg";
+
 const NAV = [
   { href: "#media", label: "Media" },
   { href: "#pages", label: "Pages" },
@@ -883,13 +886,18 @@ function MacSection() {
             knows what you love, plans around it, and uses your Mac to finish
             the job.
           </p>
-          <Link
-            href="#mac"
+          <a
+            href={MAC_DMG_URL}
+            download
             className="mt-9 inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-neutral-950 transition-all hover:-translate-y-px hover:bg-white/90"
           >
             <AppleLogo className="size-4 -translate-y-px" />
             Download for Mac
-          </Link>
+          </a>
+          <p className="mt-4 max-w-[460px] text-sm leading-relaxed text-white/45">
+            For macOS 15 or later. The first time you open it, macOS stops it:
+            go to System Settings, Privacy &amp; Security, and press Open Anyway.
+          </p>
         </div>
 
         <div className="landing-reveal mx-auto mt-16 max-w-[1080px]">

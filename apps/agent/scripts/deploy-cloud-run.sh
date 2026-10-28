@@ -1,24 +1,31 @@
 #!/bin/bash
-# Host the Slice for Mac brain on Google Cloud Run.
+# Host the Slice agents on Google Cloud Run: the Slice for Mac brain, and the agent the web app calls.
 #
 #   ./scripts/deploy-cloud-run.sh setup     once per project: APIs, image repository, service
 #                                           account, and the secrets in Secret Manager
-#   ./scripts/deploy-cloud-run.sh           build the image with Cloud Build and deploy it
+#   ./scripts/deploy-cloud-run.sh           build the image with Cloud Build and deploy the brain
+#   ./scripts/deploy-cloud-run.sh agent     the same image as the agent (server:app), for the web app
 #   ./scripts/deploy-cloud-run.sh --yes     the same without the "go ahead?" question
 #
-# Run from anywhere; it works inside apps/agent. It serves mac_server:app (only /mac/*), so the
-# concierge, Pages, Email and Media services are not exposed. Docs: docs/mac-release.md.
+# Run from anywhere; it works inside apps/agent. The brain serves mac_server:app (only /mac/*). The
+# agent serves server:app (concierge, Pages, Email, Media) and answers only requests that carry
+# AGENT_API_KEY, which the web app sends; it needs WEB_URL (the web app's https address).
+# Docs: docs/mac-release.md, docs/deploy.md.
 #
 # Where things come from (nothing secret is ever printed):
 #   project            GCP_PROJECT, else GOOGLE_CLOUD_PROJECT in apps/agent/.env, else `gcloud config`
 #   CONVEX_URL, CONVEX_SITE_URL     the environment, else apps/agent/.env (they are addresses, not secrets)
-#   secrets            Secret Manager: slice-mac-client-token, slice-qloo-proxy-secret,
-#                      slice-mac-composio-api-key, and (optional) slice-ticketmaster-api-key.
-#                      `setup` fills them from apps/agent/.env and makes the client token.
+#   secrets            Secret Manager, see SECRETS below. `setup` fills them from apps/agent/.env
+#                      and makes the random ones (client token, agent key, catalog key).
 #
 # Settings you may override in the environment:
-#   REGION=us-central1  (Gemini Live is only served there)   SERVICE=slice-brain   REPO=slice
-#   MIN_INSTANCES=1  MAX_INSTANCES=4  CPU=2  MEMORY=2Gi  CONCURRENCY=40  TIMEOUT=3600
+#   brain: REGION=us-central1 (Gemini Live is only served there)  SERVICE=slice-brain
+#          MIN_INSTANCES=1  MAX_INSTANCES=4  CPU=2  MEMORY=2Gi  CONCURRENCY=40  TIMEOUT=3600
+#   agent: REGION=us-east4 (next to Vercel and Convex)  SERVICE=slice-agent
+#          MIN_INSTANCES=1  MAX_INSTANCES=1  CPU=2  MEMORY=4Gi  CONCURRENCY=80  TIMEOUT=3600
+#          One instance, CPU always on: chat sessions and Media/Email jobs live in its memory
+#          and keep running after the request that started them returns.
+#   both:  REPO=slice  REPO_REGION=us-central1 (where images are kept)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."   # apps/agent
@@ -28,9 +35,10 @@ ASSUME_YES=0
 for arg in "$@"; do
   case "$arg" in
     setup) MODE="setup" ;;
-    deploy) MODE="deploy" ;;
+    deploy|brain) MODE="deploy" ;;
+    agent) MODE="agent" ;;
     --yes|-y) ASSUME_YES=1 ;;
-    -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "Unknown argument: $arg (try --help)" >&2; exit 2 ;;
   esac
 done
@@ -52,16 +60,29 @@ command -v gcloud >/dev/null 2>&1 || die "gcloud is not installed (https://cloud
 
 PROJECT="${GCP_PROJECT:-$(dotenv_get GOOGLE_CLOUD_PROJECT)}"
 [ -n "$PROJECT" ] || PROJECT="$(gcloud config get-value project 2>/dev/null || true)"
-REGION="${REGION:-us-central1}"
-SERVICE="${SERVICE:-slice-brain}"
 REPO="${REPO:-slice}"
+REPO_REGION="${REPO_REGION:-us-central1}"
 SA_NAME="${SA_NAME:-slice-brain}"
-MIN_INSTANCES="${MIN_INSTANCES:-1}"
-MAX_INSTANCES="${MAX_INSTANCES:-4}"
-CPU="${CPU:-2}"
-MEMORY="${MEMORY:-2Gi}"
-CONCURRENCY="${CONCURRENCY:-40}"
 TIMEOUT="${TIMEOUT:-3600}"   # seconds; Cloud Run's maximum. A WebSocket is cut at this age and the app reconnects.
+if [ "$MODE" = "agent" ]; then
+  REGION="${REGION:-us-east4}"
+  SERVICE="${SERVICE:-slice-agent}"
+  MIN_INSTANCES="${MIN_INSTANCES:-1}"
+  MAX_INSTANCES="${MAX_INSTANCES:-1}"
+  CPU="${CPU:-2}"
+  MEMORY="${MEMORY:-4Gi}"
+  CONCURRENCY="${CONCURRENCY:-80}"
+else
+  REGION="${REGION:-us-central1}"
+  SERVICE="${SERVICE:-slice-brain}"
+  MIN_INSTANCES="${MIN_INSTANCES:-1}"
+  MAX_INSTANCES="${MAX_INSTANCES:-4}"
+  CPU="${CPU:-2}"
+  MEMORY="${MEMORY:-2Gi}"
+  CONCURRENCY="${CONCURRENCY:-40}"
+fi
+WEB_URL="${WEB_URL:-}"
+WEB_URL="${WEB_URL%/}"
 VERTEX_LOCATION="${VERTEX_LOCATION:-$(dotenv_get GOOGLE_CLOUD_LOCATION)}"
 VERTEX_LOCATION="${VERTEX_LOCATION:-global}"
 CONVEX_URL="${CONVEX_URL:-$(dotenv_get CONVEX_URL)}"
@@ -69,16 +90,30 @@ CONVEX_SITE_URL="${CONVEX_SITE_URL:-$(dotenv_get CONVEX_SITE_URL)}"
 
 [ -n "$PROJECT" ] || die "No Google Cloud project. Set GCP_PROJECT=your-project-id, or run: gcloud config set project your-project-id"
 SA="$SA_NAME@$PROJECT.iam.gserviceaccount.com"
-IMAGE_REPO="$REGION-docker.pkg.dev/$PROJECT/$REPO"
+IMAGE_REPO="$REPO_REGION-docker.pkg.dev/$PROJECT/$REPO"
 
-# Secret Manager name : environment variable : required?
-SECRETS=(
-  "slice-mac-client-token:MAC_CLIENT_TOKEN:required"
+# Secret Manager name : environment variable : required? ("random" = setup makes one if .env has none)
+BRAIN_SECRETS=(
+  "slice-mac-client-token:MAC_CLIENT_TOKEN:random"
   "slice-qloo-proxy-secret:QLOO_PROXY_SECRET:required"
   # The Mac app's own Composio project (slice_mac/accounts.py), not the Pages one.
   "slice-mac-composio-api-key:COMPOSIO_MAC_API_KEY:required"
   "slice-ticketmaster-api-key:TICKETMASTER_API_KEY:optional"
 )
+AGENT_SECRETS=(
+  # The web app sends this on every call (apps/web/src/lib/agent.ts); set it there as AGENT_API_KEY.
+  "slice-agent-api-key:AGENT_API_KEY:random"
+  "slice-qloo-proxy-secret:QLOO_PROXY_SECRET:required"
+  # Encrypts WooCommerce keys at rest (slice_catalog/vault.py).
+  "slice-catalog-secret-key:CATALOG_SECRET_KEY:random"
+  "slice-firecrawl-api-key:FIRECRAWL_API_KEY:optional"
+  "slice-pexels-api-key:PEXELS_API_KEY:optional"
+  # Pages CRM audiences (slice_pages), not the Mac app's Composio project.
+  "slice-composio-api-key:COMPOSIO_API_KEY:optional"
+)
+if [ "$MODE" = "agent" ]; then SECRETS=("${AGENT_SECRETS[@]}")
+elif [ "$MODE" = "setup" ]; then SECRETS=("${BRAIN_SECRETS[@]}" "${AGENT_SECRETS[@]}")
+else SECRETS=("${BRAIN_SECRETS[@]}"); fi
 
 SECRET_MAPPING=""
 
@@ -95,7 +130,7 @@ confirm() {
 # setup: run once. Everything is skipped if it already exists.
 # ---------------------------------------------------------------------------------------
 if [ "$MODE" = "setup" ]; then
-  say "Setting up project $PROJECT (region $REGION)"
+  say "Setting up project $PROJECT (images in $REPO_REGION)"
   echo "    Enables the Cloud Run, Cloud Build, Artifact Registry, Secret Manager and Vertex AI APIs;"
   echo "    makes the image repository '$REPO' and the service account $SA (Vertex AI User);"
   echo "    stores the brain's secrets in Secret Manager from apps/agent/.env."
@@ -106,10 +141,10 @@ if [ "$MODE" = "setup" ]; then
     secretmanager.googleapis.com aiplatform.googleapis.com iam.googleapis.com --project "$PROJECT"
 
   say "Image repository $REPO"
-  if gcloud artifacts repositories describe "$REPO" --location "$REGION" --project "$PROJECT" >/dev/null 2>&1; then
+  if gcloud artifacts repositories describe "$REPO" --location "$REPO_REGION" --project "$PROJECT" >/dev/null 2>&1; then
     echo "    already there"
   else
-    gcloud artifacts repositories create "$REPO" --repository-format docker --location "$REGION" \
+    gcloud artifacts repositories create "$REPO" --repository-format docker --location "$REPO_REGION" \
       --description "Slice images" --project "$PROJECT"
   fi
 
@@ -131,7 +166,7 @@ if [ "$MODE" = "setup" ]; then
       echo "    $secret: already there"
     else
       value="$(dotenv_get "$var")"
-      if [ "$var" = "MAC_CLIENT_TOKEN" ] && [ -z "$value" ]; then
+      if [ "$need" = "random" ] && [ -z "$value" ]; then
         value="$(openssl rand -hex 24)"
         echo "    $secret: made a new random token"
       fi
@@ -147,6 +182,7 @@ if [ "$MODE" = "setup" ]; then
         --project "$PROJECT" >/dev/null
       echo "    $secret: created"
     fi
+    secret_exists "$secret" || continue
     gcloud secrets add-iam-policy-binding "$secret" --member "serviceAccount:$SA" \
       --role roles/secretmanager.secretAccessor --project "$PROJECT" --quiet >/dev/null
   done
@@ -167,20 +203,21 @@ ACCOUNT="$(gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/
 [ -n "$ACCOUNT" ] || problem "gcloud is not signed in. Run: gcloud auth login"
 [ -f Dockerfile ] || problem "apps/agent/Dockerfile is missing."
 [ -n "$CONVEX_URL" ] || problem "CONVEX_URL is not set (the https://....convex.cloud address). Export it, or put it in apps/agent/.env."
+[ "$MODE" != "agent" ] || [ -n "$WEB_URL" ] || problem "WEB_URL is not set (the web app's https address, e.g. https://slice.vercel.app). The agent's Pages builder renders pages there, and CORS allows it."
 [ -n "$CONVEX_SITE_URL" ] || problem "CONVEX_SITE_URL is not set (the https://....convex.site address). Export it, or put it in apps/agent/.env."
 
 if [ -n "$ACCOUNT" ]; then
   if ! gcloud iam service-accounts describe "$SA" --project "$PROJECT" >/dev/null 2>&1; then
     problem "The service account $SA does not exist in $PROJECT (or you cannot see it). Run: ./scripts/deploy-cloud-run.sh setup"
   fi
-  if ! gcloud artifacts repositories describe "$REPO" --location "$REGION" --project "$PROJECT" >/dev/null 2>&1; then
-    problem "The image repository '$REPO' does not exist in $REGION. Run: ./scripts/deploy-cloud-run.sh setup"
+  if ! gcloud artifacts repositories describe "$REPO" --location "$REPO_REGION" --project "$PROJECT" >/dev/null 2>&1; then
+    problem "The image repository '$REPO' does not exist in $REPO_REGION. Run: ./scripts/deploy-cloud-run.sh setup"
   fi
   for entry in "${SECRETS[@]}"; do
     IFS=: read -r secret var need <<<"$entry"
     if secret_exists "$secret"; then
       SECRET_MAPPING="${SECRET_MAPPING:+$SECRET_MAPPING,}$var=$secret:latest"
-    elif [ "$need" = "required" ]; then
+    elif [ "$need" != "optional" ]; then
       problem "The secret $secret ($var) is not in Secret Manager. Run: ./scripts/deploy-cloud-run.sh setup"
     else
       echo "    optional secret $secret not found, deploying without $var"
@@ -207,6 +244,7 @@ IMAGE="$IMAGE_REPO/$SERVICE:$(date +%Y%m%d-%H%M%S)"
 echo "    Account:  $ACCOUNT"
 echo "    Project:  $PROJECT"
 echo "    Service:  $SERVICE in $REGION ($MIN_INSTANCES to $MAX_INSTANCES instances, $CPU CPU, $MEMORY, timeout ${TIMEOUT}s, session affinity)"
+[ "$MODE" != "agent" ] || echo "    Web app:  $WEB_URL"
 echo "    Image:    $IMAGE"
 echo "    Secrets:  ${SECRET_MAPPING//:latest/}"
 confirm "Build and deploy this? It uses Cloud Build and Cloud Run in $PROJECT and is billed there."
@@ -223,6 +261,12 @@ say "Deploying to Cloud Run"
 # "^@^" makes @ the separator between variables, so values may contain commas.
 ENV_VARS="^@^GOOGLE_GENAI_USE_ENTERPRISE=true@GOOGLE_CLOUD_PROJECT=$PROJECT@GOOGLE_CLOUD_LOCATION=$VERTEX_LOCATION"
 ENV_VARS="$ENV_VARS@MAC_LIVE_LOCATION=us-central1@CONVEX_URL=$CONVEX_URL@CONVEX_SITE_URL=$CONVEX_SITE_URL"
+EXTRA_FLAGS=()
+if [ "$MODE" = "agent" ]; then
+  ENV_VARS="$ENV_VARS@APP_MODULE=server:app@PAGES_WEB_URL=$WEB_URL@AGENT_ALLOW_ORIGINS=$WEB_URL"
+  # Media and Email jobs run on after their request returns; throttled CPU would stall them.
+  EXTRA_FLAGS+=(--no-cpu-throttling)
+fi
 gcloud run deploy "$SERVICE" --project "$PROJECT" --region "$REGION" --image "$IMAGE" \
   --service-account "$SA" \
   --allow-unauthenticated \
@@ -234,12 +278,24 @@ gcloud run deploy "$SERVICE" --project "$PROJECT" --region "$REGION" --image "$I
   --timeout "$TIMEOUT" \
   --session-affinity \
   --set-env-vars "$ENV_VARS" \
-  --set-secrets "$SECRET_MAPPING"
+  --set-secrets "$SECRET_MAPPING" \
+  ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"}
 
 URL="$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format 'value(status.url)')"
 HOST="${URL#https://}"
 
 say "Checking the live service"
+if [ "$MODE" = "agent" ]; then
+  HEALTH="$(curl -sS --max-time 20 "$URL/health" || true)"
+  echo "    GET /health                   $HEALTH"
+  CODE="$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$URL/brief" || true)"
+  echo "    POST /brief, no key           $CODE (401 is right)"
+  [ "$CODE" = "401" ] || echo "    WARNING: expected 401 without the key. Check AGENT_API_KEY is set on the service." >&2
+  say "Done"
+  echo "    Agent address for the web app:  AGENT_URL=$URL"
+  echo "    The key the web app sends:      AGENT_API_KEY=\$(gcloud secrets versions access latest --secret slice-agent-api-key --project $PROJECT)"
+  exit 0
+fi
 HEALTH="$(curl -sS --max-time 20 "$URL/mac/health" || true)"
 echo "    GET /mac/health               $HEALTH"
 CODE="$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$URL/mac/search?q=test" || true)"

@@ -10,7 +10,7 @@ git cat-file -e "$VERCEL_GIT_PREVIOUS_SHA^{commit}" 2>/dev/null || exit 1
 set -- ":(exclude)src/app/page.tsx"
 for dir in src/app/*/; do
   store=$(basename "$dir")
-  [ "$store" = "$STORE" ] && continue
+  case ",$STORE," in *",$store,"*) continue ;; esac
   set -- "$@" ":(exclude)src/app/$store" ":(exclude)src/components/$store" ":(exclude)src/lib/$store" ":(exclude)src/lib/$store.ts" ":(exclude)public/$store"
 done
 

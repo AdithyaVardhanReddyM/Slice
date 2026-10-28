@@ -1,7 +1,7 @@
 // Streams the agent's NDJSON turn events to the embedded widget. The agent
 // server's address stays server-side; the widget only ever talks to this app.
 
-const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:8000";
+import { AGENT_URL, agentHeaders } from "@/lib/agent";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     upstream = await fetch(`${AGENT_URL}/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: agentHeaders(),
       body,
       // @ts-expect-error Node fetch supports duplex streaming.
       duplex: "half",

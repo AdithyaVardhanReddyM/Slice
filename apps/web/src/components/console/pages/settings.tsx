@@ -65,7 +65,7 @@ export function BrandSettings() {
             <dl className="grid gap-y-2 text-sm sm:grid-cols-[8rem_1fr]">
               <dt className="text-muted-foreground">Slug</dt>
               <dd className="num">{brand.slug}</dd>
-              <dt className="text-muted-foreground">Subdomain</dt>
+              <dt className="text-muted-foreground">Brand address</dt>
               <dd className="num">{brandDomain(brand.slug)}</dd>
               <dt className="text-muted-foreground">Page address</dt>
               <dd className="num break-all">{publicPageUrl(brand.slug, "your-page")}</dd>

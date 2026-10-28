@@ -1,7 +1,7 @@
 // Shared proxy helpers for the agent routes (Pages and Email). The agent's address stays
 // server-side; the console only ever talks to this app.
 
-const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:8000";
+import { AGENT_URL, agentHeaders } from "@/lib/agent";
 
 const offline = (err: unknown) =>
   Response.json(
@@ -16,7 +16,7 @@ export async function proxyStream(path: string, req: Request) {
   try {
     upstream = await fetch(`${AGENT_URL}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: agentHeaders(),
       body,
       // @ts-expect-error Node fetch supports duplex streaming.
       duplex: "half",
@@ -44,7 +44,7 @@ export async function proxyJson(path: string, req: Request) {
   try {
     upstream = await fetch(`${AGENT_URL}${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: agentHeaders(),
       body,
     });
   } catch (err) {

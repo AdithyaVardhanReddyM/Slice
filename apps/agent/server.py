@@ -11,6 +11,7 @@ Convex so the merchant console can replay them.
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import os
 import time
@@ -24,7 +25,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
-from fastapi.responses import StreamingResponse  # noqa: E402
+from fastapi.responses import JSONResponse, StreamingResponse  # noqa: E402
 from google.adk.agents.run_config import RunConfig, StreamingMode  # noqa: E402
 from google.adk.events import Event  # noqa: E402
 from google.adk.runners import Runner  # noqa: E402
@@ -60,7 +61,35 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
+# Hosted, every route but /health and /mac/* (which checks its own token) needs the
+# web app's key: the concierge, Pages, Email and Media services spend Gemini on request.
+AGENT_API_KEY = os.environ.get("AGENT_API_KEY", "")
+if os.environ.get("K_SERVICE") and not AGENT_API_KEY:
+    raise RuntimeError("AGENT_API_KEY must be set when the agent is hosted (see scripts/deploy-cloud-run.sh)")
+
+
+class RequireKey:
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        path = scope.get("path", "")
+        if (
+            AGENT_API_KEY
+            and scope["type"] == "http"
+            and scope.get("method") != "OPTIONS"
+            and path != "/health"
+            and not path.startswith("/mac/")
+        ):
+            sent = dict(scope.get("headers") or []).get(b"x-slice-key", b"").decode()
+            if not hmac.compare_digest(sent, AGENT_API_KEY):
+                await JSONResponse({"error": "unauthorized"}, status_code=401)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
 app = FastAPI(title="Slice concierge agent", lifespan=lifespan)
+app.add_middleware(RequireKey)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in os.environ.get("AGENT_ALLOW_ORIGINS", "http://localhost:3000").split(",")],

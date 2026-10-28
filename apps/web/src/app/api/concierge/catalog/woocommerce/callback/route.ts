@@ -4,14 +4,14 @@
 // user_id, and only then stores it. WooCommerce shows the merchant an error
 // unless this answers 200.
 
-const AGENT_URL = process.env.AGENT_URL ?? "http://localhost:8000";
+import { AGENT_URL, agentHeaders } from "@/lib/agent";
 
 export async function POST(req: Request) {
   const body = await req.text();
   try {
     const res = await fetch(`${AGENT_URL}/concierge/catalog/woo-callback`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: agentHeaders(),
       body,
     });
     const result = (await res.json()) as { ok?: boolean; error?: string };

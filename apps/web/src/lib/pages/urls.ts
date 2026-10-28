@@ -1,17 +1,20 @@
-// Where a published page lives. Dev default `pages.localhost:3000` is served
-// over http; anything else is https.
+// Where a published page lives: {brand}.{PAGES_HOST}/{page}. Dev default
+// `pages.localhost:3000` is served over http; anything else is https. A host
+// with a path (`slice.vercel.app/p`, for hosts without wildcard subdomains)
+// puts the brand in the path instead: {PAGES_HOST}/{brand}/{page}.
 
 export const PAGES_HOST = process.env.NEXT_PUBLIC_PAGES_HOST ?? "pages.localhost:3000";
 
 const isLocal = /localhost|127\.0\.0\.1/.test(PAGES_HOST);
+const pathStyle = PAGES_HOST.includes("/");
 
 export function publicPageUrl(brandSlug: string, pageSlug: string, query?: Record<string, string>) {
   const q = query && Object.keys(query).length ? `?${new URLSearchParams(query).toString()}` : "";
-  return `${isLocal ? "http" : "https"}://${brandSlug}.${PAGES_HOST}/${pageSlug}${q}`;
+  return `${isLocal ? "http" : "https"}://${brandDomain(brandSlug)}/${pageSlug}${q}`;
 }
 
 export function brandDomain(brandSlug: string) {
-  return `${brandSlug}.${PAGES_HOST}`;
+  return pathStyle ? `${PAGES_HOST}/${brandSlug}` : `${brandSlug}.${PAGES_HOST}`;
 }
 
 /** The brand's subdomain root, which lists its published pages. */
