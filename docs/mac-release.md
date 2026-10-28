@@ -174,7 +174,7 @@ gcloud storage cp Slice-0.1.0.dmg gs://slice-for-mac/Slice-0.1.0.dmg \
 macOS blocks the first open of an app that is not notarized. Since macOS 15, Control-click then Open no longer gets past this. The way through is System Settings:
 
 1. Download Slice.dmg, double-click it, and drag Slice onto the Applications shortcut.
-2. Open Slice from Applications. macOS says Slice was not opened because Apple could not verify it is free of malware. Click **Done**, not Move to Trash.
+2. Open Slice from Applications. macOS says "“Slice” Not Opened" because Apple could not verify it is free of malware. Click **Done**, not Move to Trash (Move to Bin on a Mac set to British English).
 3. Open **System Settings**, then **Privacy & Security**, and scroll down to the Security section. It says Slice was blocked to protect your Mac. Click **Open Anyway**. The button is only there for about an hour after step 2; if it is gone, do step 2 again.
 4. macOS asks once more and wants your Mac password (or Touch ID). Click **Open Anyway**.
 5. Slice opens, and from then on it opens like any other app. There is no Dock icon: it lives in the menu bar and the notch. Then the permission prompts and hold fn and control, as in [What to tell judges](#what-to-tell-judges).

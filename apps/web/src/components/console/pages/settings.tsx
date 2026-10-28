@@ -72,9 +72,11 @@ export function BrandSettings() {
               <dt className="text-muted-foreground">Also at</dt>
               <dd className="num">/p/{brand.slug}/your-page on this app</dd>
             </dl>
-            <p className="text-xs text-muted-foreground">
-              Set NEXT_PUBLIC_PAGES_HOST to change the base host. In development it is pages.localhost:3000, served over http.
-            </p>
+            {process.env.NODE_ENV !== "production" ? (
+              <p className="text-xs text-muted-foreground">
+                Set NEXT_PUBLIC_PAGES_HOST to change the base host. In development it is pages.localhost:3000, served over http.
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
