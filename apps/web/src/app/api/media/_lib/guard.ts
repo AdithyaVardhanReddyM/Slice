@@ -1,6 +1,6 @@
-// Media requests spend the merchant's generation budget, so unlike the Pages
-// and Email proxies they only pass when the signed-in merchant owns the
-// campaign (checked through Convex with their own token).
+// Media requests spend the merchant's generation budget, so they only pass when
+// the signed-in merchant owns the campaign (checked through Convex with their
+// own token). Pages and Email have the same rule in api/pages/_lib/guard.ts.
 
 import { auth } from "@clerk/nextjs/server";
 import { fetchQuery } from "convex/nextjs";
@@ -24,8 +24,7 @@ export async function ownedBody(req: Request): Promise<{ body: string } | { erro
   return { body };
 }
 
-/** The same request with the body already read. */
-export const rebuilt = (req: Request, body: string) => new Request(req.url, { method: "POST", headers: { "Content-Type": "application/json" }, body });
+export { rebuilt } from "../../pages/_lib/guard";
 
 /** A brand setup request passes when the signed-in merchant owns the brand. */
 export async function ownedBrandBody(req: Request): Promise<{ body: string } | { error: Response }> {

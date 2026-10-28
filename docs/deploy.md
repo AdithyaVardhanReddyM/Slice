@@ -30,6 +30,7 @@ Why Cloud Run and not Agent Engine: the agent is a FastAPI app with its own rout
 ## How the pieces trust each other
 
 - The web app calls the agent server-side only, with `AGENT_URL` and `AGENT_API_KEY` (Vercel env). The agent rejects every request outside `/health` and `/mac/*` without that key (`RequireKey` in `server.py`). The key is the Secret Manager secret `slice-agent-api-key`.
+- Before forwarding, the web app's `/api/pages/*`, `/api/email/*` and `/api/media/*` routes require a signed-in Clerk user who owns the brand, page, audience, campaign or list the body names (`api/pages/_lib/guard.ts`, `api/media/_lib/guard.ts`). Only `/api/pages/track` and `/api/pages/form` stay anonymous, for published pages.
 - The Mac app sends `MAC_CLIENT_TOKEN` (secret `slice-mac-client-token`, baked into the DMG).
 - Other agent secrets live in Secret Manager and are mounted as env vars: `slice-qloo-proxy-secret`, `slice-catalog-secret-key`, `slice-firecrawl-api-key`, `slice-pexels-api-key`, `slice-composio-api-key`, `slice-mac-composio-api-key`.
 - Vertex AI is reached as the service account `slice-brain@cortana-505209.iam.gserviceaccount.com` (Vertex AI User); no key file is deployed.
