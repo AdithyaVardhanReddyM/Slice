@@ -140,7 +140,7 @@ You can also run these on the file: `spctl --assess --type open --context contex
 
 ## Unnotarized build
 
-Added 2026-10-28. This is the build judges get, because there is no Developer ID certificate. Steps 1 and 2 are not needed, step 3 (the brain) is.
+Added 2026-10-28, for when there is no Developer ID certificate. Steps 1 and 2 are not needed, step 3 (the brain) is. The certificate and the `slice-notary` profile were set up the same day, so the public DMG is now the notarized build from step 4 (uploaded with the same two commands below). Keep this mode as the fallback.
 
 ```sh
 SLICE_BRAIN_URL=wss://slice-brain-xxxxx-uc.a.run.app/mac/live \
@@ -200,7 +200,7 @@ Checked on this Mac, 2026-10-26:
 
 Not checked, because it needs your accounts or spends money:
 
-- Signing with a real Developer ID certificate, notarization, stapling, and the Gatekeeper check. `release.sh` has not been run end to end. The notarization step reads `notarytool`'s normal text output, which was not exercised here.
+- Signing with a real Developer ID certificate, notarization, stapling, and the Gatekeeper check. `release.sh` has not been run end to end. The notarization step reads `notarytool`'s normal text output, which was not exercised here. (Since done, 2026-10-28: `release.sh` ran end to end with the real certificate and profile. Apple accepted the app, which took about 30 minutes, and then the DMG, which took under a minute. Both are stapled and `spctl` says "accepted, source=Notarized Developer ID". The DMG downloaded from https://storage.googleapis.com/slice-for-mac/Slice.dmg passes the same checks with the quarantine flag set, and it mounts with no prompt.)
 - Cloud Build and the Cloud Run deploy, the permissions they need on your project, and the public address.
 - A Gemini Live conversation through the hosted brain, and Composio account connections from a hosted address.
 - A Release app on a second Mac.
