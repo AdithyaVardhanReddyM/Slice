@@ -1093,9 +1093,18 @@ export default defineSchema({
     status: v.string(),
     progress: v.optional(v.object({ value: v.number(), label: v.string() })),
     error: v.optional(v.string()),
+    /**
+     * A demo brand: badged in the console and never deleted. A demo without
+     * `demoOf` is a master; every other account gets a copy of it and its campaigns (mediaDemo.ts).
+     */
+    demo: v.optional(v.boolean()),
+    /** The master this copy was made from. */
+    demoOf: v.optional(v.id("mediaBrands")),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_owner", ["owner"]),
+  })
+    .index("by_owner", ["owner"])
+    .index("by_demo", ["demo", "demoOf"]),
 
   mediaCampaigns: defineTable({
     name: v.string(),
@@ -1133,6 +1142,8 @@ export default defineSchema({
     status: v.string(),
     /** The agent's concepts per audience (MediaConcept[]), for the "why" panel. */
     concepts: v.optional(v.array(v.any())),
+    /** A demo brand's campaign (a master's or a copy's): never deleted, and it shares its files, so it never deletes one. */
+    demo: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_owner", ["owner"]),

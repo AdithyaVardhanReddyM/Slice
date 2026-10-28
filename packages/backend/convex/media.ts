@@ -57,6 +57,7 @@ export const list = query({
           cover: cover ?? null,
           kit: c.kit as MediaKit | undefined,
           brandId: c.brandId ?? null,
+          demo: c.demo ?? false,
           updatedAt: c.updatedAt,
         };
       }),
@@ -520,29 +521,37 @@ export const update = mutation({
   },
 });
 
+/** Deletes a campaign and everything on its canvas. A demo campaign's files are shared with other accounts (mediaDemo.ts), so they stay. */
+export async function deleteCampaign(ctx: MutationCtx, campaign: Doc<"mediaCampaigns">) {
+  const id = campaign._id;
+  const ownFiles = !campaign.demo;
+  const creatives = await ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect();
+  for (const c of creatives) {
+    const vs = await ctx.db.query("mediaVersions").withIndex("by_creative", (q) => q.eq("creativeId", c._id)).collect();
+    for (const x of vs) await ctx.db.delete(x._id);
+    if (ownFiles && c.export?.storageId) await ctx.storage.delete(c.export.storageId).catch(() => {});
+    await ctx.db.delete(c._id);
+  }
+  for (const a of await ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) {
+    if (ownFiles && a.storageId) await ctx.storage.delete(a.storageId).catch(() => {});
+    await ctx.db.delete(a._id);
+  }
+  for (const j of await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(j._id);
+  for (const s of await ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(s._id);
+  const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
+  if (chat) await ctx.db.delete(chat._id);
+  for (const c of await ctx.db.query("mediaItemChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(c._id);
+  for (const i of await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(i._id);
+  await ctx.db.delete(id);
+}
+
 export const remove = mutation({
   args: { id: v.id("mediaCampaigns") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    await ownCampaign(ctx, id);
-    const creatives = await ctx.db.query("mediaCreatives").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect();
-    for (const c of creatives) {
-      const vs = await ctx.db.query("mediaVersions").withIndex("by_creative", (q) => q.eq("creativeId", c._id)).collect();
-      for (const x of vs) await ctx.db.delete(x._id);
-      if (c.export?.storageId) await ctx.storage.delete(c.export.storageId).catch(() => {});
-      await ctx.db.delete(c._id);
-    }
-    for (const a of await ctx.db.query("mediaAssets").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) {
-      if (a.storageId) await ctx.storage.delete(a.storageId).catch(() => {});
-      await ctx.db.delete(a._id);
-    }
-    for (const j of await ctx.db.query("mediaJobs").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(j._id);
-    for (const s of await ctx.db.query("mediaShapes").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(s._id);
-    const chat = await ctx.db.query("mediaChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique();
-    if (chat) await ctx.db.delete(chat._id);
-    for (const c of await ctx.db.query("mediaItemChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(c._id);
-    for (const i of await ctx.db.query("mediaInsights").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect()) await ctx.db.delete(i._id);
-    await ctx.db.delete(id);
+    const campaign = await ownCampaign(ctx, id);
+    if (campaign.demo) throw new Error("Demo campaigns can't be deleted");
+    await deleteCampaign(ctx, campaign);
     return null;
   },
 });
@@ -1043,7 +1052,9 @@ export const setExport = internalMutation({
   handler: async (ctx, a) => {
     const creative = await ctx.db.get(a.creativeId);
     if (!creative) throw new Error("Unknown creative");
-    if (creative.export?.storageId && creative.export.storageId !== a.storageId) await ctx.storage.delete(creative.export.storageId).catch(() => {});
+    // A demo campaign's old export may be another account's too (mediaDemo.ts).
+    const shared = (await ctx.db.get(creative.campaignId))?.demo;
+    if (!shared && creative.export?.storageId && creative.export.storageId !== a.storageId) await ctx.storage.delete(creative.export.storageId).catch(() => {});
     await ctx.db.patch(a.creativeId, { export: { url: a.url, ...(a.storageId ? { storageId: a.storageId } : {}), mime: a.mime, version: a.version, at: Date.now() }, status: a.status ?? "ready", updatedAt: Date.now() });
     return null;
   },

@@ -37,6 +37,7 @@ import type * as emailTypes from "../emailTypes.js";
 import type * as http from "../http.js";
 import type * as media from "../media.js";
 import type * as mediaBrands from "../mediaBrands.js";
+import type * as mediaDemo from "../mediaDemo.js";
 import type * as mediaTypes from "../mediaTypes.js";
 import type * as pages from "../pages.js";
 import type * as pagesAudiences from "../pagesAudiences.js";
@@ -97,6 +98,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   media: typeof media;
   mediaBrands: typeof mediaBrands;
+  mediaDemo: typeof mediaDemo;
   mediaTypes: typeof mediaTypes;
   pages: typeof pages;
   pagesAudiences: typeof pagesAudiences;

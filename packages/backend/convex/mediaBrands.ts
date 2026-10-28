@@ -241,6 +241,7 @@ export const remove = mutation({
   returns: v.null(),
   handler: async (ctx, { id }) => {
     const brand = await ownBrand(ctx, id);
+    if (brand.demo) throw new Error("Demo brands can't be deleted");
     // Campaigns keep their copy of the kit; they just stop following the brand.
     const campaigns = await ctx.db.query("mediaCampaigns").withIndex("by_owner", (q) => q.eq("owner", brand.owner)).collect();
     for (const c of campaigns) if (c.brandId === id) await ctx.db.patch(c._id, { brandId: undefined });

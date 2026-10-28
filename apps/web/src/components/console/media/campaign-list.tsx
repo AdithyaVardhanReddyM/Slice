@@ -11,7 +11,7 @@ import { ArrowRight, Loader2, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { MediaKit } from "@slice/backend/convex/mediaTypes";
-import { PageHeader, Skeleton } from "@/components/console/primitives";
+import { Badge, PageHeader, Skeleton } from "@/components/console/primitives";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -107,7 +107,7 @@ function CampaignCard({ row }: { row: Row }) {
   const made = row.images + row.posters + row.videos + row.clips + row.tracks;
   return (
     <div className="group relative">
-      <CampaignMenu row={row} />
+      {!row.demo && <CampaignMenu row={row} />}
       <Link
         href={`/dashboard/media/${row._id}`}
         className="flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-[0_1px_2px_rgba(20,20,20,0.04),0_10px_28px_-16px_rgba(20,20,20,0.10)] ring-1 ring-black/[0.05] transition-shadow hover:shadow-lg"
@@ -115,7 +115,10 @@ function CampaignCard({ row }: { row: Row }) {
         <Art row={row} />
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div className="min-w-0">
-            <h3 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">{row.name}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="truncate text-[15px] font-semibold tracking-tight text-neutral-950">{row.name}</h3>
+              {row.demo && <Badge tone="outline">Demo</Badge>}
+            </div>
             <p className="truncate text-sm text-muted-foreground">
               {kit?.name && kit.name !== "Your brand" ? kit.name : "No brand yet"}, edited {ago(row.updatedAt)}
             </p>

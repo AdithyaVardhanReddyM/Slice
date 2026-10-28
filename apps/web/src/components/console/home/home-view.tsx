@@ -137,11 +137,13 @@ export function HomeView({ liveWidgets }: { liveWidgets: ReactNode }) {
   // Every account gets its own copy of the demo brands; the home may be the first screen it opens.
   const provisionPages = useMutation(api.pagesDemo.provision);
   const provisionEmail = useMutation(api.emailDemo.provision);
+  const provisionMedia = useMutation(api.mediaDemo.provision);
   useEffect(() => {
     if (!isAuthenticated) return;
     provisionPages({}).catch((err) => console.error("Could not add the demo brands", err));
     provisionEmail({}).catch((err) => console.error("Could not add the demo email brand", err));
-  }, [isAuthenticated, provisionPages, provisionEmail]);
+    provisionMedia({}).catch((err) => console.error("Could not add the demo media brands", err));
+  }, [isAuthenticated, provisionPages, provisionEmail, provisionMedia]);
 
   return (
     <div className="relative isolate flex flex-1 flex-col">
