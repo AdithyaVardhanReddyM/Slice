@@ -1,4 +1,4 @@
-import { httpRouter } from "convex/server";
+import { httpRouter, type FunctionReference } from "convex/server";
 import { api, internal } from "./_generated/api";
 import type { Id, TableNames } from "./_generated/dataModel";
 import { httpAction } from "./_generated/server";
@@ -10,8 +10,10 @@ const http = httpRouter();
 // The agent calls Qloo through here so it shares the cache and never holds the key.
 http.route({ path: "/qloo", method: "POST", handler: proxy });
 
-// Writes the agent makes as it works. Reads go through the public query API
-// (POST /api/query on the .convex.cloud URL). All share QLOO_PROXY_SECRET.
+// Writes the agent makes as it works, and its reads of merchants' Pages and
+// Email data (/agent/read: the console's queries answer only the brand's
+// signed-in owner). Catalog and taste reads still go through the public query
+// API (POST /api/query on the .convex.cloud URL). All share QLOO_PROXY_SECRET.
 
 function authorized(req: Request): boolean {
   const secret = process.env.QLOO_PROXY_SECRET;
@@ -322,6 +324,37 @@ emailRoute("/email/audience-brief", async (ctx, body) => {
     ...(Array.isArray(body.spans) ? { spans: body.spans } : {}),
   });
   return json({ ok: true });
+});
+
+/* Agent reads ------------------------------------------------------------------
+   The console's Pages and Email queries answer only the brand's signed-in
+   owner. The agent has no user token, so it names the query it would have
+   called and gets the internal twin's answer, without the owner check. */
+
+const AGENT_READS: Record<string, FunctionReference<"query", "internal">> = {
+  "pagesBrands:get": internal.pagesBrands.getInternal,
+  "pages:get": internal.pages.getInternal,
+  "pages:variant": internal.pages.variantInternal,
+  "pages:memory": internal.pages.memory,
+  "pagesAudiences:get": internal.pagesAudiences.getInternal,
+  "pagesAudiences:list": internal.pagesAudiences.listInternal,
+  "pagesUploads:get": internal.pagesUploads.getInternal,
+  "pagesUploads:list": internal.pagesUploads.listInternal,
+  "pagesUploads:members": internal.pagesUploads.membersForAgent,
+  "pagesUploads:member": internal.pagesUploads.memberInternal,
+  "emailBrands:get": internal.emailBrands.getInternal,
+  "emailLists:get": internal.emailLists.getInternal,
+  "emailAudiences:list": internal.emailAudiences.listInternal,
+  "emailContacts:byAudience": internal.emailContacts.byAudienceInternal,
+  "emailCampaigns:getForAgent": internal.emailCampaigns.getForAgent,
+  "emailCampaigns:renderFor": internal.emailCampaigns.renderForInternal,
+};
+
+/** { path, args } → { value }. */
+emailRoute("/agent/read", async (ctx, { path, args }) => {
+  const fn = typeof path === "string" && Object.prototype.hasOwnProperty.call(AGENT_READS, path) ? AGENT_READS[path] : undefined;
+  if (!fn) return json({ error: `Unknown read ${String(path)}` }, 400);
+  return json({ value: (await ctx.runQuery(fn, (args ?? {}) as Record<string, unknown>)) ?? null });
 });
 
 /* Media service: the agent's reads and writes (QLOO_PROXY_SECRET). */

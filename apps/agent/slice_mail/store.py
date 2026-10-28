@@ -13,7 +13,7 @@ from slice_agent import convex_client as convex
 
 
 async def read(path: str, args: dict[str, Any]) -> Any:
-    """A public Convex query, or the action of that name when it is one (renderFor may be either)."""
+    """A Convex query (convex_client.query), or the action of that name when it is one."""
     try:
         return await convex.query(path, args)
     except Exception as first:

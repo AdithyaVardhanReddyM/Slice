@@ -1,15 +1,14 @@
 // Shapes the renderer and the published route exchange with the backend
 // (contract: docs/pages-contracts.md, "A. Backend / pages.ts").
 
-import type { Doc } from "@slice/backend/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
+import type { api } from "@slice/backend/convex/_generated/api";
 
-/** `api.pages.bySlug` result. */
-export interface BySlugResult {
-  brand: Doc<"pagesBrands">;
-  page: Doc<"pages">;
-  variants: Doc<"pagesVariants">[];
-  audiences: Doc<"pagesAudiences">[];
-}
+/** `api.pages.bySlug` result: the brand's public face, the page (no brief) and its version (no trace or insights). */
+export type BySlugResult = NonNullable<FunctionReturnType<typeof api.pages.bySlug>>;
+
+/** A version as the published route sees it. */
+export type ShownVariant = BySlugResult["variants"][number];
 
 /** `api.pages.resolveVariant` result. */
 export interface ResolveResult {

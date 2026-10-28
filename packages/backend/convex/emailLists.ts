@@ -11,7 +11,7 @@ import {
   settleGroup,
   type GroupTaste,
 } from "./emailAudiences";
-import { editableBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand } from "./emailBrands";
 import { contactFromRow, readTastes, type ContactLite, type Mapping } from "./emailContacts";
 import { MAX_CONTACT_ROWS, MAX_PEOPLE_LIST } from "./emailTypes";
 import { kmeans, lift, type ClusterRow } from "./pagesCsv";
@@ -39,16 +39,18 @@ const K_RANGE: [number, number] = [2, 6];
 export const list = query({
   args: { brandId: v.id("emailBrands") },
   handler: async (ctx, { brandId }) =>
-    ctx.db
-      .query("emailLists")
-      .withIndex("by_brand", (q) => q.eq("brandId", brandId))
-      .order("desc")
-      .collect(),
+    (await ownedBrand(ctx, brandId))
+      ? ctx.db
+          .query("emailLists")
+          .withIndex("by_brand", (q) => q.eq("brandId", brandId))
+          .order("desc")
+          .collect()
+      : [],
 });
 
 export const get = query({
   args: { id: v.id("emailLists") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const getInternal = internalQuery({
