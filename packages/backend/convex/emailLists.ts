@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, mutation, query, type ActionCtx, type MutationCtx } from "./_generated/server";
 import {
   bestGroup,
   compileGroupAudience,
@@ -11,7 +11,7 @@ import {
   settleGroup,
   type GroupTaste,
 } from "./emailAudiences";
-import { editableBrand, owned, ownedBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand, ownedBrandInAction } from "./emailBrands";
 import { contactFromRow, readTastes, type ContactLite, type Mapping } from "./emailContacts";
 import { MAX_CONTACT_ROWS, MAX_PEOPLE_LIST } from "./emailTypes";
 import { kmeans, lift, type ClusterRow } from "./pagesCsv";
@@ -292,151 +292,171 @@ function featuresOf(entities: { id: string }[], contact: Pick<ContactLite, "city
   return { features };
 }
 
+const processArgs = { id: v.id("emailLists"), k: v.optional(v.number()), seed: v.optional(v.number()) };
+const processReturns = v.object({ groups: v.number(), resolved: v.number(), unique: v.number() });
+type Processed = { groups: number; resolved: number; unique: number };
+
 /**
  * Resolve → cluster or read each person. Long-running; progress is written
  * to the list (and to a people list's audience) so the console can follow.
  * People lists return once their reading is scheduled.
  */
 export const process = action({
-  args: { id: v.id("emailLists"), k: v.optional(v.number()), seed: v.optional(v.number()) },
-  returns: v.object({ groups: v.number(), resolved: v.number(), unique: v.number() }),
-  handler: async (ctx, { id, k, seed = 7 }): Promise<{ groups: number; resolved: number; unique: number }> => {
+  args: processArgs,
+  returns: processReturns,
+  handler: async (ctx, { id, k, seed }): Promise<Processed> => {
     const list: Doc<"emailLists"> | null = await ctx.runQuery(internal.emailLists.getInternal, { id });
-    if (!list) throw new Error("Unknown list");
-    const trace: Span[] = [];
-    const progress = async (value: number, label: string, status?: Doc<"emailLists">["status"]) => {
-      await ctx.runMutation(internal.emailLists.setState, { id, progress: { value, label }, ...(status ? { status } : {}) });
-      // A people list's card shows the reading of the rows as the first third of its progress.
-      if (list.audienceId) await ctx.runMutation(internal.emailAudiences.setProgress, { id: list.audienceId, value: value * 0.3, label });
-    };
-    try {
-      /* 1. What they bought (catalog items first) and like, as Qloo entities. */
-      await progress(0.02, "Reading what they bought", "resolving");
-      const contacts: ContactLite[] = await ctx.runQuery(internal.emailContacts.byListInternal, { listId: id });
-      if (!contacts.length) throw new Error("The upload has no contacts with a valid email");
-      checkSize(list.mode, contacts.length);
-      const read = await readTastes(ctx, trace, list.brandId, contacts, {
-        maxTerms: MAX_TERMS,
-        onProgress: (done, total) => progress(0.05 + 0.55 * (done / total), `Found ${done} of ${total} in Qloo`),
-      });
-      const updates = contacts.map((c) => ({ id: c._id, ...read.get(c._id)! }));
-      for (const batch of chunk(updates, 100)) await ctx.runMutation(internal.emailContacts.setEntities, { updates: batch });
-      const resolved = updates.filter((u) => u.entities.length).length;
-      const terms = new Set(updates.flatMap((u) => u.entities.map((e) => e.id)));
-      trace.push({ kind: "slice", name: "Match tastes to people", ms: 0, result: `${resolved} of ${contacts.length} people have something Qloo knows` });
-
-      if (list.mode === "people") {
-        /* 2. A profile per person, read in scheduled steps; the last step makes the list ready. */
-        if (!list.audienceId) throw new Error("The list has no audience");
-        await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", progress: { value: 0.62, label: "Reading each person" }, spans: trace });
-        await ctx.runMutation(internal.emailAudiences.requeuePeople, { id: list.audienceId });
-        await ctx.scheduler.runAfter(0, internal.emailAudiences.compilePeopleStep, { audienceId: list.audienceId });
-        return { groups: 0, resolved, unique: terms.size };
-      }
-
-      /* 2. Each person joins the taste group they fit best, if they fit one well enough. */
-      await progress(0.62, "Matching people to taste groups", "clustering");
-      const t1 = Date.now();
-      const existing: GroupTaste[] = await ctx.runQuery(internal.emailAudiences.groupTastes, { brandId: list.brandId });
-      const placed = new Map<Id<"emailContacts">, Id<"emailAudiences">>();
-      const left: number[] = [];
-      // Nothing bought or liked that Qloo knows: placed by age, gender and city once the groups are read (step 5).
-      let prospects: number[] = [];
-      updates.forEach((u, i) => {
-        if (!u.entities.length) {
-          prospects.push(i);
-          return;
-        }
-        const g = bestGroup(u.entities.map((e) => e.id), existing);
-        if (g) placed.set(u.id, g.id);
-        else left.push(i);
-      });
-      // No groups and no one to start one from: group them on city and age alone.
-      if (!existing.length && !left.length) {
-        left.push(...prospects);
-        prospects = [];
-      }
-      trace.push({
-        kind: "slice",
-        name: "Match people to the taste groups",
-        ms: Date.now() - t1,
-        result: `${existing.length ? `${placed.size} joined ${existing.length} existing groups, ${left.length} fit none` : `No taste groups yet, ${left.length} people to group`}${prospects.length ? `, ${prospects.length} with no purchases` : ""}`,
-      });
-
-      /* 3. Whoever fits no group is grouped with the others left over, into new groups. */
-      let created: Id<"emailAudiences">[] = [];
-      if (left.length) {
-        const t2 = Date.now();
-        const result = kmeans(
-          left.map((i) => featuresOf(updates[i].entities, contacts[i])),
-          { k, seed, kRange: K_RANGE },
-        );
-        const overall: Record<string, number> = {};
-        const nameOf = new Map<string, string>();
-        for (const i of left)
-          for (const e of updates[i].entities) {
-            overall[e.id] = (overall[e.id] ?? 0) + 1;
-            nameOf.set(e.id, e.name);
-          }
-        const clusters = Array.from({ length: Math.max(1, result.k) }, (_, index) => {
-          const inCluster: Record<string, number> = {};
-          let size = 0;
-          left.forEach((i, n) => {
-            if ((result.assignments[n] ?? 0) !== index) return;
-            size++;
-            for (const e of updates[i].entities) inCluster[e.id] = (inCluster[e.id] ?? 0) + 1;
-          });
-          // What sets the group apart; in a tiny group, simply what it loves most.
-          let top = lift(inCluster, size, overall, left.length, { take: 6 }).map((t) => t.id);
-          if (top.length < 2) top = Object.entries(inCluster).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([eid]) => eid);
-          return { index, size, topEntities: top.map((eid) => nameOf.get(eid) ?? eid) };
-        });
-        trace.push({
-          kind: "slice",
-          name: "k-means on favourites, city and age",
-          ms: Date.now() - t2,
-          result: `${clusters.length} new groups (${clusters.map((c) => c.size).join("/")})${result.k >= 2 ? `, silhouette ${result.silhouette.toFixed(2)}` : ""}`,
-        });
-        created = await ctx.runMutation(internal.emailLists.newGroups, { listId: id, clusters });
-        left.forEach((i, n) => placed.set(updates[i].id, created[result.assignments[n] ?? 0] ?? created[0]));
-      }
-      const moves = [...placed].map(([contactId, audienceId]) => ({ id: contactId, audienceId }));
-      for (const batch of chunk(moves, 200)) await ctx.runMutation(internal.emailLists.joinGroups, { updates: batch });
-      await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", spans: trace });
-
-      /* 4. Read each new group's taste, and again for the groups that grew. */
-      const grown = [...new Set(placed.values())].filter((g) => !created.includes(g));
-      const toRead = [...created, ...grown];
-      for (const [i, audienceId] of toRead.entries()) {
-        await progress(0.7 + 0.25 * (i / toRead.length), `Reading taste group ${i + 1} of ${toRead.length}`);
-        await compileGroupAudience(ctx, audienceId);
-      }
-
-      /* 5. People with no purchases join the group Qloo says people like them (age, gender, city) go for. */
-      if (prospects.length) {
-        await progress(0.96, `Placing ${prospects.length} people with no purchases by age and location`);
-        const groups: Doc<"emailAudiences">[] = await ctx.runQuery(internal.emailAudiences.groupsOf, { brandId: list.brandId });
-        const biggest = [...groups].sort((a, b) => b.size - a.size)[0];
-        const moves: { id: Id<"emailContacts">; audienceId: Id<"emailAudiences">; placement: { by: "demographics"; note: string } }[] = [];
-        for (const i of prospects) {
-          const c = contacts[i];
-          const known = !!(c.age || c.gender || c.city || c.neighborhood);
-          const best = known ? (await prospectFits(ctx, trace, c, groups))[0] : undefined;
-          const target = best?.id ?? biggest?._id;
-          if (!target) continue;
-          moves.push({ id: c._id, audienceId: target, placement: { by: "demographics", note: best?.note || "No purchases, age or city yet, so they joined the largest group." } });
-        }
-        if (moves.length) await ctx.runMutation(internal.emailLists.joinGroups, { updates: moves });
-        trace.push({ kind: "slice", name: "Place people with no purchases", ms: 0, result: moves.map((m) => groups.find((g) => g._id === m.audienceId)?.name ?? "").join(", ") });
-        await ctx.runMutation(internal.emailLists.setState, { id, spans: trace.slice(-1) });
-      }
-      await ctx.runMutation(internal.emailLists.setState, { id, status: "ready", progress: { value: 1, label: "Ready" } });
-      return { groups: created.length, resolved, unique: terms.size };
-    } catch (err) {
-      const error = String(err).replace(/^Error: /, "").slice(0, 300);
-      await ctx.runMutation(internal.emailLists.setState, { id, status: "failed", error, spans: trace });
-      if (list.audienceId) await ctx.runMutation(internal.emailAudiences.setStatus, { id: list.audienceId, status: "failed", error });
-      throw err;
-    }
+    if (!list || !(await ownedBrandInAction(ctx, list.brandId))) throw new Error("Unknown list");
+    return processList(ctx, list, k, seed);
   },
 });
+
+/** `process` for the seeds, which run without a signed-in merchant. */
+export const processInternal = internalAction({
+  args: processArgs,
+  returns: processReturns,
+  handler: async (ctx, { id, k, seed }): Promise<Processed> => {
+    const list: Doc<"emailLists"> | null = await ctx.runQuery(internal.emailLists.getInternal, { id });
+    if (!list) throw new Error("Unknown list");
+    return processList(ctx, list, k, seed);
+  },
+});
+
+async function processList(ctx: ActionCtx, list: Doc<"emailLists">, k: number | undefined, seed = 7): Promise<Processed> {
+  const id = list._id;
+  const trace: Span[] = [];
+  const progress = async (value: number, label: string, status?: Doc<"emailLists">["status"]) => {
+    await ctx.runMutation(internal.emailLists.setState, { id, progress: { value, label }, ...(status ? { status } : {}) });
+    // A people list's card shows the reading of the rows as the first third of its progress.
+    if (list.audienceId) await ctx.runMutation(internal.emailAudiences.setProgress, { id: list.audienceId, value: value * 0.3, label });
+  };
+  try {
+    /* 1. What they bought (catalog items first) and like, as Qloo entities. */
+    await progress(0.02, "Reading what they bought", "resolving");
+    const contacts: ContactLite[] = await ctx.runQuery(internal.emailContacts.byListInternal, { listId: id });
+    if (!contacts.length) throw new Error("The upload has no contacts with a valid email");
+    checkSize(list.mode, contacts.length);
+    const read = await readTastes(ctx, trace, list.brandId, contacts, {
+      maxTerms: MAX_TERMS,
+      onProgress: (done, total) => progress(0.05 + 0.55 * (done / total), `Found ${done} of ${total} in Qloo`),
+    });
+    const updates = contacts.map((c) => ({ id: c._id, ...read.get(c._id)! }));
+    for (const batch of chunk(updates, 100)) await ctx.runMutation(internal.emailContacts.setEntities, { updates: batch });
+    const resolved = updates.filter((u) => u.entities.length).length;
+    const terms = new Set(updates.flatMap((u) => u.entities.map((e) => e.id)));
+    trace.push({ kind: "slice", name: "Match tastes to people", ms: 0, result: `${resolved} of ${contacts.length} people have something Qloo knows` });
+
+    if (list.mode === "people") {
+      /* 2. A profile per person, read in scheduled steps; the last step makes the list ready. */
+      if (!list.audienceId) throw new Error("The list has no audience");
+      await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", progress: { value: 0.62, label: "Reading each person" }, spans: trace });
+      await ctx.runMutation(internal.emailAudiences.requeuePeople, { id: list.audienceId });
+      await ctx.scheduler.runAfter(0, internal.emailAudiences.compilePeopleStep, { audienceId: list.audienceId });
+      return { groups: 0, resolved, unique: terms.size };
+    }
+
+    /* 2. Each person joins the taste group they fit best, if they fit one well enough. */
+    await progress(0.62, "Matching people to taste groups", "clustering");
+    const t1 = Date.now();
+    const existing: GroupTaste[] = await ctx.runQuery(internal.emailAudiences.groupTastes, { brandId: list.brandId });
+    const placed = new Map<Id<"emailContacts">, Id<"emailAudiences">>();
+    const left: number[] = [];
+    // Nothing bought or liked that Qloo knows: placed by age, gender and city once the groups are read (step 5).
+    let prospects: number[] = [];
+    updates.forEach((u, i) => {
+      if (!u.entities.length) {
+        prospects.push(i);
+        return;
+      }
+      const g = bestGroup(u.entities.map((e) => e.id), existing);
+      if (g) placed.set(u.id, g.id);
+      else left.push(i);
+    });
+    // No groups and no one to start one from: group them on city and age alone.
+    if (!existing.length && !left.length) {
+      left.push(...prospects);
+      prospects = [];
+    }
+    trace.push({
+      kind: "slice",
+      name: "Match people to the taste groups",
+      ms: Date.now() - t1,
+      result: `${existing.length ? `${placed.size} joined ${existing.length} existing groups, ${left.length} fit none` : `No taste groups yet, ${left.length} people to group`}${prospects.length ? `, ${prospects.length} with no purchases` : ""}`,
+    });
+
+    /* 3. Whoever fits no group is grouped with the others left over, into new groups. */
+    let created: Id<"emailAudiences">[] = [];
+    if (left.length) {
+      const t2 = Date.now();
+      const result = kmeans(
+        left.map((i) => featuresOf(updates[i].entities, contacts[i])),
+        { k, seed, kRange: K_RANGE },
+      );
+      const overall: Record<string, number> = {};
+      const nameOf = new Map<string, string>();
+      for (const i of left)
+        for (const e of updates[i].entities) {
+          overall[e.id] = (overall[e.id] ?? 0) + 1;
+          nameOf.set(e.id, e.name);
+        }
+      const clusters = Array.from({ length: Math.max(1, result.k) }, (_, index) => {
+        const inCluster: Record<string, number> = {};
+        let size = 0;
+        left.forEach((i, n) => {
+          if ((result.assignments[n] ?? 0) !== index) return;
+          size++;
+          for (const e of updates[i].entities) inCluster[e.id] = (inCluster[e.id] ?? 0) + 1;
+        });
+        // What sets the group apart; in a tiny group, simply what it loves most.
+        let top = lift(inCluster, size, overall, left.length, { take: 6 }).map((t) => t.id);
+        if (top.length < 2) top = Object.entries(inCluster).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([eid]) => eid);
+        return { index, size, topEntities: top.map((eid) => nameOf.get(eid) ?? eid) };
+      });
+      trace.push({
+        kind: "slice",
+        name: "k-means on favourites, city and age",
+        ms: Date.now() - t2,
+        result: `${clusters.length} new groups (${clusters.map((c) => c.size).join("/")})${result.k >= 2 ? `, silhouette ${result.silhouette.toFixed(2)}` : ""}`,
+      });
+      created = await ctx.runMutation(internal.emailLists.newGroups, { listId: id, clusters });
+      left.forEach((i, n) => placed.set(updates[i].id, created[result.assignments[n] ?? 0] ?? created[0]));
+    }
+    const moves = [...placed].map(([contactId, audienceId]) => ({ id: contactId, audienceId }));
+    for (const batch of chunk(moves, 200)) await ctx.runMutation(internal.emailLists.joinGroups, { updates: batch });
+    await ctx.runMutation(internal.emailLists.setState, { id, status: "profiling", spans: trace });
+
+    /* 4. Read each new group's taste, and again for the groups that grew. */
+    const grown = [...new Set(placed.values())].filter((g) => !created.includes(g));
+    const toRead = [...created, ...grown];
+    for (const [i, audienceId] of toRead.entries()) {
+      await progress(0.7 + 0.25 * (i / toRead.length), `Reading taste group ${i + 1} of ${toRead.length}`);
+      await compileGroupAudience(ctx, audienceId);
+    }
+
+    /* 5. People with no purchases join the group Qloo says people like them (age, gender, city) go for. */
+    if (prospects.length) {
+      await progress(0.96, `Placing ${prospects.length} people with no purchases by age and location`);
+      const groups: Doc<"emailAudiences">[] = await ctx.runQuery(internal.emailAudiences.groupsOf, { brandId: list.brandId });
+      const biggest = [...groups].sort((a, b) => b.size - a.size)[0];
+      const moves: { id: Id<"emailContacts">; audienceId: Id<"emailAudiences">; placement: { by: "demographics"; note: string } }[] = [];
+      for (const i of prospects) {
+        const c = contacts[i];
+        const known = !!(c.age || c.gender || c.city || c.neighborhood);
+        const best = known ? (await prospectFits(ctx, trace, c, groups))[0] : undefined;
+        const target = best?.id ?? biggest?._id;
+        if (!target) continue;
+        moves.push({ id: c._id, audienceId: target, placement: { by: "demographics", note: best?.note || "No purchases, age or city yet, so they joined the largest group." } });
+      }
+      if (moves.length) await ctx.runMutation(internal.emailLists.joinGroups, { updates: moves });
+      trace.push({ kind: "slice", name: "Place people with no purchases", ms: 0, result: moves.map((m) => groups.find((g) => g._id === m.audienceId)?.name ?? "").join(", ") });
+      await ctx.runMutation(internal.emailLists.setState, { id, spans: trace.slice(-1) });
+    }
+    await ctx.runMutation(internal.emailLists.setState, { id, status: "ready", progress: { value: 1, label: "Ready" } });
+    return { groups: created.length, resolved, unique: terms.size };
+  } catch (err) {
+    const error = String(err).replace(/^Error: /, "").slice(0, 300);
+    await ctx.runMutation(internal.emailLists.setState, { id, status: "failed", error, spans: trace });
+    if (list.audienceId) await ctx.runMutation(internal.emailAudiences.setStatus, { id: list.audienceId, status: "failed", error });
+    throw err;
+  }
+}

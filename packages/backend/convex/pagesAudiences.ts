@@ -1,9 +1,10 @@
 import type { QlooParams } from "@slice/qloo";
 import { v } from "convex/values";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
   action,
+  internalAction,
   internalMutation,
   internalQuery,
   mutation,
@@ -29,7 +30,7 @@ import {
   type Span,
 } from "./qlooApi";
 import { cachedQlooGet } from "./qloo";
-import { owned, ownedBrand } from "./pagesBrands";
+import { editable, editableBrand, owned, ownedBrand, ownedBrandInAction } from "./pagesBrands";
 import { SEGMENT_FAMILIES, SEGMENTS } from "./pagesSegments";
 import { spanValidator } from "./schema";
 import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity, ProfileTag } from "./pagesTypes";
@@ -117,32 +118,53 @@ export async function uniqueAudienceSlug(ctx: MutationCtx, brandId: Id<"pagesBra
   }
 }
 
+/** A definition's upload and member must be the brand's own: `compile` reads their rows. */
+async function checkSources(ctx: QueryCtx, brandId: Id<"pagesBrands">, sources: Sources) {
+  if (sources.uploadId && (await ctx.db.get(sources.uploadId))?.brandId !== brandId) throw new Error("Unknown upload");
+  if (sources.memberId && (await ctx.db.get(sources.memberId))?.brandId !== brandId) throw new Error("Unknown member");
+}
+
+const createArgs = {
+  brandId: v.id("pagesBrands"),
+  name: v.string(),
+  kind: v.string(),
+  sources: sourcesValidator,
+};
+
+async function insertAudience(ctx: MutationCtx, { brandId, name, kind, sources }: { brandId: Id<"pagesBrands">; name: string; kind: string; sources: Sources }) {
+  const now = Date.now();
+  const slug = await uniqueAudienceSlug(ctx, brandId, slugify(name));
+  const id = await ctx.db.insert("pagesAudiences", {
+    brandId,
+    name: name.trim(),
+    slug,
+    kind,
+    sources,
+    status: "compiling",
+    progress: { value: 0, label: "Starting" },
+    size: 0,
+    trace: [],
+    createdAt: now,
+    updatedAt: now,
+  });
+  return { id };
+}
+
 export const create = mutation({
-  args: {
-    brandId: v.id("pagesBrands"),
-    name: v.string(),
-    kind: v.string(),
-    sources: sourcesValidator,
-  },
+  args: createArgs,
   returns: v.object({ id: v.id("pagesAudiences") }),
-  handler: async (ctx, { brandId, name, kind, sources }) => {
-    const now = Date.now();
-    const slug = await uniqueAudienceSlug(ctx, brandId, slugify(name));
-    const id = await ctx.db.insert("pagesAudiences", {
-      brandId,
-      name: name.trim(),
-      slug,
-      kind,
-      sources,
-      status: "compiling",
-      progress: { value: 0, label: "Starting" },
-      size: 0,
-      trace: [],
-      createdAt: now,
-      updatedAt: now,
-    });
-    return { id };
+  handler: async (ctx, args) => {
+    await editableBrand(ctx, args.brandId);
+    await checkSources(ctx, args.brandId, args.sources);
+    return insertAudience(ctx, args);
   },
+});
+
+/** `create` for upload processing (pagesUploads.process), which checked the upload's owner. */
+export const createInternal = internalMutation({
+  args: createArgs,
+  returns: v.object({ id: v.id("pagesAudiences") }),
+  handler: async (ctx, args) => insertAudience(ctx, args),
 });
 
 /**
@@ -159,9 +181,9 @@ export const update = mutation({
   },
   returns: v.null(),
   handler: async (ctx, { id, name, kind, sources }) => {
-    const audience = await ctx.db.get(id);
-    if (!audience) throw new Error("Unknown audience");
+    const audience = await editable(ctx, await ctx.db.get(id), "audience");
     if (["default", "csv", "lead", "people"].includes(audience.kind)) throw new Error("This audience is not defined by conditions");
+    await checkSources(ctx, audience.brandId, sources);
     const trimmed = name.trim() || audience.name;
     const renamed = trimmed !== audience.name;
     await ctx.db.patch(id, {
@@ -199,8 +221,7 @@ export const remove = mutation({
   args: { id: v.id("pagesAudiences") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    const audience = await ctx.db.get(id);
-    if (!audience) return null;
+    const audience = await editable(ctx, await ctx.db.get(id), "audience");
     // Pages built for it keep their version and drop it from their audiences.
     await ctx.db.delete(id);
     await relabelPages(ctx, audience.brandId, id, true);
@@ -699,7 +720,7 @@ export const preview = action({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, { brandId, sources }) => {
-    const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id: brandId });
+    const brand = await ownedBrandInAction(ctx, brandId);
     if (!brand) throw new Error("Unknown brand");
     const trace: Span[] = [];
     const out = (list: EntityRef[], take: number) =>
@@ -820,7 +841,7 @@ async function compilePeople(ctx: ActionCtx, trace: Span[], audience: Doc<"pages
     const lead = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
     await progress(0.2 + 0.75 * (i / ids.length), `Reading ${lead?.name ?? "the next person"} (${i + 1} of ${ids.length})`);
     const t0 = Date.now();
-    await ctx.runAction(api.pagesAudiences.compile, { id });
+    await ctx.runAction(internal.pagesAudiences.compileInternal, { id });
     const done = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
     trace.push({
       kind: "slice",
@@ -916,6 +937,11 @@ function compileDefault(trace: Span[], brand: Doc<"pagesBrands">) {
   return { profile, size: 0 };
 }
 
+/** Qloo searches for the console's pickers: they name no brand, so any signed-in merchant. */
+async function signedIn(ctx: ActionCtx) {
+  if (!(await ctx.auth.getUserIdentity())) throw new Error("Sign in to search Qloo");
+}
+
 // In the order a merchant most likely means them: "Patagonia" is the brand
 // before the dozen restaurants and parks of the same name.
 const SUGGEST_TYPES = ["brand", "artist", "movie", "tv_show", "book", "podcast", "person", "destination", "place"];
@@ -929,6 +955,7 @@ export const suggestEntities = action({
   args: { query: v.string(), types: v.optional(v.array(v.string())) },
   returns: v.array(v.object({ id: v.string(), name: v.string(), type: v.string(), image: v.optional(v.string()), subtitle: v.optional(v.string()) })),
   handler: async (ctx, { query, types }) => {
+    await signedIn(ctx);
     const q = query.trim();
     if (q.length < 2) return [];
     const order = types?.length ? types : SUGGEST_TYPES;
@@ -978,6 +1005,7 @@ export const suggestTags = action({
   args: { query: v.string() },
   returns: v.array(v.object({ id: v.string(), name: v.string(), type: v.string() })),
   handler: async (ctx, { query }) => {
+    await signedIn(ctx);
     const q = query.trim();
     if (q.length < 2) return [];
     const { body } = await cachedQlooGet(ctx, "/v2/tags", { "filter.query": q, "filter.tag.types": GENRE_TAG_TYPES.join(","), take: 24 });
@@ -1000,53 +1028,67 @@ export const suggestTags = action({
   },
 });
 
+/** Compiles the audience's profile, for its brand's owner. */
 export const compile = action({
   args: { id: v.id("pagesAudiences") },
   returns: v.null(),
   handler: async (ctx, { id }): Promise<null> => {
     const audience = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
-    if (!audience) throw new Error("Unknown audience");
-    const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id: audience.brandId });
-    if (!brand) throw new Error("Unknown brand");
-    const trace: Span[] = [];
-    const progress: Progress = (value, label) => ctx.runMutation(internal.pagesAudiences.setProgress, { id, value, label });
-    await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "compiling" });
-    try {
-      let result: { profile: AudienceProfile; size: number };
-      switch (audience.kind) {
-        case "location":
-          result = await compileLocation(ctx, trace, audience, progress);
-          break;
-        case "demographic":
-          result = await compileDemographic(ctx, trace, audience, brand, progress);
-          break;
-        case "interests":
-          result = await compileInterests(ctx, trace, audience, progress);
-          break;
-        case "custom":
-          result = await compileCustom(ctx, trace, audience, brand, progress);
-          break;
-        case "csv":
-          result = await compileCsv(ctx, trace, audience, progress);
-          break;
-        case "lead":
-          result = await compileLead(ctx, trace, audience, progress);
-          break;
-        case "people":
-          result = await compilePeople(ctx, trace, audience, progress);
-          break;
-        case "default":
-          result = compileDefault(trace, brand);
-          break;
-        default:
-          throw new Error(`Unknown audience kind "${audience.kind}"`);
-      }
-      await ctx.runMutation(internal.pagesAudiences.setProfile, { id, profile: result.profile, size: result.size, trace });
-    } catch (err) {
-      // Recorded on the audience (its card shows the reason); not rethrown, so
-      // callers and the browser console are not handed a server error.
-      await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "failed", error: String(err).replace(/^Error: /, "").slice(0, 300), trace });
-    }
-    return null;
+    if (!audience || !(await ownedBrandInAction(ctx, audience.brandId))) throw new Error("Unknown audience");
+    return compileAudience(ctx, id);
   },
 });
+
+/** `compile` without the owner check: upload processing and a customer list's people. */
+export const compileInternal = internalAction({
+  args: { id: v.id("pagesAudiences") },
+  returns: v.null(),
+  handler: async (ctx, { id }): Promise<null> => compileAudience(ctx, id),
+});
+
+async function compileAudience(ctx: ActionCtx, id: Id<"pagesAudiences">): Promise<null> {
+  const audience = await ctx.runQuery(internal.pagesAudiences.getInternal, { id });
+  if (!audience) throw new Error("Unknown audience");
+  const brand = await ctx.runQuery(internal.pagesBrands.getInternal, { id: audience.brandId });
+  if (!brand) throw new Error("Unknown brand");
+  const trace: Span[] = [];
+  const progress: Progress = (value, label) => ctx.runMutation(internal.pagesAudiences.setProgress, { id, value, label });
+  await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "compiling" });
+  try {
+    let result: { profile: AudienceProfile; size: number };
+    switch (audience.kind) {
+      case "location":
+        result = await compileLocation(ctx, trace, audience, progress);
+        break;
+      case "demographic":
+        result = await compileDemographic(ctx, trace, audience, brand, progress);
+        break;
+      case "interests":
+        result = await compileInterests(ctx, trace, audience, progress);
+        break;
+      case "custom":
+        result = await compileCustom(ctx, trace, audience, brand, progress);
+        break;
+      case "csv":
+        result = await compileCsv(ctx, trace, audience, progress);
+        break;
+      case "lead":
+        result = await compileLead(ctx, trace, audience, progress);
+        break;
+      case "people":
+        result = await compilePeople(ctx, trace, audience, progress);
+        break;
+      case "default":
+        result = compileDefault(trace, brand);
+        break;
+      default:
+        throw new Error(`Unknown audience kind "${audience.kind}"`);
+    }
+    await ctx.runMutation(internal.pagesAudiences.setProfile, { id, profile: result.profile, size: result.size, trace });
+  } catch (err) {
+    // Recorded on the audience (its card shows the reason); not rethrown, so
+    // callers and the browser console are not handed a server error.
+    await ctx.runMutation(internal.pagesAudiences.setStatus, { id, status: "failed", error: String(err).replace(/^Error: /, "").slice(0, 300), trace });
+  }
+  return null;
+}

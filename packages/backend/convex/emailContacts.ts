@@ -14,7 +14,7 @@ import {
   type GroupTaste,
   type ResolvedTerm,
 } from "./emailAudiences";
-import { editableBrand, owned, ownedBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand, ownedBrandInAction } from "./emailBrands";
 import type { AudienceProfile } from "./emailTypes";
 import { ageBucket, normalizeGender, splitTerms } from "./pagesCsv";
 import { safeRecord } from "./pagesUtil";
@@ -547,6 +547,8 @@ export const compile = action({
   args: { id: v.id("emailContacts") },
   returns: v.null(),
   handler: async (ctx, { id }): Promise<null> => {
+    const contact: Doc<"emailContacts"> | null = await ctx.runQuery(internal.emailContacts.getInternal, { id });
+    if (!contact || !(await ownedBrandInAction(ctx, contact.brandId))) throw new Error("Unknown contact");
     await ctx.runMutation(internal.emailContacts.requeue, { id });
     await compileOne(ctx, id);
     return null;

@@ -357,6 +357,21 @@ emailRoute("/agent/read", async (ctx, { path, args }) => {
   return json({ value: (await ctx.runQuery(fn, (args ?? {}) as Record<string, unknown>)) ?? null });
 });
 
+/* The public actions of these names answer only the brand's owner too; the
+   agent runs their internal twins here. */
+
+const AGENT_ACTIONS: Record<string, FunctionReference<"action", "internal">> = {
+  "pagesBrands:qlooLookup": internal.pagesBrands.qlooLookupInternal,
+  "emailItems:rank": internal.emailItems.rankInternal,
+};
+
+/** { path, args } → { value }. */
+emailRoute("/agent/action", async (ctx, { path, args }) => {
+  const fn = typeof path === "string" && Object.prototype.hasOwnProperty.call(AGENT_ACTIONS, path) ? AGENT_ACTIONS[path] : undefined;
+  if (!fn) return json({ error: `Unknown action ${String(path)}` }, 400);
+  return json({ value: (await ctx.runAction(fn, (args ?? {}) as Record<string, unknown>)) ?? null });
+});
+
 /* Media service: the agent's reads and writes (QLOO_PROXY_SECRET). */
 
 /** Campaign, brand, live audiences, creatives, assets and jobs. */

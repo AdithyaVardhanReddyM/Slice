@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { spanValidator } from "./schema";
-import { owned, ownedBrand, publicBrand } from "./pagesBrands";
+import { editable, editableBrand, owned, ownedBrand, publicBrand } from "./pagesBrands";
 import { DEFAULT_ROUTING, isHtmlDoc, validateDoc, type HandEdits, type HtmlDoc, type RoutingRules } from "./pagesTypes";
 import { audienceLabel, slugify } from "./pagesUtil";
 
@@ -13,7 +13,8 @@ import { audienceLabel, slugify } from "./pagesUtil";
 // stats and forms keep their variant keys. `bySlug` + `resolveVariant` are
 // what the public renderer calls, anonymously; every other read answers only
 // the brand's signed-in owner (the agent reads the internal twins over
-// /agent/read in http.ts).
+// /agent/read in http.ts), and every console write throws "Unknown …" for
+// anyone else.
 
 const pageBriefValidator = v.object({
   goal: v.string(),
@@ -44,16 +45,26 @@ const buildMessageValidator = v.object({
 
 /* Attachments (images the merchant drops into the builder chat) -------------- */
 
+async function signedIn(ctx: QueryCtx) {
+  if (!(await ctx.auth.getUserIdentity())) throw new Error("Sign in to upload files");
+}
+
 export const attachmentUploadUrl = mutation({
   args: {},
   returns: v.string(),
-  handler: async (ctx) => ctx.storage.generateUploadUrl(),
+  handler: async (ctx) => {
+    await signedIn(ctx);
+    return ctx.storage.generateUploadUrl();
+  },
 });
 
 export const attachmentUrl = mutation({
   args: { storageId: v.id("_storage") },
   returns: v.union(v.string(), v.null()),
-  handler: async (ctx, { storageId }) => ctx.storage.getUrl(storageId),
+  handler: async (ctx, { storageId }) => {
+    await signedIn(ctx);
+    return ctx.storage.getUrl(storageId);
+  },
 });
 
 /** A version as a published page shows it: no build trace, no insights. */
@@ -88,6 +99,17 @@ async function audiencesOf(ctx: QueryCtx | MutationCtx, ids: Id<"pagesAudiences"
   for (const id of ids) {
     const a = await ctx.db.get(id);
     if (a) out.push(a);
+  }
+  return out;
+}
+
+/** A write's audiences: each must be one of the page's brand's, or the write throws "Unknown audience". */
+async function brandAudiences(ctx: MutationCtx, brandId: Id<"pagesBrands">, ids: Id<"pagesAudiences">[]) {
+  const out: Doc<"pagesAudiences">[] = [];
+  for (const id of ids) {
+    const a = await ctx.db.get(id);
+    if (!a || a.brandId !== brandId) throw new Error("Unknown audience");
+    out.push(a);
   }
   return out;
 }
@@ -185,6 +207,11 @@ export const create = mutation({
   },
   returns: v.object({ id: v.id("pages"), slug: v.string() }),
   handler: async (ctx, { brandId, title, slug: wanted, brief, audienceIds, messages }) => {
+    await editableBrand(ctx, brandId);
+    const audiences = await brandAudiences(ctx, brandId, audienceIds);
+    for (const m of messages ?? []) {
+      if (m.variantId && (await ctx.db.get(m.variantId))?.brandId !== brandId) throw new Error("Unknown variant");
+    }
     const now = Date.now();
     const slug = await uniquePageSlug(ctx, brandId, slugify(wanted ?? title));
     const id = await ctx.db.insert("pages", {
@@ -198,7 +225,7 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
-    const defaultVariantId = await insertVariant(ctx, { _id: id, brandId }, await audiencesOf(ctx, audienceIds));
+    const defaultVariantId = await insertVariant(ctx, { _id: id, brandId }, audiences);
     await ctx.db.patch(id, { defaultVariantId });
     if (messages?.length) await ctx.db.insert("pagesBuilds", { pageId: id, messages, createdAt: now, updatedAt: now });
     return { id, slug };
@@ -219,8 +246,7 @@ export const updateSettings = mutation({
   },
   returns: v.object({ slug: v.string() }),
   handler: async (ctx, { id, title, slug: wanted, goal, offer, cta, imageMode }) => {
-    const page = await ctx.db.get(id);
-    if (!page) throw new Error("Unknown page");
+    const page = await editable(ctx, await ctx.db.get(id), "page");
     const slug = wanted !== undefined && slugify(wanted) !== page.slug ? await uniquePageSlug(ctx, page.brandId, slugify(wanted), id) : page.slug;
     const brief = { ...page.brief };
     if (goal) brief.goal = goal;
@@ -236,6 +262,7 @@ export const updateBrief = mutation({
   args: { id: v.id("pages"), brief: pageBriefValidator, title: v.optional(v.string()) },
   returns: v.null(),
   handler: async (ctx, { id, brief, title }) => {
+    await editable(ctx, await ctx.db.get(id), "page");
     await ctx.db.patch(id, { brief, ...(title ? { title: title.trim() } : {}), updatedAt: Date.now() });
     return null;
   },
@@ -246,9 +273,8 @@ export const setAudiences = mutation({
   args: { id: v.id("pages"), audienceIds: v.array(v.id("pagesAudiences")) },
   returns: v.null(),
   handler: async (ctx, { id, audienceIds }) => {
-    const page = await ctx.db.get(id);
-    if (!page) throw new Error("Unknown page");
-    const audiences = await audiencesOf(ctx, audienceIds);
+    const page = await editable(ctx, await ctx.db.get(id), "page");
+    const audiences = await brandAudiences(ctx, page.brandId, audienceIds);
     const vnt = await versionOf(ctx, page);
     if (vnt) await ctx.db.patch(vnt._id, { name: audienceLabel(audiences), audienceId: audiences.length === 1 ? audiences[0]._id : undefined, updatedAt: Date.now() });
     await ctx.db.patch(id, { audienceIds, updatedAt: Date.now() });
@@ -260,6 +286,7 @@ export const setRouting = mutation({
   args: { id: v.id("pages"), routing: v.any() },
   returns: v.null(),
   handler: async (ctx, { id, routing }) => {
+    await editable(ctx, await ctx.db.get(id), "page");
     await ctx.db.patch(id, { routing: { ...DEFAULT_ROUTING, ...(routing as Partial<RoutingRules>) }, updatedAt: Date.now() });
     return null;
   },
@@ -269,8 +296,7 @@ export const publish = mutation({
   args: { id: v.id("pages") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    const page = await ctx.db.get(id);
-    if (!page) throw new Error("Unknown page");
+    await editable(ctx, await ctx.db.get(id), "page");
     // One version per page: nothing for a quiz to choose between.
     await ctx.db.patch(id, { status: "published", publishedAt: Date.now(), quiz: undefined, updatedAt: Date.now() });
     return null;
@@ -281,6 +307,7 @@ export const unpublish = mutation({
   args: { id: v.id("pages") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
+    await editable(ctx, await ctx.db.get(id), "page");
     await ctx.db.patch(id, { status: "draft", updatedAt: Date.now() });
     return null;
   },
@@ -333,7 +360,10 @@ export const saveVariant = mutation({
     status: v.optional(v.string()),
   },
   returns: v.object({ version: v.number() }),
-  handler: async (ctx, { id, doc, trace, status }) => applyVariantPatch(ctx, id, { doc, trace, status }),
+  handler: async (ctx, { id, doc, trace, status }) => {
+    await editable(ctx, await ctx.db.get(id), "variant");
+    return applyVariantPatch(ctx, id, { doc, trace, status });
+  },
 });
 
 /** HTTP /pages/variant: the agent's writes. Spans are appended to the variant's trace. */
@@ -383,7 +413,8 @@ export const saveHandEdits = mutation({
   },
   returns: v.object({ version: v.number() }),
   handler: async (ctx, { variantId, baseVersion, html, hand, changes }) => {
-    const vnt = await ctx.db.get(variantId);
+    // Another merchant's page reads as gone, the same as a deleted one.
+    const vnt = await owned(ctx, await ctx.db.get(variantId));
     if (!vnt) throw new ConvexError("This page no longer exists.");
     if (vnt.version !== baseVersion) throw new ConvexError("The page changed while you were editing it. Reload the editor to pick up the new version.");
     const doc = vnt.doc as HtmlDoc | undefined;
@@ -421,6 +452,7 @@ export const resetVariant = mutation({
   args: { id: v.id("pagesVariants") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
+    await editable(ctx, await ctx.db.get(id), "variant");
     await ctx.db.patch(id, { status: "building", error: undefined, updatedAt: Date.now() });
     return null;
   },
@@ -497,6 +529,7 @@ export const forgetRule = mutation({
   args: { pageId: v.id("pages"), id: v.string() },
   returns: v.null(),
   handler: async (ctx, { pageId, id }) => {
+    await editable(ctx, await ctx.db.get(pageId), "page");
     const existing = await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique();
     if (existing) await ctx.db.patch(existing._id, { rules: existing.rules.filter((r) => r.id !== id), updatedAt: Date.now() });
     return null;
@@ -510,8 +543,7 @@ export const remove = mutation({
   args: { id: v.id("pages") },
   returns: v.null(),
   handler: async (ctx, { id }) => {
-    const page = await ctx.db.get(id);
-    if (!page) return null;
+    await editable(ctx, await ctx.db.get(id), "page");
     for (const vnt of await variantsOf(ctx, id)) await ctx.db.delete(vnt._id);
     const build = await ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", id)).unique();
     if (build) await ctx.db.delete(build._id);

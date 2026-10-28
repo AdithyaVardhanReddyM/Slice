@@ -202,7 +202,7 @@ export const run = internalAction({
     // The catalog in shop order, then each item matched to Qloo (books as books).
     const items = folioItems(site.replace(/\/$/, ""));
     await ctx.runMutation(internal.emailItems.append, { brandId, items });
-    const matched = await ctx.runAction(api.emailItems.resolve, { brandId });
+    const matched = await ctx.runAction(internal.emailItems.resolveInternal, { brandId });
     const fixed = await ctx.runAction(internal.emailSeed.fixMatches, { brandId });
 
     const columns = FOLIO_CONTACT_COLUMNS.map(String);
@@ -228,7 +228,7 @@ export const run = internalAction({
     });
 
     // Reads the regulars' purchases now and schedules each person's profile.
-    const read = await ctx.runAction(api.emailLists.process, { id: club.id });
+    const read = await ctx.runAction(internal.emailLists.processInternal, { id: club.id });
     await ctx.scheduler.runAfter(15_000, internal.emailSeed.step, { brandId, site, clubId: club.id, subscribersId: subscribers.id, stage: "club", attempt: 0, startedAt: t0 });
     return {
       brandId,
@@ -275,7 +275,7 @@ export const step = internalAction({
         return null;
       }
       console.log(`emailSeed: regulars ${club.status} after ${Math.round((Date.now() - startedAt) / 1000)} s`);
-      await ctx.scheduler.runAfter(0, api.emailLists.process, { id: subscribersId, k: 2 });
+      await ctx.scheduler.runAfter(0, internal.emailLists.processInternal, { id: subscribersId, k: 2 });
       await ctx.scheduler.runAfter(30_000, internal.emailSeed.step, { ...args, stage: "subscribers", attempt: 0 });
       return null;
     }

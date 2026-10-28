@@ -6,6 +6,7 @@ import {
   internalQuery,
   mutation,
   query,
+  type ActionCtx,
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
@@ -27,6 +28,14 @@ export async function ownedBrand(ctx: QueryCtx, id: Id<"emailBrands">): Promise<
 /** A campaign, list, audience or contact when the signed-in merchant owns its brand, else null. */
 export async function owned<T extends { brandId: Id<"emailBrands"> }>(ctx: QueryCtx, row: T | null): Promise<T | null> {
   return row && (await ownedBrand(ctx, row.brandId)) ? row : null;
+}
+
+/** `ownedBrand` for an action (no ctx.db): the brand when the signed-in merchant owns it, else null. */
+export async function ownedBrandInAction(ctx: ActionCtx, id: Id<"emailBrands">): Promise<Doc<"emailBrands"> | null> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) return null;
+  const brand: Doc<"emailBrands"> | null = await ctx.runQuery(internal.emailBrands.getInternal, { id });
+  return brand && brand.owner === identity.subject ? brand : null;
 }
 
 /** The brand, for a console mutation: unknown and other merchants' brands look the same. */
