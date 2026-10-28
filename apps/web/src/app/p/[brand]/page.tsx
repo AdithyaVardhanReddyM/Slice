@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@slice/backend/convex/_generated/api";
-import type { Doc } from "@slice/backend/convex/_generated/dataModel";
 import type { BrandKit } from "@slice/backend/convex/pagesTypes";
 import { googleFontsHref, kitToVars } from "@/components/pages/theme";
 import { CONVEX_URL } from "@/components/pages/resolve";
@@ -16,10 +15,7 @@ type Props = PageProps<"/p/[brand]">;
 async function loadBrand(slug: string) {
   await connection();
   if (!CONVEX_URL) return null;
-  const brand = (await fetchQuery(api.pagesBrands.bySlug, { slug }, { url: CONVEX_URL })) as Doc<"pagesBrands"> | null;
-  if (!brand) return null;
-  const pages = (await fetchQuery(api.pages.list, { brandId: brand._id }, { url: CONVEX_URL })) as Doc<"pages">[];
-  return { brand, pages: pages.filter((p) => p.status === "published") };
+  return fetchQuery(api.pages.publishedBySlug, { brandSlug: slug }, { url: CONVEX_URL });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -3,6 +3,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { spanValidator } from "./schema";
+import { owned, ownedBrand, publicBrand } from "./pagesBrands";
 import { DEFAULT_ROUTING, isHtmlDoc, validateDoc, type HandEdits, type HtmlDoc, type RoutingRules } from "./pagesTypes";
 import { audienceLabel, slugify } from "./pagesUtil";
 
@@ -10,7 +11,9 @@ import { audienceLabel, slugify } from "./pagesUtil";
 // none (everyone), one, or several combined into one group. The version lives
 // in `pagesVariants` (exactly one row per page, `defaultVariantId`) so events,
 // stats and forms keep their variant keys. `bySlug` + `resolveVariant` are
-// what the public renderer calls.
+// what the public renderer calls, anonymously; every other read answers only
+// the brand's signed-in owner (the agent reads the internal twins over
+// /agent/read in http.ts).
 
 const pageBriefValidator = v.object({
   goal: v.string(),
@@ -53,10 +56,11 @@ export const attachmentUrl = mutation({
   handler: async (ctx, { storageId }) => ctx.storage.getUrl(storageId),
 });
 
-const strip = <T extends { trace?: unknown }>(doc: T): Omit<T, "trace"> => {
-  const { trace: _t, ...rest } = doc;
-  return rest;
-};
+/** A version as a published page shows it: no build trace, no insights. */
+const shownVariant = ({ trace: _t, insights: _i, ...rest }: Doc<"pagesVariants">) => rest;
+
+/** A page as a published page shows it: not the merchant's brief. */
+const shownPage = ({ brief: _b, ...rest }: Doc<"pages">) => rest;
 
 async function uniquePageSlug(ctx: MutationCtx, brandId: Id<"pagesBrands">, base: string, self?: Id<"pages">): Promise<string> {
   let slug = base;
@@ -91,6 +95,7 @@ async function audiencesOf(ctx: QueryCtx | MutationCtx, ids: Id<"pagesAudiences"
 export const list = query({
   args: { brandId: v.id("pagesBrands") },
   handler: async (ctx, { brandId }) => {
+    if (!(await ownedBrand(ctx, brandId))) return [];
     const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect();
     return Promise.all(
       pages.map(async (page) => {
@@ -108,29 +113,24 @@ export const list = query({
   },
 });
 
+async function bundle(ctx: QueryCtx, page: Doc<"pages"> | null) {
+  if (!page) return null;
+  const variants = await variantsOf(ctx, page._id);
+  const audiences = await audiencesOf(ctx, page.audienceIds);
+  return { page, variants, audiences };
+}
+
 export const get = query({
   args: { id: v.id("pages") },
-  handler: async (ctx, { id }) => {
-    const page = await ctx.db.get(id);
-    if (!page) return null;
-    const variants = await variantsOf(ctx, id);
-    const audiences = await audiencesOf(ctx, page.audienceIds);
-    return { page, variants, audiences };
-  },
+  handler: async (ctx, { id }) => bundle(ctx, await owned(ctx, await ctx.db.get(id))),
 });
 
 export const getInternal = internalQuery({
   args: { id: v.id("pages") },
-  handler: async (ctx, { id }) => {
-    const page = await ctx.db.get(id);
-    if (!page) return null;
-    const variants = await variantsOf(ctx, id);
-    const audiences = await audiencesOf(ctx, page.audienceIds);
-    return { page, variants, audiences };
-  },
+  handler: async (ctx, { id }) => bundle(ctx, await ctx.db.get(id)),
 });
 
-/** Everything the renderer needs: brand kit, page, variants with docs, audiences (traces stripped). */
+/** Everything the renderer needs: the brand's public face, the page and its version with its doc. Drafts too (?preview=1). */
 export const bySlug = query({
   args: { brandSlug: v.string(), pageSlug: v.string() },
   handler: async (ctx, { brandSlug, pageSlug }) => {
@@ -141,9 +141,8 @@ export const bySlug = query({
       .withIndex("by_brand_slug", (q) => q.eq("brandId", brand._id).eq("slug", pageSlug))
       .unique();
     if (!page) return null;
-    const variants = (await variantsOf(ctx, page._id)).map(strip);
-    const audiences = (await audiencesOf(ctx, page.audienceIds)).map(strip);
-    return { brand: strip(brand), page, variants, audiences };
+    const variants = (await variantsOf(ctx, page._id)).map(shownVariant);
+    return { brand: publicBrand(brand), page: shownPage(page), variants };
   },
 });
 
@@ -153,8 +152,8 @@ export const publishedBySlug = query({
   handler: async (ctx, { brandSlug }) => {
     const brand = await ctx.db.query("pagesBrands").withIndex("by_slug", (q) => q.eq("slug", brandSlug)).unique();
     if (!brand) return null;
-    const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brand._id)).collect();
-    return { brand: strip(brand), pages: pages.filter((p) => p.status === "published") };
+    const pages = await ctx.db.query("pages").withIndex("by_brand", (q) => q.eq("brandId", brand._id)).order("desc").collect();
+    return { brand: publicBrand(brand), pages: pages.filter((p) => p.status === "published").map(shownPage) };
   },
 });
 
@@ -291,6 +290,11 @@ export const unpublish = mutation({
 
 export const variant = query({
   args: { id: v.id("pagesVariants") },
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
+});
+
+export const variantInternal = internalQuery({
+  args: { id: v.id("pagesVariants") },
   handler: async (ctx, { id }) => ctx.db.get(id),
 });
 
@@ -426,7 +430,8 @@ export const resetVariant = mutation({
 
 export const build = query({
   args: { pageId: v.id("pages") },
-  handler: async (ctx, { pageId }) => ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique(),
+  handler: async (ctx, { pageId }) =>
+    (await owned(ctx, await ctx.db.get(pageId))) ? ctx.db.query("pagesBuilds").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique() : null,
 });
 
 export const appendBuild = internalMutation({
@@ -459,7 +464,7 @@ export const setBuildMessages = internalMutation({
 const ruleValidator = v.object({ id: v.string(), text: v.string(), at: v.number() });
 
 /** Everything the builder remembers about a page (the agent reads this at the start of a turn). */
-export const memory = query({
+export const memory = internalQuery({
   args: { pageId: v.id("pages") },
   handler: async (ctx, { pageId }) => ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique(),
 });
@@ -468,7 +473,10 @@ export const memory = query({
 export const rules = query({
   args: { pageId: v.id("pages") },
   returns: v.array(ruleValidator),
-  handler: async (ctx, { pageId }) => (await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique())?.rules ?? [],
+  handler: async (ctx, { pageId }) => {
+    if (!(await owned(ctx, await ctx.db.get(pageId)))) return [];
+    return (await ctx.db.query("pagesMemory").withIndex("by_page", (q) => q.eq("pageId", pageId)).unique())?.rules ?? [];
+  },
 });
 
 /** The agent's upsert: any of rules, review, seen. */

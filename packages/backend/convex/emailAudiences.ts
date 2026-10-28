@@ -12,7 +12,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
-import { editableBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand } from "./emailBrands";
 import { locationOf, tasteTerms, type ContactLite } from "./emailContacts";
 import type { AudienceProfile } from "./emailTypes";
 import {
@@ -43,6 +43,7 @@ import { spanValidator } from "./schema";
 export const list = query({
   args: { brandId: v.id("emailBrands") },
   handler: async (ctx, { brandId }) => {
+    if (!(await ownedBrand(ctx, brandId))) return [];
     const audiences = await ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect();
     const lists = await ctx.db.query("emailLists").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
     const optedOut = await unsubscribedEmails(ctx, brandId);
@@ -71,10 +72,16 @@ export async function unsubscribedEmails(ctx: { db: QueryCtx["db"] }, brandId: I
   return new Set(contacts.map((c) => c.email));
 }
 
+/** The brand's audiences, newest first, as stored (the agent over /agent/read, and scripts). */
+export const listInternal = internalQuery({
+  args: { brandId: v.id("emailBrands") },
+  handler: async (ctx, { brandId }) => ctx.db.query("emailAudiences").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect(),
+});
+
 export const get = query({
   args: { id: v.id("emailAudiences") },
   handler: async (ctx, { id }) => {
-    const audience = await ctx.db.get(id);
+    const audience = await owned(ctx, await ctx.db.get(id));
     if (!audience) return null;
     const list = audience.listId ? await ctx.db.get(audience.listId) : null;
     return { ...audience, listName: list?.name ?? "" };

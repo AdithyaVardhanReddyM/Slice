@@ -30,7 +30,7 @@ Module files and public functions. Args/returns in TypeScript; ids are Convex id
 ### `pagesBrands.ts`
 
 - `list` query `{}` → `Doc<"pagesBrands">[]` (newest first).
-- `get` query `{ id }` → doc or null. `bySlug` query `{ slug }` → doc or null.
+- `get` query `{ id }` → doc or null (only for the brand's signed-in owner, like every console read; the agent reads `getInternal` over `/agent/read`). `bySlug` query `{ slug }` → the brand's public face (`_id, slug, name, url, kit`) or null.
 - `create` mutation `{ name, url, slug? }` → `{ id, slug }`. Slug derived from name, unique (`-2` suffix). Status `extracting`, progress `{0, "Starting"}`.
 - `updateKit` mutation `{ id, kit }`, `updateBrief` mutation `{ id, brief }`, `rename` mutation `{ id, name }`, `remove` mutation `{ id }` (cascades audiences, uploads, members, pages, variants, builds, events, stats, forms, sessions).
 - `qlooLookup` action `{ id }` → fills `qloo`: `/search` the brand name with `types=urn:entity:brand` (accept only name matches like `storeBrandAffinities` does); if matched, read the entity's tags (brand-domain types) and `similar_brands`; demographics via `urn:demographics` on the entity. If not matched, resolve up to 5 `brief.relatedBrands` plus LLM-free fallbacks (none), use them as `proxies`, and take tag insights on them. Writes `qloo`, appends spans to `trace`.
@@ -65,7 +65,7 @@ Module files and public functions. Args/returns in TypeScript; ids are Convex id
 
 ### `pages.ts` (pages, variants, builds)
 
-- `list` query `{ brandId }` → pages with variant counts and status. `get` query `{ id }` → `{ page, variants, audiences }`. `bySlug` query `{ brandSlug, pageSlug }` → `{ brand, page, variants, audiences }` or null (used by the renderer; include the brand kit).
+- `list` query `{ brandId }` → pages with variant counts and status. `get` query `{ id }` → `{ page, variants, audiences }`. Both answer only the brand's owner. `bySlug` query `{ brandSlug, pageSlug }` → `{ brand, page, variants }` or null, anonymous, for the renderer: the brand's public face with its kit, the page without its brief, its version without trace or insights.
 - `create` mutation `{ brandId, title, slug?, brief, audienceIds }` → `{ id }`. Creates one `pagesVariants` row per audience (name = audience name, status `building`, version 0) plus a default variant (audienceId unset, name "Default"), sets `defaultVariantId`, routing = `DEFAULT_ROUTING`.
 - `updateBrief` mutation, `setAudiences` mutation `{ id, audienceIds }` (adds/removes variants to match), `setRouting` mutation `{ id, routing }`.
 - `publish` mutation `{ id }` → status `published`, `publishedAt`, and `quiz` generated: 3 questions ("What's on repeat?", "A place you'd book", "A brand you trust") whose options are drawn from each audience's `profile.culture.artists / places` and `profile.brands` (one option per audience per question, `votes: { [audienceId]: 1 }`). `unpublish` mutation.
@@ -95,6 +95,7 @@ Module files and public functions. Args/returns in TypeScript; ids are Convex id
 - `POST /pages/variant` `{ variantId, patch: { doc?, status?, error?, spans?, name? } }` → validates doc, bumps version.
 - `POST /pages/build` `{ pageId, messages }` → appends to `pagesBuilds`.
 - `POST /pages/file` raw body with `Content-Type` image/*, query `?brandId=` → `{ url }` (Convex storage; `ctx.storage.store` + `getUrl`).
+- `POST /agent/read` `{ path, args }` → `{ value }`: the agent's reads of owner-only queries (`pagesBrands:get`, `pages:get`, `pages:variant`, `pages:memory`, `pagesAudiences:get|list`, `pagesUploads:get|list|members|member`, and the Email ones), answered by their internal twins (`AGENT_READS` in `http.ts`).
 - Existing `POST /qloo` stays the agent's Qloo path.
 
 ## B. Renderer, publishing, tracker (apps/web)

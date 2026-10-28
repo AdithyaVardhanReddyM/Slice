@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalAction, internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { unsubscribedEmails } from "./emailAudiences";
-import { editableBrand, formatFrom, hostOf, RESEND_MISSING, sendingInfoFor } from "./emailBrands";
+import { editableBrand, formatFrom, hostOf, owned, RESEND_MISSING, sendingInfoFor } from "./emailBrands";
 import { docFor, itemsRecord, mergeFor, recipientsOf, renderContextFor, renderOne, targetsOf, versionFor } from "./emailCampaigns";
 import { unsubscribeEmail } from "./emailContacts";
 import { allBlocks, personalBlocks } from "./emailDoc";
@@ -184,7 +184,7 @@ export const readiness = query({
   args: { campaignId: v.id("emailCampaigns") },
   returns: v.object({ ok: v.boolean(), reason: v.optional(v.string()), mode: sendingModeValidator, from: v.string(), recipients: v.number(), excluded: v.number() }),
   handler: async (ctx, { campaignId }) => {
-    const campaign = await ctx.db.get(campaignId);
+    const campaign = await owned(ctx, await ctx.db.get(campaignId));
     if (!campaign) throw new Error("Unknown campaign");
     const brand = await ctx.db.get(campaign.brandId);
     if (!brand) throw new Error("Unknown brand");

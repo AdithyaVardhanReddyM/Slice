@@ -1,7 +1,7 @@
 import { v, type Infer } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { editableBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand } from "./emailBrands";
 import { allBlocks, applyOps as applyDocOps, applyPersonalization, blankDoc, blockLabel, findBlock, validateEmailDoc } from "./emailDoc";
 import { toEmailItem } from "./emailItems";
 import { fillMerge, renderEmail, renderPlainText, type RenderContext } from "./emailRender";
@@ -16,7 +16,9 @@ import { emailPersonalizationStateValidator } from "./schema";
 // HTTP (/email/doc, /email/ops). When the doc has personal blocks, every group
 // and every person gets an `emailVersions` row written by the agent's
 // personalise job; a recipient reads their group's version, or their own.
-// Everything here renders through emailRender.ts.
+// Everything here renders through emailRender.ts. Console reads answer only
+// the brand's signed-in owner; the agent reads `getForAgent` and
+// `renderForInternal` over /agent/read (http.ts).
 
 /* Rendering ------------------------------------------------------------------------- */
 
@@ -133,6 +135,7 @@ export function targetsName(groups: { name: string }[], people: number): string 
 export const list = query({
   args: { brandId: v.id("emailBrands") },
   handler: async (ctx, { brandId }) => {
+    if (!(await ownedBrand(ctx, brandId))) return [];
     const campaigns = await ctx.db.query("emailCampaigns").withIndex("by_brand", (q) => q.eq("brandId", brandId)).order("desc").collect();
     return Promise.all(
       campaigns.map(async (c) => {
@@ -145,7 +148,7 @@ export const list = query({
 
 export const get = query({
   args: { id: v.id("emailCampaigns") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const getInternal = internalQuery({
@@ -156,7 +159,10 @@ export const getInternal = internalQuery({
 /** The builder chat. */
 export const messages = query({
   args: { id: v.id("emailCampaigns") },
-  handler: async (ctx, { id }) => (await ctx.db.query("emailChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique())?.messages ?? [],
+  handler: async (ctx, { id }) => {
+    if (!(await owned(ctx, await ctx.db.get(id)))) return [];
+    return (await ctx.db.query("emailChats").withIndex("by_campaign", (q) => q.eq("campaignId", id)).unique())?.messages ?? [];
+  },
 });
 
 const contactCard = (c: Doc<"emailContacts">) => ({
@@ -177,7 +183,7 @@ const groupCard = (a: Doc<"emailAudiences">) => ({ _id: a._id, name: a.name, siz
 export const versions = query({
   args: { id: v.id("emailCampaigns") },
   handler: async (ctx, { id }) => {
-    const campaign = await ctx.db.get(id);
+    const campaign = await owned(ctx, await ctx.db.get(id));
     if (!campaign) return [];
     const docVersion = (campaign.doc as EmailDoc).version;
     const rows = await ctx.db.query("emailVersions").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect();
@@ -206,7 +212,7 @@ export const versions = query({
 export const recipients = query({
   args: { id: v.id("emailCampaigns") },
   handler: async (ctx, { id }) => {
-    const campaign = await ctx.db.get(id);
+    const campaign = await owned(ctx, await ctx.db.get(id));
     if (!campaign) return [];
     const targets = await targetsOf(ctx, campaign);
     const names = new Map<string, string>(targets.groups.map((g) => [g._id, g.name]));
@@ -248,7 +254,7 @@ const agentContact = (m: Doc<"emailContacts">) => ({
  * brand and items, each taste group ticked (profile, brief and its members),
  * and each individual contact ticked with their profile.
  */
-export const getForAgent = query({
+export const getForAgent = internalQuery({
   args: { id: v.id("emailCampaigns") },
   handler: async (ctx, { id }) => {
     const campaign = await ctx.db.get(id);
@@ -270,28 +276,45 @@ export const getForAgent = query({
  * merge values), as a group gets it (`audienceId`), or as anyone gets it
  * without either. Previews and the agent's review; no tracking.
  */
+const renderForArgs = {
+  id: v.id("emailCampaigns"),
+  contactId: v.optional(v.id("emailContacts")),
+  audienceId: v.optional(v.id("emailAudiences")),
+  mode: v.optional(v.union(v.literal("send"), v.literal("preview"), v.literal("edit"))),
+};
+const renderedValidator = v.object({ html: v.string(), subject: v.string(), preheader: v.string(), text: v.string() });
+
+async function renderAs(
+  ctx: QueryCtx,
+  campaign: Doc<"emailCampaigns"> | null,
+  { contactId, audienceId, mode = "preview" }: { contactId?: Id<"emailContacts">; audienceId?: Id<"emailAudiences">; mode?: "send" | "preview" | "edit" },
+) {
+  if (!campaign) throw new Error("Unknown campaign");
+  const brand = await ctx.db.get(campaign.brandId);
+  if (!brand) throw new Error("Unknown brand");
+  const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect();
+  // Only the brand's own contacts: another brand's would lend the email their name.
+  const found = contactId ? await ctx.db.get(contactId) : null;
+  const contact = found?.brandId === campaign.brandId ? found : null;
+  const version = contact
+    ? await versionFor(ctx, campaign, contact)
+    : audienceId
+      ? await ctx.db.query("emailVersions").withIndex("by_campaign_audience", (q) => q.eq("campaignId", campaign._id).eq("audienceId", audienceId)).unique()
+      : null;
+  return renderOne(docFor(campaign, version), renderContextFor(brand, itemsRecord(items), { mode, merge: mergeFor(contact, brand) }));
+}
+
 export const renderFor = query({
-  args: {
-    id: v.id("emailCampaigns"),
-    contactId: v.optional(v.id("emailContacts")),
-    audienceId: v.optional(v.id("emailAudiences")),
-    mode: v.optional(v.union(v.literal("send"), v.literal("preview"), v.literal("edit"))),
-  },
-  returns: v.object({ html: v.string(), subject: v.string(), preheader: v.string(), text: v.string() }),
-  handler: async (ctx, { id, contactId, audienceId, mode = "preview" }) => {
-    const campaign = await ctx.db.get(id);
-    if (!campaign) throw new Error("Unknown campaign");
-    const brand = await ctx.db.get(campaign.brandId);
-    if (!brand) throw new Error("Unknown brand");
-    const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", campaign.brandId)).collect();
-    const contact = contactId ? await ctx.db.get(contactId) : null;
-    const version = contact
-      ? await versionFor(ctx, campaign, contact)
-      : audienceId
-        ? await ctx.db.query("emailVersions").withIndex("by_campaign_audience", (q) => q.eq("campaignId", id).eq("audienceId", audienceId)).unique()
-        : null;
-    return renderOne(docFor(campaign, version), renderContextFor(brand, itemsRecord(items), { mode, merge: mergeFor(contact, brand) }));
-  },
+  args: renderForArgs,
+  returns: renderedValidator,
+  handler: async (ctx, { id, ...as }) => renderAs(ctx, await owned(ctx, await ctx.db.get(id)), as),
+});
+
+/** `renderFor` for the agent's review (over /agent/read). */
+export const renderForInternal = internalQuery({
+  args: renderForArgs,
+  returns: renderedValidator,
+  handler: async (ctx, { id, ...as }) => renderAs(ctx, await ctx.db.get(id), as),
 });
 
 /**
@@ -302,7 +325,7 @@ export const renderFor = query({
 export const report = query({
   args: { id: v.id("emailCampaigns") },
   handler: async (ctx, { id }) => {
-    const campaign = await ctx.db.get(id);
+    const campaign = await owned(ctx, await ctx.db.get(id));
     if (!campaign) return null;
     const sends = await ctx.db.query("emailSends").withIndex("by_campaign", (q) => q.eq("campaignId", id)).collect();
     const doc = campaign.doc as EmailDoc;

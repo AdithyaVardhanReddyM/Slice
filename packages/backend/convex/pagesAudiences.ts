@@ -29,6 +29,7 @@ import {
   type Span,
 } from "./qlooApi";
 import { cachedQlooGet } from "./qloo";
+import { owned, ownedBrand } from "./pagesBrands";
 import { SEGMENT_FAMILIES, SEGMENTS } from "./pagesSegments";
 import { spanValidator } from "./schema";
 import type { AudienceProfile, BrandBrief, ProfileBrand, ProfileEntity, ProfileTag } from "./pagesTypes";
@@ -70,14 +71,21 @@ const agesOf = (d?: Sources["demographics"]): string[] => d?.ages?.length ? d.ag
 
 const progressValidator = v.object({ value: v.number(), label: v.string() });
 
+const audiencesOf = (ctx: QueryCtx, brandId: Id<"pagesBrands">) =>
+  ctx.db
+    .query("pagesAudiences")
+    .withIndex("by_brand", (q) => q.eq("brandId", brandId))
+    .order("desc")
+    .collect();
+
 export const list = query({
   args: { brandId: v.id("pagesBrands") },
-  handler: async (ctx, { brandId }) =>
-    ctx.db
-      .query("pagesAudiences")
-      .withIndex("by_brand", (q) => q.eq("brandId", brandId))
-      .order("desc")
-      .collect(),
+  handler: async (ctx, { brandId }) => ((await ownedBrand(ctx, brandId)) ? audiencesOf(ctx, brandId) : []),
+});
+
+export const listInternal = internalQuery({
+  args: { brandId: v.id("pagesBrands") },
+  handler: async (ctx, { brandId }) => audiencesOf(ctx, brandId),
 });
 
 /** Qloo's lifestyle segments a custom audience can use (the agent's planner reads these). */
@@ -89,7 +97,7 @@ export const segments = query({
 
 export const get = query({
   args: { id: v.id("pagesAudiences") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const getInternal = internalQuery({

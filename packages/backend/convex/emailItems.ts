@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import { tagKey } from "./catalog";
-import { editableBrand } from "./emailBrands";
+import { editableBrand, ownedBrand } from "./emailBrands";
 import type { AudienceProfile, EmailItem } from "./emailTypes";
 import { interleave } from "./pagesAudiences";
 import { plausible } from "./pagesUploads";
@@ -61,6 +61,7 @@ export function toEmailItem(d: Doc<"emailItems">): EmailItem {
 export const list = query({
   args: { brandId: v.id("emailBrands") },
   handler: async (ctx, { brandId }) => {
+    if (!(await ownedBrand(ctx, brandId))) return [];
     const items = await ctx.db.query("emailItems").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
     return items.sort((a, b) => a.order - b.order);
   },

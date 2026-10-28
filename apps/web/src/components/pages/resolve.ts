@@ -7,10 +7,9 @@ import { connection } from "next/server";
 import { cache } from "react";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@slice/backend/convex/_generated/api";
-import type { Doc, Id } from "@slice/backend/convex/_generated/dataModel";
 import type { RoutingRules, VariantDoc } from "@slice/backend/convex/pagesTypes";
 import { DEFAULT_ROUTING } from "@slice/backend/convex/pagesTypes";
-import { type BySlugResult, type ResolveResult, audienceCookieName, parseAudienceCookie } from "./types";
+import { type BySlugResult, type ResolveResult, type ShownVariant, audienceCookieName, parseAudienceCookie } from "./types";
 
 export const CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -27,12 +26,11 @@ export const loadPage = cache(async (brandSlug: string, pageSlug: string): Promi
   // value unless the render is already request-time.
   await connection();
   if (!CONVEX_URL) return null;
-  const data = (await fetchQuery(api.pages.bySlug, { brandSlug, pageSlug }, { url: CONVEX_URL })) as BySlugResult | null;
-  return data ?? null;
+  return await fetchQuery(api.pages.bySlug, { brandSlug, pageSlug }, { url: CONVEX_URL });
 });
 
 export interface Resolution {
-  variant: Doc<"pagesVariants"> | null;
+  variant: ShownVariant | null;
   doc: VariantDoc | null;
   resolved: ResolveResult;
   preview: boolean;
@@ -61,19 +59,11 @@ export async function resolveRequest(data: BySlugResult, { sp, cookie, headers }
   const overrides = city || country ? { city, country } : undefined;
 
   const defaultVariant = variants.find((v) => v._id === page.defaultVariantId) ?? variants.find((v) => !v.audienceId) ?? variants[0] ?? null;
-  const docOf = (v: Doc<"pagesVariants"> | null | undefined): VariantDoc | null => (v?.doc && typeof v.doc === "object" ? (v.doc as VariantDoc) : null);
+  const docOf = (v: ShownVariant | null | undefined): VariantDoc | null => (v?.doc && typeof v.doc === "object" ? (v.doc as VariantDoc) : null);
 
-  /* ?v= forces a variant (console preview). Freshest copy via api.pages.variant. */
+  /* ?v= forces a variant (console preview), read with the page on this request. */
   if (forced) {
-    let variant = variants.find((v) => v._id === forced) ?? null;
-    if (CONVEX_URL) {
-      try {
-        const fresh = (await fetchQuery(api.pages.variant, { id: forced as Id<"pagesVariants"> }, { url: CONVEX_URL })) as Doc<"pagesVariants"> | null;
-        if (fresh && fresh.pageId === page._id) variant = fresh;
-      } catch {
-        /* keep the listed copy */
-      }
-    }
+    const variant = variants.find((v) => v._id === forced) ?? null;
     return {
       variant,
       doc: docOf(variant) ?? docOf(defaultVariant),

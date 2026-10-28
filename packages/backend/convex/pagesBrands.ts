@@ -8,6 +8,7 @@ import {
   mutation,
   query,
   type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
 import {
   AESTHETIC_TAG_GROUPS,
@@ -44,18 +45,37 @@ export const list = query({
   },
 });
 
+/** The brand when the signed-in merchant owns it. Unknown brands and other merchants' read the same: null. */
+export async function ownedBrand(ctx: QueryCtx, id: Id<"pagesBrands">): Promise<Doc<"pagesBrands"> | null> {
+  const brand = await ctx.db.get(id);
+  const identity = await ctx.auth.getUserIdentity();
+  return brand && identity && brand.owner === identity.subject ? brand : null;
+}
+
+/** A page, version, audience, upload or member when the signed-in merchant owns its brand, else null. */
+export async function owned<T extends { brandId: Id<"pagesBrands"> }>(ctx: QueryCtx, row: T | null): Promise<T | null> {
+  return row && (await ownedBrand(ctx, row.brandId)) ? row : null;
+}
+
+/** What a published page may show of its brand. */
+export const publicBrand = ({ _id, slug, name, url, kit }: Doc<"pagesBrands">) => ({ _id, slug, name, url, kit });
+
+/** The console's read (owner only). The agent reads `getInternal` over /agent/read. */
 export const get = query({
   args: { id: v.id("pagesBrands") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => ownedBrand(ctx, id),
 });
 
+/** Published pages' read: anyone, so only the brand's public face. */
 export const bySlug = query({
   args: { slug: v.string() },
-  handler: async (ctx, { slug }) =>
-    ctx.db
+  handler: async (ctx, { slug }) => {
+    const brand = await ctx.db
       .query("pagesBrands")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique(),
+      .unique();
+    return brand ? publicBrand(brand) : null;
+  },
 });
 
 /** The console's lookup: like `bySlug`, but only for the brand's owner. Published pages use `bySlug`. */

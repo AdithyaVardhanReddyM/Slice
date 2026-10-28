@@ -1,12 +1,13 @@
 import { v } from "convex/values";
 import { api, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { action, internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
+import { action, internalMutation, internalQuery, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import type { Span } from "./qlooApi";
 import { spanValidator } from "./schema";
 import { ageBucket, kmeans, lift, normalizeGender, splitTerms, type ClusterRow, type CsvMapping } from "./pagesCsv";
 import { MAX_LIST_PEOPLE } from "./pagesTypes";
 import { uniqueAudienceSlug } from "./pagesAudiences";
+import { owned, ownedBrand } from "./pagesBrands";
 import { norm, resolveNames, safeRecord, slugify } from "./pagesUtil";
 
 // A customer CSV (or a CRM list pulled through Composio, in the same row shape)
@@ -117,19 +118,26 @@ export const appendRows = mutation({
   },
 });
 
+const uploadsOf = (ctx: QueryCtx, brandId: Id<"pagesBrands">) =>
+  ctx.db
+    .query("pagesUploads")
+    .withIndex("by_brand", (q) => q.eq("brandId", brandId))
+    .order("desc")
+    .collect();
+
 export const list = query({
   args: { brandId: v.id("pagesBrands") },
-  handler: async (ctx, { brandId }) =>
-    ctx.db
-      .query("pagesUploads")
-      .withIndex("by_brand", (q) => q.eq("brandId", brandId))
-      .order("desc")
-      .collect(),
+  handler: async (ctx, { brandId }) => ((await ownedBrand(ctx, brandId)) ? uploadsOf(ctx, brandId) : []),
+});
+
+export const listInternal = internalQuery({
+  args: { brandId: v.id("pagesBrands") },
+  handler: async (ctx, { brandId }) => uploadsOf(ctx, brandId),
 });
 
 export const get = query({
   args: { id: v.id("pagesUploads") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const getInternal = internalQuery({
@@ -137,13 +145,24 @@ export const getInternal = internalQuery({
   handler: async (ctx, { id }) => ctx.db.get(id),
 });
 
+const membersArgs = { uploadId: v.id("pagesUploads"), cluster: v.optional(v.number()), take: v.optional(v.number()) };
+
+function someMembers(ctx: QueryCtx, uploadId: Id<"pagesUploads">, cluster: number | undefined, take: number) {
+  const q = ctx.db.query("pagesMembers").withIndex("by_upload", (q) => q.eq("uploadId", uploadId));
+  const filtered = cluster === undefined ? q : q.filter((f) => f.eq(f.field("cluster"), cluster));
+  return filtered.take(Math.min(take, 1000));
+}
+
 export const members = query({
-  args: { uploadId: v.id("pagesUploads"), cluster: v.optional(v.number()), take: v.optional(v.number()) },
-  handler: async (ctx, { uploadId, cluster, take = 200 }) => {
-    const q = ctx.db.query("pagesMembers").withIndex("by_upload", (q) => q.eq("uploadId", uploadId));
-    const filtered = cluster === undefined ? q : q.filter((f) => f.eq(f.field("cluster"), cluster));
-    return filtered.take(Math.min(take, 1000));
-  },
+  args: membersArgs,
+  handler: async (ctx, { uploadId, cluster, take = 200 }) =>
+    (await owned(ctx, await ctx.db.get(uploadId))) ? someMembers(ctx, uploadId, cluster, take) : [],
+});
+
+/** `members` for the agent (over /agent/read). */
+export const membersForAgent = internalQuery({
+  args: membersArgs,
+  handler: async (ctx, { uploadId, cluster, take = 200 }) => someMembers(ctx, uploadId, cluster, take),
 });
 
 export const membersInternal = internalQuery({
@@ -157,7 +176,7 @@ export const membersInternal = internalQuery({
 /** One row, for the agent (a CRM contact's id lives in `row.crm_id`). */
 export const member = query({
   args: { id: v.id("pagesMembers") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const memberInternal = internalQuery({

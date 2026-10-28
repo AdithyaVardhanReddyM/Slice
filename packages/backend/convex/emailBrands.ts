@@ -17,6 +17,18 @@ import { slugify } from "./pagesUtil";
 // what it does, its footer details, who sends and from which domain. The
 // setup agent fills it over HTTP (/email/brand); the console edits it here.
 
+/** The brand when the signed-in merchant owns it, for console reads. Unknown brands and other merchants' read the same: null. */
+export async function ownedBrand(ctx: QueryCtx, id: Id<"emailBrands">): Promise<Doc<"emailBrands"> | null> {
+  const brand = await ctx.db.get(id);
+  const identity = await ctx.auth.getUserIdentity();
+  return brand && identity && brand.owner === identity.subject ? brand : null;
+}
+
+/** A campaign, list, audience or contact when the signed-in merchant owns its brand, else null. */
+export async function owned<T extends { brandId: Id<"emailBrands"> }>(ctx: QueryCtx, row: T | null): Promise<T | null> {
+  return row && (await ownedBrand(ctx, row.brandId)) ? row : null;
+}
+
 /** The brand, for a console mutation: unknown and other merchants' brands look the same. */
 export async function editableBrand(ctx: QueryCtx, id: Id<"emailBrands">): Promise<Doc<"emailBrands">> {
   const brand = await ctx.db.get(id);
@@ -64,9 +76,10 @@ export const mineBySlug = query({
   },
 });
 
+/** The console's read (owner only). The agent reads `getInternal` over /agent/read. */
 export const get = query({
   args: { id: v.id("emailBrands") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => ownedBrand(ctx, id),
 });
 
 export const getInternal = internalQuery({
@@ -289,7 +302,7 @@ export const sendingInfo = query({
   args: { id: v.id("emailBrands") },
   returns: v.object({ mode: sendingModeValidator, from: v.string(), reason: v.optional(v.string()) }),
   handler: async (ctx, { id }) => {
-    const brand = await ctx.db.get(id);
+    const brand = await ownedBrand(ctx, id);
     if (!brand) throw new Error("Unknown brand");
     return sendingInfoFor(brand);
   },
@@ -310,7 +323,7 @@ export const uploadUrl = mutation({
 export const fileUrl = query({
   args: { storageId: v.id("_storage") },
   returns: v.union(v.string(), v.null()),
-  handler: async (ctx, { storageId }) => ctx.storage.getUrl(storageId),
+  handler: async (ctx, { storageId }) => ((await ctx.auth.getUserIdentity()) ? ctx.storage.getUrl(storageId) : null),
 });
 
 /* Cascade delete ------------------------------------------------------------- */

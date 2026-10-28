@@ -14,7 +14,7 @@ import {
   type GroupTaste,
   type ResolvedTerm,
 } from "./emailAudiences";
-import { editableBrand } from "./emailBrands";
+import { editableBrand, owned, ownedBrand } from "./emailBrands";
 import type { AudienceProfile } from "./emailTypes";
 import { ageBucket, normalizeGender, splitTerms } from "./pagesCsv";
 import { safeRecord } from "./pagesUtil";
@@ -121,6 +121,7 @@ const slim = ({ profile, ...c }: Doc<"emailContacts">) => ({ ...c, hasProfile: !
 export const list = query({
   args: { listId: v.id("emailLists") },
   handler: async (ctx, { listId }) => {
+    if (!(await owned(ctx, await ctx.db.get(listId)))) return [];
     const contacts = await ctx.db.query("emailContacts").withIndex("by_list", (q) => q.eq("listId", listId)).collect();
     return contacts.map(slim);
   },
@@ -129,6 +130,7 @@ export const list = query({
 export const byAudience = query({
   args: { audienceId: v.id("emailAudiences") },
   handler: async (ctx, { audienceId }) => {
+    if (!(await owned(ctx, await ctx.db.get(audienceId)))) return [];
     const contacts = await ctx.db.query("emailContacts").withIndex("by_audience", (q) => q.eq("audienceId", audienceId)).collect();
     return contacts.map(slim);
   },
@@ -153,7 +155,7 @@ export const byListInternal = internalQuery({
 
 export const get = query({
   args: { id: v.id("emailContacts") },
-  handler: async (ctx, { id }) => ctx.db.get(id),
+  handler: async (ctx, { id }) => owned(ctx, await ctx.db.get(id)),
 });
 
 export const getInternal = internalQuery({
@@ -166,8 +168,9 @@ export const counts = query({
   args: { brandId: v.id("emailBrands") },
   returns: v.object({ total: v.number(), subscribed: v.number(), unsubscribed: v.number(), lists: v.number(), withProfile: v.number() }),
   handler: async (ctx, { brandId }) => {
-    const contacts = await ctx.db.query("emailContacts").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
-    const lists = await ctx.db.query("emailLists").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect();
+    const mine = !!(await ownedBrand(ctx, brandId));
+    const contacts = mine ? await ctx.db.query("emailContacts").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect() : [];
+    const lists = mine ? await ctx.db.query("emailLists").withIndex("by_brand", (q) => q.eq("brandId", brandId)).collect() : [];
     const emails = new Set(contacts.map((c) => c.email));
     const out = new Set(contacts.filter((c) => c.unsubscribed).map((c) => c.email));
     return {

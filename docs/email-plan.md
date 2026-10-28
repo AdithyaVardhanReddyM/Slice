@@ -347,7 +347,7 @@ who opted out, and `listName`), `get({id})`, `rename({id, name})`,
 quick actions) → `{version, problems}`, `setAudience({id, audienceId})`
 (clears personalisation when it changes), `messages({id})` (chat),
 `versions({id})` → `{ contact, personalization, docVersion, status }[]`,
-`getForAgent({id})` → `{ campaign, brand, audience, items, contacts? }`,
+`getForAgent({id})` (internal; the agent reads it over `/agent/read`) → `{ campaign, brand, audience, items, contacts? }`,
 `renderFor({id, contactId?, mode?})` → `{ html, subject, preheader, text }`
 (personalised + merged for that contact), `report({id})` →
 `{ stats, timeline: { at; opens; clicks }[], links: { url; label?; blockId?; clicks }[], people?: { contactId; name; email; status; opened; clicked; subject }[] }`.
@@ -387,6 +387,7 @@ account whose email is `PAGES_DEMO_OWNER_EMAIL` claims unowned masters.
 
 | Route | Body → reply |
 |---|---|
+| `POST /agent/read` | `{path, args}` → `{value}`: the agent's reads (`emailBrands:get`, `emailLists:get`, `emailAudiences:list`, `emailContacts:byAudience`, `emailCampaigns:getForAgent`, `emailCampaigns:renderFor`); console queries answer only the brand's owner |
 | `POST /email/brand` | `{brandId, patch}` → `{ok}` (kit, about, footer, sender, name, setup, url) |
 | `POST /email/items` | `{brandId, items: EmailItem-like[]}` → `{ids}` (appends, skipping names the brand already has) |
 | `POST /email/doc` | `{campaignId, doc}` → `{version, doc, problems}` (validate, bump version, save) |

@@ -364,7 +364,7 @@ function groupBrief(key: GroupKey, p: Profile) {
 export const finish = internalAction({
   args: { brandId: v.id("emailBrands"), site: v.optional(v.string()), startedAt: v.optional(v.number()) },
   handler: async (ctx, { brandId, startedAt }): Promise<Record<string, unknown>> => {
-    const audiences: Audience[] = await ctx.runQuery(api.emailAudiences.list, { brandId });
+    const audiences: Audience[] = await ctx.runQuery(internal.emailAudiences.listInternal, { brandId });
     const groups = audiences.filter((a) => a.kind === "group");
     const membersOf = new Map<string, ContactLite[]>();
     for (const a of groups) membersOf.set(a._id, await ctx.runQuery(internal.emailContacts.byAudienceInternal, { audienceId: a._id }));

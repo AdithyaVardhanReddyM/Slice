@@ -1,8 +1,10 @@
 """Thin HTTP client for the Convex backend.
 
-Reads use Convex's public query API (POST {CONVEX_URL}/api/query); writes and
-Qloo calls go through the HTTP routes in packages/backend/convex/http.ts, which
-check the shared QLOO_PROXY_SECRET.
+Catalog and taste reads use Convex's public query API (POST {CONVEX_URL}/api/query).
+Merchants' Pages and Email data answers only the brand's signed-in owner there,
+so `query` sends those reads (AGENT_READS) to /agent/read instead. Those, the
+writes and Qloo calls go through the HTTP routes in
+packages/backend/convex/http.ts, which check the shared QLOO_PROXY_SECRET.
 """
 
 from __future__ import annotations
@@ -29,8 +31,40 @@ def client() -> httpx.AsyncClient:
     return _client
 
 
+# The queries /agent/read answers with their internal twins (AGENT_READS in http.ts).
+AGENT_READS = frozenset({
+    "pagesBrands:get",
+    "pages:get",
+    "pages:variant",
+    "pages:memory",
+    "pagesAudiences:get",
+    "pagesAudiences:list",
+    "pagesUploads:get",
+    "pagesUploads:list",
+    "pagesUploads:members",
+    "pagesUploads:member",
+    "emailBrands:get",
+    "emailLists:get",
+    "emailAudiences:list",
+    "emailContacts:byAudience",
+    "emailCampaigns:getForAgent",
+    "emailCampaigns:renderFor",
+})
+
+
 async def query(path: str, args: dict[str, Any] | None = None) -> Any:
-    """Run a public Convex query, e.g. query("catalog:store", {"key": "fold"})."""
+    """Run a Convex query, e.g. query("catalog:store", {"key": "fold"})."""
+    if path in AGENT_READS:
+        res = await client().post(
+            f"{_env('CONVEX_SITE_URL')}/agent/read",
+            json={"path": path, "args": args or {}},
+            headers={"Authorization": f"Bearer {_env('QLOO_PROXY_SECRET')}"},
+        )
+        # 404 is a deployment from before /agent/read, where the public query still answers.
+        if res.status_code != 404:
+            if res.status_code >= 400:
+                raise RuntimeError(f"Convex query {path} failed: {res.status_code} {res.text[:300]}")
+            return res.json().get("value")
     res = await client().post(
         f"{_env('CONVEX_URL')}/api/query",
         json={"path": path, "args": args or {}, "format": "json"},

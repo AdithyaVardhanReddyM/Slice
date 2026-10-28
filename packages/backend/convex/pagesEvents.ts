@@ -1,11 +1,13 @@
 import { v, type Infer } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
+import { owned, ownedBrand } from "./pagesBrands";
 import { dayOf, hourOf, safeKey, safeRecord } from "./pagesUtil";
 
 // First-party analytics for published pages. `ingest` stores raw events and
 // keeps the hourly rollup (pagesStats) current, so the dashboard queries only
-// read rollups; `heatmap`/`recent`/`forms` read raw rows.
+// read rollups; `heatmap`/`recent`/`forms` read raw rows. Published pages write
+// anonymously; every read answers only the brand's owner (others read empty).
 
 const MAX_EVENTS_PER_BATCH = 100;
 
@@ -315,8 +317,9 @@ export const stats = query({
   args: { pageId: v.id("pages"), from: rangeValidator, to: rangeValidator },
   handler: async (ctx, { pageId, from, to }) => {
     const { fromDay, toDay } = dayRange(from, to);
-    const rows: StatsRow[] = await statsRows(ctx, pageId, fromDay, toDay);
-    const variants = await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).collect();
+    const mine = !!(await owned(ctx, await ctx.db.get(pageId)));
+    const rows: StatsRow[] = mine ? await statsRows(ctx, pageId, fromDay, toDay) : [];
+    const variants = mine ? await ctx.db.query("pagesVariants").withIndex("by_page", (q) => q.eq("pageId", pageId)).collect() : [];
     const byVariant = new Map<string, Delta>();
     for (const vnt of variants) byVariant.set(vnt._id, emptyDelta());
     const byDevice: Record<string, number> = {};
@@ -394,6 +397,7 @@ export const heatmap = query({
   args: { variantId: v.id("pagesVariants"), from: rangeValidator, to: rangeValidator },
   handler: async (ctx, { variantId, from, to }) => {
     const { fromDay, toDay, fromMs, toMs } = dayRange(from, to);
+    if (!(await owned(ctx, await ctx.db.get(variantId)))) return { points: [], sections: {} as Record<string, { seen: number; clicks: number }> };
     const events = await ctx.db
       .query("pagesEvents")
       .withIndex("by_variant_at", (q) => q.eq("variantId", variantId).gte("at", fromMs).lte("at", toMs))
@@ -420,21 +424,25 @@ export const heatmap = query({
 export const forms = query({
   args: { pageId: v.id("pages"), take: v.optional(v.number()) },
   handler: async (ctx, { pageId, take = 100 }) =>
-    ctx.db
-      .query("pagesForms")
-      .withIndex("by_page_at", (q) => q.eq("pageId", pageId))
-      .order("desc")
-      .take(Math.min(take, 1000)),
+    (await owned(ctx, await ctx.db.get(pageId)))
+      ? ctx.db
+          .query("pagesForms")
+          .withIndex("by_page_at", (q) => q.eq("pageId", pageId))
+          .order("desc")
+          .take(Math.min(take, 1000))
+      : [],
 });
 
 export const recent = query({
   args: { pageId: v.id("pages"), take: v.optional(v.number()) },
   handler: async (ctx, { pageId, take = 50 }) =>
-    ctx.db
-      .query("pagesEvents")
-      .withIndex("by_page_at", (q) => q.eq("pageId", pageId))
-      .order("desc")
-      .take(Math.min(take, 500)),
+    (await owned(ctx, await ctx.db.get(pageId)))
+      ? ctx.db
+          .query("pagesEvents")
+          .withIndex("by_page_at", (q) => q.eq("pageId", pageId))
+          .order("desc")
+          .take(Math.min(take, 500))
+      : [],
 });
 
 /**
@@ -448,6 +456,7 @@ const emptyDay = { views: 0, sessions: 0, visitors: 0, clicks: 0, ctaClicks: 0, 
 export const brandOverview = query({
   args: { brandId: v.id("pagesBrands"), days: v.number() },
   handler: async (ctx, { brandId, days }) => {
+    if (!(await ownedBrand(ctx, brandId))) return [];
     const now = Date.now();
     const span = Math.max(1, days);
     const fromDay = dayOf(now - (span - 1) * 86_400_000);
