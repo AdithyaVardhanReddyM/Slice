@@ -7,6 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight } from "lucide-react";
 import { api } from "@slice/backend/convex/_generated/api";
+import { isGuest } from "@/lib/guest";
 import { serviceMeta, type ServiceId } from "@/lib/services";
 import { RippleField, type RippleFieldHandle } from "./ripple-field";
 
@@ -32,7 +33,7 @@ function Greeting() {
         : hour < 18
           ? "Good afternoon"
           : "Good evening";
-  const name = user?.firstName || user?.username;
+  const name = isGuest(user) ? null : user?.firstName || user?.username;
   return (
     <header className="home-rise mx-auto max-w-3xl self-end pb-10 text-center">
       <h1 className="text-[32px] leading-[1.05] font-medium tracking-[-0.035em] text-balance text-neutral-950 sm:text-[44px]">

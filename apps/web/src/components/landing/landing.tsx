@@ -15,6 +15,7 @@ import {
   UserStar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GuestButton } from "@/components/console/auth/guest-button";
 import { AgentsTour, type TourAgent } from "./agents-tour";
 import { LaptopFrame, PhoneFrame, TalkKeys } from "./devices";
 import { Showcase } from "./showcase";
@@ -91,6 +92,9 @@ function PrimaryButton({
   );
 }
 
+const SECONDARY =
+  "inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-neutral-950 ring-1 ring-black/10 transition-all hover:-translate-y-px hover:bg-neutral-50";
+
 function SecondaryButton({
   href,
   children,
@@ -101,15 +105,18 @@ function SecondaryButton({
   className?: string;
 }) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        "inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-neutral-950 ring-1 ring-black/10 transition-all hover:-translate-y-px hover:bg-neutral-50",
-        className,
-      )}
-    >
+    <Link href={href} className={cn(SECONDARY, className)}>
       {children}
     </Link>
+  );
+}
+
+/** Straight into a guest workspace with the demo brands, for judges and the curious. */
+function GuestPill() {
+  return (
+    <GuestButton className={cn(SECONDARY, "disabled:hover:translate-y-0")}>
+      Try it as a guest
+    </GuestButton>
   );
 }
 
@@ -253,6 +260,7 @@ function Hero() {
             Start for free
             <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
           </PrimaryButton>
+          <GuestPill />
           <SecondaryButton href="#mac">
             <AppleLogo className="size-4 -translate-y-px" />
             Download for Mac
@@ -1003,6 +1011,7 @@ function FinalCta() {
               Start for free
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </PrimaryButton>
+            <GuestPill />
             <SecondaryButton href="#mac">
               <AppleLogo className="size-4 -translate-y-px" />
               Download for Mac

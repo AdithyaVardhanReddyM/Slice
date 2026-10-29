@@ -11,6 +11,7 @@ import { useState } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import type { Id } from "@slice/backend/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { isGuest } from "@/lib/guest";
 import { errorText, isResendMissing } from "@/lib/email/labels";
 import { Spinner } from "@/components/console/setup/atoms";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,8 @@ export function TestEmailDialog({
   beforeSend?: () => Promise<void>;
 }) {
   const { user } = useUser();
-  const mine = user?.primaryEmailAddress?.emailAddress ?? "";
+  // A guest's own address is a placeholder, so they type one.
+  const mine = isGuest(user) ? "" : (user?.primaryEmailAddress?.emailAddress ?? "");
   const [to, setTo] = useState("");
   const [contactId, setContactId] = useState<Id<"emailContacts"> | "">("");
   const [state, setState] = useState<State>({ kind: "idle" });

@@ -17,12 +17,14 @@ import {
   Palette,
   Plus,
   Settings,
+  UserPlus,
   UserRound,
   Users,
 } from "lucide-react";
 import { Fragment, useState, type ComponentType, type ReactNode } from "react";
 import { api } from "@slice/backend/convex/_generated/api";
 import { cn } from "@/lib/utils";
+import { isGuest } from "@/lib/guest";
 import { listedAudiences, type Brand } from "@/lib/pages/types";
 import { brandDomain, brandHomeUrl, faviconOf, hostOf } from "@/lib/pages/urls";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -169,7 +171,9 @@ function NavUser() {
   const { user } = useUser();
   const { openUserProfile, signOut } = useClerk();
   const name = user?.fullName ?? user?.username ?? "Account";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const guest = isGuest(user);
+  // A guest's email is a placeholder, so it isn't shown.
+  const email = guest ? "Guest workspace" : (user?.primaryEmailAddress?.emailAddress ?? "");
   const initials = name
     .split(" ")
     .map((p) => p.charAt(0))
@@ -201,10 +205,17 @@ function NavUser() {
               <DropdownMenuLabel className="flex items-center gap-2 px-1 py-1.5 font-normal text-foreground">{identity}</DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => openUserProfile()}>
-              <UserRound />
-              Account
-            </DropdownMenuItem>
+            {guest ? (
+              <DropdownMenuItem onClick={() => signOut({ redirectUrl: "/sign-up" })}>
+                <UserPlus />
+                Create an account
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => openUserProfile()}>
+                <UserRound />
+                Account
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem render={<Link href="/dashboard/pages" />}>
               <LayoutGrid />
               All brands

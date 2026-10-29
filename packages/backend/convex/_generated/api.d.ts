@@ -34,6 +34,7 @@ import type * as emailSend from "../emailSend.js";
 import type * as emailTemplates from "../emailTemplates.js";
 import type * as emailThemes from "../emailThemes.js";
 import type * as emailTypes from "../emailTypes.js";
+import type * as guests from "../guests.js";
 import type * as http from "../http.js";
 import type * as media from "../media.js";
 import type * as mediaBrands from "../mediaBrands.js";
@@ -95,6 +96,7 @@ declare const fullApi: ApiFromModules<{
   emailTemplates: typeof emailTemplates;
   emailThemes: typeof emailThemes;
   emailTypes: typeof emailTypes;
+  guests: typeof guests;
   http: typeof http;
   media: typeof media;
   mediaBrands: typeof mediaBrands;

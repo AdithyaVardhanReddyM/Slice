@@ -15,11 +15,13 @@ import {
   Plus,
   Settings,
   UserStar,
+  UserPlus,
   UserRound,
   Wand2,
 } from "lucide-react";
 import { useSyncExternalStore, type ComponentType } from "react";
 import { cn } from "@/lib/utils";
+import { isGuest } from "@/lib/guest";
 import { getWidget, widgets } from "@/lib/mock/widgets";
 import { removedFromCookieHeader } from "@/lib/concierge/removed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -167,7 +169,9 @@ function NavUser() {
   const { user } = useUser();
   const { openUserProfile, signOut } = useClerk();
   const name = user?.fullName ?? user?.username ?? "Account";
-  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const guest = isGuest(user);
+  // A guest's email is a placeholder, so it isn't shown.
+  const email = guest ? "Guest workspace" : (user?.primaryEmailAddress?.emailAddress ?? "");
   const initials = name
     .split(" ")
     .map((part) => part.charAt(0))
@@ -215,10 +219,17 @@ function NavUser() {
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => openUserProfile()}>
-              <UserRound />
-              Account
-            </DropdownMenuItem>
+            {guest ? (
+              <DropdownMenuItem onClick={() => signOut({ redirectUrl: "/sign-up" })}>
+                <UserPlus />
+                Create an account
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => openUserProfile()}>
+                <UserRound />
+                Account
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem render={<Link href="/dashboard/concierge" />}>
               <LayoutGrid />
               All widgets
