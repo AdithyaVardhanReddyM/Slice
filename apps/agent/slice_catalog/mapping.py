@@ -137,7 +137,7 @@ def tier_cutoffs(prices: list[float]) -> tuple[float, float]:
 
 
 def finish(draft: Draft, cutoffs: tuple[float, float]) -> dict[str, Any]:
-    """A draft → a Slice product dict, ready for `catalog.importCatalog`."""
+    """A draft → a Slice product dict, ready for `catalog.replace`."""
     keyed, free = _split_tags(draft.tags)
     lists: dict[str, list[str]] = {attr: [] for attr in set(LIST_KEYS.values())}
     for key, attr in LIST_KEYS.items():

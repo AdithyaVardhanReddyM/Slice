@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import {
   internalMutation,
-  mutation,
   query,
   type MutationCtx,
   type QueryCtx,
@@ -116,13 +115,6 @@ export async function replaceCatalog(
 }
 
 export const replace = internalMutation({
-  args: { store: storeInput, products: v.array(productInput) },
-  returns: v.object({ products: v.number() }),
-  handler: (ctx, { store, products }) => replaceCatalog(ctx, store, products),
-});
-
-/** Same as `replace`, callable from the console (catalog import). */
-export const importCatalog = mutation({
   args: { store: storeInput, products: v.array(productInput) },
   returns: v.object({ products: v.number() }),
   handler: (ctx, { store, products }) => replaceCatalog(ctx, store, products),

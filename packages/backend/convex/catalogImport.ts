@@ -1,13 +1,13 @@
 import { v } from "convex/values";
 import { parseSliceCsv } from "@slice/demo-catalogs/slice-csv";
-import { api } from "./_generated/api";
-import { action } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalAction } from "./_generated/server";
 
 // Imports a Slice-format CSV (packages/demo-catalogs/src/slice-csv.ts) as a
 // store's catalog. The store's style vocabulary and navigation are derived
 // from the rows, so a merchant only has to fill the CSV.
 
-export const importCsv = action({
+export const importCsv = internalAction({
   args: {
     key: v.string(),
     name: v.string(),
@@ -43,7 +43,7 @@ export const importCsv = action({
     }
     const label = (id: string) => id.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
-    await ctx.runMutation(api.catalog.importCatalog, {
+    await ctx.runMutation(internal.catalog.replace, {
       store: {
         key: args.key,
         name: args.name,
